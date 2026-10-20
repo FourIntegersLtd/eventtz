@@ -1,6 +1,6 @@
 "use client";
 
-import { ReceiptPageShell } from "@/features/receipts/ReceiptPageShell";
+import { VendorReceiptEzPage } from "@/features/receipts/VendorReceiptEzPage";
 import { fetchVendorPayoutStatement } from "@/lib/receiptsApi";
 
 type VendorPayoutStatementViewProps = {
@@ -8,12 +8,5 @@ type VendorPayoutStatementViewProps = {
 };
 
 export function VendorPayoutStatementView({ bookingId }: VendorPayoutStatementViewProps) {
-  return (
-    <ReceiptPageShell
-      bookingId={bookingId}
-      backHref={`/vendor/bookings/${bookingId}`}
-      backLabel="Back to booking"
-      load={fetchVendorPayoutStatement}
-    />
-  );
+  return <VendorReceiptEzPage bookingId={bookingId} load={fetchVendorPayoutStatement} />;
 }

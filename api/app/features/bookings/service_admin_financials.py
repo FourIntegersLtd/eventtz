@@ -25,7 +25,11 @@ from app.features.bookings.domain_financials import (
     summarize,
 )
 from app.features.bookings.rows import BookingRow
-from app.features.bookings.schemas_admin import AdminFinancialsDailyBucket, AdminFinancialsSummary
+from app.features.bookings.schemas_admin import (
+    AdminFinancialsDailyBucket,
+    AdminFinancialsDailyListResponse,
+    AdminFinancialsSummary,
+)
 from app.features.pricing.service import BOOKING_SERVICE_FEE_PERCENT
 from app.features.staff import service as staff_service
 
@@ -34,9 +38,11 @@ from app.features.staff import service as staff_service
 # starting with `service`, and `schemas_admin` matches neither (see `vendors/service_ai.py`
 # for the same pattern).
 __all__ = [
+    "AdminFinancialsDailyListResponse",
     "AdminFinancialsSummary",
     "CSV_CONTENT_TYPE",
     "CSV_FILENAME",
+    "financials_daily_page",
     "financials_export_csv",
     "financials_summary",
 ]
@@ -153,6 +159,22 @@ def _daily_buckets(
         )
         for bucket in (buckets[key] for key in sorted(buckets))
     ]
+
+
+async def financials_daily_page(
+    session: AsyncSession,
+    *,
+    date_from: str | None,
+    date_to: str | None,
+    offset: int,
+    limit: int,
+) -> AdminFinancialsDailyListResponse:
+    """One page of daily financial buckets for the admin table (charts use the full summary)."""
+    rows = await _financials_rows(session, date_from=date_from, date_to=date_to)
+    all_daily = _daily_buckets(rows, date_from=date_from, date_to=date_to)
+    total = len(all_daily)
+    page = all_daily[offset : offset + limit]
+    return AdminFinancialsDailyListResponse(daily=page, total=total, offset=offset, limit=limit)
 
 
 async def financials_summary(

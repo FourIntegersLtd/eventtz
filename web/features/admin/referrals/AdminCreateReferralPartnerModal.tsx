@@ -81,7 +81,7 @@ export function AdminCreateReferralPartnerModal({
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="ez-stack">
         <TextField
           label="Creator / display name"
           required
@@ -108,7 +108,11 @@ export function AdminCreateReferralPartnerModal({
           rows={3}
         />
         {error ? (
-          <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200/60">{error}</p>
+          <div className="ez-banner ez-banner--danger">
+            <div className="ez-banner__body">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
         ) : null}
       </div>
     </Modal>

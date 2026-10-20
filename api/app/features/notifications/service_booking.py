@@ -50,6 +50,29 @@ def _portal_for_user(user_id: str, parties: BookingPartiesRow) -> Portal | None:
     return None
 
 
+# Date-change notices, newest first decides what the booking screen still needs to say.
+DATE_CHANGE_NOTICE_KINDS = (
+    "date_change_requested",
+    "date_change_accepted",
+    "date_change_declined",
+    "date_change_withdrawn",
+)
+
+
+async def date_change_was_declined(session: AsyncSession, booking_id: str, user_id: str) -> bool:
+    """True when the latest date-change notice told `user_id` that the other side declined."""
+    latest = await repository.latest_notice(session, booking_id=booking_id, kinds=DATE_CHANGE_NOTICE_KINDS)
+    if latest is None:
+        return False
+    kind, recipient_id = latest
+    return kind == "date_change_declined" and recipient_id == user_id
+
+
+async def has_booking_notice(session: AsyncSession, booking_id: str, kind: str) -> bool:
+    """True when a notice of `kind` is stored for this booking."""
+    return await repository.notification_exists(session, booking_id=booking_id, kind=kind)
+
+
 async def dispatch_booking_notification(
     session: AsyncSession,
     mailer: Mailer,

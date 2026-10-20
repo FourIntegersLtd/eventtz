@@ -91,7 +91,12 @@ function DocumentRow({
         {uploading ? "Uploading…" : hasUpload ? "Replace" : "Upload document"}
       </button>
       {hasUpload && onRemove ? (
-        <button className="ez-btn ez-btn--ghost ez-btn--sm" type="button" onClick={onRemove}>
+        <button
+          className="ez-btn ez-btn--ghost ez-btn--sm"
+          type="button"
+          data-design-extra="doc-remove"
+          onClick={onRemove}
+        >
           Remove
         </button>
       ) : null}
@@ -139,7 +144,7 @@ export function StepAdditionalInfo({
 
   return (
     <div className="ez-stack">
-      <div className="ez-stack">
+      <div className="ez-stack ez-stack--sm">
         <h3 className="ez-h3">
           Find you online <span className="ez-label__opt">(optional)</span>
         </h3>
@@ -238,7 +243,6 @@ export function StepAdditionalInfo({
           }
           uploading={uploadingDoc.foodHygiene}
           onUpload={(file) => void onUploadAdditionalDoc("foodHygiene", file)}
-          onRemove={() => onRemoveAdditionalDoc("foodHygiene")}
         />
         <DocumentRow
           title="Indemnity / insurance certificate"
@@ -256,7 +260,6 @@ export function StepAdditionalInfo({
           }
           uploading={uploadingDoc.indemnity}
           onUpload={(file) => void onUploadAdditionalDoc("indemnity", file)}
-          onRemove={() => onRemoveAdditionalDoc("indemnity")}
         />
         <DocumentRow
           title="Other supporting documents"

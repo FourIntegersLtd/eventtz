@@ -23,7 +23,8 @@ const DELETE_CONFLICT_MESSAGES: Record<string, string> = {
     "You have an open problem report. Wait until it is resolved, then try again.",
 };
 
-function deleteAccountErrorMessage(err: unknown): string {
+/** Maps a close-account failure to the copy both settings screens show. */
+export function deleteAccountErrorMessage(err: unknown): string {
   const code = getApiErrorCode(err);
   if (code && DELETE_CONFLICT_MESSAGES[code]) {
     return DELETE_CONFLICT_MESSAGES[code];

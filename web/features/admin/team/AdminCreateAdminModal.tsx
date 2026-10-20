@@ -88,7 +88,7 @@ export function AdminCreateAdminModal({ isOpen, onClose, onCreated }: AdminCreat
         </div>
       }
     >
-      <div className="space-y-4">
+      <div className="ez-stack">
         {error ? <LottieFailureInline message={error} /> : null}
 
         <div className="flex rounded-lg border border-neutral-200 p-1 text-sm">

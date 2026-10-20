@@ -1,10 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { fetchAdminDisputes, type AdminDisputeCase } from "@/lib/adminPlatformApi";
+import {
+  ADMIN_DISPUTES_PAGE_SIZE,
+  fetchAdminDisputesPage,
+  type AdminDisputeCase,
+} from "@/lib/adminPlatformApi";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import { DisputeActionPanel } from "./DisputeActionPanel";
 import { DisputeResolveModal } from "./DisputeResolveModal";
 import { DisputesTable } from "./DisputesTable";
@@ -16,19 +20,28 @@ export function AdminDisputesView() {
   const [managing, setManaging] = useState<AdminDisputeCase | null>(null);
   const [resolving, setResolving] = useState<AdminDisputeCase | null>(null);
   const [statusFilter, setStatusFilter] = useState("open");
+  const [search, setSearch] = useState("");
+  const [offset, setOffset] = useState(0);
+  const [total, setTotal] = useState(0);
 
   const load = useCallback(async () => {
     setError(null);
     setLoading(true);
     try {
-      const list = await fetchAdminDisputes(statusFilter);
-      setRows(list);
+      const page = await fetchAdminDisputesPage(
+        statusFilter,
+        offset,
+        ADMIN_DISPUTES_PAGE_SIZE,
+        search,
+      );
+      setRows(page.disputes);
+      setTotal(page.total);
     } catch {
       setError("Could not load disputes.");
     } finally {
       setLoading(false);
     }
-  }, [statusFilter]);
+  }, [statusFilter, offset, search]);
 
   useEffect(() => {
     void load();
@@ -45,7 +58,7 @@ export function AdminDisputesView() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="ez-stack">
       {managing ? (
         <DisputeActionPanel
           dispute={managing}
@@ -69,13 +82,28 @@ export function AdminDisputesView() {
       ) : null}
       {error ? <AdminErrorBanner message={error} /> : null}
 
-      <AdminPageHeader />
-
       <DisputesTable
         rows={rows}
         statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
+        onStatusFilterChange={(value) => {
+          setStatusFilter(value);
+          setOffset(0);
+        }}
+        search={search}
+        onSearchChange={(value) => {
+          setSearch(value);
+          setOffset(0);
+        }}
         onManage={setManaging}
+      />
+
+      <TablePagination
+        offset={offset}
+        limit={ADMIN_DISPUTES_PAGE_SIZE}
+        total={total}
+        loading={loading}
+        onPrevious={() => setOffset((current) => Math.max(0, current - ADMIN_DISPUTES_PAGE_SIZE))}
+        onNext={() => setOffset((current) => current + ADMIN_DISPUTES_PAGE_SIZE)}
       />
     </div>
   );

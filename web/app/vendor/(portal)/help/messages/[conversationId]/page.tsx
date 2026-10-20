@@ -1,16 +1,17 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { HelpHubView } from "@/features/help/HelpHubView";
+import { VendorMessagesEzView } from "@/features/chat/VendorMessagesEzView";
 
+/** Support threads open in the same ez message layout as client chats. */
 export default function VendorHelpMessagesThreadPage() {
   const params = useParams();
   const conversationId =
     typeof params?.conversationId === "string" ? params.conversationId : "";
 
   if (!conversationId) {
-    return <p className="text-sm text-neutral-600">Invalid conversation.</p>;
+    return <p className="ez-small">Invalid conversation.</p>;
   }
 
-  return <HelpHubView portal="vendor" tab="messages" selectedConversationId={conversationId} />;
+  return <VendorMessagesEzView selectedConversationId={conversationId} />;
 }

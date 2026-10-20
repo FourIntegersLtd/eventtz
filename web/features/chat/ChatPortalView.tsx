@@ -3,11 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { portalCard } from "@/components/portal-shell/portalTheme";
-import { type ChatConversation, fetchConversations } from "@/lib/chatApi";
+import {
+  CHAT_CONVERSATIONS_PAGE_SIZE,
+  type ChatConversation,
+  fetchConversationsPage,
+} from "@/lib/chatApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { MasterDetailLayout } from "@/features/bookings/MasterDetailLayout";
 import { ChatThreadView } from "@/features/chat/ChatThreadView";
 import { helpHubTabHref, helpMessagesPath } from "@/lib/helpHub";
@@ -57,6 +62,8 @@ export function ChatPortalView({
   const [rows, setRows] = useState<ChatConversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [total, setTotal] = useState(0);
 
   const base = helpMessagesPath(portal);
   const contactHref = contactTabHref ?? helpHubTabHref(portal, "contact");
@@ -65,15 +72,17 @@ export function ChatPortalView({
     setLoading(true);
     setError(null);
     try {
-      const list = await fetchConversations();
-      setRows(list);
+      const page = await fetchConversationsPage(offset, CHAT_CONVERSATIONS_PAGE_SIZE);
+      setRows(page.conversations);
+      setTotal(page.total);
     } catch {
       setError("Could not load messages.");
       setRows([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [offset]);
 
   useEffect(() => {
     void load();
@@ -91,7 +100,7 @@ export function ChatPortalView({
               <p className="text-sm font-semibold text-neutral-900">
                 {loading
                   ? "Messages"
-                  : `${rows.length} conversation${rows.length === 1 ? "" : "s"}`}
+                  : `${total} conversation${total === 1 ? "" : "s"}`}
               </p>
             </div>
 
@@ -203,6 +212,16 @@ export function ChatPortalView({
                   })}
                 </ul>
               )}
+              {!loading && !error && total > CHAT_CONVERSATIONS_PAGE_SIZE ? (
+                <TablePagination
+                  offset={offset}
+                  limit={CHAT_CONVERSATIONS_PAGE_SIZE}
+                  total={total}
+                  pageRowCount={rows.length}
+                  onPrevious={() => setOffset(Math.max(0, offset - CHAT_CONVERSATIONS_PAGE_SIZE))}
+                  onNext={() => setOffset(offset + CHAT_CONVERSATIONS_PAGE_SIZE)}
+                />
+              ) : null}
             </div>
           </div>
         </div>
@@ -230,7 +249,7 @@ export function ChatPortalView({
             <EmptyState
               className="border-0"
               variant="messages"
-              title={rows.length === 0 ? "No conversations yet" : "Select a conversation"}
+              title={total === 0 ? "No conversations yet" : "Select a conversation"}
             />
           </div>
         )

@@ -1,12 +1,7 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { HelpHubView } from "@/features/help/HelpHubView";
-import { parseHelpHubTab } from "@/lib/helpHub";
+import { VendorHelpEzView } from "@/features/help/VendorHelpEzView";
 
 export default function VendorHelpPage() {
-  const searchParams = useSearchParams();
-  const tab = parseHelpHubTab(searchParams.get("tab"));
-
-  return <HelpHubView portal="vendor" tab={tab} />;
+  return <VendorHelpEzView />;
 }

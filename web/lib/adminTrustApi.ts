@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type AdminDisputeCase = {
   id: string;
   booking_request_id: string;
@@ -31,12 +32,41 @@ export type AdminDisputeCase = {
   opened_by_display_name?: string | null;
 };
 
+export const ADMIN_DISPUTES_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
+
+export async function fetchAdminDisputesPage(
+  status = "all",
+  offset = 0,
+  limit = ADMIN_DISPUTES_PAGE_SIZE,
+  search?: string | null,
+): Promise<{
+  disputes: AdminDisputeCase[];
+  total: number;
+  offset: number;
+  limit: number;
+}> {
+  const params: Record<string, string | number> = { status, offset, limit };
+  const query = search?.trim();
+  if (query) params.search = query;
+  const { data } = await api.get<{
+    success: boolean;
+    disputes: AdminDisputeCase[];
+    total: number;
+    offset: number;
+    limit: number;
+  }>("/api/v1/admin/disputes", { params });
+  return {
+    disputes: data.disputes ?? [],
+    total: data.total ?? 0,
+    offset: data.offset ?? offset,
+    limit: data.limit ?? limit,
+  };
+}
+
+/** Loads the first page only; prefer {@link fetchAdminDisputesPage} for list screens. */
 export async function fetchAdminDisputes(status = "all"): Promise<AdminDisputeCase[]> {
-  const { data } = await api.get<{ success: boolean; disputes: AdminDisputeCase[] }>(
-    "/api/v1/admin/disputes",
-    { params: { status } },
-  );
-  return data.disputes ?? [];
+  const page = await fetchAdminDisputesPage(status, 0, 200);
+  return page.disputes;
 }
 
 export async function patchAdminDispute(
@@ -78,11 +108,12 @@ export async function fetchAdminReviews(
   offset = 0,
   limit = 100,
   vendorUserId?: string | null,
+  visibility: "all" | "published" | "hidden" = "all",
 ): Promise<{
   reviews: AdminReviewRow[];
   total: number;
 }> {
-  const params: Record<string, string | number> = { offset, limit };
+  const params: Record<string, string | number> = { offset, limit, visibility };
   const vendorId = vendorUserId?.trim();
   if (vendorId) params.vendor_user_id = vendorId;
   const { data } = await api.get<{

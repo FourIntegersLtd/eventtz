@@ -158,18 +158,18 @@ export function AdminMessagesComposeView() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="ez-stack ez-stack--lg">
       {error ? <AdminErrorBanner message={error} /> : null}
       {success ? (
         <p className="text-sm font-medium text-primary">{success}</p>
       ) : null}
 
       <section
-        className={`relative rounded-2xl border border-neutral-100 bg-white ${resultsOpen && mode === "selected" ? "z-10 overflow-visible" : "overflow-hidden"}`}
+        className={`relative ez-card ${resultsOpen && mode === "selected" ? "z-10 overflow-visible" : "overflow-hidden"}`}
       >
-        <div className="px-5 py-4 sm:px-6 sm:py-5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Recipients</h2>
-          <p className="mt-0.5 text-[13px] text-neutral-400">
+        <div className="ez-card__head">
+          <h2 className="ez-h3">Recipients</h2>
+          <p className="ez-small">
             Choose specific users
             {canBroadcastMessages ? " or broadcast to a whole audience" : ""}.
           </p>
@@ -277,9 +277,9 @@ export function AdminMessagesComposeView() {
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <section className="ez-card overflow-hidden">
         <div className="px-5 py-4 sm:px-6 sm:py-5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Message</h2>
+          <h2 className="ez-h3">Message</h2>
           <p className="mt-0.5 text-[13px] text-neutral-400">Sent as Eventtz support.</p>
         </div>
         <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">

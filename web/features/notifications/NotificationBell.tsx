@@ -4,8 +4,8 @@ import { Bell } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
-  fetchClientNotificationsFeed,
-  fetchVendorNotificationsFeed,
+  fetchClientNotificationsFeedPreview,
+  fetchVendorNotificationsFeedPreview,
   type NotificationFeedItem,
 } from "@/lib/notificationsFeedApi";
 import { markAllClientBookingNotificationsRead } from "@/lib/clientNotificationsApi";
@@ -69,7 +69,8 @@ export function NotificationBell({
     if (!open) return;
     let cancelled = false;
     setLoading(true);
-    const fetchFeed = portal === "client" ? fetchClientNotificationsFeed : fetchVendorNotificationsFeed;
+    const fetchFeed =
+      portal === "client" ? fetchClientNotificationsFeedPreview : fetchVendorNotificationsFeedPreview;
     const markAllRead =
       portal === "client" ? markAllClientBookingNotificationsRead : markAllVendorBookingNotificationsRead;
     void (async () => {

@@ -5,7 +5,7 @@ import { AdminReferralsView } from "@/features/admin/referrals/AdminReferralsVie
 
 export default function AdminReferralsPage() {
   return (
-    <AdminConsolePage title="Referrals">
+    <AdminConsolePage title="Referral partners" description="Creator links and vendor signups.">
       <AdminReferralsView />
     </AdminConsolePage>
   );

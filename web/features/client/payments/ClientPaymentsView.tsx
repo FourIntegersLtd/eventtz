@@ -1,41 +1,89 @@
 "use client";
 
-import { portalCard } from "@/components/portal-shell/portalTheme";
 import Link from "next/link";
-import { LoadingState } from "@/components/ui/LoadingState";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
+import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
+import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
 import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { ReceiptActions } from "@/features/receipts/ReceiptActions";
 import { hasPaymentReceipt } from "@/lib/receiptsApi";
-import { fetchClientBookings, type ClientBookingListItem } from "@/lib/clientBookingsApi";
+import {
+  CLIENT_BOOKINGS_PAGE_SIZE,
+  fetchClientBookingsPage,
+  type ClientBookingListItem,
+} from "@/lib/clientBookingsApi";
 import { formatEventDate } from "@/lib/dateFormat";
-import { useReviewsQuery } from "@/features/reviews/useReviewsQuery";
 
-async function fetchPaidBookings(): Promise<ClientBookingListItem[]> {
-  return fetchClientBookings({
-    group: "all",
-    exclude_payment_status: "unpaid",
-  });
+type PaymentChip = "all" | "paid" | "refunds" | "failed";
+
+const PAYMENT_FILTER_OPTIONS: EzFilterOption<PaymentChip>[] = [
+  { id: "all", title: "All payments" },
+  { id: "paid", title: "Paid", subtitle: "Paid or payout released" },
+  { id: "refunds", title: "Refunds", subtitle: "Full or partial refunds" },
+  { id: "failed", title: "Failed / unpaid", subtitle: "Unpaid or pending checkout" },
+];
+
+function paymentChipLabel(chip: PaymentChip): string {
+  return PAYMENT_FILTER_OPTIONS.find((option) => option.id === chip)?.title ?? "Filter";
+}
+
+function matchesChip(item: ClientBookingListItem, chip: PaymentChip): boolean {
+  const payment = item.payment_status.toLowerCase();
+  if (chip === "all") return true;
+  if (chip === "paid") return payment === "paid" || payment === "payout_released";
+  if (chip === "refunds") return payment === "refunded" || payment === "partially_refunded";
+  if (chip === "failed") return payment === "unpaid" || payment === "pending";
+  return true;
 }
 
 export function ClientPaymentsView() {
-  const { data: bookings, loading, error } = useReviewsQuery(
-    fetchPaidBookings,
-    "Could not load payment history.",
-  );
+  const [rows, setRows] = useState<ClientBookingListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [chip, setChip] = useState<PaymentChip>("all");
+  const [filterOpen, setFilterOpen] = useState(false);
 
-  const rows = bookings ?? [];
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const page = await fetchClientBookingsPage({
+        group: "all",
+        exclude_payment_status: "unpaid",
+        offset,
+        limit: CLIENT_BOOKINGS_PAGE_SIZE,
+      });
+      setRows(page.bookings);
+      setTotal(page.total);
+    } catch {
+      setError("Could not load payment history.");
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [offset]);
 
-  if (loading) {
-    return <LoadingState label="Loading payment history…" variant="centered" branded className="py-12" />;
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const visibleRows = useMemo(() => rows.filter((row) => matchesChip(row, chip)), [chip, rows]);
+
+  if (loading && rows.length === 0) {
+    return <p className="ez-small">Loading payment history…</p>;
   }
 
   if (error) {
     return <LottieFailureInline message={error} />;
   }
 
-  if (rows.length === 0) {
+  if (total === 0) {
     return (
       <LottieEmptyPanel
         variant="payments"
@@ -46,33 +94,66 @@ export function ClientPaymentsView() {
   }
 
   return (
-    <ul className={`divide-y divide-neutral-100 ${portalCard}`}>
-      {rows.map((b) => (
-        <li key={b.booking_request_id}>
-          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition hover:bg-neutral-50/80">
-            <Link href={`/client/bookings/${b.booking_request_id}`} className="min-w-0 flex-1">
-              <p className="font-medium text-neutral-900">{b.event_name}</p>
-              <p className="mt-0.5 text-xs text-neutral-500">
-                {b.vendor_display_name}
-                {b.event_date ? ` · ${formatEventDate(b.event_date)}` : ""}
-              </p>
-            </Link>
-            <div className="flex shrink-0 flex-col items-end gap-1">
-              <span className="text-sm font-semibold tabular-nums text-neutral-900">
-                {b.client_total_label ?? b.total_label}
+    <div className="ez-stack ez-stack--lg">
+      <EzListFilterToolbar
+        onOpenFilter={() => setFilterOpen(true)}
+        activeFilterCount={chip !== "all" ? 1 : 0}
+        summary={
+          chip !== "all"
+            ? { label: paymentChipLabel(chip), onClear: () => setChip("all") }
+            : null
+        }
+      />
+
+      <EzFilterOptionsModal
+        isOpen={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        title="Filter payment history"
+        description="Show all paid bookings or narrow by how money moved."
+        options={PAYMENT_FILTER_OPTIONS}
+        value={chip}
+        onChange={setChip}
+        listAriaLabel="Payment history filter"
+        resetValue="all"
+        resetLabel="Show all"
+      />
+
+      <div className="ez-list">
+        {visibleRows.map((booking) => (
+          <div key={booking.booking_request_id} className="ez-list-row">
+            <div className="ez-list-row__main">
+              <Link href={`/client/bookings/${booking.booking_request_id}`} className="ez-h3">
+                {booking.event_name}
+              </Link>
+              <span className="ez-caption">
+                {booking.vendor_display_name}
+                {booking.event_date ? ` · ${formatEventDate(booking.event_date)}` : ""}
               </span>
-              <PaymentStatusBadge status={b.payment_status} />
-              {hasPaymentReceipt(b.payment_status) ? (
-                <ReceiptActions
-                  bookingId={b.booking_request_id}
-                  documentType="client_payment_receipt"
-                  compact
-                />
-              ) : null}
             </div>
+            <span className="ez-list-row__status">
+              <PaymentStatusBadge status={booking.payment_status} />
+            </span>
+            <span className="ez-strong ez-num">{booking.client_total_label ?? booking.total_label}</span>
+            {hasPaymentReceipt(booking.payment_status) ? (
+              <ReceiptActions
+                bookingId={booking.booking_request_id}
+                documentType="client_payment_receipt"
+                compact
+              />
+            ) : null}
           </div>
-        </li>
-      ))}
-    </ul>
+        ))}
+      </div>
+
+      <TablePagination
+        offset={offset}
+        limit={CLIENT_BOOKINGS_PAGE_SIZE}
+        total={total}
+        pageRowCount={rows.length}
+        loading={loading}
+        onPrevious={() => setOffset(Math.max(0, offset - CLIENT_BOOKINGS_PAGE_SIZE))}
+        onNext={() => setOffset(offset + CLIENT_BOOKINGS_PAGE_SIZE)}
+      />
+    </div>
   );
 }

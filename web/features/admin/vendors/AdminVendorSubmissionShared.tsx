@@ -55,7 +55,7 @@ export function SubmissionFieldGrid({ fields }: { fields: AdminSubmissionField[]
   return (
     <SubmissionCard>
       <dl>
-        <div className="grid gap-0 sm:grid-cols-2">
+        <div className="grid min-w-0 gap-0 sm:grid-cols-2">
           <div className="space-y-5 sm:border-r sm:border-neutral-100 sm:pr-6">
             {left.map((f) => (
               <SubmissionField
@@ -167,25 +167,35 @@ export function SubmissionLabelRow({
 export function SubmissionPricingOptionsList({
   options,
   sharedContext,
+  discountLines = [],
 }: {
   options: BrowsePricingOption[];
   sharedContext: BrowsePricingSharedContext;
+  discountLines?: string[];
 }) {
   const safeOptions = options ?? [];
+  const safeDiscounts = discountLines ?? [];
   const hasShared =
     Boolean(sharedContext.travelLine) ||
     sharedContext.serviceLines.length > 0 ||
     sharedContext.promoLines.length > 0;
 
-  if (safeOptions.length === 0 && !hasShared) {
+  if (safeOptions.length === 0 && !hasShared && safeDiscounts.length === 0) {
     return <p className="text-sm text-neutral-500">No packages submitted.</p>;
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-neutral-100 bg-white">
-      {hasShared ? <BrowsePricingSharedInfo {...sharedContext} embedded /> : null}
+    <div className="flex min-w-0 flex-col gap-6">
+      {hasShared ? (
+        <BrowsePricingSharedInfo
+          {...sharedContext}
+          variant="full"
+          embedded
+          className="!border-0 !p-0"
+        />
+      ) : null}
       {safeOptions.length > 0 ? (
-        <BrowsePricingPackagesSection nested options={safeOptions}>
+        <BrowsePricingPackagesSection nested flush options={safeOptions}>
           {(opt) => (
             <BrowsePricingOptionCard
               opt={opt}
@@ -197,8 +207,17 @@ export function SubmissionPricingOptionsList({
           )}
         </BrowsePricingPackagesSection>
       ) : (
-        <p className="px-5 py-4 text-sm text-neutral-500">No packages submitted.</p>
+        <p className="text-sm text-neutral-500">No packages submitted.</p>
       )}
+      {safeDiscounts.length > 0 ? (
+        <SubmissionLabelRow label="Discounts">
+          <ul className="space-y-2 text-sm text-neutral-700">
+            {safeDiscounts.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </SubmissionLabelRow>
+      ) : null}
     </div>
   );
 }

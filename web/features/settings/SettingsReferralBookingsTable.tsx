@@ -32,16 +32,16 @@ export function SettingsReferralBookingsTable({
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full text-left text-sm">
+      <table className="ez-table min-w-full text-sm">
         <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
           <tr>
             <th className="px-5 py-3 sm:px-6">Event</th>
             <th className="px-4 py-3">Client</th>
             {showCodeColumn ? <th className="px-4 py-3">Code used</th> : null}
             <th className="px-4 py-3">Date</th>
-            <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3 text-right">Vendor total</th>
-            <th className="px-5 py-3 text-right sm:px-6">Fee saved</th>
+            <th className="ez-td-status px-4 py-3">Status</th>
+            <th className="px-4 py-3">Vendor total</th>
+            <th className="px-5 py-3 sm:px-6">Fee saved</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-neutral-100">
@@ -62,16 +62,16 @@ export function SettingsReferralBookingsTable({
               <td className="px-4 py-3 tabular-nums text-neutral-600">
                 {row.event_date ? formatEventDate(row.event_date) : "-"}
               </td>
-              <td className="px-4 py-3 capitalize text-neutral-600">
+              <td className="ez-td-status px-4 py-3 capitalize text-neutral-600">
                 {statusLabel(row.booking_status)}
                 {row.payment_status ? (
                   <span className="block text-xs text-neutral-400">{statusLabel(row.payment_status)}</span>
                 ) : null}
               </td>
-              <td className="px-4 py-3 text-right tabular-nums">
+              <td className="px-4 py-3 tabular-nums">
                 {formatBookingMoneyLabel(row.vendor_portion_gbp)}
               </td>
-              <td className="px-5 py-3 text-right tabular-nums text-emerald-700 sm:px-6">
+              <td className="px-5 py-3 tabular-nums text-emerald-700 sm:px-6">
                 {row.referral_fee_discount_gbp > 0
                   ? formatBookingMoneyLabel(row.referral_fee_discount_gbp)
                   : "-"}

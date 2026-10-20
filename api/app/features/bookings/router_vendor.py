@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from app.core.auth import ROLE_ERRORS, CurrentVendor
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import MailerDependency, PaymentGatewayDependency
 from app.features.bookings import (
     errors,
@@ -16,6 +17,7 @@ from app.features.bookings import (
     service_create,
     service_date_change,
     service_deposits,
+    service_portal_dashboard,
     service_queries,
     service_receipts,
     service_status,
@@ -34,6 +36,7 @@ from app.features.bookings.schemas import (
     VendorBookingsListResponse,
     VendorBookingStatusBody,
     VendorBookingStatusResponse,
+    VendorDashboardResponse,
 )
 from app.features.bookings.service_common import require_booking_id
 
@@ -78,6 +81,16 @@ async def post_vendor_quote(
 
 
 @router.get(
+    "/dashboard",
+    response_model=VendorDashboardResponse,
+    responses=error_responses(*ROLE_ERRORS),
+)
+async def get_vendor_dashboard(session: SessionDep, vendor: CurrentVendor) -> VendorDashboardResponse:
+    """Aggregated home-screen data for the vendor portal."""
+    return await service_portal_dashboard.vendor_dashboard(session, vendor)
+
+
+@router.get(
     "/booking-requests",
     response_model=VendorBookingsListResponse,
     responses=error_responses(*ROLE_ERRORS, errors.InvalidListGroup),
@@ -89,17 +102,30 @@ async def list_vendor_bookings(
     status: str | None = Query(None, description="Optional exact booking status, e.g. pending"),
     payment_status: str | None = Query(None, description="Optional exact payment_status"),
     exclude_payment_status: str | None = Query(None, description="Exclude this payment_status"),
+    search: str | None = Query(
+        None,
+        alias="q",
+        max_length=200,
+        description="Part of an event name or client email.",
+    ),
+    conversation_id: str | None = Query(None, description="Exact conversation id linked to the booking."),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
 ) -> VendorBookingsListResponse:
     """The vendor's bookings in one bucket, most recently active first."""
-    bookings = await service_queries.vendor_bookings(
+    bookings, total = await service_queries.vendor_bookings_page(
         session,
         vendor.id,
         group=group,
         status=status,
         payment_status=payment_status,
         exclude_payment_status=exclude_payment_status,
+        search=search,
+        conversation_id=conversation_id,
+        offset=offset,
+        limit=limit,
     )
-    return VendorBookingsListResponse(bookings=bookings)
+    return VendorBookingsListResponse(bookings=bookings, total=total, offset=offset, limit=limit)
 
 
 @router.put(

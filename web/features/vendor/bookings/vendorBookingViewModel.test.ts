@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { formatMoney } from "@/lib/markets";
-import { toVendorBookingRowViewModel } from "@/features/vendor/bookings/vendorBookingViewModel";
+import {
+  toVendorBookingRowViewModel,
+  vendorBookingDetailHref,
+} from "@/features/vendor/bookings/vendorBookingViewModel";
 import type { VendorBookingListItem } from "@/lib/vendorBookingsApi";
 
 describe("formatMoney", () => {
@@ -8,6 +11,14 @@ describe("formatMoney", () => {
     const label = formatMoney(120, "GBP");
     expect(label).toMatch(/120/);
     expect(label.toUpperCase()).toMatch(/£|GBP/);
+  });
+});
+
+describe("vendorBookingDetailHref", () => {
+  it("opens the booking as its own page", () => {
+    expect(vendorBookingDetailHref("b3cdfb75-64fa-4e75-ad4c-1db50dd5640e")).toBe(
+      "/vendor/bookings/b3cdfb75-64fa-4e75-ad4c-1db50dd5640e",
+    );
   });
 });
 

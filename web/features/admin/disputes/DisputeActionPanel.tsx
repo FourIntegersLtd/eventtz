@@ -195,10 +195,10 @@ export function DisputeActionPanel({
           </div>
         }
       >
-        <div className="space-y-4 text-sm">
+        <div className="ez-stack text-sm">
           {error ? <LottieFailureInline message={error} /> : null}
 
-          <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+          <div className="ez-card overflow-hidden">
             <div className="px-5 py-4">
               {dispute.resolution_action ? (
                 <p className="mb-2 text-[13px] text-neutral-500">

@@ -2,12 +2,12 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
-import { fetchVendorBookings, type VendorBookingListItem } from "@/lib/vendorBookingsApi";
 import { fetchChatUnreadCount } from "@/lib/chatApi";
 import { installVisibilityRefresh } from "@/lib/useVisibilityRefresh";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { fetchVendorBookingNotificationsUnreadCount } from "@/lib/vendorNotificationsApi";
-import { fetchVendorNotificationsFeed, type NotificationFeedItem } from "@/lib/notificationsFeedApi";
+import type { NotificationFeedItem } from "@/lib/notificationsFeedApi";
+import { fetchVendorDashboard } from "@/lib/portalDashboardApi";
 import { fetchVendorProfile, type VendorProfileResponse } from "@/lib/vendorProfileApi";
 import {
   fetchVendorStripeConnectStatus,
@@ -16,27 +16,8 @@ import {
 } from "@/lib/vendorPaymentsApi";
 import { isVendorPayoutsReady } from "@/features/vendor/payments/useVendorPayoutsReady";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-
-function dateKeyFromIso(iso: string | null | undefined): string | null {
-  if (!iso || iso.length < 10) return null;
-  return iso.slice(0, 10);
-}
-
-function noonUtcSafeDateFromKey(key: string): Date {
-  return new Date(`${key}T12:00:00`);
-}
-
-function localDateKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function addDays(d: Date, days: number): Date {
-  return new Date(d.getTime() + days * 24 * 60 * 60 * 1000);
-}
+import { fetchVendorAnalytics, type VendorAnalytics } from "@/lib/vendorAnalyticsApi";
+import type { VendorBookingListItem } from "@/lib/vendorBookingsApi";
 
 export type VendorBookingsByDate = Record<string, VendorBookingListItem[]>;
 
@@ -53,10 +34,9 @@ export type VendorDashboardState = {
   upcomingAgenda: VendorBookingListItem[];
   bookingsByDate: VendorBookingsByDate;
   errorMessage: string | null;
-  /** `null` when payout status could not be loaded. */
   payoutsReady: boolean | null;
-  /** True once an approved vendor has stored a cancellation preset; `null` while unknown or not yet approved. */
   cancellationPolicyChosen: boolean | null;
+  analytics: VendorAnalytics | null;
 };
 
 const initial: VendorDashboardState = {
@@ -74,6 +54,7 @@ const initial: VendorDashboardState = {
   errorMessage: null,
   payoutsReady: null,
   cancellationPolicyChosen: null,
+  analytics: null,
 };
 
 /** Whether an approved vendor's form holds a preset; `null` for a draft or unloaded profile (no nudge). */
@@ -90,10 +71,6 @@ export function useVendorDashboard(enabled: boolean) {
   const connectPayouts = useCallback(async (returnPath: string) => {
     setPayoutsConnecting(true);
     try {
-      track(MixpanelEvents.vendor_payout_setup_started, {
-        source: returnPath.includes("/bookings") ? "bookings" : "payments",
-        return_path: returnPath,
-      });
       const { onboarding_url } = await postConnectStripeAccount(returnPath);
       window.location.href = onboarding_url;
     } catch (e: unknown) {
@@ -107,69 +84,37 @@ export function useVendorDashboard(enabled: boolean) {
     if (!enabled) return;
     setState((s) => ({ ...s, loadStatus: "loading", errorMessage: null }));
     try {
-      const [active, chatUnread, bookingNotificationsUnread, updates, paymentsStatus, profile] =
+      const [dashboard, chatUnread, bookingNotificationsUnread, paymentsStatus, profile, analytics] =
         await Promise.all([
-        fetchVendorBookings("active"),
-        fetchChatUnreadCount(),
-        fetchVendorBookingNotificationsUnreadCount(),
-        fetchVendorNotificationsFeed(),
-        fetchVendorStripeConnectStatus().catch((): VendorPaymentsStatus | null => null),
-        fetchVendorProfile().catch((): VendorProfileResponse | null => null),
-      ]);
-      const pendingBookingsCount = active.filter((b) => b.booking_status === "pending").length;
-      const needsResponse = active.filter((b) => b.booking_status === "pending").slice(0, 3);
+          fetchVendorDashboard(),
+          fetchChatUnreadCount(),
+          fetchVendorBookingNotificationsUnreadCount(),
+          fetchVendorStripeConnectStatus().catch((): VendorPaymentsStatus | null => null),
+          fetchVendorProfile().catch((): VendorProfileResponse | null => null),
+          fetchVendorAnalytics(90).catch((): VendorAnalytics | null => null),
+        ]);
 
-      const todayKey = localDateKey(new Date());
-      const todayAtNoon = noonUtcSafeDateFromKey(todayKey);
-
-      const accepted = active.filter((b) => b.booking_status === "accepted");
-      const acceptedUpcoming = accepted.filter((b) => {
-        const startKey = dateKeyFromIso(b.event_date);
-        if (!startKey) return false;
-        const start = noonUtcSafeDateFromKey(startKey);
-        const endKey = dateKeyFromIso(b.event_end_date);
-        const end = endKey ? noonUtcSafeDateFromKey(endKey) : start;
-        return end.getTime() >= todayAtNoon.getTime();
-      });
-
-      const bookingsByDate: VendorBookingsByDate = {};
-      for (const b of acceptedUpcoming) {
-        const startKey = dateKeyFromIso(b.event_date);
-        if (!startKey) continue;
-        const start = noonUtcSafeDateFromKey(startKey);
-        const endKey = dateKeyFromIso(b.event_end_date);
-        const end = endKey ? noonUtcSafeDateFromKey(endKey) : start;
-
-        for (let d = start; d.getTime() <= end.getTime(); d = addDays(d, 1)) {
-          const key = localDateKey(d);
-          if (noonUtcSafeDateFromKey(key).getTime() < todayAtNoon.getTime()) continue;
-          (bookingsByDate[key] ??= []).push(b);
-        }
-      }
-
-      const upcomingAgenda = [...acceptedUpcoming]
-        .sort((a, b) => {
-          const ak = dateKeyFromIso(a.event_date) ?? "9999-12-31";
-          const bk = dateKeyFromIso(b.event_date) ?? "9999-12-31";
-          return ak.localeCompare(bk);
-        })
-        .slice(0, 5);
+      const acceptedUpcoming = Object.values(dashboard.bookings_by_date).flat();
+      const uniqueAccepted = [
+        ...new Map(acceptedUpcoming.map((booking) => [booking.booking_request_id, booking])).values(),
+      ];
 
       setState({
         loadStatus: "ready",
-        activeBookingsCount: active.length,
-        pendingBookingsCount,
+        activeBookingsCount: dashboard.active_bookings_count,
+        pendingBookingsCount: dashboard.pending_bookings_count,
         bookingNotificationsUnread,
         chatUnread,
-        updates,
-        needsResponse,
-        activeBookings: active,
-        acceptedUpcoming,
-        upcomingAgenda,
-        bookingsByDate,
+        updates: dashboard.notification_preview.items ?? [],
+        needsResponse: dashboard.needs_response,
+        activeBookings: dashboard.active_bookings,
+        acceptedUpcoming: uniqueAccepted,
+        upcomingAgenda: dashboard.upcoming_agenda,
+        bookingsByDate: dashboard.bookings_by_date,
         errorMessage: null,
         payoutsReady: paymentsStatus ? isVendorPayoutsReady(paymentsStatus) : null,
         cancellationPolicyChosen: cancellationPolicyChosenFor(profile),
+        analytics,
       });
     } catch {
       setState({

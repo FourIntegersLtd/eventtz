@@ -5,10 +5,7 @@ import { formControlClass } from "@/components/ui/tokens";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import {
-  CompactActionRow,
-  type SupportAction,
-} from "./AdminBookingDetailShared";
+import { CompactActionRow, type SupportAction } from "./AdminBookingDetailShared";
 import { VISIBLE_ACTION_COUNT } from "./adminBookingSupportActions";
 
 type Feedback = {
@@ -61,76 +58,81 @@ export function AdminBookingSupportActionsPanel({
 
   return (
     <>
-      <aside className="lg:sticky lg:top-6">
-        <section>
-          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
-            Support actions
-          </h2>
-          <p className="mt-0.5 text-[13px] text-neutral-400">
+      <section className="ez-card">
+        <div className="ez-card__head">
+          <h2 className="ez-h3">Support actions</h2>
+        </div>
+        <div className="ez-card__body">
+          <p className="ez-small">
             {canRunBookingSupportActions
-              ? "Hover for when to use · logged in audit"
-              : "Payment and refund actions are limited to super admins"}
+              ? "Hover for when to use. Recorded in the admin audit log."
+              : "Payment and refund actions are limited to super admins."}
           </p>
 
-          <div className="mt-3 overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-            {canRunBookingSupportActions ? (
-              <div className="px-3 py-2 sm:px-4">
-                <div className="space-y-0.5">
-                  {primaryActions.map((action) => (
-                    <CompactActionRow
-                      key={action.id}
-                      action={action}
-                      busy={actionBusy === action.id}
-                      onSelect={onPendingActionChange}
+          {canRunBookingSupportActions ? (
+            <div className="ez-stack ez-stack--sm" style={{ marginTop: "12px" }}>
+              {primaryActions.map((action) => (
+                <CompactActionRow
+                  key={action.id}
+                  action={action}
+                  busy={actionBusy === action.id}
+                  onSelect={onPendingActionChange}
+                />
+              ))}
+
+              {moreActions.length > 0 ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setActionsExpanded((value) => !value)}
+                    className="ez-btn ez-btn--ghost ez-btn--sm"
+                  >
+                    {actionsExpanded ? "Show fewer" : `More actions (${moreActions.length})`}
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 transition-transform ${actionsExpanded ? "rotate-180" : ""}`}
+                      aria-hidden
                     />
-                  ))}
+                  </button>
+                  {actionsExpanded
+                    ? moreActions.map((action) => (
+                        <CompactActionRow
+                          key={action.id}
+                          action={action}
+                          busy={actionBusy === action.id}
+                          onSelect={onPendingActionChange}
+                        />
+                      ))
+                    : null}
+                </>
+              ) : null}
+
+              {cancelAction ? (
+                <>
+                  <hr className="ez-divider" />
+                  <CompactActionRow
+                    action={cancelAction}
+                    busy={actionBusy === "cancel"}
+                    onSelect={onPendingActionChange}
+                  />
+                </>
+              ) : null}
+
+              <div className="ez-banner ez-banner--warning" role="status">
+                <div className="ez-banner__body">
+                  <span className="ez-banner__title">Confirm before moving money</span>
+                  <span className="ez-small">
+                    Refunds and payouts change real balances. You will confirm each action.
+                  </span>
                 </div>
-
-                {moreActions.length > 0 ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setActionsExpanded((v) => !v)}
-                      className="mt-2 flex w-full items-center justify-center gap-1 py-1.5 text-[12px] font-medium text-primary hover:underline"
-                    >
-                      {actionsExpanded ? "Show fewer" : `More actions (${moreActions.length})`}
-                      <ChevronDown
-                        className={`h-3.5 w-3.5 transition-transform ${actionsExpanded ? "rotate-180" : ""}`}
-                      />
-                    </button>
-                    {actionsExpanded ? (
-                      <div className="space-y-0.5 border-t border-neutral-100 pt-2">
-                        {moreActions.map((action) => (
-                          <CompactActionRow
-                            key={action.id}
-                            action={action}
-                            busy={actionBusy === action.id}
-                            onSelect={onPendingActionChange}
-                          />
-                        ))}
-                      </div>
-                    ) : null}
-                  </>
-                ) : null}
-
-                {cancelAction ? (
-                  <div className="mt-2 border-t border-neutral-100 pt-2">
-                    <CompactActionRow
-                      action={cancelAction}
-                      busy={actionBusy === "cancel"}
-                      onSelect={onPendingActionChange}
-                    />
-                  </div>
-                ) : null}
               </div>
-            ) : (
-              <p className="px-5 py-4 text-sm text-neutral-600">
-                You can review this booking and escalate if needed.
-              </p>
-            )}
-          </div>
-        </section>
-      </aside>
+            </div>
+          ) : (
+            <p className="ez-small" style={{ marginTop: "12px" }}>
+              You can review this booking and escalate if needed.
+            </p>
+          )}
+        </div>
+      </section>
 
       <Modal
         isOpen={Boolean(pendingAction)}
@@ -161,7 +163,7 @@ export function AdminBookingSupportActionsPanel({
           </div>
         }
       >
-        <div className="space-y-4 text-left">
+        <div className="ez-stack text-left">
           {pendingAction ? (
             <p className="text-sm leading-relaxed text-neutral-700">{pendingAction.confirmBody}</p>
           ) : null}

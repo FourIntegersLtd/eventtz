@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { DateInput } from "@/components/ui/DateInput";
+import { Modal } from "@/components/ui/Modal";
 import { TextArea } from "@/components/ui/TextArea";
 import { useToast } from "@/components/ui/Toast";
 import { getApiErrorCode, getApiErrorDetail } from "@/lib/api-errors";
@@ -25,7 +26,20 @@ type BookingDateChangeCardProps = {
   eventDate: string;
   eventEndDate: string | null;
   dateChange: BookingDateChangeFields;
+  /** `modal` keeps a button in place and opens the request form over the page. */
+  requestPresentation?: "inline" | "modal";
 };
+
+/** True when a date can be requested, or a request is already waiting for an answer. */
+export function dateChangeIsVisible(
+  bookingStatus: string,
+  paymentStatus: string,
+  requestedBy: string | null | undefined,
+): boolean {
+  const canChange =
+    bookingStatus === "accepted" && (paymentStatus === "unpaid" || paymentStatus === "paid");
+  return canChange || Boolean(requestedBy);
+}
 
 function formatDay(iso: string): string {
   const parsed = new Date(`${iso.slice(0, 10)}T00:00:00`);
@@ -50,6 +64,7 @@ export function BookingDateChangeCard({
   eventDate,
   eventEndDate,
   dateChange,
+  requestPresentation = "inline",
 }: BookingDateChangeCardProps) {
   const { showToast } = useToast();
   const [formOpen, setFormOpen] = useState(false);
@@ -60,9 +75,7 @@ export function BookingDateChangeCard({
 
   const pendingBy = dateChange.date_change_requested_by ?? null;
   const proposed = dateChange.proposed_event_date ?? null;
-  const canChange =
-    bookingStatus === "accepted" && (paymentStatus === "unpaid" || paymentStatus === "paid");
-  if (!canChange && !pendingBy) return null;
+  if (!dateChangeIsVisible(bookingStatus, paymentStatus, pendingBy)) return null;
 
   const otherLabel = role === "client" ? "Your vendor" : "Your client";
 
@@ -93,19 +106,64 @@ export function BookingDateChangeCard({
 
   if (pendingBy && proposed) {
     const byMe = pendingBy === role;
+    const headline = byMe
+      ? `You asked to move the event to ${formatRange(proposed, dateChange.proposed_event_end_date)}`
+      : `${otherLabel} asked to move the event to ${formatRange(proposed, dateChange.proposed_event_end_date)}`;
+    const detail = `Currently ${formatRange(eventDate, eventEndDate)}. The price and your payment stay the same.`;
+    const note = dateChange.date_change_note ? (
+      <p className="text-[13px] text-neutral-700">&ldquo;{dateChange.date_change_note}&rdquo;</p>
+    ) : null;
+
+    if (requestPresentation === "modal") {
+      return (
+        <div className="ez-stack ez-stack--sm">
+          <p className="text-sm font-semibold text-neutral-900">{headline}</p>
+          <p className="text-[13px] text-neutral-600">{detail}</p>
+          {note}
+          {byMe ? (
+            <button
+              type="button"
+              className="ez-btn ez-btn--secondary ez-btn--block"
+              disabled={busy !== null}
+              onClick={() =>
+                void run("withdraw", () => withdrawDateChange(role, bookingId), "Request withdrawn")
+              }
+            >
+              {busy === "withdraw" ? "Withdrawing…" : "Withdraw request"}
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="ez-btn ez-btn--primary ez-btn--block"
+                disabled={busy !== null}
+                onClick={() =>
+                  void run("accept", () => respondToDateChange(role, bookingId, true), "New date agreed")
+                }
+              >
+                {busy === "accept" ? "Accepting…" : "Accept new date"}
+              </button>
+              <button
+                type="button"
+                className="ez-btn ez-btn--secondary ez-btn--block"
+                disabled={busy !== null}
+                onClick={() =>
+                  void run("decline", () => respondToDateChange(role, bookingId, false), "Date change declined")
+                }
+              >
+                {busy === "decline" ? "Declining…" : "Decline"}
+              </button>
+            </>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 px-5 py-4">
-        <p className="text-[15px] font-semibold tracking-tight text-neutral-900">
-          {byMe
-            ? `You asked to move the event to ${formatRange(proposed, dateChange.proposed_event_end_date)}`
-            : `${otherLabel} asked to move the event to ${formatRange(proposed, dateChange.proposed_event_end_date)}`}
-        </p>
-        <p className="mt-1 text-[13px] text-neutral-600">
-          Currently {formatRange(eventDate, eventEndDate)}. The price and your payment stay the same.
-        </p>
-        {dateChange.date_change_note ? (
-          <p className="mt-2 text-[13px] text-neutral-700">&ldquo;{dateChange.date_change_note}&rdquo;</p>
-        ) : null}
+        <p className="text-[15px] font-semibold tracking-tight text-neutral-900">{headline}</p>
+        <p className="mt-1 text-[13px] text-neutral-600">{detail}</p>
+        {note ? <div className="mt-2">{note}</div> : null}
         <div className="mt-3 flex flex-wrap gap-2">
           {byMe ? (
             <Button
@@ -137,11 +195,7 @@ export function BookingDateChangeCard({
                 loading={busy === "decline"}
                 disabled={busy !== null}
                 onClick={() =>
-                  void run(
-                    "decline",
-                    () => respondToDateChange(role, bookingId, false),
-                    "Date change declined",
-                  )
+                  void run("decline", () => respondToDateChange(role, bookingId, false), "Date change declined")
                 }
               >
                 Decline
@@ -153,20 +207,9 @@ export function BookingDateChangeCard({
     );
   }
 
-  if (!formOpen) {
-    return (
-      <div className="flex">
-        <Button variant="secondary" size="sm" onClick={() => setFormOpen(true)}>
-          Request a date change
-        </Button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4">
-      <p className="text-sm font-semibold text-neutral-900">Request a date change</p>
-      <p className="mt-1 text-[13px] text-neutral-600">
+  const requestForm = (
+    <>
+      <p className="text-[13px] text-neutral-600">
         The other side has to agree. Your price and payment stay the same.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -193,24 +236,67 @@ export function BookingDateChangeCard({
           onChange={(event) => setNote(event.target.value)}
         />
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          loading={busy === "request"}
-          disabled={busy !== null || !newDate}
-          onClick={() =>
-            void run(
-              "request",
-              () =>
-                requestDateChange(role, bookingId, {
-                  new_event_date: newDate,
-                  new_event_end_date: newEndDate || null,
-                  note: note.trim() || null,
-                }),
-              "Date change requested",
-            )
+    </>
+  );
+
+  const sendRequest = () =>
+    void run(
+      "request",
+      () =>
+        requestDateChange(role, bookingId, {
+          new_event_date: newDate,
+          new_event_end_date: newEndDate || null,
+          note: note.trim() || null,
+        }),
+      "Date change requested",
+    );
+
+  if (requestPresentation === "modal") {
+    return (
+      <>
+        <button type="button" className="ez-btn ez-btn--secondary ez-btn--block" onClick={() => setFormOpen(true)}>
+          Request a date change
+        </button>
+        <Modal
+          isOpen={formOpen}
+          onClose={() => {
+            if (busy === null) setFormOpen(false);
+          }}
+          title="Request a date change"
+          maxWidthClassName="max-w-lg"
+          footer={
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button variant="secondary" size="sm" disabled={busy !== null} onClick={() => setFormOpen(false)}>
+                Cancel
+              </Button>
+              <Button size="sm" loading={busy === "request"} disabled={busy !== null || !newDate} onClick={sendRequest}>
+                Send request
+              </Button>
+            </div>
           }
         >
+          {requestForm}
+        </Modal>
+      </>
+    );
+  }
+
+  if (!formOpen) {
+    return (
+      <div className="flex">
+        <Button variant="secondary" size="sm" onClick={() => setFormOpen(true)}>
+          Request a date change
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4">
+      <p className="text-sm font-semibold text-neutral-900">Request a date change</p>
+      {requestForm}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button size="sm" loading={busy === "request"} disabled={busy !== null || !newDate} onClick={sendRequest}>
           Send request
         </Button>
         <Button variant="secondary" size="sm" disabled={busy !== null} onClick={() => setFormOpen(false)}>

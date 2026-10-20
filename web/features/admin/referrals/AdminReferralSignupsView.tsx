@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 // lucide-react 1.x dropped brand logos, so the Instagram mark comes from react-icons.
 import { Link2, type LucideIcon } from "lucide-react";
 import type { IconType } from "react-icons";
@@ -14,6 +15,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { VendorApprovalStatusBadge } from "@/components/badges/VendorApprovalStatusBadge";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminSuccessBanner } from "@/features/admin/components/AdminSuccessBanner";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import {
   AdminTable,
@@ -70,6 +73,8 @@ type AdminReferralSignupsViewProps = {
   partnerId: string;
 };
 
+const SIGNUPS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
+
 export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsViewProps) {
   const { showToast } = useToast();
   const [partner, setPartner] = useState<ReferralPartner | null>(null);
@@ -78,6 +83,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [shoutoutFilter, setShoutoutFilter] = useState<ShoutoutFilter>("all");
+  const [offset, setOffset] = useState(0);
   const [toggleBusyId, setToggleBusyId] = useState<string | null>(null);
   const [copyNote, setCopyNote] = useState<string | null>(null);
 
@@ -85,7 +91,11 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
     setError(null);
     setLoading(true);
     try {
-      const data = await fetchReferralSignups(partnerId, { shoutout: shoutoutFilter, limit: 100 });
+      const data = await fetchReferralSignups(partnerId, {
+        shoutout: shoutoutFilter,
+        offset,
+        limit: SIGNUPS_PAGE_SIZE,
+      });
       setPartner(data.partner);
       setSignups(data.signups);
       setTotal(data.total);
@@ -94,11 +104,15 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
     } finally {
       setLoading(false);
     }
-  }, [partnerId, shoutoutFilter]);
+  }, [partnerId, shoutoutFilter, offset]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setOffset(0);
+  }, [shoutoutFilter, partnerId]);
 
   const onToggleShoutout = async (row: ReferralVendorSignup) => {
     setToggleBusyId(row.user_id);
@@ -138,7 +152,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
 
   if (!partner) {
     return (
-      <div className="space-y-4">
+      <div className="ez-stack">
         {error ? <AdminErrorBanner message={error} /> : null}
         <BackLink href="/admin/referrals" label="Back to creators" />
         <EmptyState title="Creator not found" />
@@ -147,16 +161,13 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
   }
 
   return (
-    <div className="space-y-4">
+    <div className="ez-stack">
       {error ? <AdminErrorBanner message={error} /> : null}
-      {copyNote ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          {copyNote}
-        </div>
-      ) : null}
+      {copyNote ? <AdminSuccessBanner message={copyNote} /> : null}
       <BackLink href="/admin/referrals" label="Back to creators" />
 
-      <div className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5">
+      <section className="ez-card overflow-hidden">
+        <div className="ez-card__body p-4 sm:p-5">
         <div className="mb-4 flex flex-col items-center gap-3 border-b border-neutral-100 pb-4 sm:flex-row sm:items-center">
           <LottieIllustration asset="welcome" size="status" className="mx-0 h-24 w-24 shrink-0 sm:h-28 sm:w-28" ariaLabel="" />
           <div className="min-w-0 text-center sm:text-left">
@@ -164,7 +175,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
             <p className="font-heading text-lg font-semibold text-neutral-900">{partner.display_name}</p>
           </div>
         </div>
-        <div className="space-y-4">
+        <div className="ez-stack">
           <CreatorDetailRow icon={SiInstagram} label="Instagram handle">
             {partner.instagram_handle ? (
               <span>{partner.instagram_handle}</span>
@@ -183,7 +194,8 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
             </div>
           </CreatorDetailRow>
         </div>
-      </div>
+        </div>
+      </section>
 
       <SegmentedControl
         aria-label="Filter signups by shoutout status"
@@ -214,7 +226,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
                 <AdminTableHeaderCell>Signed up</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Approval</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Shoutout</AdminTableHeaderCell>
-                <AdminTableHeaderCell className="text-right">Profile</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Profile</AdminTableHeaderCell>
               </AdminTableHead>
               <AdminTableBody>
                 {signups.map((row) => (
@@ -246,7 +258,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
                         <p className="mt-0.5 text-xs text-neutral-500">{formatDate(row.shoutout_completed_at)}</p>
                       ) : null}
                     </AdminTableCell>
-                    <AdminTableCell className="text-right">
+                    <AdminTableCell>
                       {row.explore_path ? (
                         <ButtonLink
                           href={row.explore_path}
@@ -266,6 +278,15 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
               </AdminTableBody>
             </AdminTableElement>
           </AdminTable>
+          <TablePagination
+            offset={offset}
+            limit={SIGNUPS_PAGE_SIZE}
+            total={total}
+            pageRowCount={signups.length}
+            loading={loading}
+            onPrevious={() => setOffset((value) => Math.max(0, value - SIGNUPS_PAGE_SIZE))}
+            onNext={() => setOffset((value) => value + SIGNUPS_PAGE_SIZE)}
+          />
         </>
       )}
     </div>

@@ -39,6 +39,7 @@ export function ClientDashboardView() {
   const { user } = useAuth();
   const [dayOpen, setDayOpen] = useState(false);
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
+  const { state } = useClientDashboard(Boolean(user?.id));
   const {
     loadStatus,
     chatUnread,
@@ -48,7 +49,7 @@ export function ClientDashboardView() {
     needsReview,
     activeBookings,
     errorMessage,
-  } = useClientDashboard(Boolean(user?.id));
+  } = state;
 
   const nextEvent = upcomingAgenda[0] ?? null;
   const nextEventDays = nextEvent ? daysUntil(nextEvent.event_date) : null;

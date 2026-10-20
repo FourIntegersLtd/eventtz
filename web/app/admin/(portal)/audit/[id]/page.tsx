@@ -9,7 +9,7 @@ export default function AdminAuditDetailPage() {
   const id = typeof params?.id === "string" ? params.id : "";
 
   return (
-    <AdminConsolePage title="Activity detail">
+    <AdminConsolePage title="Activity detail" description="One staff action, and a link to everything else they did.">
       {id ? (
         <AdminAuditDetailView entryId={id} />
       ) : (

@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type AdminClientRow = {
   user_id: string;
   email?: string | null;
@@ -34,7 +35,7 @@ export async function fetchAdminClients(
   }>("/api/v1/admin/clients", {
     params: {
       offset: q.offset ?? 0,
-      limit: q.limit ?? 50,
+      limit: q.limit ?? DEFAULT_LIST_PAGE_SIZE,
       q: q.q?.trim() || undefined,
       suspended: q.suspended,
     },
@@ -43,7 +44,7 @@ export async function fetchAdminClients(
     clients: data.clients ?? [],
     total: data.total ?? 0,
     offset: data.offset ?? 0,
-    limit: data.limit ?? 50,
+    limit: data.limit ?? DEFAULT_LIST_PAGE_SIZE,
   };
 }
 

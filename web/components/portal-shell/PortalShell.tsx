@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CircleHelp, LogOut, Menu, X, type LucideIcon } from "lucide-react";
+import { LogOut, Menu, X, type LucideIcon } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -13,7 +13,7 @@ import {
   fetchClientBookingNotificationsUnreadCount,
 } from "@/lib/clientNotificationsApi";
 import { CHAT_UNREAD_CLEARED_EVENT, fetchChatUnreadCount } from "@/lib/chatApi";
-import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
+import { fetchVendorDashboard } from "@/lib/portalDashboardApi";
 import { fetchVendorProfile } from "@/lib/vendorProfileApi";
 import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
@@ -26,7 +26,6 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   isPortalNavActive,
   portalDashboardHref,
-  portalHidePageTitleOnMobile,
   portalNavItems,
   type PortalRole,
 } from "@/components/portal-shell/portalNav";
@@ -34,7 +33,7 @@ import {
 /**
  * The signed-in client and vendor shell, transcribed from the canvas `Shells` artboard:
  * an `ez-side` sidebar (logo, role chip, nav, user chip) beside an `ez-main` column with an
- * `ez-topbar` (page title, bell, help) over `ez-content`. The `app-viewport-shell` classes keep
+ * `ez-topbar--icon` (notifications bell) over `ez-content`; page titles are in-page. The `app-viewport-shell` classes keep
  * the shell locked to the viewport so master-detail pages scroll inside their panes; the
  * `ez-` classes from `design/canvas/project/eventtz.css` give it the drawn look.
  */
@@ -108,7 +107,11 @@ function ShellNavLinks({
             href={item.href}
             onClick={() => onNavigate?.()}
             aria-current={active ? "page" : undefined}
-            className={active ? "ez-nav-item ez-nav-item--active" : "ez-nav-item"}
+            className={
+              active
+                ? `ez-nav-item ez-nav-item--active${item.href === "/client/planner" ? " ez-nav-item--feature" : ""}`
+                : `ez-nav-item${item.href === "/client/planner" ? " ez-nav-item--feature" : ""}`
+            }
           >
             <Icon size={19} strokeWidth={1.75} aria-hidden />
             <span className="min-w-0 flex-1 truncate">{item.label}</span>
@@ -190,7 +193,7 @@ function UserFooter({
 }
 
 export function PortalShell({
-  title,
+  title: _title,
   children,
   portal = "vendor",
 }: PortalShellProps) {
@@ -232,10 +235,8 @@ export function PortalShell({
           setVendorBookingsPending(0);
           return;
         }
-        const activeBookings = await fetchVendorBookings("active");
-        setVendorBookingsPending(
-          activeBookings.filter((booking) => booking.booking_status === "pending").length,
-        );
+        const dashboard = await fetchVendorDashboard();
+        setVendorBookingsPending(dashboard.pending_bookings_count);
       }
     } catch {
       setBookingUnread(portal === "client" ? 0 : null);
@@ -298,7 +299,6 @@ export function PortalShell({
   const roleFallback = portal === "client" ? "Client" : "Vendor";
   // The chip's second line is the account's state: a vendor still in review sees that, not their role.
   const statusLine = portal === "vendor" && vendorPreApproval ? "Pending review" : roleFallback;
-  const helpHref = portal === "client" ? "/client/help" : "/vendor/help";
 
   const closeMobile = () => setMobileNavOpen(false);
 
@@ -341,8 +341,6 @@ export function PortalShell({
     chatUnread,
     vendorBookingsPending,
   } as const;
-
-  const hideTitleOnMobile = portalHidePageTitleOnMobile(pathname, portal);
 
   const shell = (
     <div className="app-viewport-shell ez-shell ez-page w-full min-w-0 overflow-x-hidden">
@@ -390,10 +388,7 @@ export function PortalShell({
           {/* Plain Tailwind here: eventtz.css turns `.ez-side` into a row and hides its brand
               and foot below 720px, which is exactly where the drawer lives. */}
           <aside className="absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2.5rem))] max-w-full flex-col gap-1 bg-white px-[14px] pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-overlay">
-            <div className="mb-3 flex items-center justify-between">
-              <div onClick={closeMobile}>
-                <EventtzLogo href={logoHref} imageClassName="ez-logo ez-logo--sm" />
-              </div>
+            <div className="mb-3 flex items-center justify-end">
               <button
                 type="button"
                 className="ez-icon-btn"
@@ -442,17 +437,10 @@ export function PortalShell({
         </nav>
 
         <main className="app-viewport-shell__main ez-main overflow-x-hidden">
-          <div className={hideTitleOnMobile ? "hidden shrink-0 md:block" : "shrink-0"}>
-            <header className="ez-topbar">
-              <div className="ez-hrow">
-                {title ? <span className="ez-h3">{title}</span> : null}
-              </div>
-              <div className="ez-topbar__actions hidden md:flex">
-                {notificationBell}
-                <Link href={helpHref} className="ez-icon-btn" aria-label="Help">
-                  <CircleHelp size={20} aria-hidden />
-                </Link>
-              </div>
+          {/* Desktop: bell only (same as vendor). Page titles live in `ez-pagehead` inside content. */}
+          <div className="hidden shrink-0 md:block">
+            <header className="ez-topbar ez-topbar--icon">
+              <div className="ez-topbar__actions">{notificationBell}</div>
             </header>
           </div>
           <div className="portal-content app-viewport-shell__main-scroll ez-content min-w-0">
@@ -462,7 +450,7 @@ export function PortalShell({
         </main>
       </div>
 
-      <HelpWidget audience={portal} hidden={mobileNavOpen} />
+      {portal === "vendor" ? null : <HelpWidget audience={portal} hidden={mobileNavOpen} />}
       {portal === "vendor" ? <VendorCopilotWidget /> : null}
     </div>
   );

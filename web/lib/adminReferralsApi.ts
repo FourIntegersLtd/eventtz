@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type ReferralPartner = {
   id: string;
   slug: string;
@@ -26,9 +27,34 @@ export type ReferralVendorSignup = {
 
 export type ShoutoutFilter = "all" | "pending" | "completed";
 
+export const ADMIN_REFERRAL_PARTNERS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
+
+export async function fetchReferralPartnersPage(
+  offset = 0,
+  limit = ADMIN_REFERRAL_PARTNERS_PAGE_SIZE,
+): Promise<{
+  partners: ReferralPartner[];
+  total: number;
+  offset: number;
+  limit: number;
+}> {
+  const { data } = await api.get<{
+    partners: ReferralPartner[];
+    total: number;
+    offset: number;
+    limit: number;
+  }>("/api/v1/admin/referrals/partners", { params: { offset, limit } });
+  return {
+    partners: data.partners ?? [],
+    total: data.total ?? 0,
+    offset: data.offset ?? offset,
+    limit: data.limit ?? limit,
+  };
+}
+
 export async function fetchReferralPartners(): Promise<ReferralPartner[]> {
-  const { data } = await api.get<{ partners: ReferralPartner[] }>("/api/v1/admin/referrals/partners");
-  return data.partners ?? [];
+  const page = await fetchReferralPartnersPage(0, 200);
+  return page.partners;
 }
 
 export async function createReferralPartner(body: {

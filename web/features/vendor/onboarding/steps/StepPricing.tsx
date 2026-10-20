@@ -13,7 +13,6 @@ import {
   type VendorOnboardingUpdate,
   type VendorPackageItem,
 } from "../types";
-import { PackageCoachPanel, usePackageCoach } from "../ui/PackageCoachPanel";
 import { VendorListingOptimizerPanel } from "@/features/vendor/copilot/VendorListingOptimizerPanel";
 import { PackageExamplesModal } from "../ui/PackageExamplesModal";
 import { consumeCoachScrollTarget } from "../packageCoachApply";
@@ -39,6 +38,10 @@ export type StepPricingProps = {
   update: VendorOnboardingUpdate;
   /** Approved live profile: use the post-launch growth optimizer instead of the onboarding coach. */
   usePostLaunchOptimizer?: boolean;
+  /** Wizard artboard omits the large “What is a package?” call-to-action. */
+  showPackageExamples?: boolean;
+  /** V04 artboard shows only offer name and off-peak discount. */
+  useOnboardingLayout?: boolean;
 };
 
 /** Returns `packages` with the package `id` patched. */
@@ -75,6 +78,8 @@ export function StepPricing({
   data,
   update,
   usePostLaunchOptimizer = false,
+  showPackageExamples = false,
+  useOnboardingLayout = true,
 }: StepPricingProps) {
   const { packages } = data;
   const [scrollTargetId, setScrollTargetId] = useState<string | null>(null);
@@ -82,25 +87,6 @@ export function StepPricing({
     [],
   );
   const primaryService = data.servicesOffered[0];
-
-  const scrollToPackages = (ids: string[]) => {
-    if (ids.length === 0) return;
-    setScrollTargetId(ids[0]!);
-    setHighlightedPackageIds(ids);
-    window.setTimeout(() => setHighlightedPackageIds([]), 8000);
-  };
-
-  const coach = usePackageCoach(data, update, {
-    onApplied: scrollToPackages,
-  });
-
-  useEffect(() => {
-    const appliedIds = coach.result?.applied_package_ids;
-    if (!appliedIds?.length) return;
-    setHighlightedPackageIds(appliedIds);
-    const timer = window.setTimeout(() => setHighlightedPackageIds([]), 8000);
-    return () => window.clearTimeout(timer);
-  }, [coach.result?.applied_package_ids]);
 
   useEffect(() => {
     const { scrollToId, highlightIds } = consumeCoachScrollTarget();
@@ -178,7 +164,7 @@ export function StepPricing({
     <div className="ez-stack">
       <div className="ez-stack">
         <div className="ez-between">
-          <h3 className="ez-h3">Your items and packages</h3>
+          <h3 className="ez-h3">Your items / packages</h3>
           {ratesVisible ? null : (
             <button
               type="button"
@@ -274,7 +260,6 @@ export function StepPricing({
           const errors = packageFieldErrors(pkg, { strict: true });
           const perUnit = isPerUnitPricing(pkg.pricingMode);
           const extrasInUse =
-            (perUnit && (pkg.minQuantity !== "" || pkg.maxQuantity !== "")) ||
             (pkg.duration !== "" && perUnit) ||
             !(pkg.useDefaultTravelPackage ?? true) ||
             Boolean(errors.minQuantity || errors.maxQuantity);
@@ -351,7 +336,7 @@ export function StepPricing({
                           Fixed price
                         </option>
                         <option value={PACKAGE_PRICING_MODE_PER_UNIT}>
-                          Price per item
+                          {primaryService === "catering" ? "Per person" : "Price per item"}
                         </option>
                       </select>
                       <ChevronDown strokeWidth={1.75} aria-hidden />
@@ -443,17 +428,12 @@ export function StepPricing({
           <Plus strokeWidth={1.75} aria-hidden />
           Add another package
         </button>
-        <PackageExamplesModal servicesOffered={data.servicesOffered} />
+        {showPackageExamples ? (
+          <PackageExamplesModal servicesOffered={data.servicesOffered} />
+        ) : null}
         {usePostLaunchOptimizer ? (
           <VendorListingOptimizerPanel data={data} update={update} />
-        ) : (
-          <PackageCoachPanel
-            result={coach.result}
-            loading={coach.loading}
-            error={coach.error}
-            onCheck={coach.runCheck}
-          />
-        )}
+        ) : null}
       </div>
 
       <hr className="ez-divider" />
@@ -476,26 +456,30 @@ export function StepPricing({
               updateDiscount({ offPeakDiscountPercent: value })
             }
           />
-          <EzTextField
-            label="Percentage off (%)"
-            value={data.discountPercentage}
-            onChange={(value) => updateDiscount({ discountPercentage: value })}
-            placeholder="10"
-          />
-          <EzTextField
-            label="Bulk booking threshold (£)"
-            value={data.bulkDiscountThreshold}
-            onChange={(value) =>
-              updateDiscount({ bulkDiscountThreshold: value })
-            }
-            placeholder="500"
-          />
-          <EzTextField
-            label="Bulk booking discount (%)"
-            value={data.bulkDiscountPercent}
-            onChange={(value) => updateDiscount({ bulkDiscountPercent: value })}
-            placeholder="10"
-          />
+          {useOnboardingLayout ? null : (
+            <>
+              <EzTextField
+                label="Percentage off (%)"
+                value={data.discountPercentage}
+                onChange={(value) => updateDiscount({ discountPercentage: value })}
+                placeholder="10"
+              />
+              <EzTextField
+                label="Bulk booking threshold (£)"
+                value={data.bulkDiscountThreshold}
+                onChange={(value) =>
+                  updateDiscount({ bulkDiscountThreshold: value })
+                }
+                placeholder="500"
+              />
+              <EzTextField
+                label="Bulk booking discount (%)"
+                value={data.bulkDiscountPercent}
+                onChange={(value) => updateDiscount({ bulkDiscountPercent: value })}
+                placeholder="10"
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

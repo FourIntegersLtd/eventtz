@@ -7,10 +7,9 @@ import { fetchAdminChatMessages, type AdminChatMessageItem } from "@/lib/adminPl
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { adminCard } from "@/components/admin-shell/adminTheme";
+import { chatBubbleClass } from "@/lib/chatBubbleClasses";
 import { LinkifyMessageBody } from "@/lib/linkifyMessageBody";
 
-const VENDOR_BUBBLE = "border border-primary/35 bg-primary/[0.15] text-neutral-900";
-const CLIENT_BUBBLE = "border border-neutral-200 bg-white text-neutral-900";
 
 function formatTime(iso: string | null | undefined): string {
   if (!iso) return "";
@@ -180,8 +179,8 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
                   : clientEmail
                 : "Client";
               const vendorLabel = vendorName?.trim() ? vendorName : "Vendor";
-              const bubbleSurface = fromClient ? CLIENT_BUBBLE : VENDOR_BUBBLE;
-              const headerClass = fromClient ? "text-neutral-600" : "text-primary";
+              const bubbleSurface = chatBubbleClass(!fromClient);
+              const headerClass = "text-neutral-600";
 
               return (
                 <li
@@ -199,7 +198,7 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
                       align={fromClient ? "left" : "right"}
                     />
                     <div
-                      className={`min-w-0 max-w-[calc(100%-3rem)] rounded-2xl px-3 py-2 text-sm sm:max-w-[min(85%,24rem)] ${bubbleSurface}`}
+                      className={`min-w-0 max-w-[calc(100%-3rem)] text-sm sm:max-w-[min(85%,24rem)] ${bubbleSurface}`}
                     >
                       <p className={`text-[10px] font-semibold uppercase tracking-wide ${headerClass}`}>
                         {fromClient ? `${clientLabel} · Client` : `${vendorLabel} · Vendor`}

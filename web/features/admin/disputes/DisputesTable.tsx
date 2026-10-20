@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ParticipantDisputeStatusBadge } from "@/components/badges/ParticipantDisputeStatusBadge";
@@ -12,8 +13,10 @@ import {
   AdminTableHeaderCell,
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
-import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
-import { adminFilterControlClassSm } from "@/features/admin/components/adminFilterControlClass";
+import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
+import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
+import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
+import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
 import { type AdminDisputeCase } from "@/lib/adminPlatformApi";
 import {
   disputeBookingLabel,
@@ -21,37 +24,73 @@ import {
   resolutionActionLabel,
 } from "./disputeFormatters";
 
+const STATUS_FILTER_OPTIONS: EzFilterOption<string>[] = [
+  { id: "open", title: "Open / under review" },
+  { id: "under_review", title: "Under review only" },
+  { id: "resolved", title: "Resolved" },
+  { id: "closed", title: "Closed" },
+];
+
+function disputeStatusFilterLabel(statusFilter: string): string {
+  return STATUS_FILTER_OPTIONS.find((option) => option.id === statusFilter)?.title ?? "Filter";
+}
+
 type DisputesTableProps = {
   rows: AdminDisputeCase[];
   statusFilter: string;
   onStatusFilterChange: (value: string) => void;
+  search: string;
+  onSearchChange: (value: string) => void;
   onManage: (dispute: AdminDisputeCase) => void;
 };
+
+function partiesLabel(row: AdminDisputeCase): string {
+  const client = row.client_email ?? "Client";
+  const vendor = row.vendor_display_name ?? "Vendor";
+  return `${client} / ${vendor}`;
+}
 
 export function DisputesTable({
   rows,
   statusFilter,
   onStatusFilterChange,
+  search,
+  onSearchChange,
   onManage,
 }: DisputesTableProps) {
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const resolvedStatus = statusFilter === "all" ? "open" : statusFilter;
+  const statusActive = resolvedStatus !== "open";
+  const statusLabel = disputeStatusFilterLabel(resolvedStatus);
+
   return (
     <>
-      <AdminFilterBar>
-        <label className="block w-full text-sm sm:w-auto">
-          <span className="text-neutral-600">Status</span>
-          <select
-            value={statusFilter}
-            onChange={(e) => onStatusFilterChange(e.target.value)}
-            className={adminFilterControlClassSm}
-          >
-            <option value="all">All</option>
-            <option value="open">Open / under review</option>
-            <option value="under_review">Under review only</option>
-            <option value="resolved">Resolved</option>
-            <option value="closed">Closed</option>
-          </select>
-        </label>
-      </AdminFilterBar>
+      <EzListFilterToolbar
+        searchValue={search}
+        onSearchChange={onSearchChange}
+        searchPlaceholder="Search booking or party"
+        searchAriaLabel="Search booking or party"
+        inputClassName={adminFilterControlClass}
+        searchMaxWidth="16rem"
+        onOpenFilter={() => setStatusModalOpen(true)}
+        activeFilterCount={statusActive ? 1 : 0}
+        summary={
+          statusActive ? { label: statusLabel, onClear: () => onStatusFilterChange("open") } : null
+        }
+      />
+
+      <EzFilterOptionsModal
+        isOpen={statusModalOpen}
+        onClose={() => setStatusModalOpen(false)}
+        title="Filter disputes"
+        description="Narrow the list by dispute status. Search still applies on top."
+        options={STATUS_FILTER_OPTIONS}
+        value={resolvedStatus}
+        onChange={onStatusFilterChange}
+        listAriaLabel="Dispute status"
+        resetValue="open"
+        resetLabel="Reset to open"
+      />
 
       {rows.length === 0 ? (
         <EmptyState title="No disputes match this filter" lottie="searchNoResults" />
@@ -63,7 +102,7 @@ export function DisputesTable({
               <AdminTableHeaderCell>Summary</AdminTableHeaderCell>
               <AdminTableHeaderCell>Booking</AdminTableHeaderCell>
               <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
-              <AdminTableHeaderCell className="text-right">Actions</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Actions</AdminTableHeaderCell>
             </AdminTableHead>
             <AdminTableBody>
               {rows.map((r) => (
@@ -91,7 +130,7 @@ export function DisputesTable({
                   <AdminTableCell className="whitespace-nowrap align-top text-xs text-neutral-500">
                     {formatWhen(r.updated_at)}
                   </AdminTableCell>
-                  <AdminTableCell className="align-top text-right">
+                  <AdminTableCell className="align-top">
                     <button
                       type="button"
                       onClick={() => onManage(r)}

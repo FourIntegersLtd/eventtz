@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import { CalendarDays, Heart, LifeBuoy, MessageSquare, Users } from "lucide-react";
+import { Heart, LifeBuoy, MessageSquare, Users } from "lucide-react";
 import type { EmptyLottieAssetKey } from "@/lib/lottieAssets";
 
 /** Semantic empty-state visuals - pick by context, not a generic mail envelope. */
@@ -21,8 +21,8 @@ export const EMPTY_STATE_ICON_CLASS = "h-12 w-12 text-neutral-300";
 
 export const EMPTY_STATE_VARIANTS: Record<EmptyStateVariant, EmptyStateVariantConfig> = {
   favorites: { icon: Heart },
-  bookings: { icon: CalendarDays },
-  payments: { lottie: "paymentSecure" },
+  bookings: { lottie: "emptyCalendar" },
+  payments: { lottie: "noTransactions" },
   vendors: { lottie: "searchNoResults" },
   messages: { icon: MessageSquare },
   support: { icon: LifeBuoy },

@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type AdminMessageAudience = "clients" | "vendors" | "users";
 
 export type AdminMessageSendBody = {
@@ -43,11 +44,34 @@ export async function sendAdminMessages(body: AdminMessageSendBody): Promise<Adm
   return data;
 }
 
+export const ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
+
+export async function fetchAdminSupportConversationsPage(
+  offset = 0,
+  limit = ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE,
+): Promise<{
+  conversations: AdminSupportConversation[];
+  total: number;
+  offset: number;
+  limit: number;
+}> {
+  const { data } = await api.get<{
+    conversations: AdminSupportConversation[];
+    total: number;
+    offset: number;
+    limit: number;
+  }>(`${prefix()}/conversations`, { params: { offset, limit } });
+  return {
+    conversations: data.conversations ?? [],
+    total: data.total ?? 0,
+    offset: data.offset ?? offset,
+    limit: data.limit ?? limit,
+  };
+}
+
 export async function fetchAdminSupportConversations(): Promise<AdminSupportConversation[]> {
-  const { data } = await api.get<{ conversations: AdminSupportConversation[] }>(
-    `${prefix()}/conversations`,
-  );
-  return data.conversations ?? [];
+  const page = await fetchAdminSupportConversationsPage(0, 200);
+  return page.conversations;
 }
 
 export async function fetchAdminSupportMessages(

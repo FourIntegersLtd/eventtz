@@ -1,7 +1,7 @@
 "use client";
 
-import { DisputesPortalPage } from "@/features/disputes/DisputesPortalPage";
+import { VendorDisputesEzView } from "@/features/disputes/VendorDisputesEzView";
 
 export default function VendorDisputesPage() {
-  return <DisputesPortalPage role="vendor" />;
+  return <VendorDisputesEzView />;
 }

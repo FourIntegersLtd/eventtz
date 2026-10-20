@@ -120,11 +120,26 @@ async def _peer_names(
 
 async def list_conversations(session: AsyncSession, principal: Principal) -> list[ConversationRow]:
     """Every thread the caller is on (DMs and their support thread), newest activity first."""
+    page, _total = await list_conversations_page(session, principal, kind=None, offset=0, limit=10_000)
+    return page
+
+
+async def list_conversations_page(
+    session: AsyncSession,
+    principal: Principal,
+    *,
+    kind: str | None,
+    offset: int,
+    limit: int,
+) -> tuple[list[ConversationRow], int]:
+    """One page of the caller's inbox, optionally filtered to DMs or support only."""
     _require_chat_portal(principal)
-    threads = await repository.threads_for_user(session, principal.id)
+    threads, total = await repository.threads_for_user_page(
+        session, principal.id, kind=kind, offset=offset, limit=limit
+    )
     names = await _peer_names(session, principal, threads)
     unread = await repository.unread_counts_for_user(session, principal.id)
-    return [
+    rows = [
         ConversationRow.model_validate(
             domain.conversation_item(
                 thread,
@@ -135,6 +150,7 @@ async def list_conversations(session: AsyncSession, principal: Principal) -> lis
         )
         for thread in threads
     ]
+    return rows, total
 
 
 async def _participant_thread(session: AsyncSession, principal: Principal, conversation_id: str) -> ThreadRow:

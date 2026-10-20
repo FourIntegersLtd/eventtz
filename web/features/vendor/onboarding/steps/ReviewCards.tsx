@@ -4,6 +4,7 @@
  * The wizard review step body (design V08): one card per answered step with an Edit
  * link back to it, then a single confirmation tick.
  */
+import { Fragment } from "react";
 import { Check, Pencil, TriangleAlert } from "lucide-react";
 import { buildReviewCards } from "../reviewSummary";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
@@ -52,10 +53,10 @@ export function ReviewCards({
           <div className="ez-card__body">
             <dl className="ez-dl">
               {card.rows.map((row) => (
-                <div key={row.label} style={{ display: "contents" }}>
+                <Fragment key={row.label}>
                   <dt>{row.label}</dt>
                   <dd>{row.value}</dd>
-                </div>
+                </Fragment>
               ))}
             </dl>
           </div>

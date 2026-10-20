@@ -19,18 +19,23 @@ from sqlalchemy import (
     exists,
     func,
     insert,
+    or_,
     select,
     table,
     update,
 )
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.db import as_uuid, plain_row
 from app.features.bookings import domain
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.rows import BookingRow, ClientReviewRow, VendorReviewRow
+
+_users = table("users", column("id", Uuid), column("email", Text))
+_vendors = table("vendors", column("user_id", Uuid), column("payload", JSONB))
 
 BOOKING_COLUMNS = (
     BookingRequest.id,
@@ -185,6 +190,84 @@ async def get_booking_by_charge_id(session: AsyncSession, charge_id: str) -> Boo
     return BookingRow.model_validate(plain_row(found)) if found is not None else None
 
 
+def _booking_party_search_clause(
+    term: str,
+    *,
+    client_user_id: str | None,
+    vendor_user_id: str | None,
+) -> ColumnElement[bool] | None:
+    """Match event name and, for clients, vendor name; for vendors, client email."""
+    pattern = f"%{term}%"
+    parts: list[ColumnElement[bool]] = [BookingRequest.event_name.ilike(pattern)]
+    if vendor_user_id is not None:
+        parts.append(
+            exists(
+                select(1).where(
+                    _users.c.id == BookingRequest.client_user_id,
+                    _users.c.email.ilike(pattern),
+                )
+            )
+        )
+    if client_user_id is not None:
+        vendor_business_name = func.coalesce(_vendors.c.payload["businessName"].as_string(), "")
+        parts.append(
+            exists(
+                select(1).where(
+                    _vendors.c.user_id == BookingRequest.vendor_user_id,
+                    vendor_business_name.ilike(pattern),
+                )
+            )
+        )
+    return or_(*parts)
+
+
+def _booking_list_filters(
+    *,
+    client_user_id: str | None,
+    vendor_user_id: str | None,
+    statuses: tuple[str, ...] | None,
+    status: str | None,
+    payment_status: str | None,
+    exclude_payment_status: str | None,
+    search: str | None = None,
+    conversation_id: str | None = None,
+) -> list[ColumnElement[bool]]:
+    """Shared WHERE clauses for party booking lists."""
+    clauses: list[ColumnElement[bool]] = [
+        *_party_filters(client_user_id=client_user_id, vendor_user_id=vendor_user_id),
+    ]
+    if statuses is not None:
+        clauses.append(BookingRequest.status.in_(statuses))
+    if status:
+        clauses.append(BookingRequest.status == status)
+    if payment_status:
+        clauses.append(BookingRequest.payment_status == payment_status)
+    if exclude_payment_status:
+        clauses.append(BookingRequest.payment_status != exclude_payment_status)
+    term = (search or "").strip()
+    if term:
+        party_search = _booking_party_search_clause(
+            term,
+            client_user_id=client_user_id,
+            vendor_user_id=vendor_user_id,
+        )
+        if party_search is not None:
+            clauses.append(party_search)
+    conversation_uuid = as_uuid(conversation_id) if conversation_id else None
+    if conversation_uuid is not None:
+        clauses.append(BookingRequest.conversation_id == conversation_uuid)
+    return clauses
+
+
+def _booking_list_order() -> tuple[ColumnElement[Any], ...]:
+    """Same ordering as `domain.recent_first` (latest activity first)."""
+    return (
+        BookingRequest.updated_at.desc().nullslast(),
+        BookingRequest.created_at.desc(),
+        BookingRequest.id.desc(),
+    )
+
+
 async def list_bookings(
     session: AsyncSession,
     *,
@@ -197,18 +280,53 @@ async def list_bookings(
 ) -> list[BookingRow]:
     """The party's bookings in the given statuses, narrowed by the optional exact filters."""
     query = select(*BOOKING_COLUMNS).where(
-        *_party_filters(client_user_id=client_user_id, vendor_user_id=vendor_user_id)
+        *_booking_list_filters(
+            client_user_id=client_user_id,
+            vendor_user_id=vendor_user_id,
+            statuses=statuses,
+            status=status,
+            payment_status=payment_status,
+            exclude_payment_status=exclude_payment_status,
+        )
     )
-    if statuses is not None:
-        query = query.where(BookingRequest.status.in_(statuses))
-    if status:
-        query = query.where(BookingRequest.status == status)
-    if payment_status:
-        query = query.where(BookingRequest.payment_status == payment_status)
-    if exclude_payment_status:
-        query = query.where(BookingRequest.payment_status != exclude_payment_status)
-    result = await session.execute(query.order_by(BookingRequest.created_at.desc()))
+    result = await session.execute(query.order_by(*_booking_list_order()))
     return [BookingRow.model_validate(plain_row(found)) for found in result]
+
+
+async def list_bookings_page(
+    session: AsyncSession,
+    *,
+    client_user_id: str | None = None,
+    vendor_user_id: str | None = None,
+    statuses: tuple[str, ...] | None,
+    status: str | None,
+    payment_status: str | None,
+    exclude_payment_status: str | None,
+    search: str | None = None,
+    conversation_id: str | None = None,
+    offset: int,
+    limit: int,
+) -> tuple[list[BookingRow], int]:
+    """One page of the party's bookings plus the total matching row count."""
+    filters = _booking_list_filters(
+        client_user_id=client_user_id,
+        vendor_user_id=vendor_user_id,
+        statuses=statuses,
+        status=status,
+        payment_status=payment_status,
+        exclude_payment_status=exclude_payment_status,
+        search=search,
+        conversation_id=conversation_id,
+    )
+    total = (
+        await session.execute(select(func.count()).select_from(BookingRequest).where(*filters))
+    ).scalar_one()
+    query = (
+        select(*BOOKING_COLUMNS).where(*filters).order_by(*_booking_list_order()).offset(offset).limit(limit)
+    )
+    result = await session.execute(query)
+    rows = [BookingRow.model_validate(plain_row(found)) for found in result]
+    return rows, int(total)
 
 
 async def open_booking_dates(session: AsyncSession, vendor_user_id: str) -> list[tuple[str, str | None]]:

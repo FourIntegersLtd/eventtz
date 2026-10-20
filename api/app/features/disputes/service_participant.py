@@ -99,11 +99,12 @@ async def list_disputes_on_booking(
     ]
 
 
-async def list_own_disputes(session: AsyncSession, user_id: str) -> list[DisputePublic]:
-    """Every dispute on a booking this user is a party to, most recently opened first."""
-    disputes = domain.recent_first(await repository.list_disputes_for_party(session, user_id))
+async def _own_disputes_to_public(
+    session: AsyncSession, user_id: str, disputes: list[DisputeRow]
+) -> list[DisputePublic]:
+    """Map dispute rows to public payloads when the booking still exists."""
     bookings = await _bookings_by_id(session, [dispute.booking_request_id for dispute in disputes])
-    public_disputes = []
+    public_disputes: list[DisputePublic] = []
     for dispute in disputes:
         booking = bookings.get(dispute.booking_request_id)
         if booking is not None:
@@ -111,6 +112,28 @@ async def list_own_disputes(session: AsyncSession, user_id: str) -> list[Dispute
                 await _to_public(session, dispute, booking=booking, viewer_user_id=user_id)
             )
     return public_disputes
+
+
+async def list_own_disputes(session: AsyncSession, user_id: str) -> list[DisputePublic]:
+    """Every dispute on a booking this user is a party to, most recently opened first."""
+    disputes = domain.recent_first(await repository.list_disputes_for_party(session, user_id))
+    return await _own_disputes_to_public(session, user_id, disputes)
+
+
+async def list_own_disputes_page(
+    session: AsyncSession, user_id: str, *, offset: int, limit: int
+) -> tuple[list[DisputePublic], int]:
+    """One page of the caller's disputes plus total count."""
+    disputes, total = await repository.list_disputes_for_party_page(
+        session, user_id, offset=offset, limit=limit
+    )
+    public_disputes = await _own_disputes_to_public(session, user_id, disputes)
+    return public_disputes, total
+
+
+async def open_dispute_count(session: AsyncSession, user_id: str) -> int:
+    """How many of the caller's disputes are still open or under review."""
+    return await repository.count_open_disputes_for_party(session, user_id)
 
 
 async def get_dispute(session: AsyncSession, *, user_id: str, dispute_id: str) -> DisputePublic:

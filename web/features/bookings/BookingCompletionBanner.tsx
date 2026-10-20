@@ -44,6 +44,29 @@ export function BookingCompletionBanner({
 
   const copy = completionWaitingCopy(waitingOn, viewer);
   const viewerNeedsToConfirm = waitingOn === "both" || waitingOn === viewer;
+  const showConfirm = viewerNeedsToConfirm && Boolean(onConfirm) && !hasOpenDispute;
+  const release = autoReleaseAt ? autoReleaseLine(autoReleaseAt, viewer) : null;
+
+  if (viewer === "vendor") {
+    return (
+      <div className="ez-banner ez-banner--brand">
+        <div className="ez-banner__body">
+          <div className="ez-banner__title">{copy.title}</div>
+          <p className="ez-small" style={{ color: "inherit" }}>
+            {copy.body}
+            {release ? ` ${release}` : ""}
+          </p>
+        </div>
+        {showConfirm ? (
+          <div className="ez-banner__actions">
+            <button className="ez-btn ez-btn--primary" type="button" disabled={confirmDisabled} onClick={() => onConfirm?.()}>
+              Mark as complete
+            </button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <div className="mt-4 overflow-hidden rounded-2xl border border-primary/15 bg-primary/[0.03]">
@@ -64,13 +87,13 @@ export function BookingCompletionBanner({
             ) : null}
           </div>
         </div>
-        {viewerNeedsToConfirm && onConfirm && !hasOpenDispute ? (
+        {showConfirm ? (
           <Button
             variant="primary"
             size="md"
             className="shrink-0"
             disabled={confirmDisabled}
-            onClick={onConfirm}
+            onClick={() => onConfirm?.()}
           >
             Confirm event complete
           </Button>

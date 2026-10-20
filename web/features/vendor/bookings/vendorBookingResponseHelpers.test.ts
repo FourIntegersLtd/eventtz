@@ -130,6 +130,25 @@ describe("adjustmentPreviewDeltaExplanation", () => {
       "+£21 for them: £20 to you + £1 Eventtz fee (5%).",
     );
   });
+
+  it("shows a £10 discount as £10 off the vendor price plus a smaller fee", () => {
+    const base = pricing({
+      line_items_subtotal_gbp: 18,
+      vendor_portion_gbp: 18,
+      client_total_gbp: 18.9,
+      client_total_label: "GBP 18.90",
+      service_fee_gbp: 0.9,
+      service_fee_percent: 5,
+    });
+    const drafts = [{ kind: "discount" as const, tag: "discount", label: "Discount", amount: "10" }];
+    const delta = previewTotalDeltaGbp(base, drafts);
+    const breakdown = previewClientFeeBreakdown(base, drafts);
+    expect(breakdown?.totalGbp).toBe(8.4);
+    expect(delta).toBe(-10.5);
+    expect(adjustmentPreviewDeltaExplanation(base, drafts, delta!)).toBe(
+      "−£10.50 for them: £10 off your price and £0.50 less Eventtz fee (5%).",
+    );
+  });
 });
 
 describe("clientTotalBeforeVendorAdjustments", () => {

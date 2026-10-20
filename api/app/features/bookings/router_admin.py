@@ -12,6 +12,7 @@ from fastapi import APIRouter, Query, Response
 from app.core.auth import ROLE_ERRORS, CurrentStaff, CurrentSuperAdmin
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import PaymentGatewayDependency
 from app.features.bookings import service_admin, service_admin_financials
 from app.features.bookings.errors import (
@@ -35,6 +36,7 @@ from app.features.bookings.service_admin import (
 from app.features.bookings.service_admin_financials import (
     CSV_CONTENT_TYPE,
     CSV_FILENAME,
+    AdminFinancialsDailyListResponse,
     AdminFinancialsSummary,
 )
 
@@ -50,7 +52,7 @@ async def list_bookings(
     session: SessionDep,
     staff: CurrentStaff,
     offset: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
     status: str | None = Query(None),
     date_from: str | None = Query(None),
     date_to: str | None = Query(None),
@@ -150,6 +152,25 @@ async def financials_summary(
 ) -> AdminFinancialsSummary:
     """Totals for the admin financials screen, over an optional `paid_at` date range."""
     return await service_admin_financials.financials_summary(session, date_from=date_from, date_to=date_to)
+
+
+@router.get(
+    "/financials/daily",
+    response_model=AdminFinancialsDailyListResponse,
+    responses=error_responses(*ROLE_ERRORS),
+)
+async def financials_daily(
+    session: SessionDep,
+    staff: CurrentStaff,
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
+) -> AdminFinancialsDailyListResponse:
+    """One page of daily financial buckets for the admin table."""
+    return await service_admin_financials.financials_daily_page(
+        session, date_from=date_from, date_to=date_to, offset=offset, limit=limit
+    )
 
 
 @router.get(

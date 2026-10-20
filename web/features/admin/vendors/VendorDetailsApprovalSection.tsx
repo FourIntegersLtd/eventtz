@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import { AlertTriangle, Ban, CheckCircle2, Clock, Eye, EyeOff, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ContentCard } from "@/components/ui/SectionBlock";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
@@ -14,8 +13,6 @@ import {
   VENDOR_LISTING_OVERRIDE_META,
 } from "@/lib/domain-types";
 import { VendorMarketplaceStatusBanner } from "./VendorMarketplaceStatusBanner";
-import { VendorStripeConnectSection } from "./VendorStripeConnectSection";
-import { VendorPanelSection } from "./vendorDetailsPanel";
 import { ApprovalCard, VendorActionOptionRow } from "./vendorDetailsShared";
 import { formControlClass } from "@/components/ui/tokens";
 
@@ -28,7 +25,6 @@ type Props = {
     override: VendorListingOverride,
     reason?: string,
   ) => Promise<boolean>;
-  onRestoreStripe?: (userId: string) => Promise<boolean>;
 };
 
 const APPROVAL_HINTS: Record<VendorApprovalStatus, string> = {
@@ -42,7 +38,6 @@ export function VendorDetailsApprovalSection({
   busyId,
   onSetApproval,
   onSetListingOverride,
-  onRestoreStripe,
 }: Props) {
   const {
     canApproveVendors,
@@ -131,77 +126,81 @@ export function VendorDetailsApprovalSection({
     approved && !payoutsVerified && currentOverride === "auto" && !listingDirty;
 
   return (
-    <div className={`space-y-6 ${busy ? "pointer-events-none opacity-60" : ""}`}>
+    <div className={`ez-stack ez-stack--lg ${busy ? "pointer-events-none opacity-60" : ""}`}>
       <VendorMarketplaceStatusBanner vendor={vendor} />
 
-      <VendorStripeConnectSection
-        vendor={vendor}
-        busy={busy}
-        onRestoreStripe={onRestoreStripe}
-      />
-
-      <VendorPanelSection
-        title="Review decision"
-        description="Whether this vendor has passed admin review"
-      >
-        {approvingWontPublish ? (
-          <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-200/80 bg-amber-50 px-4 py-3">
-            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
-            <p className="text-sm leading-relaxed text-amber-900">
-              Approving alone won&apos;t make this vendor visible. Clients can only see and book
-              them once Stripe verifies their payout details, which happens automatically - or
-              you choose <strong>Publish anyway</strong> below.
-            </p>
+      <section className="ez-card overflow-hidden">
+        <div className="ez-card__head">
+          <div>
+            <h2 className="ez-h3">Decision</h2>
+            <p className="ez-small">Whether this vendor has passed admin review</p>
           </div>
-        ) : null}
-        <div className="grid gap-5 sm:grid-cols-3">
-          <Tooltip hint={APPROVAL_HINTS.pending} widthClassName="w-60" className="h-full">
-            <ApprovalCard
-              title="Pending"
-              icon={Clock}
-              variant="secondary"
-              isCurrent={currentApproval === "pending"}
-              disabled={busy || !canApproveVendors}
-              loading={busy}
-              onClick={() => selectApproval("pending")}
-            />
-          </Tooltip>
-          <Tooltip hint={APPROVAL_HINTS.approved} widthClassName="w-60" className="h-full">
-            <ApprovalCard
-              title="Approve"
-              icon={CheckCircle2}
-              variant="primary"
-              isCurrent={currentApproval === "approved"}
-              disabled={busy || !canApproveVendors}
-              loading={busy}
-              onClick={() => selectApproval("approved")}
-            />
-          </Tooltip>
-          <Tooltip hint={APPROVAL_HINTS.banned} widthClassName="w-60" className="h-full">
-            <ApprovalCard
-              title="Ban"
-              icon={Ban}
-              variant="destructive"
-              isCurrent={currentApproval === "banned"}
-              disabled={busy || !canBanVendors}
-              loading={busy}
-              onClick={() => selectApproval("banned")}
-            />
-          </Tooltip>
         </div>
-      </VendorPanelSection>
+        <div className="ez-card__body ez-stack ez-stack--lg">
+          {approvingWontPublish ? (
+            <div className="ez-banner ez-banner--warning">
+              <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
+              <div className="ez-banner__body">
+                <p className="text-sm leading-relaxed">
+                  Approving alone won&apos;t make this vendor visible. Clients can only see and book
+                  them once Stripe verifies their payout details, which happens automatically - or
+                  you choose <strong>Publish anyway</strong> below.
+                </p>
+              </div>
+            </div>
+          ) : null}
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
+            <Tooltip hint={APPROVAL_HINTS.pending} widthClassName="w-60" className="h-full">
+              <ApprovalCard
+                title="Pending"
+                icon={Clock}
+                variant="secondary"
+                isCurrent={currentApproval === "pending"}
+                disabled={busy || !canApproveVendors}
+                loading={busy}
+                onClick={() => selectApproval("pending")}
+              />
+            </Tooltip>
+            <Tooltip hint={APPROVAL_HINTS.approved} widthClassName="w-60" className="h-full">
+              <ApprovalCard
+                title="Approve"
+                icon={CheckCircle2}
+                variant="primary"
+                isCurrent={currentApproval === "approved"}
+                disabled={busy || !canApproveVendors}
+                loading={busy}
+                onClick={() => selectApproval("approved")}
+              />
+            </Tooltip>
+            <Tooltip hint={APPROVAL_HINTS.banned} widthClassName="w-60" className="h-full">
+              <ApprovalCard
+                title="Ban"
+                icon={Ban}
+                variant="destructive"
+                isCurrent={currentApproval === "banned"}
+                disabled={busy || !canBanVendors}
+                loading={busy}
+                onClick={() => selectApproval("banned")}
+              />
+            </Tooltip>
+          </div>
+        </div>
+      </section>
 
-      <ContentCard className="overflow-hidden !p-0">
-        <div className="border-b border-neutral-100 px-4 py-3 sm:px-5">
-          <h3 className="text-sm font-semibold text-neutral-900">Explore listing</h3>
-          <p className="mt-0.5 text-xs text-neutral-500">What clients see when browsing vendors</p>
+      <section className="ez-card overflow-hidden">
+        <div className="ez-card__head">
+          <div>
+            <h2 className="ez-h3">Explore listing</h2>
+            <p className="ez-small">What clients see when browsing vendors</p>
+          </div>
+        </div>
+        <div className="ez-card__body !p-0">
           {showStripeHint ? (
-            <p className="mt-2 text-xs leading-relaxed text-amber-800">
+            <p className="border-b border-neutral-100 px-4 py-3 text-xs leading-relaxed text-amber-800 sm:px-5">
               Stripe isn&apos;t verified yet, so they stay hidden on Automatic. Use{" "}
               <strong>Publish anyway</strong> if you want them live now.
             </p>
           ) : null}
-        </div>
         <div className="space-y-1 p-2 sm:p-3">
           <VendorActionOptionRow
             icon={Wand2}
@@ -282,7 +281,8 @@ export function VendorDetailsApprovalSection({
             This vendor is not approved, so they stay hidden regardless of listing setting.
           </p>
         ) : null}
-      </ContentCard>
+        </div>
+      </section>
 
       <ConfirmDialog
         isOpen={banConfirmOpen}

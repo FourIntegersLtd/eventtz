@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import MailerDependency, WebhooksDependency
 from app.features.content import service_blog, service_contact
 from app.features.content.errors import MessageTooShort, PostNotFound, PostWriteFailed
@@ -33,9 +34,19 @@ _POST_CHANGE_ERRORS = (*ROLE_ERRORS, PostNotFound, PostWriteFailed)
     response_model=BlogPostsListResponse,
     responses=error_responses(*ROLE_ERRORS),
 )
-async def list_posts(session: SessionDep, principal: CurrentStaff) -> BlogPostsListResponse:
+async def list_posts(
+    session: SessionDep,
+    principal: CurrentStaff,
+    search: str | None = Query(None, description="Match title, slug, or author"),
+    status: str | None = Query(None, description="draft or published"),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
+) -> BlogPostsListResponse:
     """Every post, draft or published, most recently edited first."""
-    return BlogPostsListResponse(posts=await service_blog.list_posts_for_staff(session))
+    posts, total = await service_blog.list_posts_for_staff_page(
+        session, status=status, search=search, offset=offset, limit=limit
+    )
+    return BlogPostsListResponse(posts=posts, total=total, offset=offset, limit=limit)
 
 
 @router.post(

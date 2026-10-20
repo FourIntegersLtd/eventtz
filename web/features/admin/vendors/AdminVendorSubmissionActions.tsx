@@ -129,8 +129,8 @@ export function AdminVendorSubmissionActions({
 
   return (
     <>
-      <div className="rounded-xl border border-amber-200/80 bg-amber-50/60 p-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <div className="ez-banner ez-banner--warning">
+        <div className="ez-banner__body flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-amber-950">
               {missingCount > 0

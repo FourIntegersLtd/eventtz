@@ -8,7 +8,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import {
   AdminTable,
   AdminTableBody,
@@ -18,10 +17,12 @@ import {
   AdminTableHeaderCell,
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
+import { AdminSuccessBanner } from "@/features/admin/components/AdminSuccessBanner";
 import { AdminCreateAdminModal } from "@/features/admin/team/AdminCreateAdminModal";
 import { AdminTeamMemberActionsMenu } from "@/features/admin/team/AdminTeamMemberActionsMenu";
 import {
-  fetchAdminTeam,
+  ADMIN_TEAM_PAGE_SIZE,
+  fetchAdminTeamPage,
   isSuperAdmin,
   patchAdminTeamMember,
   sendAdminPasswordResetLink,
@@ -30,6 +31,7 @@ import {
 } from "@/lib/adminTeamApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { formControlClass } from "@/components/ui/tokens";
+import { TablePagination } from "@/components/ui/TablePagination";
 
 function roleLabel(role: AdminTeamMember["admin_role"]): string {
   return role === "super_admin" ? "Super admin" : "Admin";
@@ -39,11 +41,13 @@ export function AdminTeamView() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [members, setMembers] = useState<AdminTeamMember[]>([]);
+  const [rosterTotal, setRosterTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
+  const [rosterOffset, setRosterOffset] = useState(0);
 
   const canManage = isSuperAdmin(user);
 
@@ -51,14 +55,15 @@ export function AdminTeamView() {
     setError(null);
     setLoading(true);
     try {
-      const list = await fetchAdminTeam();
-      setMembers(list);
+      const page = await fetchAdminTeamPage(rosterOffset, ADMIN_TEAM_PAGE_SIZE);
+      setMembers(page.members);
+      setRosterTotal(page.total);
     } catch {
       setError("Could not load admin team.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [rosterOffset]);
 
   useEffect(() => {
     void load();
@@ -69,31 +74,22 @@ export function AdminTeamView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="ez-stack ez-stack--lg">
       {error ? <AdminErrorBanner message={error} /> : null}
-      {successMessage ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          {successMessage}
-        </div>
-      ) : null}
+      {successMessage ? <AdminSuccessBanner message={successMessage} /> : null}
 
-      <AdminPageHeader
-        subtitle={
-          canManage
-            ? "Admin colleagues who can access the console. Super admins can create accounts and manage roles."
-            : "Colleagues on the admin team. Contact a super admin to add admins or change roles."
-        }
-        actions={
-          canManage ? (
+      {canManage ? (
+        <div className="flex justify-end">
+          <div className="ez-pagehead__actions">
             <Button
               icon={<UserPlus className="h-4 w-4" aria-hidden />}
               onClick={() => setCreateOpen(true)}
             >
               Create admin account
             </Button>
-          ) : null
-        }
-      />
+          </div>
+        </div>
+      ) : null}
 
       <AdminCreateAdminModal
         isOpen={createOpen}
@@ -113,9 +109,9 @@ export function AdminTeamView() {
             <AdminTableHead>
               <AdminTableHeaderCell>Email</AdminTableHeaderCell>
               <AdminTableHeaderCell>Role</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Status</AdminTableHeaderCell>
+              <AdminTableHeaderCell className="ez-td-status">Status</AdminTableHeaderCell>
               {canManage ? (
-                <AdminTableHeaderCell className="text-right">Actions</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Actions</AdminTableHeaderCell>
               ) : null}
             </AdminTableHead>
             <AdminTableBody>
@@ -164,7 +160,7 @@ export function AdminTeamView() {
                         <span className="text-sm text-neutral-800">{roleLabel(m.admin_role)}</span>
                       )}
                     </AdminTableCell>
-                    <AdminTableCell>
+                    <AdminTableCell className="ez-td-status">
                       {m.account_suspended ? (
                         <span className="text-sm text-amber-800">Suspended</span>
                       ) : (
@@ -172,7 +168,7 @@ export function AdminTeamView() {
                       )}
                     </AdminTableCell>
                     {canManage ? (
-                      <AdminTableCell className="text-right">
+                      <AdminTableCell>
                         {!isSelf ? (
                           <AdminTeamMemberActionsMenu
                             memberEmail={m.email}
@@ -247,6 +243,54 @@ export function AdminTeamView() {
           </AdminTableElement>
         </AdminTable>
       )}
+
+      {members.length > 0 ? (
+        <TablePagination
+          offset={rosterOffset}
+          limit={ADMIN_TEAM_PAGE_SIZE}
+          total={rosterTotal}
+          pageRowCount={members.length}
+          onPrevious={() => setRosterOffset((current) => Math.max(0, current - ADMIN_TEAM_PAGE_SIZE))}
+          onNext={() => setRosterOffset((current) => current + ADMIN_TEAM_PAGE_SIZE)}
+        />
+      ) : null}
+
+      <section className="ez-card overflow-hidden">
+        <div className="ez-card__head">
+          <h2 className="ez-h3">What each role can do</h2>
+          <p className="ez-small">
+            Grant Super admin only when someone needs platform settings, team management, or email health.
+          </p>
+        </div>
+        <AdminTable embedded>
+          <AdminTableElement className="min-w-[28rem]">
+            <AdminTableHead>
+              <AdminTableHeaderCell>Area</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Admin</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Super admin</AdminTableHeaderCell>
+            </AdminTableHead>
+            <AdminTableBody>
+              {[
+                ["Vendors, clients, bookings", "Yes", "Yes"],
+                ["Refunds and dispute decisions", "Yes", "Yes"],
+                ["Platform settings and fees", "No", "Yes"],
+                ["Team and roles", "No", "Yes"],
+                ["Email health", "No", "Yes"],
+              ].map(([area, admin, superAdmin]) => (
+                <AdminTableRow key={area}>
+                  <AdminTableCell className="text-sm text-neutral-800">{area}</AdminTableCell>
+                  <AdminTableCell className="text-sm text-neutral-700">{admin}</AdminTableCell>
+                  <AdminTableCell className="text-sm text-neutral-700">{superAdmin}</AdminTableCell>
+                </AdminTableRow>
+              ))}
+            </AdminTableBody>
+          </AdminTableElement>
+        </AdminTable>
+        <p className="border-t border-neutral-100 px-5 py-4 text-sm text-neutral-600">
+          Removing an admin keeps their history in the activity log. Sending a password reset link does
+          not sign them out.
+        </p>
+      </section>
     </div>
   );
 }

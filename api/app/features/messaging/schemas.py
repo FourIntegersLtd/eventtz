@@ -6,6 +6,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from app.core.pagination import DEFAULT_LIST_LIMIT
+
 
 class ChatUnreadCountResponse(BaseModel):
     """How many messages are waiting for the caller across all their threads."""
@@ -40,6 +42,9 @@ class ConversationsListResponse(BaseModel):
 
     success: bool = True
     conversations: list[ConversationRow]
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT
 
 
 class ConversationDetailResponse(BaseModel):
@@ -138,6 +143,9 @@ class AdminSupportConversationsListResponse(BaseModel):
 
     success: bool = True
     conversations: list[AdminSupportConversationRow]
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminSupportConversationDetailResponse(BaseModel):

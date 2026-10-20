@@ -17,6 +17,8 @@ from sqlalchemy import Boolean, Date, DateTime, Numeric, Text, Uuid, column, fun
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql import Select
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.db import as_uuid, plain_row
 from app.features.referrals.domain import ShoutoutFilter
@@ -79,8 +81,20 @@ _PARTNER_COLUMNS = (
 
 async def list_partners_newest_first(session: AsyncSession) -> list[PartnerRow]:
     """Every partner, most recently created first."""
-    result = await session.execute(select(*_PARTNER_COLUMNS).order_by(ReferralPartner.created_at.desc()))
-    return [PartnerRow.model_validate(plain_row(row)) for row in result]
+    rows, _total = await list_partners_newest_first_page(session, offset=0, limit=500)
+    return rows
+
+
+async def list_partners_newest_first_page(
+    session: AsyncSession, *, offset: int, limit: int
+) -> tuple[list[PartnerRow], int]:
+    """One page of partners plus total count."""
+    total = (await session.execute(select(func.count()).select_from(ReferralPartner))).scalar_one()
+    result = await session.execute(
+        select(*_PARTNER_COLUMNS).order_by(ReferralPartner.created_at.desc()).offset(offset).limit(limit)
+    )
+    rows = [PartnerRow.model_validate(plain_row(row)) for row in result]
+    return rows, int(total)
 
 
 async def find_partner(session: AsyncSession, partner_id: str) -> PartnerRow | None:
@@ -313,30 +327,64 @@ async def save_vendor_code(session: AsyncSession, vendor_user_id: str, code: str
 REFERRAL_BOOKINGS_LIMIT = 200
 
 
+def _referral_bookings_where(vendor_uuid: object) -> tuple[ColumnElement[bool], ColumnElement[bool]]:
+    """Bookings that used a vendor referral code."""
+    bookings = _booking_requests.c
+    return (
+        bookings.vendor_user_id == vendor_uuid,
+        bookings.vendor_referral_code.is_not(None),
+    )
+
+
+def _referral_bookings_select() -> Select[Any]:
+    """Columns needed for vendor referral booking rows."""
+    bookings = _booking_requests.c
+    return select(
+        bookings.id,
+        bookings.status,
+        bookings.payment_status,
+        bookings.event_name,
+        bookings.event_date,
+        bookings.created_at,
+        bookings.client_user_id,
+        bookings.vendor_user_id,
+        bookings.line_items,
+        bookings.vendor_adjustments,
+        bookings.vendor_referral_code,
+        bookings.service_fee_percent,
+        bookings.referral_fee_discount_gbp,
+    )
+
+
 async def list_referral_bookings(session: AsyncSession, vendor_user_id: str) -> list[ReferralBookingRow]:
     """The vendor's bookings made with any referral code (retired ones too), most recent first."""
+    rows, _total = await list_referral_bookings_page(
+        session, vendor_user_id, offset=0, limit=REFERRAL_BOOKINGS_LIMIT
+    )
+    return rows
+
+
+async def list_referral_bookings_page(
+    session: AsyncSession, vendor_user_id: str, *, offset: int, limit: int
+) -> tuple[list[ReferralBookingRow], int]:
+    """One page of referral bookings plus total count."""
     parsed_id = as_uuid(vendor_user_id)
     if parsed_id is None:
-        return []
-    bookings = _booking_requests.c
+        return [], 0
+    party_filter = _referral_bookings_where(parsed_id)
+    total = (
+        await session.execute(select(func.count()).select_from(_booking_requests).where(*party_filter))
+    ).scalar_one()
     result = await session.execute(
-        select(
-            bookings.id,
-            bookings.status,
-            bookings.payment_status,
-            bookings.event_name,
-            bookings.event_date,
-            bookings.created_at,
-            bookings.client_user_id,
-            bookings.vendor_user_id,
-            bookings.line_items,
-            bookings.vendor_adjustments,
-            bookings.vendor_referral_code,
-            bookings.service_fee_percent,
-            bookings.referral_fee_discount_gbp,
+        _referral_bookings_select()
+        .where(*party_filter)
+        .order_by(
+            _booking_requests.c.updated_at.desc(),
+            _booking_requests.c.created_at.desc(),
+            _booking_requests.c.id.desc(),
         )
-        .where(bookings.vendor_user_id == parsed_id, bookings.vendor_referral_code.is_not(None))
-        .order_by(bookings.updated_at.desc(), bookings.created_at.desc(), bookings.id.desc())
-        .limit(REFERRAL_BOOKINGS_LIMIT)
+        .offset(offset)
+        .limit(limit)
     )
-    return [ReferralBookingRow.model_validate(plain_row(row)) for row in result]
+    rows = [ReferralBookingRow.model_validate(plain_row(row)) for row in result]
+    return rows, int(total)

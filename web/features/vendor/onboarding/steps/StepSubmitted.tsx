@@ -220,7 +220,7 @@ export function StepSubmitted({
           <AnimatedStepItem index={2}>
             <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
-                href="/vendor/payments"
+                href="/vendor/payments?tab=account"
                 className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:w-auto sm:min-w-[12rem]"
               >
                 Set up payouts

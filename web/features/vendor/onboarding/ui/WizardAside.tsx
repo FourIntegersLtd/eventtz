@@ -15,7 +15,7 @@ import {
 import { Fragment, type ReactNode } from "react";
 import { MIN_PORTFOLIO_IMAGES } from "../constants";
 import { ONBOARDING_FORM_STEP_COUNT } from "../onboardingProgress";
-import { RADIUS_OPTIONS, SERVICE_OPTIONS } from "../constants";
+import { BUSINESS_STEP_SERVICE_CHIPS, RADIUS_OPTIONS, SERVICE_OPTIONS } from "../constants";
 import { describeWorkingDays, reviewReadiness } from "../reviewSummary";
 import type { VendorOnboardingData } from "../types";
 import { BOOKING_SERVICE_FEE_PERCENT } from "@/lib/bookingServiceFee";
@@ -105,9 +105,11 @@ function lowestPackagePrice(data: VendorOnboardingData): string | null {
 
 /** Step 2: a live preview of how the listing card will read to clients. */
 function BusinessAside({ data }: { data: VendorOnboardingData }) {
-  const serviceLabel = SERVICE_OPTIONS.find(
-    (option) => option.value === data.servicesOffered[0],
-  )?.label;
+  const serviceLabel =
+    BUSINESS_STEP_SERVICE_CHIPS.find(
+      (option) => option.value === data.servicesOffered[0],
+    )?.label ??
+    SERVICE_OPTIONS.find((option) => option.value === data.servicesOffered[0])?.label;
   const fromPrice = lowestPackagePrice(data);
   const categoryAndCity = [serviceLabel, data.baseCity.trim()].filter(Boolean);
   return (

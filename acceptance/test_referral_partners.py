@@ -332,7 +332,7 @@ def test_signups_list_newest_first_with_vendor_details(
     body = response.json()
     assert body["success"] is True
     assert body["partner"]["id"] == partner["id"]
-    assert (body["total"], body["offset"], body["limit"]) == (3, 0, 50)
+    assert (body["total"], body["offset"], body["limit"]) == (3, 0, 25)
     assert [signup["user_id"] for signup in body["signups"]] == [
         vendor.user_id for vendor in reversed(vendors)
     ]

@@ -48,11 +48,20 @@ def _admin_row(
 
 
 async def list_reviews(
-    session: AsyncSession, *, offset: int, limit: int, vendor_user_id: str | None
+    session: AsyncSession,
+    *,
+    offset: int,
+    limit: int,
+    vendor_user_id: str | None,
+    visibility: str = "all",
 ) -> AdminReviewsListResponse:
     """Every review, hidden ones included, most recent first, optionally filtered by vendor."""
     reviews, total = await repository.all_reviews_for_admin(
-        session, offset=offset, limit=limit, vendor_user_id=vendor_user_id
+        session,
+        offset=offset,
+        limit=limit,
+        vendor_user_id=vendor_user_id,
+        visibility=visibility,
     )
     vendor_display_names = await vendors_service.display_names(
         session, [review.vendor_user_id for review in reviews]

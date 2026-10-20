@@ -136,21 +136,51 @@ async def get_or_insert_support_thread(session: AsyncSession, user_id: str) -> T
 
 async def threads_for_user(session: AsyncSession, user_id: str) -> list[ThreadRow]:
     """Every thread the user is on, newest activity first."""
+    rows, _total = await threads_for_user_page(session, user_id, kind=None, offset=0, limit=10_000)
+    return rows
+
+
+async def threads_for_user_page(
+    session: AsyncSession,
+    user_id: str,
+    *,
+    kind: str | None,
+    offset: int,
+    limit: int,
+) -> tuple[list[ThreadRow], int]:
+    """One page of the user's threads, optionally filtered by conversation kind."""
     parsed_id = as_uuid(user_id)
     if parsed_id is None:
-        return []
+        return [], 0
+    clauses: list[ColumnElement[bool]] = [_participant(parsed_id)]
+    if kind in ("dm", "support"):
+        clauses.append(Conversation.kind == kind)
+    where = and_(*clauses)
+    total = (await session.execute(select(func.count()).select_from(Conversation).where(where))).scalar_one()
     result = await session.execute(
-        select(*_THREAD_COLUMNS).where(_participant(parsed_id)).order_by(*_RECENT_FIRST)
+        select(*_THREAD_COLUMNS).where(where).order_by(*_RECENT_FIRST).offset(offset).limit(limit)
     )
-    return [_thread(row) for row in result]
+    return [_thread(row) for row in result], int(total)
 
 
 async def support_threads(session: AsyncSession, *, limit: int) -> list[ThreadRow]:
     """The newest support threads, for the staff inbox."""
-    result = await session.execute(
-        select(*_THREAD_COLUMNS).where(Conversation.kind == "support").order_by(*_RECENT_FIRST).limit(limit)
-    )
-    return [_thread(row) for row in result]
+    rows, _total = await support_threads_page(session, offset=0, limit=limit)
+    return rows
+
+
+async def support_threads_page(
+    session: AsyncSession, *, offset: int, limit: int
+) -> tuple[list[ThreadRow], int]:
+    """One page of support threads plus total count."""
+    base = select(*_THREAD_COLUMNS).where(Conversation.kind == "support")
+    total = (
+        await session.execute(
+            select(func.count()).select_from(Conversation).where(Conversation.kind == "support")
+        )
+    ).scalar_one()
+    result = await session.execute(base.order_by(*_RECENT_FIRST).offset(offset).limit(limit))
+    return [_thread(row) for row in result], int(total)
 
 
 def _user_cursor(user_id: uuid.UUID) -> ColumnElement[Any]:

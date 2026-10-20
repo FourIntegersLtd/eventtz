@@ -26,15 +26,45 @@ type SubmittedMediaViewerProps = {
   hidePortfolio?: boolean;
 };
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
+function SectionHeading({
+  children,
+  compact,
+}: {
+  children: React.ReactNode;
+  compact?: boolean;
+}) {
   return (
-    <h4 className="mb-3 text-[13px] font-medium uppercase tracking-wide text-neutral-500">
+    <h4
+      className={
+        compact
+          ? "mb-1 text-[11px] font-medium uppercase tracking-wide text-neutral-500"
+          : "mb-3 text-[13px] font-medium uppercase tracking-wide text-neutral-500"
+      }
+    >
       {children}
     </h4>
   );
 }
 
-function DocumentRow({ file }: { file: SubmittedMediaFile }) {
+function DocumentRow({ file, compact }: { file: SubmittedMediaFile; compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="flex items-center gap-2 py-0.5 text-xs">
+        <FileText className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+        <span className="min-w-0 truncate text-neutral-600">{file.label}</span>
+        <Link
+          href={file.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-auto inline-flex shrink-0 items-center gap-1 font-medium text-primary hover:underline"
+        >
+          Open
+          <ExternalLink className="h-3 w-3" aria-hidden />
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-start gap-3 rounded-xl border border-neutral-100 bg-neutral-50/50 px-4 py-3">
       <FileText className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
@@ -83,18 +113,19 @@ export function SubmittedMediaViewer({
   }
 
   const heading = (label: string) =>
-    hideHeadings ? null : <SectionHeading>{label}</SectionHeading>;
+    hideHeadings ? null : <SectionHeading compact={compact}>{label}</SectionHeading>;
 
   return (
-    <div className="space-y-6">
+    <div className={compact ? "flex flex-col gap-3" : "ez-stack ez-stack--lg"}>
       {hasProfile ? (
-        <div>
+        <div className={compact ? "max-w-[4.5rem]" : undefined}>
           {heading("Profile photo")}
           <PortfolioImageGallery
             urls={bundle.profileImageUrl ? [bundle.profileImageUrl] : []}
             alt={`${subjectName} profile photo`}
             emptyFallback={profileInitials}
             compact={compact}
+            layout={compact ? "grid" : "hero"}
             className={compact ? "rounded-none border-0" : undefined}
           />
         </div>
@@ -107,7 +138,8 @@ export function SubmittedMediaViewer({
             urls={bundle.portfolioImageUrls}
             alt={`${subjectName} portfolio`}
             layout="grid"
-            gridCols={compact ? 2 : 3}
+            compact={compact}
+            gridCols={compact ? 3 : 3}
           />
         </div>
       ) : null}
@@ -132,26 +164,29 @@ export function SubmittedMediaViewer({
             urls={imageDocuments.map((file) => file.url)}
             alt={`${subjectName} submitted document`}
             layout="grid"
-            gridCols={compact ? 2 : 2}
+            compact={compact}
+            gridCols={compact ? 3 : 2}
           />
-          <ul className="mt-3 space-y-2">
-            {imageDocuments.map((file) => (
-              <li key={file.url} className="text-xs text-neutral-600">
-                <span className="font-medium text-neutral-800">{file.category}:</span>{" "}
-                {file.label}
-              </li>
-            ))}
-          </ul>
+          {!compact ? (
+            <ul className="mt-3 space-y-2">
+              {imageDocuments.map((file) => (
+                <li key={file.url} className="text-xs text-neutral-600">
+                  <span className="font-medium text-neutral-800">{file.category}:</span>{" "}
+                  {file.label}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </div>
       ) : null}
 
       {pdfAndOtherDocuments.length > 0 ? (
         <div>
           {heading(`Files (${pdfAndOtherDocuments.length})`)}
-          <ul className="space-y-3">
+          <ul className={compact ? "space-y-1" : "space-y-3"}>
             {pdfAndOtherDocuments.map((file) => (
               <li key={file.url}>
-                <DocumentRow file={file} />
+                <DocumentRow file={file} compact={compact} />
               </li>
             ))}
           </ul>

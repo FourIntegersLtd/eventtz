@@ -36,11 +36,29 @@ export type VendorOwnerReviewsResponse = {
   success: boolean;
   average_rating: number | null;
   review_count: number;
+  five_star_count?: number;
   reviews: VendorOwnerReviewItem[];
+  total?: number;
+  offset?: number;
+  limit?: number;
 };
 
-export async function fetchVendorOwnReviews(): Promise<VendorOwnerReviewsResponse> {
-  const { data } = await api.get<VendorOwnerReviewsResponse>("/api/v1/vendor/reviews");
+export type VendorOwnReviewsParams = {
+  min_rating?: number;
+  offset?: number;
+  limit?: number;
+};
+
+export async function fetchVendorOwnReviews(
+  params: VendorOwnReviewsParams = {},
+): Promise<VendorOwnerReviewsResponse> {
+  const { data } = await api.get<VendorOwnerReviewsResponse>("/api/v1/vendor/reviews", {
+    params: {
+      offset: params.offset ?? 0,
+      limit: params.limit ?? 100,
+      ...(params.min_rating != null ? { min_rating: params.min_rating } : {}),
+    },
+  });
   return data;
 }
 

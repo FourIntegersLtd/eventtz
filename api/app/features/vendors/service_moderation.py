@@ -111,6 +111,7 @@ async def list_vendors(
     search: str | None,
     approval_status: str | None,
     status: str | None,
+    returned_for_edits: bool | None = None,
 ) -> AdminVendorsListResponse:
     """One page of vendors, most recently updated first, optionally searched and filtered.
 
@@ -135,6 +136,7 @@ async def list_vendors(
         user_ids=matching_ids,
         approval_status=(approval_status or "").strip() or None,
         status=(status or "").strip() or None,
+        returned_for_edits=returned_for_edits,
     )
     rows = await _admin_rows(session, vendors)
     return AdminVendorsListResponse(vendors=rows, total=total, offset=offset, limit=limit)

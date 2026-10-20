@@ -59,7 +59,16 @@ def _blank_to_none(text: str | None) -> str | None:
 
 async def list_partners(session: AsyncSession) -> list[ReferralPartnerRow]:
     """Every partner, newest first."""
-    return [_partner_view(partner) for partner in await repository.list_partners_newest_first(session)]
+    partners, _total = await list_partners_page(session, offset=0, limit=500)
+    return partners
+
+
+async def list_partners_page(
+    session: AsyncSession, *, offset: int, limit: int
+) -> tuple[list[ReferralPartnerRow], int]:
+    """One page of partners plus total count."""
+    rows, total = await repository.list_partners_newest_first_page(session, offset=offset, limit=limit)
+    return [_partner_view(partner) for partner in rows], total
 
 
 async def create_partner(

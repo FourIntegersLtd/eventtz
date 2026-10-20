@@ -14,13 +14,15 @@ from typing import Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+# A client referral code is at most this many digits (as in the referrals slice).
+from app.core.pagination import DEFAULT_LIST_LIMIT
+
 # The admin console's booking view, re-exported so the recovery routes can answer with it
 # (a router imports only its slice's `schemas`).
 from app.features.bookings.schemas_admin import AdminBookingDetailResponse as AdminBookingDetailResponse
 from app.features.bookings.schemas_receipts import PaymentReceiptResponse as PaymentReceiptResponse
 from app.features.bookings.schemas_terms import BookingTermsFields as BookingTermsFields
 
-# A client referral code is at most this many digits (as in the referrals slice).
 _REFERRAL_CODE_MAX_DIGITS = 6
 _PRICE_OUT_OF_RANGE = "Enter a price between £0 and £1,000,000."
 _WHOLE_NUMBER = "Each quantity must be a whole number."
@@ -322,6 +324,9 @@ class VendorBookingsListResponse(BaseModel):
 
     success: bool = True
     bookings: list[VendorBookingListItem]
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT
 
 
 class VendorBookingDetail(BookingTermsFields):
@@ -357,6 +362,10 @@ class VendorBookingDetail(BookingTermsFields):
     review: VendorReviewSummary | None = None
     initiator: Literal["client", "vendor"] = "client"
     conversation_id: str | None = None
+    # The client turned down a new price; the booking is open again at the original price.
+    price_update_declined: bool = False
+    # The other side turned down this vendor's date-change request; the original date stands.
+    date_change_declined: bool = False
     # True while a problem report is open or under review: completion cannot be confirmed.
     has_open_dispute: bool = False
     # After a tiered client cancel: the vendor's share and whether it has been sent.
@@ -436,6 +445,9 @@ class ClientBookingsListResponse(BaseModel):
 
     success: bool = True
     bookings: list[ClientBookingListItem]
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT
 
 
 class CancellationPreview(BaseModel):
@@ -484,6 +496,8 @@ class ClientBookingDetail(BookingTermsFields):
     review: ClientReviewSummary | None = None
     initiator: Literal["client", "vendor"] = "client"
     conversation_id: str | None = None
+    # The vendor turned down this client's date-change request; the original date stands.
+    date_change_declined: bool = False
     # True while a problem report is open or under review: completion cannot be confirmed.
     has_open_dispute: bool = False
     event_id: str | None = None
@@ -641,3 +655,45 @@ class AdminResolveDepositClaimBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     award_gbp: float = Field(ge=0, le=1000)
+
+
+# --- portal dashboards ------------------------------------------------------------------------------
+
+
+class PortalDashboardNotificationPreview(BaseModel):
+    """A few recent feed lines for the home screen."""
+
+    items: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ClientDashboardResponse(BaseModel):
+    """Aggregated client home data (counts, agenda, calendar, review nudges)."""
+
+    success: bool = True
+    active_count: int = 0
+    completed_count: int = 0
+    awaiting_vendor_count: int = 0
+    awaiting_client_count: int = 0
+    next_booking: ClientBookingListItem | None = None
+    active_bookings: list[ClientBookingListItem] = Field(default_factory=list)
+    upcoming_agenda: list[ClientBookingListItem] = Field(default_factory=list)
+    bookings_by_date: dict[str, list[ClientBookingListItem]] = Field(default_factory=dict)
+    needs_review: list[ClientBookingListItem] = Field(default_factory=list)
+    notification_preview: PortalDashboardNotificationPreview = Field(
+        default_factory=PortalDashboardNotificationPreview
+    )
+
+
+class VendorDashboardResponse(BaseModel):
+    """Aggregated vendor home data."""
+
+    success: bool = True
+    active_bookings_count: int = 0
+    pending_bookings_count: int = 0
+    active_bookings: list[VendorBookingListItem] = Field(default_factory=list)
+    needs_response: list[VendorBookingListItem] = Field(default_factory=list)
+    upcoming_agenda: list[VendorBookingListItem] = Field(default_factory=list)
+    bookings_by_date: dict[str, list[VendorBookingListItem]] = Field(default_factory=dict)
+    notification_preview: PortalDashboardNotificationPreview = Field(
+        default_factory=PortalDashboardNotificationPreview
+    )

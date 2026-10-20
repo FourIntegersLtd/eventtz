@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 
 from app.core.auth import ROLE_ERRORS, CurrentClient
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import MailerDependency
 from app.features.disputes import errors, service_participant
 from app.features.disputes.schemas import (
@@ -65,10 +66,20 @@ async def list_client_booking_disputes(
     response_model=DisputesListResponse,
     responses=error_responses(*ROLE_ERRORS),
 )
-async def list_client_disputes(session: SessionDep, client: CurrentClient) -> DisputesListResponse:
+async def list_client_disputes(
+    session: SessionDep,
+    client: CurrentClient,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
+) -> DisputesListResponse:
     """Every dispute on a booking the client is party to, most recently opened first."""
-    disputes = await service_participant.list_own_disputes(session, client.id)
-    return DisputesListResponse(disputes=disputes)
+    disputes, total = await service_participant.list_own_disputes_page(
+        session, client.id, offset=offset, limit=limit
+    )
+    open_count = await service_participant.open_dispute_count(session, client.id)
+    return DisputesListResponse(
+        disputes=disputes, total=total, offset=offset, limit=limit, open_count=open_count
+    )
 
 
 @router.get(

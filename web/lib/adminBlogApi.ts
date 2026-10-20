@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type BlogPostStatus = "draft" | "published";
 
 export type BlogPostListItem = {
@@ -26,9 +27,39 @@ function prefix() {
   return "/api/v1/admin/blog";
 }
 
+export const ADMIN_BLOG_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
+
+export async function fetchAdminBlogPostsPage(
+  offset = 0,
+  limit = ADMIN_BLOG_PAGE_SIZE,
+  opts?: { search?: string; status?: BlogPostStatus | "" },
+): Promise<{
+  posts: BlogPostListItem[];
+  total: number;
+  offset: number;
+  limit: number;
+}> {
+  const params: Record<string, string | number> = { offset, limit };
+  const search = opts?.search?.trim();
+  if (search) params.search = search;
+  if (opts?.status) params.status = opts.status;
+  const { data } = await api.get<{
+    posts: BlogPostListItem[];
+    total: number;
+    offset: number;
+    limit: number;
+  }>(`${prefix()}/posts`, { params });
+  return {
+    posts: data.posts ?? [],
+    total: data.total ?? 0,
+    offset: data.offset ?? offset,
+    limit: data.limit ?? limit,
+  };
+}
+
 export async function fetchAdminBlogPosts(): Promise<BlogPostListItem[]> {
-  const { data } = await api.get<{ posts: BlogPostListItem[] }>(`${prefix()}/posts`);
-  return data.posts ?? [];
+  const page = await fetchAdminBlogPostsPage(0, 200);
+  return page.posts;
 }
 
 export async function fetchAdminBlogPost(postId: string): Promise<BlogPostAdminDetail> {

@@ -13,9 +13,9 @@ import {
 import {
   SortableContext,
   arrayMove,
+  rectSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Eye, EyeOff, GripVertical } from "lucide-react";
@@ -36,7 +36,7 @@ type AdminListingMediaEditorProps = {
   onSave: (payload: AdminListingMediaSavePayload) => Promise<boolean>;
 };
 
-function SortableMediaRow({
+function SortableMediaTile({
   item,
   isMain,
   disabled,
@@ -63,13 +63,28 @@ function SortableMediaRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-stretch gap-2 rounded-xl border bg-white transition ${
-        item.hidden ? "border-neutral-200 opacity-60" : "border-neutral-200"
-      } ${isDragging ? "z-20 shadow-lg ring-2 ring-primary/20" : ""}`}
+      className={`group relative h-14 w-full overflow-hidden rounded-md border bg-neutral-50 transition ${
+        item.hidden ? "border-neutral-200 opacity-55" : "border-neutral-200"
+      } ${isDragging ? "z-20 shadow-md ring-2 ring-primary/25" : ""}`}
     >
       <button
         type="button"
-        className={`flex shrink-0 items-center px-2 text-neutral-400 hover:text-neutral-600 ${
+        disabled={disabled || saving}
+        onClick={() => onPreview(item.url)}
+        className="absolute inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset"
+        aria-label={`Open ${item.label} fullscreen`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={item.url}
+          alt=""
+          className="h-full w-full cursor-zoom-in object-cover object-center"
+          decoding="async"
+        />
+      </button>
+      <button
+        type="button"
+        className={`absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-br-md bg-white/90 text-neutral-500 shadow-sm ${
           disabled || saving ? "cursor-not-allowed opacity-50" : "cursor-grab active:cursor-grabbing"
         }`}
         aria-label={`Drag ${item.label}`}
@@ -77,54 +92,26 @@ function SortableMediaRow({
         {...attributes}
         {...listeners}
       >
-        <GripVertical className="h-4 w-4" aria-hidden />
+        <GripVertical className="h-3 w-3" aria-hidden />
       </button>
       <button
         type="button"
         disabled={disabled || saving}
-        onClick={() => onPreview(item.url)}
-        className="relative min-w-0 flex-1 overflow-hidden text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-        aria-label={`Open ${item.label} fullscreen`}
+        onClick={() => onToggleHidden(item.url)}
+        className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-tl-md bg-white/90 text-neutral-700 shadow-sm hover:bg-white disabled:opacity-50"
+        aria-label={item.hidden ? `Show ${item.label}` : `Hide ${item.label}`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={item.url}
-          alt=""
-          className="aspect-[16/10] w-full cursor-zoom-in object-cover object-top"
-          decoding="async"
-        />
-        {isMain ? (
-          <span className="pointer-events-none absolute bottom-2 left-2 inline-flex rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow-sm">
-            Main
-          </span>
-        ) : null}
         {item.hidden ? (
-          <span className="pointer-events-none absolute bottom-2 right-2 inline-flex rounded-full bg-neutral-900/75 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-            Hidden
-          </span>
-        ) : null}
+          <Eye className="h-3 w-3" aria-hidden />
+        ) : (
+          <EyeOff className="h-3 w-3" aria-hidden />
+        )}
       </button>
-      <div className="flex shrink-0 flex-col justify-center gap-1 pr-2">
-        <span className="text-[11px] font-medium text-neutral-500">{item.label}</span>
-        <button
-          type="button"
-          disabled={disabled || saving}
-          onClick={() => onToggleHidden(item.url)}
-          className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 px-2 py-1 text-[11px] font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-50"
-        >
-          {item.hidden ? (
-            <>
-              <Eye className="h-3.5 w-3.5" aria-hidden />
-              Show
-            </>
-          ) : (
-            <>
-              <EyeOff className="h-3.5 w-3.5" aria-hidden />
-              Hide
-            </>
-          )}
-        </button>
-      </div>
+      {isMain ? (
+        <span className="pointer-events-none absolute right-0 top-0 rounded-bl-md bg-primary px-1 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">
+          Main
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -230,16 +217,15 @@ export function AdminListingMediaEditor({
       : "Vendor";
 
   return (
-    <div className="space-y-3">
-      <p className="text-xs text-neutral-500">
-        Drag to reorder. Click a photo to view fullscreen. First visible photo is the main listing
-        image. Hidden photos are not shown to clients.
+    <div className="space-y-2">
+      <p className="text-[11px] leading-snug text-neutral-500">
+        Drag to reorder · click to enlarge · first visible photo is the main image
       </p>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => void handleDragEnd(e)}>
-        <SortableContext items={items.map((item) => item.url)} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
+        <SortableContext items={items.map((item) => item.url)} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10">
             {items.map((item) => (
-              <SortableMediaRow
+              <SortableMediaTile
                 key={`${vendorUserId}-${item.url}`}
                 item={item}
                 isMain={!item.hidden && item.url === mainUrl}

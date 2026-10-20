@@ -106,9 +106,9 @@ export function adjustmentPreviewDeltaExplanation(
   }
 
   if (vendorDelta < 0 && deltaGbp < 0) {
-    const feeReduction = Math.round((Math.abs(vendorDelta) - Math.abs(deltaGbp)) * 100) / 100;
-    if (feeReduction <= 0) return null;
-    return `${deltaLabel} for them: ${formatGbp(Math.abs(vendorDelta))} off your quote − ${formatGbp(feeReduction)} less Eventtz fee.`;
+    const feeChange = Math.round((deltaGbp - vendorDelta) * 100) / 100;
+    if (feeChange >= 0) return null;
+    return `${deltaLabel} for them: ${formatGbp(Math.abs(vendorDelta))} off your price and ${formatGbp(Math.abs(feeChange))} less Eventtz fee (${feePct}%).`;
   }
 
   return null;

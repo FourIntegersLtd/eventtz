@@ -1,22 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ChevronRight } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
-import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
+import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
+import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
 import {
-  adminFilterControlClass,
-  adminFilterControlClassLg44,
-} from "@/features/admin/components/adminFilterControlClass";
-import { AdminFilterDateField } from "@/features/admin/components/AdminFilterDateField";
-import { AdminFilterDateRange } from "@/features/admin/components/AdminFilterDateRange";
+  AdminBookingsFilterModal,
+  bookingStatusFilterLabel,
+  eventDatesFilterSummary,
+} from "@/features/admin/bookings/AdminBookingsFilterModal";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import {
   AdminTable,
   AdminTableBody,
@@ -29,7 +28,10 @@ import {
 import { useAdminBookings } from "@/features/admin/bookings/useAdminBookings";
 import type { AdminBookingListItem } from "@/lib/adminPlatformApi";
 
-const STATUSES = ["", "pending", "accepted", "completed", "declined", "cancelled"];
+function bookingRef(id: string): string {
+  const tail = id.replace(/-/g, "").slice(-5).toUpperCase();
+  return `EZ-${tail}`;
+}
 
 function supportRowClass(support: AdminBookingListItem["support"]): string | undefined {
   if (!support?.needs_attention_count) return undefined;
@@ -62,149 +64,148 @@ export function AdminBookingsView() {
     setDateTo,
     needsAttentionOnly,
     setNeedsAttentionOnly,
+    reload,
   } = useAdminBookings({ status: initialStatus, needs_attention: initialNeedsAttention });
 
+  const [filterOpen, setFilterOpen] = useState(false);
+
   const maxOffset = Math.max(0, total - limit);
-  const canPrev = offset > 0;
-  const canNext = offset + limit < total;
+  const datesActive = Boolean(dateFrom) || Boolean(dateTo);
+  const datesLabel = eventDatesFilterSummary(dateFrom, dateTo);
+  const modalFilterActive = datesActive || Boolean(status);
+  const activeFilterCount = (datesActive ? 1 : 0) + (status ? 1 : 0);
+
+  const hasActiveFilters =
+    Boolean(status) ||
+    Boolean(search.trim()) ||
+    Boolean(dateFrom) ||
+    Boolean(dateTo) ||
+    needsAttentionOnly;
+
+  const clearFilters = () => {
+    setOffset(0);
+    setStatus("");
+    setSearch("");
+    setDateFrom("");
+    setDateTo("");
+    setNeedsAttentionOnly(false);
+  };
 
   return (
-    <div className="min-w-0 max-w-full space-y-4">
-      {error ? <AdminErrorBanner message={error} /> : null}
+    <div className="ez-stack min-w-0 max-w-full">
+      {error ? <AdminErrorBanner message={error} onRetry={() => void reload()} /> : null}
 
-      <AdminPageHeader />
+      <EzListFilterToolbar
+        searchValue={search}
+        onSearchChange={(value) => {
+          setOffset(0);
+          setSearch(value);
+        }}
+        searchPlaceholder="Search event name"
+        searchAriaLabel="Search event name"
+        inputClassName={adminFilterControlClass}
+        onOpenFilter={() => setFilterOpen(true)}
+        activeFilterCount={activeFilterCount}
+        summary={
+          modalFilterActive
+            ? {
+                label: [datesActive ? datesLabel : null, status ? bookingStatusFilterLabel(status) : null]
+                  .filter(Boolean)
+                  .join(" · "),
+                onClear: () => {
+                  setOffset(0);
+                  setDateFrom("");
+                  setDateTo("");
+                  setStatus("");
+                },
+              }
+            : null
+        }
+      />
 
-      <AdminFilterBar>
-        <label className="block w-full min-w-0 max-w-full text-sm lg:w-auto">
-          <span className="text-neutral-600">Status</span>
-          <select
-            value={status}
-            onChange={(e) => {
-              setOffset(0);
-              setStatus(e.target.value);
-            }}
-            className={adminFilterControlClassLg44}
-          >
-            {STATUSES.map((s) => (
-              <option key={s || "all"} value={s}>
-                {s ? s : "All"}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block w-full min-w-0 max-w-full text-sm lg:min-w-[12rem] lg:flex-1">
-          <span className="text-neutral-600">Search event name</span>
-          <input
-            value={search}
-            onChange={(e) => {
-              setOffset(0);
-              setSearch(e.target.value);
-            }}
-            className={adminFilterControlClass}
-            placeholder="Contains…"
-          />
-        </label>
-        <AdminFilterDateRange>
-          <AdminFilterDateField
-            label="From"
-            value={dateFrom}
-            onChange={(value) => {
-              setOffset(0);
-              setDateFrom(value);
-            }}
-          />
-          <AdminFilterDateField
-            label="To"
-            value={dateTo}
-            onChange={(value) => {
-              setOffset(0);
-              setDateTo(value);
-            }}
-          />
-        </AdminFilterDateRange>
-        <label className="flex h-11 items-center gap-2 self-end text-sm text-neutral-700">
-          <input
-            type="checkbox"
-            checked={needsAttentionOnly}
-            onChange={(e) => {
-              setOffset(0);
-              setNeedsAttentionOnly(e.target.checked);
-            }}
-            className="h-4 w-4 rounded border-neutral-300"
-          />
-          Needs support only
-        </label>
-      </AdminFilterBar>
+      <AdminBookingsFilterModal
+        isOpen={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={(value) => {
+          setOffset(0);
+          setDateFrom(value);
+        }}
+        onDateToChange={(value) => {
+          setOffset(0);
+          setDateTo(value);
+        }}
+        status={status}
+        onStatusChange={(id) => {
+          setOffset(0);
+          setStatus(id);
+        }}
+        hasActiveFilters={modalFilterActive}
+        onClearAll={() => {
+          setOffset(0);
+          setDateFrom("");
+          setDateTo("");
+          setStatus("");
+        }}
+      />
 
       {loading ? (
         <AdminLoadingState label="Loading bookings…" />
       ) : rows.length === 0 ? (
-        <EmptyState title="No bookings match your filters" lottie="searchNoResults" />
+        <EmptyState
+          title="No bookings match your filters"
+          lottie="searchNoResults"
+          action={
+            hasActiveFilters ? (
+              <button type="button" className="ez-btn ez-btn--secondary ez-btn--sm" onClick={clearFilters}>
+                Clear filters
+              </button>
+            ) : undefined
+          }
+        />
       ) : (
         <>
           <AdminTable>
-            <AdminTableElement className="min-w-[56rem]">
+            <AdminTableElement className="min-w-[68rem]">
               <AdminTableHead>
+                <AdminTableHeaderCell>Ref</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Event</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Status</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Client</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Vendor</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Total</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Payment</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Support</AdminTableHeaderCell>
-                <AdminTableHeaderCell className="text-right"> </AdminTableHeaderCell>
+                <AdminTableHeaderCell>Event date</AdminTableHeaderCell>
+                <AdminTableHeaderCell className="ez-td-num">Total</AdminTableHeaderCell>
+                <AdminTableHeaderCell className="ez-td-status">Request</AdminTableHeaderCell>
+                <AdminTableHeaderCell className="ez-td-status">Payment</AdminTableHeaderCell>
+                <AdminTableHeaderCell> </AdminTableHeaderCell>
               </AdminTableHead>
               <AdminTableBody>
                 {rows.map((r) => (
                   <AdminTableRow key={r.id} className={supportRowClass(r.support)}>
-                    <AdminTableCell>
-                      <div className="font-medium text-neutral-900">{r.event_name || "-"}</div>
-                      <div className="text-xs text-neutral-500">{r.event_date}</div>
-                    </AdminTableCell>
-                    <AdminTableCell>
-                      <StatusBadge status={r.status} />
-                    </AdminTableCell>
+                    <AdminTableCell className="ez-td-strong">{bookingRef(r.id)}</AdminTableCell>
+                    <AdminTableCell className="text-neutral-900">{r.event_name || "-"}</AdminTableCell>
                     <AdminTableCell className="max-w-[10rem] truncate text-neutral-700">
                       {r.client_email ?? "-"}
                     </AdminTableCell>
                     <AdminTableCell>
                       <div className="font-medium text-neutral-800">{r.vendor_display_name}</div>
-                      <div className="text-xs text-neutral-500">{r.vendor_email ?? ""}</div>
+                      {r.vendor_email ? (
+                        <div className="text-xs text-neutral-500">{r.vendor_email}</div>
+                      ) : null}
                     </AdminTableCell>
-                    <AdminTableCell className="text-neutral-700">{r.client_total_label ?? "-"}</AdminTableCell>
-                    <AdminTableCell>
+                    <AdminTableCell className="text-neutral-700">{r.event_date || "-"}</AdminTableCell>
+                    <AdminTableCell className="ez-td-num text-neutral-700">
+                      {r.client_total_label ?? "-"}
+                    </AdminTableCell>
+                    <AdminTableCell className="ez-td-status">
+                      <StatusBadge status={r.status} />
+                    </AdminTableCell>
+                    <AdminTableCell className="ez-td-status">
                       <PaymentStatusBadge status={r.payment_status} />
                     </AdminTableCell>
-                    <AdminTableCell className="max-w-[14rem]">
-                      {r.support?.needs_attention_count ? (
-                        <div className="space-y-0.5">
-                          <span
-                            className={`inline-flex items-center gap-1 text-xs font-semibold ${
-                              r.support.max_severity === "critical"
-                                ? "text-red-800"
-                                : "text-amber-900"
-                            }`}
-                          >
-                            <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                            {r.support.next_action ?? "Review"}
-                          </span>
-                          {r.support.primary_label ? (
-                            <p className="line-clamp-2 text-[11px] leading-snug text-neutral-600">
-                              {r.support.primary_label}
-                            </p>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <span className="text-xs text-neutral-400">-</span>
-                      )}
-                    </AdminTableCell>
-                    <AdminTableCell className="text-right">
-                      <Link
-                        href={`/admin/bookings/${r.id}`}
-                        className="inline-flex items-center gap-0.5 text-xs font-medium text-primary hover:underline"
-                      >
-                        View
-                        <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                    <AdminTableCell>
+                      <Link href={`/admin/bookings/${r.id}`} className="ez-btn ez-btn--secondary ez-btn--sm">
+                        Support
                       </Link>
                     </AdminTableCell>
                   </AdminTableRow>
@@ -212,29 +213,15 @@ export function AdminBookingsView() {
               </AdminTableBody>
             </AdminTableElement>
           </AdminTable>
-          <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-neutral-600">
-            <span>
-              Showing {rows.length ? offset + 1 : 0}-{offset + rows.length} of {total}
-            </span>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={!canPrev}
-                onClick={() => setOffset(Math.max(0, offset - limit))}
-                className="rounded-lg border border-neutral-200 px-3 py-1.5 font-medium text-neutral-800 disabled:opacity-40"
-              >
-                Previous
-              </button>
-              <button
-                type="button"
-                disabled={!canNext}
-                onClick={() => setOffset(Math.min(maxOffset, offset + limit))}
-                className="rounded-lg border border-neutral-200 px-3 py-1.5 font-medium text-neutral-800 disabled:opacity-40"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          <TablePagination
+            offset={offset}
+            limit={limit}
+            total={total}
+            pageRowCount={rows.length}
+            loading={loading}
+            onPrevious={() => setOffset(Math.max(0, offset - limit))}
+            onNext={() => setOffset(Math.min(maxOffset, offset + limit))}
+          />
         </>
       )}
     </div>

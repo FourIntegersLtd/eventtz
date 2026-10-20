@@ -112,7 +112,7 @@ export function WizardFrame({
                 </span>
               ) : null}
             </div>
-            <div className="ez-card__body">{children}</div>
+            <div className="ez-card__body vendor-setup">{children}</div>
             <div className="ez-card__foot">
               {footer.note ? (
                 <p className="ez-small" style={{ marginRight: "auto" }}>

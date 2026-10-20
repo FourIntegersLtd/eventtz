@@ -68,7 +68,7 @@ RANK_DEFAULTS: dict[str, Any] = {
     "budget_max": None,
     "sort_key": "relevance",
     "intent_summary": None,
-    "limit": 50,
+    "limit": 25,
     "offset": 0,
     "service_match_counts_as_exact": False,
 }

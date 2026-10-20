@@ -9,9 +9,11 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from sqlalchemy import func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.bookings import service_date_change
+from app.core.db import as_uuid
+from app.features.bookings import service_date_change, service_queries
 from app.features.bookings.errors import (
     DateChangeCapacityFull,
     DateChangeNotAllowed,
@@ -19,6 +21,7 @@ from app.features.bookings.errors import (
     DateChangePending,
     NoDateChange,
 )
+from app.features.notifications.models import BookingNotification
 from app.features.vendors import repository as vendors_repository
 from tests.http.test_bookings_maintenance import _make_booking, _make_parties, _notices, _stored
 from tests.support.fakes import FakeMailer
@@ -42,6 +45,19 @@ async def _accepted(db_session: AsyncSession, prefix: str, **columns: object) ->
         **columns,
     )
     return client_id, vendor_id, booking.id
+
+
+async def _make_notice_newest(session: AsyncSession, booking_id: str, kind: str) -> None:
+    """Stamp this notice later than the others inserted in this test.
+
+    PostgreSQL now() is the transaction start, so every notice in one test shares
+    created_at. A real request is its own transaction and sorts by time.
+    """
+    await session.execute(
+        update(BookingNotification)
+        .where(BookingNotification.booking_id == as_uuid(booking_id), BookingNotification.kind == kind)
+        .values(created_at=func.clock_timestamp())
+    )
 
 
 async def test_accepted_request_moves_the_date_and_keeps_price_and_policy(db_session: AsyncSession) -> None:
@@ -93,6 +109,41 @@ async def test_decline_keeps_the_original_date(db_session: AsyncSession) -> None
     stored = await _stored(db_session, booking_id)
     assert (stored.event_date[:10], stored.proposed_event_date) == (ORIGINAL, None)
     assert [kind for kind, _ in await _notices(db_session, vendor_id)] == ["date_change_declined"]
+    await _make_notice_newest(db_session, booking_id, "date_change_declined")
+    vendor_detail = await service_queries.vendor_booking_detail(db_session, vendor_id, booking_id)
+    assert vendor_detail.date_change_declined is True
+
+
+async def test_vendor_declining_a_client_request_shows_on_the_client_booking(
+    db_session: AsyncSession,
+) -> None:
+    """Date stays put; client sees vendor declined; a new request clears that state."""
+    client_id, vendor_id, booking_id = await _accepted(db_session, "dc-client-declined")
+    mailer = FakeMailer()
+    await service_date_change.request_date_change(
+        db_session, mailer, "client", client_id, booking_id, PROPOSED, None, None
+    )
+
+    await service_date_change.respond_to_date_change(
+        db_session, mailer, "vendor", vendor_id, booking_id, accept=False
+    )
+
+    stored = await _stored(db_session, booking_id)
+    await _make_notice_newest(db_session, booking_id, "date_change_declined")
+    client_detail = await service_queries.client_booking_detail(db_session, client_id, booking_id)
+    vendor_detail = await service_queries.vendor_booking_detail(db_session, vendor_id, booking_id)
+    assert stored.event_date[:10] == ORIGINAL
+    assert stored.proposed_event_date is None
+    assert [kind for kind, _ in await _notices(db_session, client_id)] == ["date_change_declined"]
+    assert client_detail.date_change_declined is True
+    assert vendor_detail.date_change_declined is False
+
+    await service_date_change.request_date_change(
+        db_session, mailer, "client", client_id, booking_id, PROPOSED, None, None
+    )
+    await _make_notice_newest(db_session, booking_id, "date_change_requested")
+    asked_again = await service_queries.client_booking_detail(db_session, client_id, booking_id)
+    assert asked_again.date_change_declined is False
 
 
 async def test_requester_can_withdraw_and_only_once(db_session: AsyncSession) -> None:

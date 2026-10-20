@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import OptionalUser
 from app.core.db import SessionDep
 from app.core.errors import AppError, error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import LanguageModelDependency
 from app.features.marketplace import service_explore, service_search
 from app.features.marketplace.errors import InvalidVendorId, VendorNotListed
@@ -69,7 +70,7 @@ async def get_explore_vendors_search(
         None, description="Comma-separated vendor user IDs - restrict search (e.g. favorites)."
     ),
     country: str | None = Query(None, description="ISO country code (default GB)."),
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ) -> ExploreVendorSearchResponse:
     """Search listed vendors: a ranked page, or checklist sections for event planning."""

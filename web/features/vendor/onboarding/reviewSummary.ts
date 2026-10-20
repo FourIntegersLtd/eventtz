@@ -6,8 +6,7 @@
 import { phoneRequiredSchema } from "@/lib/validation/phone";
 import {
   CANCELLATION_POLICY_KEYS,
-  CANCELLATION_POLICY_SUMMARIES,
-  cancellationPolicyLabel,
+  cancellationPolicyReviewLine,
   type CancellationPolicyKey,
 } from "@/features/bookings/cancellationPolicyCopy";
 import { isPerUnitPricing } from "@/lib/packagePricing";
@@ -54,20 +53,16 @@ function packagePriceLabel(pkg: VendorOnboardingData["packages"][number]): strin
 function dietarySummary(data: VendorOnboardingData): string {
   const ticked = [
     data.isHalal ? "Halal" : null,
-    data.isVegan ? "vegan" : null,
-    data.isVegetarian ? "vegetarian" : null,
-    data.isGlutenFree ? "gluten-free" : null,
+    data.isVegan ? "Vegan" : null,
+    data.isVegetarian ? "Vegetarian" : null,
+    data.isGlutenFree ? "Gluten-free" : null,
   ].filter((option): option is string => option !== null);
   return ticked.join(", ");
 }
 
-/** "Moderate: Full refund up to 30 days before", or the not-chosen note. */
+/** Cancellation row on the review step (design V08 compact line). */
 function cancellationSummary(data: VendorOnboardingData): string {
-  if (!(CANCELLATION_POLICY_KEYS as readonly string[]).includes(data.cancellationPolicy)) {
-    return "Not chosen yet";
-  }
-  const key = data.cancellationPolicy as CancellationPolicyKey;
-  return `${cancellationPolicyLabel(key)}: ${CANCELLATION_POLICY_SUMMARIES[key]}`;
+  return cancellationPolicyReviewLine(data.cancellationPolicy);
 }
 
 /** Names of the documents on file, in the order the step lists them. */
@@ -83,9 +78,10 @@ function documentNames(data: VendorOnboardingData): string[] {
 
 /** The review cards in design order; a card for a step with errors is marked incomplete. */
 export function buildReviewCards(data: VendorOnboardingData): ReviewCard[] {
-  const serviceLabels = data.servicesOffered.map(
-    (value) => SERVICE_OPTIONS.find((option) => option.value === value)?.label ?? value,
-  );
+  const serviceLabels = data.servicesOffered.map((value) => {
+    if (value === "catering") return "Caterer";
+    return SERVICE_OPTIONS.find((option) => option.value === value)?.label ?? value;
+  });
   const outwardCode = data.postalCode.trim().split(/\s+/)[0]?.toUpperCase() ?? "";
   const radiusLabel = RADIUS_OPTIONS.find((option) => option.value === data.travelRadius)?.label;
   const packages = data.packages
@@ -118,7 +114,10 @@ export function buildReviewCards(data: VendorOnboardingData): ReviewCard[] {
       title: "Location",
       step: ONBOARDING_STEP.location,
       rows: [
-        { label: "Base", value: [data.baseCity.trim(), outwardCode].filter(Boolean).join(" ") || "-" },
+        {
+          label: "Base",
+          value: [data.baseCity.trim(), outwardCode].filter(Boolean).join(" ") || "-",
+        },
         { label: "Delivery", value: formatReviewDeliveryModes(data.deliveryModes) },
         { label: "Reach", value: radiusLabel ?? "-" },
       ],
@@ -165,11 +164,7 @@ export function buildReviewCards(data: VendorOnboardingData): ReviewCard[] {
 
   return cards.map((card) => ({
     ...card,
-    // The cancellation row sits in the last card, so its step's errors flag that card too.
-    incomplete:
-      vendorOnboardingStepErrors(card.step, data).length > 0 ||
-      (card.step === ONBOARDING_STEP.additionalInfo &&
-        vendorOnboardingStepErrors(ONBOARDING_STEP.cancellation, data).length > 0),
+    incomplete: vendorOnboardingStepErrors(card.step, data).length > 0,
   }));
 }
 

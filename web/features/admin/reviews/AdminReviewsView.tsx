@@ -1,17 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ChevronRight, X } from "lucide-react";
 import { ReviewVisibilityBadge } from "@/components/badges/ReviewVisibilityBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StarRating } from "@/components/ui/StarRating";
 import { fetchAdminReviews, type AdminReviewRow } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
+import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
+import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
+import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import {
   AdminTable,
   AdminTableBody,
@@ -23,6 +26,20 @@ import {
 } from "@/features/admin/components/AdminTable";
 import { adminTrustReviewsHref, formatReviewWhen } from "./reviewFormatters";
 
+type ReviewFilter = "all" | "published" | "hidden";
+
+const REVIEW_FILTER_OPTIONS: EzFilterOption<ReviewFilter>[] = [
+  { id: "all", title: "All reviews" },
+  { id: "published", title: "Published", subtitle: "Visible on vendor profiles" },
+  { id: "hidden", title: "Hidden", subtitle: "Removed from public profiles" },
+];
+
+function reviewFilterLabel(filter: ReviewFilter): string {
+  return REVIEW_FILTER_OPTIONS.find((option) => option.id === filter)?.title ?? "Filter";
+}
+
+const REVIEWS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
+
 export function AdminReviewsView() {
   const searchParams = useSearchParams();
   const vendorUserId = useMemo(() => searchParams.get("vendor")?.trim() || null, [searchParams]);
@@ -32,24 +49,36 @@ export function AdminReviewsView() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<ReviewFilter>("all");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [offset, setOffset] = useState(0);
 
   const load = useCallback(async () => {
     setError(null);
     setLoading(true);
     try {
-      const { reviews, total: t } = await fetchAdminReviews(0, 100, vendorUserId);
+      const { reviews, total: reviewTotal } = await fetchAdminReviews(
+        offset,
+        REVIEWS_PAGE_SIZE,
+        vendorUserId,
+        filter,
+      );
       setRows(reviews);
-      setTotal(t);
+      setTotal(reviewTotal);
     } catch {
       setError("Could not load reviews.");
     } finally {
       setLoading(false);
     }
-  }, [vendorUserId]);
+  }, [offset, vendorUserId, filter]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    setOffset(0);
+  }, [vendorUserId, filter]);
 
   const resolvedVendorName =
     vendorNameFromUrl ?? rows[0]?.vendor_display_name ?? null;
@@ -59,71 +88,112 @@ export function AdminReviewsView() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="ez-stack ez-stack--lg">
       {error ? <AdminErrorBanner message={error} /> : null}
 
       {vendorUserId ? (
         <AdminFilterBar>
-          <p className="min-w-0 flex-1 text-sm text-neutral-700">
+          <p className="min-w-0 flex-1 ez-small">
             Showing reviews for{" "}
-            <span className="font-medium text-neutral-900">{resolvedVendorName ?? "this vendor"}</span>
-            {total > 0 ? <span className="text-neutral-500">{` · ${total} total`}</span> : null}
+            <span className="ez-strong">{resolvedVendorName ?? "this vendor"}</span>
+            {total > 0 ? <span>{` · ${total} total`}</span> : null}
           </p>
-          <Link
-            href={adminTrustReviewsHref()}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50"
-          >
-            <X className="h-3.5 w-3.5" aria-hidden />
+          <Link href={adminTrustReviewsHref()} className="ez-btn ez-btn--secondary ez-btn--sm">
             Clear filter
           </Link>
         </AdminFilterBar>
-      ) : (
-        <AdminPageHeader />
-      )}
+      ) : null}
+
+      <EzListFilterToolbar
+        onOpenFilter={() => setFilterOpen(true)}
+        activeFilterCount={filter !== "all" ? 1 : 0}
+        summary={
+          filter !== "all"
+            ? {
+                label: reviewFilterLabel(filter),
+                onClear: () => {
+                  setFilter("all");
+                  setOffset(0);
+                },
+              }
+            : null
+        }
+      />
+
+      <EzFilterOptionsModal
+        isOpen={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        title="Filter reviews"
+        description="Show all reviews or narrow by visibility on vendor profiles."
+        options={REVIEW_FILTER_OPTIONS}
+        value={filter}
+        onChange={(id) => {
+          setFilter(id);
+          setOffset(0);
+        }}
+        listAriaLabel="Review visibility"
+        resetValue="all"
+        resetLabel="Show all"
+      />
 
       {rows.length === 0 ? (
-        <EmptyState title={vendorUserId ? "No reviews for this vendor" : "No reviews yet"} lottie="searchNoResults" />
+        <EmptyState
+          title={vendorUserId ? "No reviews for this vendor" : "No reviews yet"}
+          lottie="searchNoResults"
+        />
       ) : (
         <AdminTable>
-          <AdminTableElement className="min-w-[30rem]">
+          <AdminTableElement className="min-w-[40rem]">
             <AdminTableHead>
-              {!vendorUserId ? <AdminTableHeaderCell>Vendor</AdminTableHeaderCell> : null}
+              <AdminTableHeaderCell>Vendor</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Rating</AdminTableHeaderCell>
               <AdminTableHeaderCell>Review</AdminTableHeaderCell>
-              <AdminTableHeaderCell className="text-right"> </AdminTableHeaderCell>
+              <AdminTableHeaderCell>Client</AdminTableHeaderCell>
+              <AdminTableHeaderCell className="ez-td-status">Status</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Date</AdminTableHeaderCell>
+              <AdminTableHeaderCell> </AdminTableHeaderCell>
             </AdminTableHead>
             <AdminTableBody>
-              {rows.map((r) => {
-                const vendorLabel = r.vendor_display_name ?? "Vendor";
+              {rows.map((row) => {
+                const vendorLabel = row.vendor_display_name ?? "Vendor";
                 return (
-                  <AdminTableRow key={r.id} className={r.hidden_at ? "opacity-60" : undefined}>
-                    {!vendorUserId ? (
-                      <AdminTableCell className="align-top">
-                        <Link
-                          href={adminTrustReviewsHref({
-                            vendorUserId: r.vendor_user_id,
-                            vendorName: vendorLabel,
-                          })}
-                          className="text-sm font-medium text-primary hover:underline"
-                        >
-                          {vendorLabel}
-                        </Link>
-                      </AdminTableCell>
-                    ) : null}
-                    <AdminTableCell className="max-w-xl align-top">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <StarRating rating={r.rating} size="sm" />
-                        {r.hidden_at ? <ReviewVisibilityBadge hidden /> : null}
-                      </div>
-                      <p className="mt-1.5 line-clamp-2 text-sm text-neutral-800">{r.body || "-"}</p>
-                      <p className="mt-1 text-xs text-neutral-500">{formatReviewWhen(r.created_at)}</p>
-                    </AdminTableCell>
-                    <AdminTableCell className="text-right align-top">
+                  <AdminTableRow key={row.id} className={row.hidden_at ? "opacity-70" : undefined}>
+                    <AdminTableCell className="ez-td-strong align-top">
                       <Link
-                        href={`/admin/trust/reviews/${r.id}`}
-                        className="inline-flex items-center gap-0.5 text-xs font-medium text-primary hover:underline"
+                        href={adminTrustReviewsHref({
+                          vendorUserId: row.vendor_user_id,
+                          vendorName: vendorLabel,
+                        })}
+                        className="hover:underline"
                       >
-                        View
-                        <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                        {vendorLabel}
+                      </Link>
+                    </AdminTableCell>
+                    <AdminTableCell className="align-top">
+                      <StarRating rating={row.rating} size="sm" />
+                    </AdminTableCell>
+                    <AdminTableCell className="max-w-md align-top">
+                      <p className="line-clamp-2 text-sm">{row.body || "-"}</p>
+                    </AdminTableCell>
+                    <AdminTableCell className="align-top text-sm">
+                      {row.client_email ?? "-"}
+                    </AdminTableCell>
+                    <AdminTableCell className="ez-td-status align-top whitespace-nowrap">
+                      {row.hidden_at ? (
+                        <ReviewVisibilityBadge hidden />
+                      ) : (
+                        <span className="ez-badge ez-badge--success">Published</span>
+                      )}
+                    </AdminTableCell>
+                    <AdminTableCell className="align-top ez-caption whitespace-nowrap">
+                      {formatReviewWhen(row.created_at)}
+                    </AdminTableCell>
+                    <AdminTableCell className="align-top">
+                      <Link
+                        href={`/admin/trust/reviews/${row.id}`}
+                        className="ez-btn ez-btn--secondary ez-btn--sm"
+                      >
+                        Open
                       </Link>
                     </AdminTableCell>
                   </AdminTableRow>
@@ -133,6 +203,16 @@ export function AdminReviewsView() {
           </AdminTableElement>
         </AdminTable>
       )}
+
+      <TablePagination
+        offset={offset}
+        limit={REVIEWS_PAGE_SIZE}
+        total={total}
+        pageRowCount={rows.length}
+        loading={loading}
+        onPrevious={() => setOffset((value) => Math.max(0, value - REVIEWS_PAGE_SIZE))}
+        onNext={() => setOffset((value) => value + REVIEWS_PAGE_SIZE)}
+      />
     </div>
   );
 }

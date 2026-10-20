@@ -1,12 +1,10 @@
-import { formControlClass } from "@/components/ui/tokens";
+/** Text filter. */
+export const adminFilterControlClass = "ez-input";
 
-/** Full-width admin list filter control (search, status, etc.). */
-export const adminFilterControlClass = `${formControlClass()} mt-1 block`;
+/** Select filter. */
+export const adminFilterControlClassSm = "ez-input ez-select sm:w-48";
 
-/** Filter control with a fixed width from `sm` breakpoint up. */
-export const adminFilterControlClassSm = `${adminFilterControlClass} sm:w-48`;
+/** Select filter with a fixed width from `lg` breakpoint up. */
+export const adminFilterControlClassLg36 = "ez-input ez-select lg:w-36";
 
-/** Filter control with a fixed width from `lg` breakpoint up. */
-export const adminFilterControlClassLg36 = `${adminFilterControlClass} lg:w-36`;
-
-export const adminFilterControlClassLg44 = `${adminFilterControlClass} lg:w-44`;
+export const adminFilterControlClassLg44 = "ez-input ez-select lg:w-44";

@@ -70,11 +70,7 @@ type Props = {
 };
 
 function LiveEditStepShell({ children }: { children: ReactNode }) {
-  return (
-    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-5 sm:px-6 sm:py-6">
-      {children}
-    </section>
-  );
+  return <div className="vendor-setup">{children}</div>;
 }
 
 /** Routes the current step to the matching screen under `steps/`. */
@@ -154,19 +150,26 @@ export function OnboardingStepContent({
           update={update}
           businessNameError={businessNameError}
           setBusinessNameError={setBusinessNameError}
-          onOpenStepInfo={isLiveEdit ? undefined : onOpenStepInfo}
-          onGenerateBioWithAI={onGenerateBioWithAI}
+          onGenerateBioWithAI={isLiveEdit ? onGenerateBioWithAI : undefined}
           generatingBio={generatingBio}
         />,
       );
     case 3:
-      return wrapLive(<StepLocation data={data} update={update} />);
+      return wrapLive(
+        <StepLocation
+          data={data}
+          update={update}
+          useOnboardingLayout={!isLiveEdit}
+        />,
+      );
     case 4:
       return wrapLive(
         <StepPricing
           data={data}
           update={update}
           usePostLaunchOptimizer={isLiveEdit && approvalStatus === "approved"}
+          showPackageExamples={isLiveEdit}
+          useOnboardingLayout={!isLiveEdit}
         />,
       );
     case 5:

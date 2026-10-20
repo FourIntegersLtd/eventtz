@@ -102,15 +102,17 @@ export function EzCheck({
   onChange,
   children,
   disabled,
+  className,
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
   children: ReactNode;
   disabled?: boolean;
+  className?: string;
 }) {
   const id = useId();
   return (
-    <label className="ez-check" htmlFor={id}>
+    <label className={`ez-check${className ? ` ${className}` : ""}`} htmlFor={id}>
       <input
         type="checkbox"
         id={id}

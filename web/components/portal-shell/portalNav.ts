@@ -24,11 +24,11 @@ export type PortalNavItem = {
 const CLIENT_NAV: readonly PortalNavItem[] = [
   { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/client/planner", label: "Plan my event", icon: Sparkles },
-  { href: "/client/browse", label: "Browse", icon: Compass },
-  { href: "/client/favorites", label: "Favorites", icon: Heart },
-  { href: "/client/bookings", label: "Bookings", icon: CalendarDays },
-  { href: "/client/help", label: "Help", icon: LifeBuoy },
+  { href: "/client/browse", label: "Browse vendors", icon: Compass },
+  { href: "/client/favorites", label: "Favourites", icon: Heart },
+  { href: "/client/bookings", label: "My bookings", icon: CalendarDays },
   { href: "/client/disputes", label: "Disputes", icon: ShieldAlert },
+  { href: "/client/help", label: "Help", icon: LifeBuoy },
   { href: "/client/settings", label: "Settings", icon: Settings },
 ];
 
@@ -36,7 +36,6 @@ const VENDOR_NAV: readonly PortalNavItem[] = [
   { href: "/vendor/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/vendor/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/vendor/bookings", label: "Bookings", icon: CalendarDays },
-  { href: "/vendor/help", label: "Help", icon: LifeBuoy },
   { href: "/vendor/profile", label: "Profile", icon: UserCircle2 },
   { href: "/vendor/payments", label: "Payments", icon: Wallet },
   { href: "/vendor/disputes", label: "Disputes", icon: ShieldAlert },
@@ -49,7 +48,7 @@ export function portalNavItems(
 ): readonly PortalNavItem[] {
   if (role === "client") return CLIENT_NAV;
   if (!options?.vendorPreApproval) return VENDOR_NAV;
-  const pendingHrefs = new Set(["/vendor/profile", "/vendor/help", "/vendor/settings"]);
+  const pendingHrefs = new Set(["/vendor/profile", "/vendor/settings"]);
   return VENDOR_NAV.filter((item) => pendingHrefs.has(item.href));
 }
 
@@ -88,7 +87,7 @@ const PORTAL_ROUTES: Record<PortalRole, Record<PortalRouteKey, string>> = {
     browse: "/client/browse",
     favorites: "/client/favorites",
     profile: "/client/settings",
-    payments: "/client/settings",
+    payments: "/client/payments",
   },
   vendor: {
     dashboard: "/vendor/dashboard",
@@ -114,16 +113,17 @@ export function portalRoute(role: PortalRole, key: PortalRouteKey): string {
 const PAGE_TITLE_RULES: Record<PortalRole, readonly { prefix: string; title: string }[]> = {
   client: [
     { prefix: "/client/help", title: "Help" },
-    { prefix: "/client/bookings", title: "My bookings" },
-    { prefix: "/client/disputes", title: "Disputes" },
-    { prefix: "/client/settings/reviews", title: "Your reviews" },
-    { prefix: "/client/payments", title: "Payment history" },
+    { prefix: "/client/disputes", title: "Help and disputes" },
+    { prefix: "/client/settings/reviews", title: "My reviews" },
+    { prefix: "/client/payments", title: "My bookings" },
     { prefix: "/client/settings", title: "Settings" },
     { prefix: "/client/notifications", title: "Notifications" },
-    { prefix: "/client/favorites", title: "Favorites" },
-    { prefix: "/client/planner", title: "Plan my celebration" },
+    { prefix: "/client/favorites", title: "Favourites" },
+    { prefix: "/client/planner/", title: "Your plan" },
+    { prefix: "/client/planner", title: "Plan my event" },
     { prefix: "/client/browse", title: "Browse vendors" },
     { prefix: "/client/dashboard", title: "Dashboard" },
+    { prefix: "/client/bookings", title: "My bookings" },
   ],
   vendor: [
     { prefix: "/vendor/help", title: "Help" },
@@ -139,7 +139,28 @@ const PAGE_TITLE_RULES: Record<PortalRole, readonly { prefix: string; title: str
   ],
 };
 
-export function portalPageTitle(pathname: string, role: PortalRole): string {
+/** Client booking sub-routes with their own topbar label (design C14–C16, C19). */
+export function clientBookingPortalTopbarTitle(pathname: string): string | null {
+  if (!pathname.startsWith("/client/bookings/")) return null;
+  if (pathname.endsWith("/pay")) return "Pay";
+  if (pathname.endsWith("/receipt")) return "Receipt";
+  if (/\/client\/bookings\/[^/]+$/.test(pathname) && pathname.includes("payment")) {
+    return "Booking payment";
+  }
+  return null;
+}
+
+export function portalPageTitle(pathname: string, role: PortalRole, search = ""): string {
+  if (role === "client") {
+    const bookingTitle = clientBookingPortalTopbarTitle(pathname);
+    if (bookingTitle) return bookingTitle;
+    if (/\/client\/bookings\/[^/]+$/.test(pathname) && /(?:^|&)rate=\d/.test(search)) {
+      return "Review";
+    }
+    if (/\/client\/bookings\/[^/]+$/.test(pathname) && /(?:^|&)(checkout|payment)=/.test(search)) {
+      return "Booking payment";
+    }
+  }
   for (const { prefix, title } of PAGE_TITLE_RULES[role]) {
     if (pathname.startsWith(prefix)) return title;
   }

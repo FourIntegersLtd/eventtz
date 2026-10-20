@@ -23,6 +23,34 @@ import { useToast } from "@/components/ui/Toast";
 import { SettingsReferralBookingsTable } from "./SettingsReferralBookingsTable";
 import { SettingsSection } from "./SettingsSection";
 
+/** True when referrals are hidden because the listing is not approved yet. */
+export function referralUnavailableError(err: unknown): boolean {
+  return isHttpStatus(err, 404);
+}
+
+/** Folds a newly created code into the referral info already on screen. */
+export function withCreatedReferralCode(
+  prev: VendorClientReferralInfo | null,
+  result: { referral_code: string; share_link: string },
+): VendorClientReferralInfo | null {
+  if (!prev) {
+    return {
+      referral_code: result.referral_code,
+      has_referral_code: true,
+      share_link: result.share_link,
+      service_fee_percent: 0,
+      tiers: [],
+      enabled: true,
+    };
+  }
+  return {
+    ...prev,
+    referral_code: result.referral_code,
+    has_referral_code: true,
+    share_link: result.share_link,
+  };
+}
+
 export function SettingsReferralsSection() {
   const { showToast } = useToast();
   const [info, setInfo] = useState<VendorClientReferralInfo | null>(null);
@@ -48,7 +76,7 @@ export function SettingsReferralsSection() {
     void load()
       .catch((err: unknown) => {
         if (cancelled) return;
-        if (isHttpStatus(err, 404)) {
+        if (referralUnavailableError(err)) {
           setUnavailable(true);
           return;
         }
@@ -69,16 +97,7 @@ export function SettingsReferralsSection() {
       const result = await setVendorReferralCode(
         trimmed ? { code: trimmed } : { generate: true },
       );
-      setInfo((prev) =>
-        prev
-          ? {
-              ...prev,
-              referral_code: result.referral_code,
-              has_referral_code: true,
-              share_link: result.share_link,
-            }
-          : prev,
-      );
+      setInfo((prev) => withCreatedReferralCode(prev, result));
       setDraftCode(result.referral_code);
       const referralBookings = await fetchVendorReferralBookings();
       setBookings(referralBookings);
@@ -141,7 +160,7 @@ export function SettingsReferralsSection() {
             <thead className="bg-neutral-50 text-xs font-semibold uppercase tracking-wide text-neutral-500">
               <tr>
                 <th className="px-5 py-2.5 sm:px-6">Booking total</th>
-                <th className="px-5 py-2.5 text-right sm:px-6">Client saves</th>
+                <th className="px-5 py-2.5 sm:px-6">Client saves</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100">
@@ -150,7 +169,7 @@ export function SettingsReferralsSection() {
                   <td className="px-5 py-2.5 text-neutral-800 sm:px-6">
                     {formatBookingMoneyLabel(tier.min_spend_gbp)}+
                   </td>
-                  <td className="px-5 py-2.5 text-right font-medium tabular-nums text-emerald-700 sm:px-6">
+                  <td className="px-5 py-2.5 font-medium tabular-nums text-emerald-700 sm:px-6">
                     {formatBookingMoneyLabel(tier.fee_discount_gbp)}
                   </td>
                 </tr>

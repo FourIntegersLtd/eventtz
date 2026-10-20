@@ -25,14 +25,15 @@ type UseVendorBookingSubmitArgs = {
   vendorUserId: string;
   selectedEventId: string | null;
   clientSearchContext?: ClientSearchContext | null;
-  calendarConflict: boolean;
+  /** Set when the chosen dates sit outside this vendor's days or blocked dates. */
+  dateConflictMessage: string | null;
 };
 
 export function useVendorBookingSubmit({
   vendorUserId,
   selectedEventId,
   clientSearchContext,
-  calendarConflict,
+  dateConflictMessage,
 }: UseVendorBookingSubmitArgs) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -57,10 +58,8 @@ export function useVendorBookingSubmit({
         setValidationError(parsed.formError);
         return;
       }
-      if (calendarConflict) {
-        setValidationError(
-          "These dates don't match this vendor's availability. Adjust the dates or message them to confirm.",
-        );
+      if (dateConflictMessage) {
+        setValidationError(dateConflictMessage);
         return;
       }
       setValidationError(null);
@@ -97,7 +96,7 @@ export function useVendorBookingSubmit({
           setSubmitting(false);
         });
     },
-    [vendorUserId, selectedEventId, clientSearchContext, calendarConflict],
+    [vendorUserId, selectedEventId, clientSearchContext, dateConflictMessage],
   );
 
   return {

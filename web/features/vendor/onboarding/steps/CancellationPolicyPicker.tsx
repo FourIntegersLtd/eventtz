@@ -4,8 +4,8 @@ import { Info } from "lucide-react";
 import {
   CANCELLATION_POLICY_KEYS,
   CANCELLATION_POLICY_LABELS,
-  CANCELLATION_POLICY_SUMMARIES,
-  cancellationPolicyTiers,
+  CANCELLATION_POLICY_ONBOARDING_TIERS,
+  CANCELLATION_POLICY_TAGLINES,
   type CancellationPolicyKey,
 } from "@/features/bookings/cancellationPolicyCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
@@ -30,33 +30,38 @@ export function CancellationPolicyPicker({
         <h3 className="ez-h3">Choose one</h3>
         <span className="ez-badge">Shown on your profile</span>
       </div>
-      <div className="ez-hrow" style={{ alignItems: "stretch" }}>
+      <div
+        className="ez-hrow"
+        style={{
+          alignItems: "stretch",
+          flexWrap: "nowrap",
+          gap: 16,
+        }}
+      >
         {CANCELLATION_POLICY_KEYS.map((policyKey: CancellationPolicyKey) => {
           const active = data.cancellationPolicy === policyKey;
           return (
             <label
               key={policyKey}
               className={`ez-option${active ? " ez-option--active" : ""}`}
-              style={{ flex: "1 1 220px" }}
+              style={{ flex: "1 1 220px", minWidth: 0 }}
             >
               <input
                 type="radio"
-                name="cancellation-policy"
+                name="cancel"
                 aria-label={CANCELLATION_POLICY_LABELS[policyKey]}
                 checked={active}
                 onChange={() => update({ cancellationPolicy: policyKey })}
               />
-              <span className="ez-stack ez-stack--sm" style={{ flex: 1 }}>
+              <span className="ez-stack ez-stack--sm" style={{ flex: 1, minWidth: 0 }}>
                 <span className="ez-strong">
                   {CANCELLATION_POLICY_LABELS[policyKey]}
                 </span>
-                <span className="ez-small">
-                  {CANCELLATION_POLICY_SUMMARIES[policyKey]}
-                </span>
+                <span className="ez-small">{CANCELLATION_POLICY_TAGLINES[policyKey]}</span>
                 <div className="ez-table-wrap" style={{ marginTop: 8 }}>
-                  <table className="ez-table" style={{ minWidth: 0 }}>
+                  <table className="ez-table" style={{ minWidth: 0, width: "100%" }}>
                     <tbody>
-                      {cancellationPolicyTiers(policyKey).map((tier) => (
+                      {CANCELLATION_POLICY_ONBOARDING_TIERS[policyKey].map((tier) => (
                         <tr key={tier.window}>
                           <td className="ez-td-strong">{tier.window}</td>
                           <td className="ez-td-num">{tier.refund}</td>

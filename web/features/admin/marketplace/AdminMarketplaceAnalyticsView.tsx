@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import {
   fetchAdminMarketplaceAnalytics,
   type AdminMarketplaceAnalytics,
 } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { adminCard } from "@/components/admin-shell/adminTheme";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
 import { AdminChartCard } from "@/features/admin/components/AdminChartCard";
 import { AdminBarChart } from "@/features/admin/components/AdminBarChart";
 import { AdminDonutChart } from "@/features/admin/components/AdminDonutChart";
@@ -31,6 +32,9 @@ import {
   toMarketplaceCompletedSeries,
   toMarketplaceDemandSeries,
 } from "@/features/admin/marketplace/marketplaceAnalyticsModel";
+import { TablePagination } from "@/components/ui/TablePagination";
+
+const ADMIN_TABLE_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export function AdminMarketplaceAnalyticsView() {
   const [period, setPeriod] = useState<CommercePeriodDays>(30);
@@ -38,19 +42,23 @@ export function AdminMarketplaceAnalyticsView() {
   const [data, setData] = useState<AdminMarketplaceAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [categoryOffset, setCategoryOffset] = useState(0);
 
   const handlePeriodChange = useCallback((next: CommercePeriodDays) => {
     setPeriod(next);
     setRange(commercePeriodRange(next));
+    setCategoryOffset(0);
   }, []);
 
-  const load = useCallback(async (from: string, to: string) => {
+  const load = useCallback(async (from: string, to: string, categoryPageOffset: number) => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetchAdminMarketplaceAnalytics({
         from_date: from,
         to_date: to,
+        category_offset: categoryPageOffset,
+        category_limit: ADMIN_TABLE_PAGE_SIZE,
       });
       setData(res);
     } catch (e) {
@@ -61,8 +69,8 @@ export function AdminMarketplaceAnalyticsView() {
   }, []);
 
   useEffect(() => {
-    void load(range.from, range.to);
-  }, [load, range.from, range.to]);
+    void load(range.from, range.to, categoryOffset);
+  }, [load, range.from, range.to, categoryOffset]);
 
   if (loading && !data) {
     return <LoadingState label="Loading marketplace analytics…" variant="centered" />;
@@ -70,9 +78,9 @@ export function AdminMarketplaceAnalyticsView() {
 
   if (error && !data) {
     return (
-      <div className="space-y-3">
+      <div className="ez-stack">
         <AdminErrorBanner message={error} />
-        <Button variant="secondary" onClick={() => void load(range.from, range.to)}>
+        <Button variant="secondary" onClick={() => void load(range.from, range.to, categoryOffset)}>
           Retry
         </Button>
       </div>
@@ -81,10 +89,18 @@ export function AdminMarketplaceAnalyticsView() {
 
   if (!data) return null;
   const kpis = marketplaceOverviewKpis(data.overview);
+  const categoryChartRows = data.by_category_chart ?? data.by_category;
+  const revenueTotal =
+    kpis.revenueGbp > 0
+      ? kpis.revenueGbp
+      : categoryChartRows.reduce((sum, row) => sum + (Number(row.revenue_gbp) || 0), 0);
+  const recruitCategoryKeys = new Set(
+    data.recruitment_hints.categories.map((hint) => hint.category.toLowerCase()),
+  );
   const secondary = marketplaceSecondaryMeta(kpis);
   const demandSeries = toMarketplaceDemandSeries(data.enquiries_by_month);
   const completedSeries = toMarketplaceCompletedSeries(data.completed_by_month);
-  const categoryBars = toMarketplaceCategoryBars(data.by_category);
+  const categoryBars = toMarketplaceCategoryBars(categoryChartRows);
   const failureDonut = data.failure_reasons.map((r) => ({
     name: r.reason.replace(/_/g, " ").toLowerCase(),
     value: r.count,
@@ -97,73 +113,112 @@ export function AdminMarketplaceAnalyticsView() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="ez-stack ez-stack--lg">
       {error ? <AdminErrorBanner message={error} /> : null}
 
-      <div className="flex justify-end">
+      <div className="ez-hrow" style={{ justifyContent: "flex-end" }}>
         <AdminCommercePeriodFilter period={period} onPeriodChange={handlePeriodChange} />
       </div>
 
-      {/* One overview surface - hero metrics + quiet secondary strip */}
-      <section className={`${adminCard} overflow-hidden`}>
-        <div className="flex items-start justify-between gap-2 border-b border-neutral-100 px-5 py-3.5">
-          <div>
-            <h2 className="text-sm font-semibold text-neutral-900">Overview</h2>
-            <p className="mt-0.5 text-xs text-neutral-500">Marketplace health for this period</p>
-          </div>
-          <AdminInfoHint label="Overview" info={MARKETPLACE_CHART_INFO.overview} />
-        </div>
-        <div className="grid divide-y divide-neutral-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-          <div className="px-5 py-5">
-            <p className="text-xs text-neutral-500">Enquiries</p>
-            <p className="mt-1 font-heading text-2xl font-semibold tabular-nums text-neutral-900">
-              {kpis.enquiries}
-            </p>
-            <p className="mt-1 text-xs text-neutral-500">
-              {kpis.vendorsActive} active vendors
-            </p>
-          </div>
-          <div className="px-5 py-5">
-            <p className="text-xs text-neutral-500">Conversion</p>
-            <p className="mt-1 font-heading text-2xl font-semibold tabular-nums text-neutral-900">
-              {formatMarketplacePct(kpis.overallConversion)}
-            </p>
-            <p className="mt-1 text-xs text-neutral-500">
-              Avg response {formatMarketplaceSeconds(kpis.avgResponseSeconds)}
-            </p>
-          </div>
-          <div className="px-5 py-5">
-            <p className="text-xs text-neutral-500">Completed</p>
-            <p className="mt-1 font-heading text-2xl font-semibold tabular-nums text-neutral-900">
-              {kpis.completed}
-            </p>
-            <p className="mt-1 text-xs text-neutral-500">
-              Avg {formatMarketplaceMoney(kpis.avgBookingValue)}
-            </p>
-          </div>
-        </div>
-        {secondary.length > 0 ? (
-          <div className="flex flex-wrap gap-x-4 gap-y-1 border-t border-neutral-100 px-5 py-3 text-xs text-neutral-500">
-            {secondary.map((line) => (
-              <span key={line}>{line}</span>
-            ))}
-          </div>
-        ) : null}
-      </section>
+      <div className="ez-grid-4">
+        <AdminKpiCard
+          label="Enquiries"
+          value={kpis.enquiries}
+          hint={`${kpis.vendorsActive} active vendors`}
+        />
+        <AdminKpiCard label="Completed bookings" value={kpis.completed} />
+        <AdminKpiCard
+          label="Conversion"
+          value={formatMarketplacePct(kpis.overallConversion)}
+          hint={`Avg response ${formatMarketplaceSeconds(kpis.avgResponseSeconds)}`}
+        />
+        <AdminKpiCard
+          label="Revenue"
+          value={formatMarketplaceMoney(revenueTotal)}
+          hint={`Avg booking ${formatMarketplaceMoney(kpis.avgBookingValue)}`}
+        />
+      </div>
+      <div className="ez-hrow" style={{ justifyContent: "flex-end" }}>
+        <AdminInfoHint label="Overview" info={MARKETPLACE_CHART_INFO.overview} />
+      </div>
+      {secondary.length > 0 ? (
+        <p className="ez-small">{secondary.join(" · ")}</p>
+      ) : null}
 
-      {recruitHints.length > 0 ? (
-        <section className={`${adminCard} px-5 py-4`}>
-          <p className="text-sm font-medium text-neutral-900">Recruitment opportunities</p>
-          <ul className="mt-2 space-y-1 text-sm text-neutral-600">
-            {recruitHints.map((message) => (
-              <li key={message}>{message}</li>
-            ))}
-          </ul>
+      {data.by_category.length > 0 ? (
+        <section className="ez-card">
+          <div className="ez-card__head">
+            <h2 className="ez-h3">Category performance and recruitment opportunities</h2>
+          </div>
+          <div className="ez-table-wrap">
+            <table className="ez-table">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th className="ez-td-num">Enquiries</th>
+                  <th className="ez-td-num">Completed</th>
+                  <th className="ez-td-num">Conversion</th>
+                  <th className="ez-td-num">Revenue</th>
+                  <th>Supply</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.by_category.map((row) => {
+                  const needsRecruit = recruitCategoryKeys.has(row.key.toLowerCase());
+                  return (
+                    <tr key={row.key}>
+                      <td className="ez-td-strong">{row.key}</td>
+                      <td className="ez-td-num tabular-nums">{row.enquiries}</td>
+                      <td className="ez-td-num tabular-nums">{row.completed}</td>
+                      <td className="ez-td-num tabular-nums">
+                        {formatMarketplacePct(row.conversion_rate)}
+                      </td>
+                      <td className="ez-td-num tabular-nums">
+                        {formatMarketplaceMoney(row.revenue_gbp)}
+                      </td>
+                      <td>
+                        <span
+                          className={
+                            needsRecruit
+                              ? "ez-badge ez-badge--warning"
+                              : "ez-badge ez-badge--success"
+                          }
+                        >
+                          {needsRecruit ? "Recruit more" : "Well supplied"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <TablePagination
+            offset={categoryOffset}
+            limit={ADMIN_TABLE_PAGE_SIZE}
+            total={data.by_category_total ?? data.by_category.length}
+            pageRowCount={data.by_category.length}
+            onPrevious={() =>
+              setCategoryOffset((current) => Math.max(0, current - ADMIN_TABLE_PAGE_SIZE))
+            }
+            onNext={() => setCategoryOffset((current) => current + ADMIN_TABLE_PAGE_SIZE)}
+          />
+          {recruitHints.length > 0 ? (
+            <div className="ez-card__body">
+              <ul className="ez-stack ez-stack--sm">
+                {recruitHints.map((message) => (
+                  <li key={message} className="ez-small">
+                    {message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </section>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <div className="space-y-4">
+        <div className="ez-stack">
           <AdminChartCard
             title="Demand over time"
             subtitle="Enquiries per month"
@@ -203,7 +258,7 @@ export function AdminMarketplaceAnalyticsView() {
           </AdminChartCard>
         </div>
 
-        <div className="space-y-4">
+        <div className="ez-stack">
           <AdminChartCard
             title="Failed demand"
             subtitle="Why enquiries did not convert"
@@ -218,7 +273,7 @@ export function AdminMarketplaceAnalyticsView() {
             )}
           </AdminChartCard>
 
-          <section className={`${adminCard} overflow-hidden`}>
+          <section className={`ez-card overflow-hidden`}>
             <div className="flex items-center justify-between gap-2 border-b border-neutral-100 px-5 py-3.5">
               <div className="min-w-0">
                 <h2 className="text-sm font-semibold text-neutral-900">Top locations</h2>
@@ -254,7 +309,7 @@ export function AdminMarketplaceAnalyticsView() {
             )}
           </section>
 
-          <section className={`${adminCard} overflow-hidden`}>
+          <section className={`ez-card overflow-hidden`}>
             <div className="flex items-center justify-between gap-2 border-b border-neutral-100 px-5 py-3.5">
               <div className="min-w-0">
                 <h2 className="text-sm font-semibold text-neutral-900">Top vendors</h2>

@@ -1,24 +1,23 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { ContentCard, SectionBlock } from "@/components/ui/SectionBlock";
-import { AdminCommercePeriodFilter } from "@/features/admin/components/AdminCommercePeriodFilter";
+import { AdminAreaChart } from "@/features/admin/components/AdminAreaChart";
 import { AdminDonutChart } from "@/features/admin/components/AdminDonutChart";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminGroupedBarChart } from "@/features/admin/components/AdminGroupedBarChart";
 import { AdminInfoHint } from "@/features/admin/components/AdminInfoHint";
 import { DASHBOARD_CHART_INFO } from "@/features/admin/components/adminChartInfoCopy";
 import { chartHasData } from "@/features/admin/components/chartUtils";
-import type { AdminPeriodDays } from "@/features/admin/commerce/commercePeriod";
-import type { AdminDashboardSummary } from "@/lib/adminPlatformApi";
-import { useAdminDashboardMetrics } from "@/features/admin/dashboard/useAdminDashboardMetrics";
+import type { AdminDashboardMetrics, AdminDashboardSummary } from "@/lib/adminPlatformApi";
 
 type AdminDashboardChartsProps = {
   summary: AdminDashboardSummary;
+  metrics: AdminDashboardMetrics | null;
+  loading: boolean;
+  error: string | null;
 };
 
 function ChartSkeleton() {
@@ -32,10 +31,7 @@ function ChartSkeleton() {
   );
 }
 
-export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
-  const [period, setPeriod] = useState<AdminPeriodDays>(30);
-  const { metrics, loading, error } = useAdminDashboardMetrics(period);
-
+export function AdminDashboardCharts({ summary, metrics, loading, error }: AdminDashboardChartsProps) {
   const pipelineData = [
     { name: "Pending", value: summary.bookings_pending },
     { name: "Accepted", value: summary.bookings_accepted },
@@ -45,6 +41,10 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
   ];
 
   const signupData = metrics?.signups ?? [];
+  const gmvData = (metrics?.bookings_paid ?? []).map((bucket) => ({
+    date: bucket.date,
+    value: bucket.gmv_gbp,
+  }));
   const pipelineTotal =
     summary.bookings_pending +
     summary.bookings_accepted +
@@ -53,11 +53,14 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
     summary.bookings_cancelled;
 
   return (
-    <SectionBlock
-      title="Platform overview"
-      trailing={<AdminCommercePeriodFilter period={period} onPeriodChange={setPeriod} />}
-    >
-      <ContentCard padding="none" className="overflow-hidden">
+    <section className="ez-stack ez-stack--lg">
+      <div className="ez-section-title">
+        <h2 className="ez-h2">Bookings and enquiries</h2>
+        <Link href="/admin/commerce?tab=marketplace" className="ez-link">
+          Open analytics
+        </Link>
+      </div>
+      <div className="ez-card overflow-hidden">
         {error ? (
           <div className="px-5 pt-4 sm:px-6">
             <AdminErrorBanner message={error} />
@@ -101,7 +104,22 @@ export function AdminDashboardCharts({ summary }: AdminDashboardChartsProps) {
             ) : null}
           </div>
         </div>
-      </ContentCard>
-    </SectionBlock>
+      </div>
+
+      <div className="ez-card overflow-hidden">
+        <div className="ez-card__head">
+          <h2 className="ez-h3">Marketplace health</h2>
+        </div>
+        <div className="ez-card__body">
+          {loading ? (
+            <ChartSkeleton />
+          ) : chartHasData(gmvData.map((d) => d.value)) ? (
+            <AdminAreaChart data={gmvData} valueLabel="Gross booking value (GBP)" />
+          ) : (
+            <EmptyState className="border-0 py-8" title="No paid volume in this period" lottie="searchNoResults" />
+          )}
+        </div>
+      </div>
+    </section>
   );
 }

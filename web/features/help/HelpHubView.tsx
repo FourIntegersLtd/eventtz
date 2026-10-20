@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { PortalRole } from "@/components/portal-shell/portalNav";
@@ -15,20 +16,42 @@ type HelpHubViewProps = {
   portal: PortalRole;
   tab: HelpHubTab;
   selectedConversationId?: string;
+  useEzChrome?: boolean;
 };
 
-export function HelpHubView({ portal, tab, selectedConversationId }: HelpHubViewProps) {
+export function HelpHubView({
+  portal,
+  tab,
+  selectedConversationId,
+  useEzChrome = false,
+}: HelpHubViewProps) {
   const router = useRouter();
 
   return (
     <div className="flex h-full min-h-0 w-full flex-1 flex-col gap-4">
       <div className="shrink-0">
-        <SegmentedControl
-          aria-label="Help sections"
-          options={HELP_HUB_TAB_OPTIONS}
-          value={tab}
-          onChange={(next) => router.push(helpHubTabHref(portal, next))}
-        />
+        {useEzChrome ? (
+          <div className="ez-seg" aria-label="Help sections">
+            {HELP_HUB_TAB_OPTIONS.map((option) => (
+              <Link
+                key={option.value}
+                href={helpHubTabHref(portal, option.value)}
+                className={
+                  tab === option.value ? "ez-seg__item ez-seg__item--active" : "ez-seg__item"
+                }
+              >
+                {option.label}
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <SegmentedControl
+            aria-label="Help sections"
+            options={HELP_HUB_TAB_OPTIONS}
+            value={tab}
+            onChange={(next) => router.push(helpHubTabHref(portal, next))}
+          />
+        )}
       </div>
 
       {tab === "messages" ? (

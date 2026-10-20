@@ -9,6 +9,7 @@ import type {
   BookingLineItem,
 } from "@/lib/domain-types";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type ClientSearchContext = {
   q?: string;
   types?: string[];
@@ -76,6 +77,7 @@ export type ClientBookingsListParams = {
   status?: string;
   payment_status?: string;
   exclude_payment_status?: string;
+  q?: string;
 };
 
 export type ClientBookingListItem = {
@@ -106,7 +108,19 @@ export type ClientBookingListItem = {
 export type ClientBookingsListResponse = {
   success: boolean;
   bookings: ClientBookingListItem[];
+  total?: number;
+  offset?: number;
+  limit?: number;
 };
+
+export type ClientBookingsPage = {
+  bookings: ClientBookingListItem[];
+  total: number;
+  offset: number;
+  limit: number;
+};
+
+export const CLIENT_BOOKINGS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export type ClientBookingDetail = BookingTermsFields & {
   booking_request_id: string;
@@ -146,6 +160,8 @@ export type ClientBookingDetail = BookingTermsFields & {
     image_urls?: string[];
   } | null;
   initiator?: BookingInitiator;
+  /** The vendor declined this client's date-change request; the original date stands. */
+  date_change_declined?: boolean;
   conversation_id: string | null;
   counterparty_phone?: string | null;
   /** Client-facing total at request time (before vendor price changes). */
@@ -177,25 +193,52 @@ export type ClientBookingDetailResponse = {
   booking: ClientBookingDetail;
 };
 
-export async function fetchClientBookings(
-  groupOrParams: ClientBookingsListGroup | ClientBookingsListParams = "active",
-): Promise<ClientBookingListItem[]> {
-  const params: ClientBookingsListParams =
+export type ClientBookingsListParamsWithPage = ClientBookingsListParams & {
+  offset?: number;
+  limit?: number;
+};
+
+export async function fetchClientBookingsPage(
+  groupOrParams: ClientBookingsListGroup | ClientBookingsListParamsWithPage = "active",
+): Promise<ClientBookingsPage> {
+  const params: ClientBookingsListParamsWithPage =
     typeof groupOrParams === "string" ? { group: groupOrParams } : groupOrParams;
+  const offset = params.offset ?? 0;
+  const limit = params.limit ?? CLIENT_BOOKINGS_PAGE_SIZE;
   const { data } = await api.get<ClientBookingsListResponse>(
     "/api/v1/client/booking-requests",
     {
       params: {
         group: params.group ?? "active",
+        offset,
+        limit,
         ...(params.status ? { status: params.status } : {}),
         ...(params.payment_status ? { payment_status: params.payment_status } : {}),
         ...(params.exclude_payment_status
           ? { exclude_payment_status: params.exclude_payment_status }
           : {}),
+        ...(params.q?.trim() ? { q: params.q.trim() } : {}),
       },
     },
   );
-  return data.bookings ?? [];
+  return {
+    bookings: data.bookings ?? [],
+    total: data.total ?? data.bookings?.length ?? 0,
+    offset: data.offset ?? offset,
+    limit: data.limit ?? limit,
+  };
+}
+
+/** @deprecated Prefer paginated `fetchClientBookingsPage` or `fetchClientDashboard`. */
+export async function fetchClientBookings(
+  groupOrParams: ClientBookingsListGroup | ClientBookingsListParamsWithPage = "active",
+): Promise<ClientBookingListItem[]> {
+  const page = await fetchClientBookingsPage({
+    ...(typeof groupOrParams === "string" ? { group: groupOrParams } : groupOrParams),
+    offset: 0,
+    limit: 200,
+  });
+  return page.bookings;
 }
 
 export async function fetchClientBookingDetail(

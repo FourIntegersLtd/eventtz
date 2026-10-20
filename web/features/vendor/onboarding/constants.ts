@@ -18,6 +18,20 @@ export const SERVICE_OPTIONS: VendorServiceOption[] = [
   { value: "other", label: "Other" },
 ];
 
+/** Step 2 service chips in design order (V02 artboard labels). */
+export const BUSINESS_STEP_SERVICE_CHIPS: { value: string; label: string }[] = [
+  { value: "catering", label: "Caterer" },
+  { value: "dj", label: "DJ" },
+  { value: "photography", label: "Photographer" },
+  { value: "decor", label: "Florist" },
+  { value: "rentals", label: "Venue" },
+  { value: "event_planning", label: "Decor" },
+  { value: "baking", label: "Cake maker" },
+  { value: "mc", label: "MC" },
+  { value: "makeup", label: "Makeup artist" },
+  { value: "other", label: "Other" },
+];
+
 /** Event type values included when “All of the Above” is selected (excludes `all`). */
 export const EVENT_TYPE_IDS_ALL = [
   "weddings",

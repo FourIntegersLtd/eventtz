@@ -11,10 +11,33 @@ type SettingsTabsProps = {
   tabs: readonly SettingsTab[];
   activeId: string;
   basePath: string;
+  variant?: "legacy" | "ez";
 };
 
-export function SettingsTabs({ tabs, activeId, basePath }: SettingsTabsProps) {
+export function SettingsTabs({ tabs, activeId, basePath, variant = "legacy" }: SettingsTabsProps) {
   const path = basePath.replace(/\/$/, "");
+
+  if (variant === "ez") {
+    return (
+      <div className="ez-tabs" role="tablist" aria-label="Settings sections">
+        {tabs.map((tab) => {
+          const selected = tab.id === activeId;
+          return (
+            <Link
+              key={tab.id}
+              href={`${path}?tab=${encodeURIComponent(tab.id)}`}
+              scroll={false}
+              role="tab"
+              aria-selected={selected}
+              className={selected ? "ez-tab ez-tab--active" : "ez-tab"}
+            >
+              {tab.label}
+            </Link>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div

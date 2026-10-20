@@ -7,6 +7,7 @@ import {
 } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
 import { LandingSection } from "@/features/landing/LandingSection";
+import { CHAT_BUBBLE_MINE, CHAT_BUBBLE_THEIRS } from "@/lib/chatBubbleClasses";
 
 function JourneyPanelMock({ stage }: { stage: "browse" | "chat" | "pay" }) {
   if (stage === "browse") {
@@ -27,10 +28,10 @@ function JourneyPanelMock({ stage }: { stage: "browse" | "chat" | "pay" }) {
   if (stage === "chat") {
     return (
       <div className="space-y-3 p-4 sm:p-5">
-        <div className="ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-primary px-3 py-2 text-xs text-white">
+        <div className={`ml-auto text-xs ${CHAT_BUBBLE_MINE}`}>
           Can you add a vegan tier for 20 guests?
         </div>
-        <div className="max-w-[90%] rounded-2xl rounded-bl-md border border-primary-border/60 bg-neutral-50 px-3 py-2 text-xs text-neutral-700">
+        <div className={`max-w-[90%] text-xs ${CHAT_BUBBLE_THEIRS}`}>
           Quote sent · Total GBP 1,240 · Review and accept
         </div>
       </div>

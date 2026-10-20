@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
 from app.core.logging import get_logger
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import Mailer, PaymentGateway, PaymentGatewayError
 from app.core.settings import get_settings
 from app.features.bookings import service_payments, service_payments_checkout, service_payout_ledger
@@ -342,10 +343,20 @@ async def restore_connect_from_payout_history(
     )
 
 
-async def payout_history(session: AsyncSession, vendor_user_id: str) -> VendorPayoutHistoryResponse:
+async def payout_history(
+    session: AsyncSession, vendor_user_id: str, *, offset: int = 0, limit: int = DEFAULT_LIST_LIMIT
+) -> VendorPayoutHistoryResponse:
     """The vendor's payout ledger: their share only, never the client total."""
     ledger = await service_payout_ledger.vendor_payout_ledger(session, vendor_user_id)
-    return VendorPayoutHistoryResponse(**ledger.model_dump())
+    payouts = ledger.payouts
+    page = payouts[offset : offset + limit]
+    return VendorPayoutHistoryResponse(
+        **ledger.model_dump(exclude={"payouts"}),
+        payouts=page,
+        total=len(payouts),
+        offset=offset,
+        limit=limit,
+    )
 
 
 # --- the webhook ---------------------------------------------------------------------------------------

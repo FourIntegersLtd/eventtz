@@ -32,6 +32,8 @@ export function PortfolioImageGallery({
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
+  const useCompactGrid = compact && (layout === "hero" || layout === "grid");
+
   if (layout === "collage") {
     return (
       <PortfolioCollageGallery
@@ -59,32 +61,52 @@ export function PortfolioImageGallery({
       />
     ) : null;
 
-  if (layout === "grid") {
+  if (layout === "grid" || useCompactGrid) {
     if (photos.length === 0) {
+      if (emptyFallback?.trim()) {
+        return (
+          <div
+            className={`flex h-14 w-14 items-center justify-center rounded-lg border border-neutral-100 bg-neutral-50 font-heading text-lg font-semibold text-neutral-400 ${className}`.trim()}
+          >
+            {emptyFallback.slice(0, 1).toUpperCase()}
+          </div>
+        );
+      }
       return (
-        <p className={`rounded-xl border border-dashed border-neutral-200 px-3 py-6 text-center text-xs text-neutral-400 ${className}`.trim()}>
+        <p
+          className={`rounded-lg border border-dashed border-neutral-200 px-3 py-3 text-center text-xs text-neutral-400 ${className}`.trim()}
+        >
           No photos uploaded
         </p>
       );
     }
 
-    const gridClass = gridCols === 3 ? "grid-cols-3" : "grid-cols-2";
+    const gridClass = compact
+      ? "grid-cols-5 sm:grid-cols-6 md:grid-cols-8"
+      : gridCols === 3
+        ? "grid-cols-3"
+        : "grid-cols-2";
+    const cellClass = compact ? "h-14 w-full" : "aspect-[4/3]";
     return (
       <>
-        <div className={`grid gap-2 ${gridClass} ${className}`.trim()}>
+        <div className={`grid gap-1.5 ${gridClass} ${className}`.trim()}>
           {photos.map((url, index) => (
             <button
               key={url}
               type="button"
               onClick={() => openLightbox(index)}
-              className="group flex aspect-[4/3] cursor-zoom-in items-center justify-center overflow-hidden rounded-xl border border-neutral-100 bg-neutral-50 transition hover:border-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className={`group flex ${cellClass} cursor-zoom-in items-center justify-center overflow-hidden rounded-lg border border-neutral-100 bg-neutral-50 transition hover:border-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40`}
               aria-label={`Open ${alt} photo ${index + 1} fullscreen`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={url}
                 alt={`${alt} ${index + 1}`}
-                className="max-h-full max-w-full object-contain object-center transition duration-300 group-hover:scale-[1.02]"
+                className={
+                  compact
+                    ? "h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.02]"
+                    : "max-h-full max-w-full object-contain object-center transition duration-300 group-hover:scale-[1.02]"
+                }
                 decoding="async"
               />
             </button>

@@ -1,33 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { fetchClientBookings, type ClientBookingListItem } from "@/lib/clientBookingsApi";
-import { BOOKING_NOTIFICATIONS_REFRESH_EVENT, fetchClientBookingNotificationsUnreadCount } from "@/lib/clientNotificationsApi";
-import { CHAT_UNREAD_CLEARED_EVENT, fetchChatUnreadCount } from "@/lib/chatApi";
+import type { ClientBookingListItem } from "@/lib/clientBookingsApi";
+import { fetchClientBookingNotificationsUnreadCount } from "@/lib/clientNotificationsApi";
+import { fetchChatUnreadCount } from "@/lib/chatApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import { fetchClientDashboard } from "@/lib/portalDashboardApi";
 import { installVisibilityRefresh } from "@/lib/useVisibilityRefresh";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
-import { fetchClientNotificationsFeed, type NotificationFeedItem } from "@/lib/notificationsFeedApi";
-
-function dateKeyFromIso(iso: string | null | undefined): string | null {
-  if (!iso || iso.length < 10) return null;
-  return iso.slice(0, 10);
-}
-
-function noonUtcSafeDateFromKey(key: string): Date {
-  return new Date(`${key}T12:00:00`);
-}
-
-function localDateKey(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
-function addDays(d: Date, days: number): Date {
-  return new Date(d.getTime() + days * 24 * 60 * 60 * 1000);
-}
+import type { NotificationFeedItem } from "@/lib/notificationsFeedApi";
 
 export type ClientBookingsByDate = Record<string, ClientBookingListItem[]>;
 
@@ -35,9 +16,7 @@ export type ClientDashboardState = {
   loadStatus: "loading" | "ready" | "error";
   activeCount: number;
   completedCount: number;
-  /** Client-initiated requests still waiting on the vendor to accept/decline/quote. */
   awaitingVendorCount: number;
-  /** Vendor-sent quotes waiting on the client to accept - a distinct, more urgent bucket. */
   awaitingClientCount: number;
   bookingNotificationsUnread: number;
   chatUnread: number;
@@ -47,7 +26,6 @@ export type ClientDashboardState = {
   acceptedUpcoming: ClientBookingListItem[];
   upcomingAgenda: ClientBookingListItem[];
   bookingsByDate: ClientBookingsByDate;
-  /** Completed bookings with no review yet - powers the one-tap review nudge. */
   needsReview: ClientBookingListItem[];
   errorMessage: string | null;
 };
@@ -70,22 +48,6 @@ const initial: ClientDashboardState = {
   errorMessage: null,
 };
 
-function pickNextUpcoming(active: ClientBookingListItem[]): ClientBookingListItem | null {
-  if (active.length === 0) return null;
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
-  const withTime = active.map((b) => ({
-    b,
-    t: Date.parse(`${b.event_date.slice(0, 10)}T12:00:00`),
-  }));
-  const future = withTime
-    .filter(({ t }) => !Number.isNaN(t) && t >= startOfToday.getTime())
-    .sort((a, b) => a.t - b.t);
-  if (future.length > 0) return future[0].b;
-  const sorted = [...withTime].filter(({ t }) => !Number.isNaN(t)).sort((a, b) => a.t - b.t);
-  return sorted[0]?.b ?? null;
-}
-
 export function useClientDashboard(enabled: boolean) {
   const [state, setState] = useState<ClientDashboardState>(initial);
   const dashboardViewedRef = useRef(false);
@@ -94,81 +56,41 @@ export function useClientDashboard(enabled: boolean) {
     if (!enabled) return;
     setState((s) => ({ ...s, loadStatus: "loading", errorMessage: null }));
     try {
-      const [active, completed, bookingNotificationsUnread, chatUnread, updates] = await Promise.all([
-        fetchClientBookings("active"),
-        fetchClientBookings("completed"),
+      const [dashboard, bookingNotificationsUnread, chatUnread] = await Promise.all([
+        fetchClientDashboard(),
         fetchClientBookingNotificationsUnreadCount(),
         fetchChatUnreadCount(),
-        fetchClientNotificationsFeed(),
       ]);
 
-      const todayKey = localDateKey(new Date());
-      const todayAtNoon = noonUtcSafeDateFromKey(todayKey);
-
-      const accepted = active.filter((b) => b.booking_status === "accepted");
-      const acceptedUpcoming = accepted.filter((b) => {
-        const startKey = dateKeyFromIso(b.event_date);
-        if (!startKey) return false;
-        const start = noonUtcSafeDateFromKey(startKey);
-        const endKey = dateKeyFromIso(b.event_end_date);
-        const end = endKey ? noonUtcSafeDateFromKey(endKey) : start;
-        return end.getTime() >= todayAtNoon.getTime();
-      });
-
-      const bookingsByDate: ClientBookingsByDate = {};
-      for (const b of acceptedUpcoming) {
-        const startKey = dateKeyFromIso(b.event_date);
-        if (!startKey) continue;
-        const start = noonUtcSafeDateFromKey(startKey);
-        const endKey = dateKeyFromIso(b.event_end_date);
-        const end = endKey ? noonUtcSafeDateFromKey(endKey) : start;
-
-        for (let d = start; d.getTime() <= end.getTime(); d = addDays(d, 1)) {
-          const key = localDateKey(d);
-          if (noonUtcSafeDateFromKey(key).getTime() < todayAtNoon.getTime()) continue;
-          (bookingsByDate[key] ??= []).push(b);
-        }
-      }
-
-      const upcomingAgenda = [...acceptedUpcoming]
-        .sort((a, b) => {
-          const ak = dateKeyFromIso(a.event_date) ?? "9999-12-31";
-          const bk = dateKeyFromIso(b.event_date) ?? "9999-12-31";
-          return ak.localeCompare(bk);
-        })
-        .slice(0, 5);
-
-      const awaitingVendorCount = active.filter(
-        (b) => b.booking_status === "pending" && b.initiator !== "vendor",
-      ).length;
-      const awaitingClientCount = active.filter(
-        (b) => b.booking_status === "pending" && b.initiator === "vendor",
-      ).length;
+      const acceptedUpcoming = Object.values(dashboard.bookings_by_date).flat();
+      const uniqueAccepted = [
+        ...new Map(acceptedUpcoming.map((booking) => [booking.booking_request_id, booking])).values(),
+      ];
 
       if (!dashboardViewedRef.current) {
         dashboardViewedRef.current = true;
         track(MixpanelEvents.client_dashboard_viewed, {
-          active_count: active.length,
-          awaiting_vendor_count: awaitingVendorCount,
-          awaiting_client_count: awaitingClientCount,
+          active_count: dashboard.active_count,
+          awaiting_vendor_count: dashboard.awaiting_vendor_count,
+          awaiting_client_count: dashboard.awaiting_client_count,
         });
       }
 
       setState({
         loadStatus: "ready",
-        activeCount: active.length,
-        completedCount: completed.length,
-        awaitingVendorCount,
-        awaitingClientCount,
+        activeCount: dashboard.active_count,
+        completedCount: dashboard.completed_count,
+        awaitingVendorCount: dashboard.awaiting_vendor_count,
+        awaitingClientCount: dashboard.awaiting_client_count,
         bookingNotificationsUnread,
         chatUnread,
-        nextBooking: pickNextUpcoming(active),
-        updates,
-        activeBookings: active,
-        acceptedUpcoming,
-        upcomingAgenda,
-        bookingsByDate,
-        needsReview: completed.filter((b) => !b.has_review),
+        nextBooking: dashboard.next_booking,
+        updates: dashboard.notification_preview.items ?? [],
+        activeBookings: dashboard.active_bookings,
+        acceptedUpcoming: uniqueAccepted,
+        upcomingAgenda: dashboard.upcoming_agenda,
+        bookingsByDate: dashboard.bookings_by_date,
+        needsReview: dashboard.needs_review,
         errorMessage: null,
       });
     } catch {
@@ -184,18 +106,12 @@ export function useClientDashboard(enabled: boolean) {
     void load();
   }, [load]);
 
+  useRealtimeRefresh(["booking_notifications:refresh", "chat:unread_refresh"], load, [enabled]);
+
   useEffect(() => {
     if (!enabled) return;
-    return installVisibilityRefresh(() => {
-      void load();
-    });
+    return installVisibilityRefresh(load);
   }, [enabled, load]);
 
-  useRealtimeRefresh(
-    ["bookings:refresh", "chat:unread_refresh", "booking_notifications:refresh", "disputes:refresh"],
-    () => void load(),
-    [enabled, load],
-  );
-
-  return { ...state, reload: load };
+  return { state, reload: load };
 }

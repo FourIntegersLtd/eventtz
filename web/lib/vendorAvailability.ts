@@ -62,6 +62,101 @@ export function isoDatesInEventRange(
   return out;
 }
 
+const WEEKDAY_NAMES = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+] as const;
+
+const MAX_BLOCKED_DATES_SHOWN = 8;
+
+function joinList(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? "";
+  if (items.length === 2) return `${items[0]} and ${items[1]}`;
+  return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+}
+
+function formatCalendarDay(iso: string, withWeekday: boolean): string {
+  return new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", {
+    ...(withWeekday ? { weekday: "long" as const } : {}),
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function pythonWeekday(iso: string): number {
+  return (new Date(`${iso}T12:00:00Z`).getUTCDay() + 6) % 7;
+}
+
+/** "Saturday", "Monday to Friday", or "every day". `null` when the vendor set no days. */
+export function vendorWorkingDaysLabel(payload: Record<string, unknown>): string | null {
+  const days = [...availableWeekdaysSet(payload)].sort((first, second) => first - second);
+  if (days.length === 0) return null;
+  if (days.length === 7) return "every day";
+  const names = days.map((day) => WEEKDAY_NAMES[day]);
+  const isRun = days.length > 2 && days[days.length - 1] - days[0] === days.length - 1;
+  return isRun ? `${names[0]} to ${names[names.length - 1]}` : joinList(names);
+}
+
+/** "They take bookings on Saturday." */
+export function vendorWorkingDaysSentence(payload: Record<string, unknown>): string | null {
+  const label = vendorWorkingDaysLabel(payload);
+  if (!label) return null;
+  if (label === "every day") return "They take bookings every day.";
+  return `They take bookings on ${label}.`;
+}
+
+/** Upcoming blocked dates, from `todayIso` inclusive. */
+export function vendorBlockedDatesSentence(
+  payload: Record<string, unknown>,
+  todayIso: string,
+): string | null {
+  const today = normalizeIsoDate(todayIso);
+  const dates = [...blockedDatesSet(payload)]
+    .filter((iso) => (today ? iso >= today : true))
+    .sort();
+  if (dates.length === 0) return null;
+  const shown = dates.slice(0, MAX_BLOCKED_DATES_SHOWN).map((iso) => formatCalendarDay(iso, false));
+  const extra = dates.length - shown.length;
+  const list = extra > 0 ? `${shown.join(", ")} and ${extra} more` : joinList(shown);
+  return `Unavailable on ${list}.`;
+}
+
+/**
+ * Why these dates are outside the vendor calendar, including the days they do take.
+ * `null` when the dates are allowed.
+ */
+export function explainVendorDateConflict(
+  payload: Record<string, unknown>,
+  isoDates: string[],
+): string | null {
+  if (vendorPayloadAllowsEventDates(payload, isoDates)) return null;
+  const blocked = blockedDatesSet(payload);
+  const weekdays = availableWeekdaysSet(payload);
+  const problems: string[] = [];
+  for (const raw of isoDates) {
+    const iso = normalizeIsoDate(raw);
+    if (!iso) continue;
+    if (blocked.has(iso)) {
+      problems.push(`${formatCalendarDay(iso, true)} is marked unavailable`);
+      continue;
+    }
+    if (weekdays.size > 0 && !weekdays.has(pythonWeekday(iso))) {
+      problems.push(`${formatCalendarDay(iso, true)} is not a day they take bookings`);
+    }
+  }
+  const schedule = vendorWorkingDaysSentence(payload);
+  const detail = problems.slice(0, 3).join(". ");
+  if (!detail) return schedule;
+  return schedule ? `${detail}. ${schedule}` : `${detail}.`;
+}
+
 export function vendorPayloadAllowsEventDates(
   payload: Record<string, unknown>,
   isoDates: string[],

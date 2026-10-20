@@ -7,8 +7,9 @@ RUN := env -u VIRTUAL_ENV poetry run
 install:
 	env -u VIRTUAL_ENV POETRY_VIRTUALENVS_IN_PROJECT=true poetry install --extras dev --no-root
 
+# --timeout-graceful-shutdown: SSE tabs hold connections open; without a short cap reload hangs on "Waiting for connections to close".
 dev:
-	$(RUN) uvicorn app.main:app --reload --port 8001
+	$(RUN) uvicorn app.main:app --reload --host 127.0.0.1 --port 8001 --timeout-graceful-shutdown 3
 
 # The background job worker (procrastinate); a second Railway service in production.
 worker:

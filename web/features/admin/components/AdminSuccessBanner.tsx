@@ -8,12 +8,11 @@ type AdminSuccessBannerProps = {
 
 export function AdminSuccessBanner({ message }: AdminSuccessBannerProps) {
   return (
-    <div
-      role="status"
-      className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-sm text-emerald-900"
-    >
+    <div role="status" className="ez-banner ez-banner--success">
       <LottieIllustration asset="successCheck" size="inline" ariaLabel="" />
-      <p className="whitespace-pre-wrap leading-relaxed">{message}</p>
+      <div className="ez-banner__body">
+        <p className="whitespace-pre-wrap">{message}</p>
+      </div>
     </div>
   );
 }

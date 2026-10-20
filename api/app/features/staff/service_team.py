@@ -68,10 +68,11 @@ def _member(row: AdminTeamMemberRow) -> AdminTeamMember:
     )
 
 
-async def list_team(session: AsyncSession) -> AdminTeamListResponse:
-    """Every admin account, for the team roster screen."""
-    members = [_member(row) for row in await repository.list_admin_team(session)]
-    return AdminTeamListResponse(members=members)
+async def list_team(session: AsyncSession, *, offset: int, limit: int) -> AdminTeamListResponse:
+    """One page of admin accounts for the team roster screen."""
+    rows, total = await repository.list_admin_team(session, offset=offset, limit=limit)
+    members = [_member(row) for row in rows]
+    return AdminTeamListResponse(members=members, total=total, offset=offset, limit=limit)
 
 
 async def invite(

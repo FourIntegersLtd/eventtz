@@ -11,6 +11,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from app.core.pagination import DEFAULT_LIST_LIMIT
+
 
 class SuccessResponse(BaseModel):
     """The bare `{"success": true}` a few mutating routes answer with."""
@@ -36,6 +38,9 @@ class AdminTeamListResponse(BaseModel):
 
     success: bool = True
     members: list[AdminTeamMember]
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminTeamInviteBody(BaseModel):
@@ -104,7 +109,7 @@ class AdminClientsListResponse(BaseModel):
     clients: list[AdminClientRow]
     total: int = 0
     offset: int = 0
-    limit: int = 50
+    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminClientSuspendedBody(BaseModel):

@@ -47,6 +47,7 @@ export function marketplaceOverviewKpis(overview: AdminMarketplaceAnalytics["ove
   unfulfilled: number;
   vendorsActive: number;
   avgBookingValue: number;
+  revenueGbp: number;
   avgResponseSeconds: number | null;
   avgRating: number | null;
   replyWithin1h: number | null;
@@ -67,6 +68,8 @@ export function marketplaceOverviewKpis(overview: AdminMarketplaceAnalytics["ove
     unfulfilled: Number(overview.unfulfilled ?? 0) || 0,
     vendorsActive: Number(overview.vendors_active ?? 0) || 0,
     avgBookingValue: Number(overview.avg_booking_value_gbp ?? 0) || 0,
+    revenueGbp:
+      Number(overview.revenue_gbp ?? overview.completed_revenue_gbp ?? 0) || 0,
     avgResponseSeconds:
       avgResponse == null || Number.isNaN(Number(avgResponse)) ? null : Number(avgResponse),
     avgRating: avgRating == null || Number.isNaN(Number(avgRating)) ? null : Number(avgRating),

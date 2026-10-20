@@ -1,11 +1,8 @@
 "use client";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { BackLink } from "@/components/ui/BackLink";
 import { BookingDisputeSection } from "@/features/bookings/BookingDisputeSection";
-import { BookingDetailPanel } from "@/features/bookings/BookingDetailPanel";
-import { BookingListPanel } from "@/features/bookings/BookingListPanel";
-import { MasterDetailLayout } from "@/features/bookings/MasterDetailLayout";
+import { VendorBookingDetailEzPanel } from "@/features/vendor/bookings/VendorBookingDetailEzPanel";
 import { BOOKING_EMPTY_LIST_TITLE } from "@/features/bookings/bookingListConstants";
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";
@@ -13,6 +10,50 @@ import { VendorBookingDetailExtras } from "@/features/vendor/bookings/VendorBook
 import { VendorBookingResponseFlow } from "@/features/vendor/bookings/VendorBookingResponseFlow";
 import { useVendorBookingsController } from "@/features/vendor/bookings/useVendorBookingsController";
 import { PayoutSetupRequiredModal } from "@/features/vendor/payments/PayoutSetupRequiredModal";
+import { VendorBookingsEzList } from "@/features/vendor/bookings/VendorBookingsEzList";
+import { BookingDateChangeCard, dateChangeIsVisible } from "@/features/bookings/BookingDateChangeCard";
+import { paymentDeadlineLine } from "@/features/bookings/bookingTerms";
+import type { BookingDateChangeFields } from "@/lib/bookingDateChangeApi";
+import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
+
+/** Payment deadline and date-change controls for the right-hand action card. */
+function vendorSideActions(detail: VendorBookingDetail) {
+  const deadline = paymentDeadlineLine("vendor", detail.payment_due_at, detail.payment_status);
+  const dateChange = vendorDateChangeAction(detail);
+  if (!deadline && !dateChange) return undefined;
+  return (
+    <>
+      {deadline ? <p className="ez-small">{deadline}</p> : null}
+      {dateChange}
+    </>
+  );
+}
+
+/** Date-change control for the right-hand action card. Hidden when a change is not allowed. */
+function vendorDateChangeAction(detail: VendorBookingDetail) {
+  const dateChange = detail as VendorBookingDetail & BookingDateChangeFields;
+  if (
+    !dateChangeIsVisible(
+      detail.booking_status,
+      detail.payment_status,
+      dateChange.date_change_requested_by,
+    )
+  ) {
+    return undefined;
+  }
+  return (
+    <BookingDateChangeCard
+      role="vendor"
+      bookingId={detail.booking_request_id}
+      bookingStatus={detail.booking_status}
+      paymentStatus={detail.payment_status}
+      eventDate={detail.event_date}
+      eventEndDate={detail.event_end_date}
+      dateChange={dateChange}
+      requestPresentation="modal"
+    />
+  );
+}
 
 type VendorBookingsViewProps = {
   /** Present on `/vendor/bookings/[bookingId]` - absent on the `/vendor/bookings` index. */
@@ -28,6 +69,7 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
         isOpen={controller.payoutModalOpen}
         connecting={controller.connectingPayouts}
         error={controller.payoutConnectError}
+        clientName={controller.detail?.client_email ?? undefined}
         onClose={() => {
           controller.setPayoutModalOpen(false);
           controller.setPayoutConnectError(null);
@@ -68,92 +110,82 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
           }}
         />
       ) : null}
-      <MasterDetailLayout
-        hasSelection={!!selectedBookingId}
-        list={
-          <BookingListPanel
-            tab={controller.tab}
-            onTabChange={controller.setTab}
-            rows={controller.rows}
-            loading={controller.listLoading}
-            error={controller.listError}
-            selectedId={selectedBookingId ?? null}
-            onSelect={controller.selectBooking}
-            emptyTitle={BOOKING_EMPTY_LIST_TITLE[controller.tab]}
-            eventGroups={controller.eventGroups}
-          />
-        }
-        detail={
-          <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-            {selectedBookingId ? (
-              <BackLink
-                href="/vendor/bookings"
-                label="Back to bookings"
-                tone="muted"
-                mobileOnly
-                className="mb-3 shrink-0"
+      {selectedBookingId ? (
+        <VendorBookingDetailEzPanel
+          booking={controller.viewModel}
+          loading={controller.detailLoading}
+          error={controller.detailError}
+          actionError={controller.actionError}
+          headerActions={controller.headerActions}
+          footerActions={controller.footerActions}
+          emptyTitle="Booking not found"
+          slots={{
+            beforeSections: controller.detail ? (
+              <VendorBookingDetailExtras
+                detail={controller.detail}
+                actionBusy={controller.actionBusy}
+                onConfirmComplete={() => controller.setConfirmAction("complete")}
+                onRetryPayout={() => void controller.applyConfirmCompletion()}
+                onDetailChanged={controller.reloadBookingDetail}
               />
-            ) : null}
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <BookingDetailPanel
-                booking={controller.viewModel}
-                loading={controller.detailLoading || (controller.listLoading && !selectedBookingId)}
-                error={controller.detailError}
-                actionError={controller.actionError}
-                headerActions={controller.headerActions}
-                footerActions={controller.footerActions}
-                emptyTitle={controller.list.length === 0 ? "No bookings yet" : "Select a booking"}
-                slots={{
-                  beforeSections: controller.detail ? (
-                    <VendorBookingDetailExtras
-                      detail={controller.detail}
-                      actionBusy={controller.actionBusy}
-                      onConfirmComplete={() => controller.setConfirmAction("complete")}
-                      onRetryPayout={() => void controller.applyConfirmCompletion()}
-                      onDetailChanged={controller.reloadBookingDetail}
-                    />
-                  ) : undefined,
-                  footerSection: controller.showClientResponseFlow && controller.detail ? (
-                    <VendorBookingResponseFlow
-                      key={`${controller.detail.booking_request_id}-${controller.detail.vendor_adjustments.length}`}
-                      detail={controller.detail}
-                      actionBusy={controller.actionBusy}
-                      adjustmentSaving={controller.adjustmentSaving}
-                      payoutsLoading={controller.payoutsLoading}
-                      payoutsReady={controller.payoutsReady}
-                      onPayoutSetupRequired={() => controller.setPayoutModalOpen(true)}
-                      onAcceptAtListedPrice={() => controller.requestAccept()}
-                      onDecline={() => void controller.applyBookingStatus("declined")}
-                      onSendUpdatedPrice={(rows) => void controller.sendUpdatedPrice(rows)}
-                      onOpenChat={() => controller.setChatOpen(true)}
-                      onUseDraftInChat={(message) => controller.setChatPrefill(message)}
-                    />
-                  ) : undefined,
-                  afterSections:
-                    controller.detail && controller.detail.booking_status === "completed" ? (
-                      <BookingReviewPanel
-                        title="Client review"
-                        review={controller.detail.review}
-                        showReviewer
-                        emptyLabel="The client has not left a review for this booking yet."
-                      />
-                    ) : undefined,
-                  disputeSection: controller.detail ? (
-                    <BookingDisputeSection
-                      bookingId={controller.detail.booking_request_id}
-                      role="vendor"
-                      bookingStatus={controller.detail.booking_status}
-                      presentation="header"
-                    />
-                  ) : (
-                    <></>
-                  ),
-                }}
+            ) : undefined,
+            sideActions: controller.detail ? vendorSideActions(controller.detail) : undefined,
+            footerSection: controller.showClientResponseFlow && controller.detail ? (
+              <VendorBookingResponseFlow
+                key={`${controller.detail.booking_request_id}-${controller.detail.vendor_adjustments.length}`}
+                detail={controller.detail}
+                actionBusy={controller.actionBusy}
+                adjustmentSaving={controller.adjustmentSaving}
+                payoutsLoading={controller.payoutsLoading}
+                payoutsReady={controller.payoutsReady}
+                onPayoutSetupRequired={() => controller.setPayoutModalOpen(true)}
+                onAcceptAtListedPrice={() => controller.requestAccept()}
+                onDecline={() => void controller.applyBookingStatus("declined")}
+                onSendUpdatedPrice={(rows) => void controller.sendUpdatedPrice(rows)}
+                onOpenChat={() => controller.setChatOpen(true)}
+                onUseDraftInChat={(message) => controller.setChatPrefill(message)}
               />
-            </div>
-          </div>
-        }
-      />
+            ) : undefined,
+            afterSections:
+              controller.detail && controller.detail.booking_status === "completed" ? (
+                <BookingReviewPanel
+                  title="Client review"
+                  review={controller.detail.review}
+                  showReviewer
+                  emptyLabel="The client has not left a review for this booking yet."
+                />
+              ) : undefined,
+            disputeSection: controller.detail ? (
+              <BookingDisputeSection
+                bookingId={controller.detail.booking_request_id}
+                role="vendor"
+                bookingStatus={controller.detail.booking_status}
+                presentation="header"
+              />
+            ) : (
+              <></>
+            ),
+          }}
+        />
+      ) : (
+        <VendorBookingsEzList
+          tab={controller.tab}
+          onTabChange={controller.setTab}
+          rows={controller.rows}
+          loading={controller.listLoading}
+          error={controller.listError}
+          emptyTitle={BOOKING_EMPTY_LIST_TITLE[controller.tab]}
+          listOffset={controller.listOffset}
+          listPageSize={controller.listPageSize}
+          listTotal={controller.listTotal}
+          onListPrevious={() =>
+            controller.setListOffset(Math.max(0, controller.listOffset - controller.listPageSize))
+          }
+          onListNext={() => controller.setListOffset(controller.listOffset + controller.listPageSize)}
+          listSearch={controller.listSearch}
+          onListSearchChange={controller.setListSearch}
+        />
+      )}
     </>
   );
 }

@@ -30,5 +30,7 @@ class VendorPayoutLedger(BaseModel):
     payouts: list[VendorPayoutRow] = Field(default_factory=list)
     total_paid_out_gbp: float = 0.0
     total_paid_out_label: str = "GBP 0"
+    paid_out_last_30_days_gbp: float = 0.0
+    paid_out_last_30_days_label: str = "GBP 0"
     total_awaiting_gbp: float = 0.0
     total_awaiting_label: str = "GBP 0"

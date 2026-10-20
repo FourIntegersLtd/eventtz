@@ -30,10 +30,15 @@ async def list_reviews(
     offset: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
     vendor_user_id: str | None = Query(None),
+    visibility: str = Query("all", description="all, published, or hidden"),
 ) -> AdminReviewsListResponse:
     """Every review, hidden ones included, optionally narrowed to one vendor."""
     return await service_admin.list_reviews(
-        session, offset=offset, limit=limit, vendor_user_id=vendor_user_id
+        session,
+        offset=offset,
+        limit=limit,
+        vendor_user_id=vendor_user_id,
+        visibility=visibility,
     )
 
 

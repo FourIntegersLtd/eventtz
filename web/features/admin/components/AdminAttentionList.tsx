@@ -3,14 +3,14 @@
 import Link from "next/link";
 import { AlertCircle, ChevronRight, Info, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { PanelCard } from "@/components/ui/SectionBlock";
 
 export type AdminAttentionItem = {
   id: string;
   title: string;
   subtitle?: string;
   href: string;
-  ctaLabel?: string;
+  /** Count pill, for example "6 pending". */
+  badge?: string;
   tone?: "urgent" | "info" | "positive";
 };
 
@@ -34,22 +34,23 @@ type AdminAttentionListProps = {
 };
 
 export function AdminAttentionList({
-  title = "Needs attention",
+  title = "Needs action",
   subtitle,
   items,
   emptyTitle = "All clear",
 }: AdminAttentionListProps) {
+  const countLine =
+    subtitle ??
+    (items.length > 0 ? `${items.length} item${items.length === 1 ? "" : "s"}` : undefined);
+
   return (
-    <PanelCard
-      title={title}
-      description={
-        subtitle ??
-        (items.length > 0
-          ? `${items.length} item${items.length === 1 ? "" : "s"}`
-          : undefined)
-      }
-      bodyClassName="p-0 pb-0 sm:pb-0"
-    >
+    <section className="ez-card">
+      <div className="ez-card__head">
+        <div>
+          <h2 className="ez-h3">{title}</h2>
+          {countLine ? <p className="ez-small">{countLine}</p> : null}
+        </div>
+      </div>
       {items.length === 0 ? (
         <EmptyState
           className="border-0 shadow-none"
@@ -57,33 +58,28 @@ export function AdminAttentionList({
           title={emptyTitle}
         />
       ) : (
-        <ul className="divide-y divide-neutral-100">
+        <div>
           {items.map((item) => {
             const tone = item.tone ?? "info";
             const Icon = TONE_ICON[tone];
             return (
-              <li key={item.id}>
-                <Link
-                  href={item.href}
-                  className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-neutral-50/80 sm:px-6"
-                >
-                  <Icon className={`h-4 w-4 shrink-0 ${TONE_CLASS[tone]}`} aria-hidden />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-neutral-900">{item.title}</p>
-                    {item.subtitle ? (
-                      <p className="truncate text-xs text-neutral-500">{item.subtitle}</p>
-                    ) : null}
-                  </div>
-                  <span className="shrink-0 text-xs font-medium text-neutral-500">
-                    {item.ctaLabel ?? "Open"}
+              <Link key={item.id} href={item.href} className="ez-list-row">
+                <Icon className={`h-4 w-4 shrink-0 ${TONE_CLASS[tone]}`} aria-hidden />
+                <div className="ez-list-row__main">
+                  <span className="ez-strong">{item.title}</span>
+                  {item.subtitle ? <span className="ez-caption truncate">{item.subtitle}</span> : null}
+                </div>
+                {item.badge ? (
+                  <span className={tone === "urgent" ? "ez-badge ez-badge--warning" : "ez-badge ez-badge--neutral"}>
+                    {item.badge}
                   </span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-neutral-300" aria-hidden />
-                </Link>
-              </li>
+                ) : null}
+                <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
+              </Link>
             );
           })}
-        </ul>
+        </div>
       )}
-    </PanelCard>
+    </section>
   );
 }

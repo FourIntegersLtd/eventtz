@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
 from app.core.logging import get_logger
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import LanguageModel
 from app.core.settings import get_settings
 from app.features.marketplace import repository_explore, service_explore
@@ -126,7 +127,7 @@ class SearchRequest:
     sort: str = "relevance"
     vendor_ids: str | None = None
     country: str | None = None
-    limit: int = 50
+    limit: int = DEFAULT_LIST_LIMIT
     offset: int = 0
 
 

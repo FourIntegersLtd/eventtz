@@ -5,6 +5,7 @@ import type {
   VendorProfileStatus,
 } from "@/lib/domain-types";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type AdminVendorRow = {
   id: string | null;
   user_id: string;
@@ -61,6 +62,8 @@ export type AdminVendorsQuery = {
   q?: string;
   approval_status?: string;
   status?: string;
+  /** When filtering drafts: true = staff returned for edits; false = in-progress onboarding. */
+  returned_for_edits?: boolean;
 };
 
 export type AdminVendorsListResult = {
@@ -82,17 +85,18 @@ export async function fetchAdminVendors(
   }>("/api/v1/admin/vendors", {
     params: {
       offset: q.offset ?? 0,
-      limit: q.limit ?? 50,
+      limit: q.limit ?? DEFAULT_LIST_PAGE_SIZE,
       q: q.q?.trim() || undefined,
       approval_status: q.approval_status || undefined,
       status: q.status || undefined,
+      returned_for_edits: q.returned_for_edits,
     },
   });
   return {
     vendors: data.vendors ?? [],
     total: data.total ?? 0,
     offset: data.offset ?? 0,
-    limit: data.limit ?? 50,
+    limit: data.limit ?? DEFAULT_LIST_PAGE_SIZE,
   };
 }
 

@@ -1178,7 +1178,7 @@
             "type": "array"
           },
           "limit": {
-            "default": 50,
+            "default": 25,
             "title": "Limit",
             "type": "integer"
           },
@@ -1357,7 +1357,7 @@
             "type": "array"
           },
           "limit": {
-            "default": 50,
+            "default": 25,
             "title": "Limit",
             "type": "integer"
           },
@@ -2113,6 +2113,21 @@
             },
             "title": "Disputes",
             "type": "array"
+          },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
@@ -2289,6 +2304,40 @@
         "title": "AdminFinancialsDailyBucket",
         "type": "object"
       },
+      "AdminFinancialsDailyListResponse": {
+        "description": "One page of daily buckets for the financials table.",
+        "properties": {
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/AdminFinancialsDailyBucket"
+            },
+            "title": "Daily",
+            "type": "array"
+          },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "title": "AdminFinancialsDailyListResponse",
+        "type": "object"
+      },
       "AdminFinancialsSummary": {
         "description": "Totals for the admin financials screen, over an optional date range.",
         "properties": {
@@ -2381,6 +2430,19 @@
             "title": "By Category",
             "type": "array"
           },
+          "by_category_chart": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "By Category Chart",
+            "type": "array"
+          },
+          "by_category_total": {
+            "default": 0,
+            "title": "By Category Total",
+            "type": "integer"
+          },
           "by_location": {
             "items": {
               "additionalProperties": true,
@@ -2388,6 +2450,16 @@
             },
             "title": "By Location",
             "type": "array"
+          },
+          "category_limit": {
+            "default": 25,
+            "title": "Category Limit",
+            "type": "integer"
+          },
+          "category_offset": {
+            "default": 0,
+            "title": "Category Offset",
+            "type": "integer"
           },
           "completed_by_month": {
             "items": {
@@ -2885,10 +2957,25 @@
             "title": "Conversations",
             "type": "array"
           },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "success": {
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
@@ -3195,6 +3282,11 @@
       "AdminTeamListResponse": {
         "description": "`GET /admin/team`.",
         "properties": {
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
           "members": {
             "items": {
               "$ref": "#/components/schemas/AdminTeamMember"
@@ -3202,10 +3294,20 @@
             "title": "Members",
             "type": "array"
           },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "success": {
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
@@ -4117,7 +4219,7 @@
         "description": "One page of the staff vendor list and how many vendors match in total.",
         "properties": {
           "limit": {
-            "default": 50,
+            "default": 25,
             "title": "Limit",
             "type": "integer"
           },
@@ -4906,6 +5008,16 @@
       "BlogPostsListResponse": {
         "description": "A list of posts.",
         "properties": {
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "posts": {
             "items": {
               "$ref": "#/components/schemas/BlogPostListItem"
@@ -4917,6 +5029,11 @@
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
@@ -5910,6 +6027,11 @@
             ],
             "title": "Damage Deposit Gbp"
           },
+          "date_change_declined": {
+            "default": false,
+            "title": "Date Change Declined",
+            "type": "boolean"
+          },
           "date_change_note": {
             "anyOf": [
               {
@@ -6610,16 +6732,107 @@
             "title": "Bookings",
             "type": "array"
           },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "success": {
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
           "bookings"
         ],
         "title": "ClientBookingsListResponse",
+        "type": "object"
+      },
+      "ClientDashboardResponse": {
+        "description": "Aggregated client home data (counts, agenda, calendar, review nudges).",
+        "properties": {
+          "active_bookings": {
+            "items": {
+              "$ref": "#/components/schemas/ClientBookingListItem"
+            },
+            "title": "Active Bookings",
+            "type": "array"
+          },
+          "active_count": {
+            "default": 0,
+            "title": "Active Count",
+            "type": "integer"
+          },
+          "awaiting_client_count": {
+            "default": 0,
+            "title": "Awaiting Client Count",
+            "type": "integer"
+          },
+          "awaiting_vendor_count": {
+            "default": 0,
+            "title": "Awaiting Vendor Count",
+            "type": "integer"
+          },
+          "bookings_by_date": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/ClientBookingListItem"
+              },
+              "type": "array"
+            },
+            "title": "Bookings By Date",
+            "type": "object"
+          },
+          "completed_count": {
+            "default": 0,
+            "title": "Completed Count",
+            "type": "integer"
+          },
+          "needs_review": {
+            "items": {
+              "$ref": "#/components/schemas/ClientBookingListItem"
+            },
+            "title": "Needs Review",
+            "type": "array"
+          },
+          "next_booking": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ClientBookingListItem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "notification_preview": {
+            "$ref": "#/components/schemas/PortalDashboardNotificationPreview"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "upcoming_agenda": {
+            "items": {
+              "$ref": "#/components/schemas/ClientBookingListItem"
+            },
+            "title": "Upcoming Agenda",
+            "type": "array"
+          }
+        },
+        "title": "ClientDashboardResponse",
         "type": "object"
       },
       "ClientEventDetail": {
@@ -7430,10 +7643,25 @@
             "title": "Conversations",
             "type": "array"
           },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "success": {
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
@@ -8272,6 +8500,26 @@
             },
             "title": "Disputes",
             "type": "array"
+          },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "open_count": {
+            "default": 0,
+            "title": "Open Count",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
@@ -9672,10 +9920,25 @@
             "title": "Items",
             "type": "array"
           },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "success": {
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
@@ -10306,6 +10569,21 @@
         "title": "PlannerVendorCard",
         "type": "object"
       },
+      "PortalDashboardNotificationPreview": {
+        "description": "A few recent feed lines for the home screen.",
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "title": "PortalDashboardNotificationPreview",
+        "type": "object"
+      },
       "PostBookingReviewBody": {
         "description": "A client's rating and comment on a completed booking.",
         "properties": {
@@ -10492,6 +10770,16 @@
       "ReferralPartnerListResponse": {
         "description": "Every partner, newest first.",
         "properties": {
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "partners": {
             "items": {
               "$ref": "#/components/schemas/ReferralPartnerRow"
@@ -10503,6 +10791,11 @@
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
@@ -11657,6 +11950,11 @@
             ],
             "title": "Damage Deposit Gbp"
           },
+          "date_change_declined": {
+            "default": false,
+            "title": "Date Change Declined",
+            "type": "boolean"
+          },
           "date_change_note": {
             "anyOf": [
               {
@@ -11954,6 +12252,11 @@
               }
             ],
             "title": "Payout Upfront Percent"
+          },
+          "price_update_declined": {
+            "default": false,
+            "title": "Price Update Declined",
+            "type": "boolean"
           },
           "pricing": {
             "anyOf": [
@@ -12354,10 +12657,25 @@
             "title": "Bookings",
             "type": "array"
           },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "success": {
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "required": [
@@ -12486,6 +12804,62 @@
           "context_fingerprint"
         ],
         "title": "VendorCopilotBriefResponse",
+        "type": "object"
+      },
+      "VendorDashboardResponse": {
+        "description": "Aggregated vendor home data.",
+        "properties": {
+          "active_bookings": {
+            "items": {
+              "$ref": "#/components/schemas/VendorBookingListItem"
+            },
+            "title": "Active Bookings",
+            "type": "array"
+          },
+          "active_bookings_count": {
+            "default": 0,
+            "title": "Active Bookings Count",
+            "type": "integer"
+          },
+          "bookings_by_date": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/VendorBookingListItem"
+              },
+              "type": "array"
+            },
+            "title": "Bookings By Date",
+            "type": "object"
+          },
+          "needs_response": {
+            "items": {
+              "$ref": "#/components/schemas/VendorBookingListItem"
+            },
+            "title": "Needs Response",
+            "type": "array"
+          },
+          "notification_preview": {
+            "$ref": "#/components/schemas/PortalDashboardNotificationPreview"
+          },
+          "pending_bookings_count": {
+            "default": 0,
+            "title": "Pending Bookings Count",
+            "type": "integer"
+          },
+          "success": {
+            "default": true,
+            "title": "Success",
+            "type": "boolean"
+          },
+          "upcoming_agenda": {
+            "items": {
+              "$ref": "#/components/schemas/VendorBookingListItem"
+            },
+            "title": "Upcoming Agenda",
+            "type": "array"
+          }
+        },
+        "title": "VendorDashboardResponse",
         "type": "object"
       },
       "VendorInsuranceState": {
@@ -12647,6 +13021,21 @@
             ],
             "title": "Average Rating"
           },
+          "five_star_count": {
+            "default": 0,
+            "title": "Five Star Count",
+            "type": "integer"
+          },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "review_count": {
             "default": 0,
             "title": "Review Count",
@@ -12663,6 +13052,11 @@
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           }
         },
         "title": "VendorOwnerReviewsResponse",
@@ -12733,6 +13127,26 @@
       "VendorPayoutHistoryResponse": {
         "description": "The vendor's payout ledger.",
         "properties": {
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "paid_out_last_30_days_gbp": {
+            "default": 0.0,
+            "title": "Paid Out Last 30 Days Gbp",
+            "type": "number"
+          },
+          "paid_out_last_30_days_label": {
+            "default": "GBP 0",
+            "title": "Paid Out Last 30 Days Label",
+            "type": "string"
+          },
           "payouts": {
             "items": {
               "$ref": "#/components/schemas/VendorPayoutRow"
@@ -12744,6 +13158,11 @@
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           },
           "total_awaiting_gbp": {
             "default": 0.0,
@@ -13060,10 +13479,25 @@
             "title": "Bookings",
             "type": "array"
           },
+          "limit": {
+            "default": 25,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
           "success": {
             "default": true,
             "title": "Success",
             "type": "boolean"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
           },
           "total_fee_savings_gbp": {
             "title": "Total Fee Savings Gbp",
@@ -13500,6 +13934,67 @@
       "get": {
         "description": "Every post, draft or published, most recently edited first.",
         "operationId": "list_posts_api_v1_admin_blog_posts_get",
+        "parameters": [
+          {
+            "description": "Match title, slug, or author",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Match title, slug, or author",
+              "title": "Search"
+            }
+          },
+          {
+            "description": "draft or published",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "draft or published",
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -13536,6 +14031,16 @@
             "x-codes": [
               "forbidden"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -14147,7 +14652,7 @@
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 50,
+              "default": 25,
               "maximum": 200,
               "minimum": 1,
               "title": "Limit",
@@ -15576,7 +16081,7 @@
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 50,
+              "default": 25,
               "maximum": 200,
               "minimum": 1,
               "title": "Limit",
@@ -16092,6 +16597,47 @@
               "title": "Status",
               "type": "string"
             }
+          },
+          {
+            "description": "Match summary or booking id",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Match summary or booking id",
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -16432,6 +16978,126 @@
         ]
       }
     },
+    "/api/v1/admin/financials/daily": {
+      "get": {
+        "description": "One page of daily financial buckets for the admin table.",
+        "operationId": "financials_daily_api_v1_admin_financials_daily_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminFinancialsDailyListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Financials Daily",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/financials/export.csv": {
       "get": {
         "description": "The financials CSV attachment; writes a `financials.export_csv` audit row.",
@@ -16655,6 +17321,29 @@
               ],
               "title": "To Date"
             }
+          },
+          {
+            "in": "query",
+            "name": "category_offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Category Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category_limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Category Limit",
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -16736,11 +17425,22 @@
         "parameters": [
           {
             "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 200,
-              "maximum": 500,
+              "default": 25,
+              "maximum": 200,
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
@@ -17404,6 +18104,31 @@
       "get": {
         "description": "Every partner, newest first, with the link each one shares.",
         "operationId": "list_partners_api_v1_admin_referrals_partners_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -17440,6 +18165,16 @@
             "x-codes": [
               "forbidden"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -17695,7 +18430,7 @@
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 50,
+              "default": 25,
               "maximum": 200,
               "minimum": 1,
               "title": "Limit",
@@ -17932,6 +18667,18 @@
               ],
               "title": "Vendor User Id"
             }
+          },
+          {
+            "description": "all, published, or hidden",
+            "in": "query",
+            "name": "visibility",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "description": "all, published, or hidden",
+              "title": "Visibility",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -18166,8 +18913,33 @@
     },
     "/api/v1/admin/team": {
       "get": {
-        "description": "Every admin account, for the team roster screen.",
+        "description": "Admin accounts for the team roster screen, oldest first.",
         "operationId": "list_team_api_v1_admin_team_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -18204,6 +18976,16 @@
             "x-codes": [
               "forbidden"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -18623,7 +19405,7 @@
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 50,
+              "default": 25,
               "maximum": 200,
               "minimum": 1,
               "title": "Limit",
@@ -18679,6 +19461,22 @@
                 }
               ],
               "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "returned_for_edits",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Returned For Edits"
             }
           }
         ],
@@ -20707,7 +21505,7 @@
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 50,
+              "default": 25,
               "maximum": 100,
               "minimum": 1,
               "title": "Limit",
@@ -20816,6 +21614,49 @@
       "get": {
         "description": "The caller's threads, newest activity first.",
         "operationId": "list_conversations_api_v1_chat_conversations_get",
+        "parameters": [
+          {
+            "description": "all (default) | dm | support",
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "all (default) | dm | support",
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -20852,6 +21693,16 @@
             "x-codes": [
               "chat_portal_only"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -21394,6 +22245,48 @@
               ],
               "description": "Exclude this payment_status (e.g. unpaid for payment history)",
               "title": "Exclude Payment Status"
+            }
+          },
+          {
+            "description": "Part of an event name or vendor business name.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Part of an event name or vendor business name.",
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           }
         ],
@@ -23446,10 +24339,88 @@
         ]
       }
     },
+    "/api/v1/client/dashboard": {
+      "get": {
+        "description": "Aggregated home-screen data for the client portal.",
+        "operationId": "get_client_dashboard_api_v1_client_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientDashboardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Client Dashboard",
+        "tags": [
+          "client"
+        ]
+      }
+    },
     "/api/v1/client/disputes": {
       "get": {
         "description": "Every dispute on a booking the client is party to, most recently opened first.",
         "operationId": "list_client_disputes_api_v1_client_disputes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -23486,6 +24457,16 @@
             "x-codes": [
               "forbidden"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -24501,6 +25482,53 @@
       "get": {
         "description": "The client's dashboard feed, newest first.",
         "operationId": "get_client_notifications_feed_api_v1_client_notifications_feed_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "read_state",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "pattern": "^(all|unread)$",
+              "title": "Read State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "topic",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "pattern": "^(all|bookings|payments|messages)$",
+              "title": "Topic",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -24537,6 +25565,16 @@
             "x-codes": [
               "forbidden"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -26454,6 +27492,66 @@
               ],
               "description": "Exclude this payment_status",
               "title": "Exclude Payment Status"
+            }
+          },
+          {
+            "description": "Part of an event name or client email.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Part of an event name or client email.",
+              "title": "Q"
+            }
+          },
+          {
+            "description": "Exact conversation id linked to the booking.",
+            "in": "query",
+            "name": "conversation_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Exact conversation id linked to the booking.",
+              "title": "Conversation Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           }
         ],
@@ -28675,10 +29773,88 @@
         ]
       }
     },
+    "/api/v1/vendor/dashboard": {
+      "get": {
+        "description": "Aggregated home-screen data for the vendor portal.",
+        "operationId": "get_vendor_dashboard_api_v1_vendor_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VendorDashboardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Vendor Dashboard",
+        "tags": [
+          "vendor"
+        ]
+      }
+    },
     "/api/v1/vendor/disputes": {
       "get": {
         "description": "Every dispute on a booking the vendor is party to, most recently opened first.",
         "operationId": "list_vendor_disputes_api_v1_vendor_disputes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -28715,6 +29891,16 @@
             "x-codes": [
               "forbidden"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -29012,6 +30198,53 @@
       "get": {
         "description": "The vendor's dashboard feed, newest first.",
         "operationId": "get_vendor_notifications_feed_api_v1_vendor_notifications_feed_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "read_state",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "pattern": "^(all|unread)$",
+              "title": "Read State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "topic",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "pattern": "^(all|bookings|payments|messages)$",
+              "title": "Topic",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -29048,6 +30281,16 @@
             "x-codes": [
               "forbidden"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -29464,6 +30707,31 @@
       "get": {
         "description": "Vendor earnings ledger: their share only, not the client total Eventtz charged.",
         "operationId": "get_payout_history_api_v1_vendor_payments_history_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -29500,6 +30768,16 @@
             "x-codes": [
               "forbidden"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -29849,6 +31127,31 @@
       "get": {
         "description": "Bookings clients made with the vendor's codes, and what the codes saved them.",
         "operationId": "list_referral_bookings_api_v1_vendor_referral_bookings_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -29885,6 +31188,16 @@
             "x-codes": [
               "forbidden"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -30004,6 +31317,49 @@
       "get": {
         "description": "The caller's visible reviews, matching what shows on their public profile.",
         "operationId": "list_own_reviews_api_v1_vendor_reviews_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "min_rating",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 5,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Rating"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -30040,6 +31396,16 @@
             "x-codes": [
               "forbidden"
             ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "security": [
@@ -30299,7 +31665,7 @@
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 50,
+              "default": 25,
               "maximum": 200,
               "minimum": 1,
               "title": "Limit",

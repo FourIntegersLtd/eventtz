@@ -44,6 +44,24 @@ export function BookingPriceUpdateBanner({
             New price from your vendor
           </p>
         </div>
+        {adjustments.length > 0 ? (
+          <div className="mt-3 rounded-lg border border-amber-300/80 bg-white px-3 py-2.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-900">
+              Why the price changed
+            </p>
+            <ul className="mt-1.5 space-y-1.5">
+              {adjustments.map((adjustment) => (
+                <li key={adjustment.id} className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="font-medium text-neutral-900">{adjustment.label}</span>
+                  <span className="shrink-0 font-semibold tabular-nums text-neutral-900">
+                    {formatAdjustmentAmount(adjustment.amount_gbp)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
         <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="text-sm text-neutral-500">
             Was:{" "}
@@ -54,19 +72,6 @@ export function BookingPriceUpdateBanner({
           </span>
           <span className="text-sm font-semibold text-neutral-900">Now: {nowTotalLabel}</span>
         </div>
-
-        {adjustments.length > 0 ? (
-          <ul className="mt-3 space-y-1.5 text-[13px] text-neutral-600">
-            {adjustments.map((a) => (
-              <li key={a.id} className="flex items-start gap-2">
-                <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-neutral-400" aria-hidden />
-                <span>
-                  {a.label}: {formatAdjustmentAmount(a.amount_gbp)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
 
         {pricing && !pricing.has_pricing_tbc ? (
           <div className="mt-3 rounded-lg border border-neutral-200/80 bg-white/70 px-3 py-2.5">

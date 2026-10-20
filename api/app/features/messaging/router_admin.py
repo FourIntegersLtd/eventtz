@@ -9,6 +9,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import MailerDependency
 from app.features.messaging import service_support
 from app.features.messaging.errors import (
@@ -65,11 +66,17 @@ async def admin_messages_send(
     responses=error_responses(*ROLE_ERRORS),
 )
 async def admin_messages_conversations(
-    session: SessionDep, principal: CurrentStaff, limit: Annotated[int, Query(ge=1, le=500)] = 200
+    session: SessionDep,
+    principal: CurrentStaff,
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=200)] = DEFAULT_LIST_LIMIT,
 ) -> AdminSupportConversationsListResponse:
     """The newest support threads."""
+    conversations, total = await service_support.list_support_threads_page(
+        session, offset=offset, limit=limit
+    )
     return AdminSupportConversationsListResponse(
-        conversations=await service_support.list_support_threads(session, limit=limit)
+        conversations=conversations, total=total, offset=offset, limit=limit
     )
 
 

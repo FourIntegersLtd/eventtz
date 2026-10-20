@@ -11,6 +11,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.core.pagination import DEFAULT_LIST_LIMIT
+
 VendorProfileStatus = Literal["draft", "submitted", "complete"]
 VendorApprovalStatus = Literal["pending", "approved", "banned"]
 VendorListingOverride = Literal["auto", "visible", "hidden"]
@@ -116,7 +118,7 @@ class AdminVendorsListResponse(BaseModel):
     vendors: list[AdminVendorRow] = Field(default_factory=list)
     total: int = 0
     offset: int = 0
-    limit: int = 50
+    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminVendorDetailResponse(BaseModel):

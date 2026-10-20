@@ -1,7 +1,7 @@
 "use client";
 
-import { NotificationsPageView } from "@/features/notifications/NotificationsPageView";
+import { VendorNotificationsEzView } from "@/features/notifications/VendorNotificationsEzView";
 
 export default function VendorNotificationsPage() {
-  return <NotificationsPageView portal="vendor" />;
+  return <VendorNotificationsEzView />;
 }

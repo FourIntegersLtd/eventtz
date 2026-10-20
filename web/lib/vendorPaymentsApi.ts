@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export { getApiErrorDetail } from "@/lib/api-errors";
 
 export type VendorPaymentsStatus = {
@@ -31,9 +32,16 @@ export type VendorPayoutHistory = {
   payouts: VendorPayoutRow[];
   total_paid_out_gbp: number;
   total_paid_out_label: string;
+  paid_out_last_30_days_gbp?: number;
+  paid_out_last_30_days_label?: string;
   total_awaiting_gbp: number;
   total_awaiting_label: string;
+  total?: number;
+  offset?: number;
+  limit?: number;
 };
+
+export const VENDOR_PAYOUTS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export async function postConnectStripeAccount(
   returnPath?: string,
@@ -52,7 +60,16 @@ export async function fetchVendorStripeConnectStatus(): Promise<VendorPaymentsSt
 }
 
 /** Vendor earnings ledger - their share only, not the client total Eventtz charged. */
-export async function fetchVendorPayoutHistory(): Promise<VendorPayoutHistory> {
-  const { data } = await api.get<VendorPayoutHistory>("/api/v1/vendor/payments/history");
+export async function fetchVendorPayoutHistoryPage(
+  offset = 0,
+  limit = VENDOR_PAYOUTS_PAGE_SIZE,
+): Promise<VendorPayoutHistory> {
+  const { data } = await api.get<VendorPayoutHistory>("/api/v1/vendor/payments/history", {
+    params: { offset, limit },
+  });
   return data;
+}
+
+export async function fetchVendorPayoutHistory(): Promise<VendorPayoutHistory> {
+  return fetchVendorPayoutHistoryPage(0, 200);
 }

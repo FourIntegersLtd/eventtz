@@ -1,65 +1,42 @@
 "use client";
 
+import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
-import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
-import {
-  adminFilterControlClass,
-  adminFilterControlClassLg36,
-} from "@/features/admin/components/adminFilterControlClass";
+import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
+import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import { AdminVendorsTable } from "@/features/admin/vendors/AdminVendorsTable";
 import { useAdminVendors } from "@/features/admin/vendors/useAdminVendors";
 import type { AdminVendorProfileNudgeResult } from "@/lib/adminVendorsApi";
+import {
+  vendorQueueFilters,
+  type VendorQueueTab,
+} from "@/features/admin/vendors/adminVendorQueueStatus";
+import {
+  AdminVendorQueueFilterModal,
+  vendorQueueTabLabel,
+} from "@/features/admin/vendors/AdminVendorQueueFilterModal";
 
-const APPROVAL_STATUSES = ["", "pending", "approved", "banned"];
-const PROFILE_STATUSES = ["", "draft", "submitted", "complete"];
-
-type NudgeKind = "profile" | "payout";
-
-function nudgeToastCopy(
-  kind: NudgeKind,
-  result: AdminVendorProfileNudgeResult,
-): {
-  title: string;
-  description: string;
-  tone: "success" | "error" | "neutral";
-} {
-  const { sent, skipped, failures } = result;
+function nudgeToastSummary(result: AdminVendorProfileNudgeResult): string {
   const parts: string[] = [];
-  const skippedLabel =
-    kind === "profile" ? "skipped (not draft)." : "skipped (payouts set up or not approved).";
-
-  if (sent > 0) {
-    parts.push(`Sent ${sent} email${sent === 1 ? "" : "s"}.`);
+  if (result.sent > 0) {
+    parts.push(`${result.sent} sent`);
   }
-  if (skipped > 0) {
-    parts.push(`${skipped} ${skippedLabel}`);
+  if (result.skipped > 0) {
+    parts.push(`${result.skipped} skipped`);
   }
-  if (failures.length > 0) {
-    const reasons = [...new Set(failures.map((f) => f.error).filter(Boolean))];
-    const reasonHint = reasons.length > 0 ? ` ${reasons.join("; ")}.` : "";
-    parts.push(`${failures.length} failed.${reasonHint}`);
+  if (result.failures.length > 0) {
+    parts.push(`${result.failures.length} failed`);
   }
-
-  const description = parts.join(" ") || "No emails were sent.";
-  const label = kind === "profile" ? "profile" : "payout";
-
-  if (sent > 0 && failures.length === 0) {
-    return { title: `${label} emails sent`, description, tone: "success" };
-  }
-  if (sent > 0) {
-    return { title: `${label} emails partly sent`, description, tone: "neutral" };
-  }
-  if (failures.length > 0 || skipped > 0) {
-    return { title: `Could not send ${label} emails`, description, tone: "error" };
-  }
-  return { title: `No ${label} emails sent`, description, tone: "neutral" };
+  return parts.length > 0 ? parts.join(", ") : "No emails sent";
 }
 
 export function AdminVendorsView() {
+  const [queueTab, setQueueTab] = useState<VendorQueueTab>("pending");
+  const [filterOpen, setFilterOpen] = useState(false);
   const { showToast } = useToast();
   const {
     rows,
@@ -71,12 +48,10 @@ export function AdminVendorsView() {
     error,
     search,
     setSearch,
-    approvalStatus,
     setApprovalStatus,
-    profileStatus,
     setProfileStatus,
+    setReturnedForEdits,
     selectedUserIds,
-    selectableUserIdsOnPage,
     selectedDraftCount,
     selectedPayoutCount,
     toggleSelectedUserId,
@@ -87,129 +62,79 @@ export function AdminVendorsView() {
     nudgeBusy,
   } = useAdminVendors();
 
-  const canPrev = offset > 0;
-  const canNext = offset + limit < total;
+  useEffect(() => {
+    const filters = vendorQueueFilters(queueTab);
+    setOffset(0);
+    setApprovalStatus(filters.approvalStatus);
+    setProfileStatus(filters.profileStatus);
+    setReturnedForEdits(filters.returnedForEdits);
+  }, [queueTab, setApprovalStatus, setOffset, setProfileStatus, setReturnedForEdits]);
 
-  const runNudge = async (kind: NudgeKind) => {
-    const outcome = kind === "profile" ? await nudgeDraftVendors() : await nudgePayoutVendors();
-    if (!outcome) return;
-    if (outcome.kind === "error") {
-      showToast({
-        title:
-          kind === "profile"
-            ? "Could not send profile emails"
-            : "Could not send payout emails",
-        description: outcome.message,
-        tone: "error",
-        durationMs: 7000,
-      });
-      return;
-    }
-    const toast = nudgeToastCopy(kind, outcome.result);
+  const runProfileNudge = useCallback(async () => {
+    const outcome = await nudgeDraftVendors();
+    if (!outcome || outcome.kind === "error") return;
     showToast({
-      title: toast.title,
-      description: toast.description,
-      tone: toast.tone,
-      durationMs: toast.tone === "error" ? 7000 : 6000,
+      title: "Profile reminders sent",
+      description: nudgeToastSummary(outcome.result),
+      tone: outcome.result.failures.length > 0 ? "neutral" : "success",
     });
-  };
+  }, [nudgeDraftVendors, showToast]);
+
+  const runPayoutNudge = useCallback(async () => {
+    const outcome = await nudgePayoutVendors();
+    if (!outcome || outcome.kind === "error") return;
+    showToast({
+      title: "Payout reminders sent",
+      description: nudgeToastSummary(outcome.result),
+      tone: outcome.result.failures.length > 0 ? "neutral" : "success",
+    });
+  }, [nudgePayoutVendors, showToast]);
+
+  const activeFilterLabel = vendorQueueTabLabel(queueTab);
+  const activeFilterCount = queueTab !== "pending" ? 1 : 0;
 
   return (
-    <div className="space-y-4">
+    <div className="ez-stack ez-stack--lg">
       {error ? <AdminErrorBanner message={error} /> : null}
-      <AdminPageHeader />
 
-      <AdminFilterBar>
-        <label className="block w-full min-w-0 max-w-full text-sm lg:min-w-[12rem] lg:flex-1">
-          <span className="text-neutral-600">Search email or business</span>
-          <input
-            value={search}
-            onChange={(e) => {
-              setOffset(0);
-              setSearch(e.target.value);
-            }}
-            className={adminFilterControlClass}
-            placeholder="Contains…"
-          />
-        </label>
-        <label className="block w-full min-w-0 max-w-full text-sm lg:w-auto">
-          <span className="text-neutral-600">Approval</span>
-          <select
-            value={approvalStatus}
-            onChange={(e) => {
-              setOffset(0);
-              setApprovalStatus(e.target.value);
-            }}
-            className={adminFilterControlClassLg36}
-          >
-            {APPROVAL_STATUSES.map((s) => (
-              <option key={s || "all"} value={s}>
-                {s || "All"}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block w-full min-w-0 max-w-full text-sm lg:w-auto">
-          <span className="text-neutral-600">Profile</span>
-          <select
-            value={profileStatus}
-            onChange={(e) => {
-              setOffset(0);
-              setProfileStatus(e.target.value);
-            }}
-            className={adminFilterControlClassLg36}
-          >
-            {PROFILE_STATUSES.map((s) => (
-              <option key={s || "all"} value={s}>
-                {s || "All"}
-              </option>
-            ))}
-          </select>
-        </label>
-      </AdminFilterBar>
+      <EzListFilterToolbar
+        searchValue={search}
+        onSearchChange={(value) => {
+          setOffset(0);
+          setSearch(value);
+        }}
+        searchPlaceholder="Search email or business"
+        searchAriaLabel="Search email or business"
+        inputClassName={adminFilterControlClass}
+        onOpenFilter={() => setFilterOpen(true)}
+        activeFilterCount={activeFilterCount}
+        summary={
+          queueTab !== "pending"
+            ? {
+                label: activeFilterLabel,
+                onClear: () => {
+                  setQueueTab("pending");
+                },
+              }
+            : null
+        }
+      />
 
-      {selectedUserIds.length > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3">
-          <p className="text-sm text-neutral-700">
-            {selectedUserIds.length} vendor{selectedUserIds.length === 1 ? "" : "s"} selected
-            {selectedDraftCount > 0 || selectedPayoutCount > 0 ? (
-              <span className="text-neutral-500">
-                {" "}
-                (
-                {[
-                  selectedDraftCount > 0 ? `${selectedDraftCount} draft` : null,
-                  selectedPayoutCount > 0 ? `${selectedPayoutCount} need payouts` : null,
-                ]
-                  .filter(Boolean)
-                  .join(", ")}
-                )
-              </span>
-            ) : null}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {selectedDraftCount > 0 ? (
-              <button
-                type="button"
-                disabled={nudgeBusy}
-                onClick={() => void runNudge("profile")}
-                className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {nudgeBusy ? "Sending…" : "Send complete profile email"}
-              </button>
-            ) : null}
-            {selectedPayoutCount > 0 ? (
-              <button
-                type="button"
-                disabled={nudgeBusy}
-                onClick={() => void runNudge("payout")}
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {nudgeBusy ? "Sending…" : "Send setup payouts email"}
-              </button>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
+      <AdminVendorQueueFilterModal
+        isOpen={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        value={queueTab}
+        onChange={setQueueTab}
+        showReminders={!loading && rows.length > 0}
+        selectedCount={selectedUserIds.length}
+        selectedDraftCount={selectedDraftCount}
+        selectedPayoutCount={selectedPayoutCount}
+        nudgeBusy={nudgeBusy}
+        onSelectAllOnPage={selectAllSelectableOnPage}
+        onClearPage={clearSelectableOnPage}
+        onNudgeProfile={() => void runProfileNudge()}
+        onNudgePayout={() => void runPayoutNudge()}
+      />
 
       {loading ? (
         <AdminLoadingState label="Loading vendors…" />
@@ -220,34 +145,16 @@ export function AdminVendorsView() {
           <AdminVendorsTable
             rows={rows}
             selectedUserIds={selectedUserIds}
-            selectableUserIdsOnPage={selectableUserIdsOnPage}
             onToggleSelected={toggleSelectedUserId}
-            onSelectAllSelectable={selectAllSelectableOnPage}
-            onClearSelectableOnPage={clearSelectableOnPage}
           />
-          <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-neutral-600">
-            <span>
-              Showing {rows.length ? offset + 1 : 0}-{offset + rows.length} of {total}
-            </span>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={!canPrev}
-                onClick={() => setOffset(Math.max(0, offset - limit))}
-                className="rounded-lg border border-neutral-200 px-3 py-1.5 text-sm disabled:opacity-40"
-              >
-                Previous
-              </button>
-              <button
-                type="button"
-                disabled={!canNext}
-                onClick={() => setOffset(offset + limit)}
-                className="rounded-lg border border-neutral-200 px-3 py-1.5 text-sm disabled:opacity-40"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          <TablePagination
+            offset={offset}
+            limit={limit}
+            total={total}
+            pageRowCount={rows.length}
+            onPrevious={() => setOffset(Math.max(0, offset - limit))}
+            onNext={() => setOffset(offset + limit)}
+          />
         </>
       )}
     </div>

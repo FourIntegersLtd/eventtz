@@ -59,6 +59,15 @@ export function ClientBookingDetailExtras({
 }: ClientBookingDetailExtrasProps) {
   return (
     <>
+      {detail.date_change_declined ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4">
+          <p className="text-sm font-semibold text-amber-950">Your vendor declined the date change</p>
+          <p className="mt-1 text-[13px] text-amber-950">
+            The event stays on its original date. You can message them from this booking.
+          </p>
+        </div>
+      ) : null}
+
       <BookingDateChangeCard
         role="client"
         bookingId={detail.booking_request_id}

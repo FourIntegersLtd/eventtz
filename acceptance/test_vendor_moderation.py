@@ -121,6 +121,36 @@ def test_admin_list_vendors_filters_by_status(admin_db: LocalDatabase, as_staff)
     assert ids == {submitted_id}
 
 
+def test_admin_list_vendors_filters_by_returned_for_edits(admin_db: LocalDatabase, as_staff) -> None:
+    """`returned_for_edits` splits draft vendors staff returned from in-progress drafts."""
+    label = uuid.uuid4().hex[:8]
+    returned_id = _seed_vendor(
+        admin_db,
+        f"mod-list-returned-{label}-a",
+        status="draft",
+        payload={"returnedForEditsAt": "2026-01-15T12:00:00+00:00"},
+    )
+    in_progress_id = _seed_vendor(admin_db, f"mod-list-returned-{label}-b", status="draft", payload={})
+
+    returned_only = as_staff.get(
+        VENDORS_URL,
+        params={"status": "draft", "returned_for_edits": "true", "q": label},
+    )
+    assert returned_only.status_code == 200
+    returned_body = returned_only.json()
+    assert {row["user_id"] for row in returned_body["vendors"]} == {returned_id}
+    assert returned_body["total"] == 1
+
+    in_progress_only = as_staff.get(
+        VENDORS_URL,
+        params={"status": "draft", "returned_for_edits": "false", "q": label},
+    )
+    assert in_progress_only.status_code == 200
+    in_progress_body = in_progress_only.json()
+    assert {row["user_id"] for row in in_progress_body["vendors"]} == {in_progress_id}
+    assert in_progress_body["total"] == 1
+
+
 def test_admin_list_vendors_filters_by_q_matching_email(admin_db: LocalDatabase, as_staff) -> None:
     """`q` matches by vendor email (case-insensitive substring)."""
     label = uuid.uuid4().hex[:8]

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.features.referrals import service_partners
 from app.features.referrals.errors import (
     DisplayNameEmpty,
@@ -36,9 +37,15 @@ MAX_SIGNUPS_PAGE = 200
 
 
 @router.get("/partners", response_model=ReferralPartnerListResponse, responses=error_responses(*ROLE_ERRORS))
-async def list_partners(session: SessionDep, principal: CurrentStaff) -> ReferralPartnerListResponse:
+async def list_partners(
+    session: SessionDep,
+    principal: CurrentStaff,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
+) -> ReferralPartnerListResponse:
     """Every partner, newest first, with the link each one shares."""
-    return ReferralPartnerListResponse(partners=await service_partners.list_partners(session))
+    partners, total = await service_partners.list_partners_page(session, offset=offset, limit=limit)
+    return ReferralPartnerListResponse(partners=partners, total=total, offset=offset, limit=limit)
 
 
 @router.post(
@@ -77,7 +84,7 @@ async def list_signups(
     principal: CurrentStaff,
     partner_id: str,
     offset: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=MAX_SIGNUPS_PAGE),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=MAX_SIGNUPS_PAGE),
     shoutout: ShoutoutFilter = "all",
 ) -> ReferralSignupListResponse:
     """One page of the vendors a partner brought in, newest first, optionally by shout-out state."""

@@ -19,6 +19,14 @@ export type ContactSharingSettingsSectionProps = {
   role: PortalRole;
 };
 
+/** Saves one contact-sharing switch and returns the stored settings. */
+export async function persistContactSharingToggle(
+  current: ContactSharingSettings,
+  key: keyof Pick<ContactSharingSettings, "share_email" | "share_phone">,
+): Promise<ContactSharingSettings> {
+  return updateContactSharingSettings({ [key]: !current[key] });
+}
+
 export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSectionProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -39,9 +47,8 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
     if (!settings) return;
     setSaving(true);
     setError(null);
-    const next = { ...settings, [key]: !settings[key] };
     try {
-      const updated = await updateContactSharingSettings({ [key]: next[key] });
+      const updated = await persistContactSharingToggle(settings, key);
       setSettings(updated);
       showToast({ title: "Contact preferences saved", tone: "success" });
     } catch {

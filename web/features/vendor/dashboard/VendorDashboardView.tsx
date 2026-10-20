@@ -1,22 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { formatEventDate, shortDateLabel } from "@/lib/dateFormat";
-import { AttentionFeedCard } from "@/features/dashboard/AttentionFeedCard";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { dashboardNotificationUpdates } from "@/features/dashboard/attentionFeedHelpers";
 import type { AttentionItem } from "@/features/dashboard/attentionTypes";
 import { eventDayOver } from "@/features/bookings/eventDay";
-import { VendorGrowthGlanceTile } from "@/features/vendor/copilot/VendorGrowthGlanceTile";
 import { useVendorDashboard } from "./useVendorDashboard";
-import { VendorBookingsCalendarCard } from "./VendorBookingsCalendarCard";
-import { VendorAttentionCard } from "./VendorAttentionCard";
 import { VendorCancellationPolicyModal } from "./VendorCancellationPolicyModal";
+import { publicSiteUrl } from "@/lib/siteUrl";
+import { VendorDashboardDesignStatic } from "./VendorDashboardDesignStatic";
 
 function daysUntil(iso: string): number {
   const start = new Date(`${iso.slice(0, 10)}T00:00:00`);
@@ -37,8 +34,10 @@ export function VendorDashboardView() {
     updates,
     needsResponse,
     activeBookings,
+    acceptedUpcoming,
     bookingsByDate,
     upcomingAgenda,
+    analytics,
     errorMessage,
     payoutsReady,
     cancellationPolicyChosen,
@@ -161,79 +160,46 @@ export function VendorDashboardView() {
     upcomingAgenda,
   ]);
 
-  return (
-    <div className="w-full min-w-0 max-w-full space-y-6 pt-2">
-      {loadStatus === "error" && errorMessage && (
-        <LottieFailurePanel
-          className="py-5"
-          title="Couldn't load dashboard"
-          description={errorMessage}
-        />
-      )}
+  const meta = user?.user_metadata;
+  const greetingName =
+    (typeof meta?.first_name === "string"
+      ? meta.first_name
+      : typeof meta?.firstName === "string"
+        ? meta.firstName
+        : ""
+    ).trim() || "there";
 
-      <VendorAttentionCard
-        payoutsReady={payoutsReady}
-        policyChosen={cancellationPolicyChosen}
-        loading={loadStatus === "loading"}
-        connecting={payoutsConnecting}
-        onConnect={() => void connectPayouts("/vendor/payments")}
+  if (loadStatus === "error" && errorMessage) {
+    return (
+      <LottieFailurePanel
+        className="py-5"
+        title="Couldn't load dashboard"
+        description={errorMessage}
       />
+    );
+  }
 
+  return (
+    <>
       <VendorCancellationPolicyModal
         policyChosen={cancellationPolicyChosen}
         loading={loadStatus === "loading"}
       />
-
-      {loadStatus === "ready" ? (
-        <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
-          <Link
-            href="/vendor/bookings?tab=active"
-            className={`flex min-w-0 w-full flex-col justify-between overflow-hidden ${portalCard} ${portalCardPadding} transition hover:shadow-md`}
-          >
-            <p className="text-base font-medium text-neutral-500">Active bookings</p>
-            <p className="mt-4 text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl">
-              {activeBookingsCount}
-            </p>
-          </Link>
-          <Link
-            href="/vendor/bookings?tab=active&status=pending"
-            className={`flex min-w-0 w-full flex-col justify-between overflow-hidden ${portalCard} ${portalCardPadding} transition hover:shadow-md`}
-          >
-            <p className="text-base font-medium text-neutral-500">Pending response</p>
-            <p
-              className={`mt-4 text-3xl font-semibold tracking-tight sm:text-4xl ${
-                pendingBookingsCount > 0 ? "text-amber-600" : "text-neutral-900"
-              }`}
-            >
-              {pendingBookingsCount}
-            </p>
-          </Link>
-          <VendorGrowthGlanceTile />
-        </div>
-      ) : null}
-
-      <div className="grid w-full min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
-        <div className="min-w-0 lg:col-span-2">
-          <AttentionFeedCard
-            items={attentionItems}
-            loading={loadStatus === "loading"}
-          />
-        </div>
-
-        <div className="min-w-0 lg:col-span-1">
-          {loadStatus === "ready" ? (
-            <VendorBookingsCalendarCard
-              bookingsByDate={bookingsByDate}
-              agendaRows={upcomingAgenda}
-              onSelectDate={(key) => {
-                setSelectedDayKey(key);
-                setDayOpen(true);
-              }}
-            />
-          ) : null}
-        </div>
-      </div>
-
+      <VendorDashboardDesignStatic
+        greetingName={greetingName}
+        pendingEnquiries={pendingBookingsCount}
+        confirmedBookings={acceptedUpcoming.length}
+        needsResponse={needsResponse}
+        analytics={analytics}
+        bookingsByDate={bookingsByDate}
+        publicProfileHref={
+          user?.id ? publicSiteUrl(`/client/browse/${encodeURIComponent(user.id)}`) : null
+        }
+        onCalendarDaySelect={(dateKey) => {
+          setSelectedDayKey(dateKey);
+          setDayOpen(true);
+        }}
+      />
       <Modal
         isOpen={dayOpen}
         onClose={() => setDayOpen(false)}
@@ -278,6 +244,6 @@ export function VendorDashboardView() {
           </ul>
         )}
       </Modal>
-    </div>
+    </>
   );
 }

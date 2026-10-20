@@ -1,15 +1,14 @@
 "use client";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { BackLink } from "@/components/ui/BackLink";
 import { ClientBookingReviewForm } from "@/features/client/bookings/ClientBookingReviewForm";
 import { ClientBookingDetailExtras } from "@/features/client/bookings/ClientBookingDetailExtras";
 import { useClientBookingsController } from "@/features/client/bookings/useClientBookingsController";
 import { BookingDisputeSection } from "@/features/bookings/BookingDisputeSection";
-import { BookingDetailPanel } from "@/features/bookings/BookingDetailPanel";
-import { BookingListPanel } from "@/features/bookings/BookingListPanel";
-import { MasterDetailLayout } from "@/features/bookings/MasterDetailLayout";
+import { ClientBookingsEzList } from "@/features/client/bookings/ClientBookingsEzList";
+import { ClientMyBookingsHub } from "@/features/client/bookings/ClientMyBookingsHub";
 import { BOOKING_EMPTY_LIST_TITLE } from "@/features/bookings/bookingListConstants";
+import { VendorBookingDetailEzPanel } from "@/features/vendor/bookings/VendorBookingDetailEzPanel";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";
@@ -101,42 +100,18 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
         />
       ) : null}
 
-      <MasterDetailLayout
-        hasSelection={!!selectedBookingId}
-        list={
-          <BookingListPanel
-            tab={c.tab}
-            onTabChange={c.setTab}
-            rows={c.rows}
-            eventGroups={c.eventGroups}
-            loading={c.listLoading}
-            error={c.listError}
-            selectedId={selectedBookingId ?? null}
-            onSelect={c.selectBooking}
-            emptyTitle={BOOKING_EMPTY_LIST_TITLE[c.tab]}
-          />
-        }
-        detail={
-          <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-            {selectedBookingId ? (
-              <BackLink
-                href="/client/bookings"
-                label="Back to bookings"
-                tone="muted"
-                mobileOnly
-                className="mb-3 shrink-0"
-              />
-            ) : null}
-            <div className="min-h-0 flex-1 overflow-hidden">
-              <BookingDetailPanel
-                booking={c.viewModel}
-                loading={c.detailLoading || (c.listLoading && !selectedBookingId)}
-                error={c.detailError}
-                actionError={c.actionError}
-                headerActions={c.headerActions}
-                footerActions={c.footerActions}
-                emptyTitle={c.list.length === 0 ? "No bookings yet" : "Select a booking"}
-                slots={{
+      {selectedBookingId ? (
+        <VendorBookingDetailEzPanel
+          backHref="/client/bookings"
+          footerSectionTitle="Next steps"
+          booking={c.viewModel}
+          loading={c.detailLoading}
+          error={c.detailError}
+          actionError={c.actionError}
+          headerActions={c.headerActions}
+          footerActions={c.footerActions}
+          emptyTitle={c.list.length === 0 ? "No bookings yet" : "Booking not found"}
+          slots={{
                   beforeSections: c.detail ? (
                     <ClientBookingDetailExtras
                       detail={c.detail}
@@ -191,12 +166,27 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
                   ) : (
                     <></>
                   ),
-                }}
-              />
-            </div>
-          </div>
-        }
-      />
+          }}
+        />
+      ) : (
+        <ClientMyBookingsHub segment="bookings">
+          <ClientBookingsEzList
+            tab={c.tab}
+            onTabChange={c.setTab}
+            rows={c.rows}
+            loading={c.listLoading}
+            error={c.listError}
+            emptyTitle={BOOKING_EMPTY_LIST_TITLE[c.tab]}
+            listOffset={c.listOffset}
+            listPageSize={c.listPageSize}
+            listTotal={c.listTotal}
+            listSearch={c.listSearch}
+            onListSearchChange={c.setListSearch}
+            onListPrevious={() => c.setListOffset(Math.max(0, c.listOffset - c.listPageSize))}
+            onListNext={() => c.setListOffset(c.listOffset + c.listPageSize)}
+          />
+        </ClientMyBookingsHub>
+      )}
     </>
   );
 }

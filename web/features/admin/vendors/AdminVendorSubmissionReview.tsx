@@ -2,10 +2,15 @@
 
 import { CheckCircle2, XCircle } from "lucide-react";
 import type { AdminListingMediaSavePayload, AdminVendorRow } from "@/lib/adminVendorsApi";
+import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
 import { TagPills } from "./vendorDetailsShared";
 import { AdminVendorSubmissionChecklist } from "./AdminVendorSubmissionChecklist";
 import { AdminVendorSubmissionActions } from "./AdminVendorSubmissionActions";
 import { AdminVendorSubmissionMediaRail } from "./AdminVendorSubmissionMediaRail";
+import { VendorConsequencesSection } from "./VendorConsequencesSection";
+import { VendorDetailsApprovalSection } from "./VendorDetailsApprovalSection";
+import { VendorInsuranceSection } from "./VendorInsuranceSection";
+import { VendorStripeConnectSection } from "./VendorStripeConnectSection";
 import {
   DetailSection,
   SubmissionCard,
@@ -47,16 +52,39 @@ function splitPortfolioFields(fields: AdminSubmissionField[]) {
   return { socialLinks };
 }
 
+export type AdminVendorSubmissionReviewPanel = "submission" | "staff";
+
 type Props = {
   model: AdminVendorSubmissionReviewModel;
+  /** Submission wizard fields, or staff review actions (tabs keep these separate). */
+  panel: AdminVendorSubmissionReviewPanel;
   vendor?: AdminVendorRow;
   busyId?: string | null;
   onUnsubmit?: AdminVendorUnsubmitHandler;
   onReportError?: (message: string) => void;
   onSaveListingMedia?: (payload: AdminListingMediaSavePayload) => Promise<boolean>;
+  onSetApproval?: (userId: string, status: VendorApprovalStatus) => Promise<boolean>;
+  onSetListingOverride?: (
+    userId: string,
+    override: VendorListingOverride,
+    reason?: string,
+  ) => Promise<boolean>;
+  onRestoreStripe?: (userId: string) => Promise<boolean>;
 };
 
-export function AdminVendorSubmissionReview({ model, vendor, busyId, onUnsubmit, onReportError, onSaveListingMedia }: Props) {
+/** Vendor submission review: submission fields and/or staff decision panels (one panel per tab). */
+export function AdminVendorSubmissionReview({
+  model,
+  panel,
+  vendor,
+  busyId,
+  onUnsubmit,
+  onReportError,
+  onSaveListingMedia,
+  onSetApproval,
+  onSetListingOverride,
+  onRestoreStripe,
+}: Props) {
   const checklistGroups = model.checklistGroups ?? [];
   const reachFields = model.reachFields ?? [];
   const locationFields = model.locationFields ?? [];
@@ -84,129 +112,191 @@ export function AdminVendorSubmissionReview({ model, vendor, busyId, onUnsubmit,
     ...reachFields,
   ];
 
-  return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
-      <div className="min-w-0 space-y-8">
-        <div className="space-y-4">
-          <AdminVendorSubmissionChecklist groups={checklistGroups} />
-          {vendor && onUnsubmit ? (
-            <AdminVendorSubmissionActions
-              vendor={vendor}
-              checklistGroups={checklistGroups}
-              businessName={model.businessName}
-              busyId={busyId ?? null}
-              onUnsubmit={onUnsubmit}
-              onReportError={onReportError}
+  const showStaffAside = Boolean(vendor && onSetApproval && onSetListingOverride);
+
+  const submissionReviewPanel = (
+    <section className="ez-card overflow-hidden">
+      <div className="ez-card__head">
+        <h2 className="ez-h3">Review checklist</h2>
+        <p className="ez-small mt-1">
+          Work through gaps here, then use <strong className="font-medium text-neutral-800">Actions</strong> to
+          approve or update listing status.
+        </p>
+      </div>
+      <div className="ez-card__body flex flex-col gap-4">
+        {vendor && onUnsubmit ? (
+          <AdminVendorSubmissionActions
+            vendor={vendor}
+            checklistGroups={checklistGroups}
+            businessName={model.businessName}
+            busyId={busyId ?? null}
+            onUnsubmit={onUnsubmit}
+            onReportError={onReportError}
+          />
+        ) : null}
+        <AdminVendorSubmissionChecklist groups={checklistGroups} embedded />
+      </div>
+    </section>
+  );
+
+  const submissionContent = (
+    <div className="flex flex-col gap-8">
+      {submissionReviewPanel}
+
+      <DetailSection
+        id="submission-contact"
+        title="Contact"
+        description="Account holder and how clients can reach them"
+      >
+        <SubmissionFieldGrid fields={identityFields} />
+      </DetailSection>
+
+      <DetailSection
+        id="submission-listing"
+        title="Business & listing"
+        description="What clients see on explore and the public profile"
+      >
+        <SubmissionCard>
+          <dl>
+            <SubmissionFieldBlock
+              label="Public bio"
+              value={model.bio}
+              missing={model.bioMissing}
             />
+          </dl>
+          <SubmissionLabelRow label="Services">
+            <TagPills items={serviceLabels} />
+          </SubmissionLabelRow>
+          <SubmissionLabelRow label="Event types">
+            <TagPills items={eventTypeLabels} />
+          </SubmissionLabelRow>
+          {socialLinks ? (
+            <SubmissionLabelRow label="Social links">
+              <p className="text-sm text-neutral-800">{socialLinks.value}</p>
+            </SubmissionLabelRow>
           ) : null}
-        </div>
+        </SubmissionCard>
+      </DetailSection>
 
-        <div className="space-y-8">
-          <DetailSection
-            id="submission-identity"
-            title="Identity & contact"
-            description="Login and business contact details"
-          >
-            <SubmissionFieldGrid fields={identityFields} />
-          </DetailSection>
+      <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
+        <DetailSection
+          id="submission-location"
+          title="Location & travel"
+          description="Where they operate and how far they travel"
+        >
+          <SubmissionFieldGrid fields={locationFields} />
+        </DetailSection>
 
-          <DetailSection
-            id="submission-listing"
-            title="Listing content"
-            description="Public bio, services, and event types"
-          >
-            <SubmissionCard>
-              <dl>
-                <SubmissionFieldBlock
-                  label="Public bio"
-                  value={model.bio}
-                  missing={model.bioMissing}
-                />
-              </dl>
-              <SubmissionLabelRow label="Services">
-                <TagPills items={serviceLabels} />
-              </SubmissionLabelRow>
-              <SubmissionLabelRow label="Event types">
-                <TagPills items={eventTypeLabels} />
-              </SubmissionLabelRow>
-              {socialLinks ? (
-                <SubmissionLabelRow label="Social links">
-                  <p className="text-sm text-neutral-800">{socialLinks.value}</p>
-                </SubmissionLabelRow>
-              ) : null}
-            </SubmissionCard>
-          </DetailSection>
-
-          <DetailSection
-            id="submission-pricing"
-            title="Pricing & packages"
-            description="Rates, packages, and discounts"
-          >
-            <SubmissionFieldGrid fields={pricingFields} />
-            <SubmissionCard>
-              <SubmissionPricingOptionsList
-                options={pricingOptions}
-                sharedContext={pricingSharedContext}
-              />
-              {discountLines.length > 0 ? (
-                <SubmissionLabelRow label="Discounts">
-                  <ul className="space-y-2 text-sm text-neutral-700">
-                    {discountLines.map((line) => (
-                      <li key={line}>{line}</li>
-                    ))}
-                  </ul>
-                </SubmissionLabelRow>
-              ) : null}
-            </SubmissionCard>
-          </DetailSection>
-
-          <DetailSection
-            id="submission-availability"
-            title="Portfolio & availability"
-            description="Location, travel, and schedule"
-          >
-            <SubmissionFieldGrid fields={locationFields} />
-            <SubmissionCard>
-              <SubmissionFieldRows fields={availabilityFields} />
-              {additionalFields.length > 0 ? (
-                <div className="mt-6 border-t border-neutral-100 pt-6">
-                  <p className="mb-3 text-[13px] font-medium text-neutral-500">Dietary info</p>
-                  <SubmissionFieldRows fields={additionalFields} />
-                </div>
-              ) : null}
-            </SubmissionCard>
-          </DetailSection>
-
-          <DetailSection
-            id="submission-legal"
-            title="Legal confirmations"
-            description="Vendor attestations at submission"
-          >
-            <SubmissionCard>
-              <div className="divide-y divide-neutral-100">
-                {confirmations.map((item) => (
-                  <ConfirmationRow
-                    key={item.label}
-                    label={item.label}
-                    accepted={item.accepted}
-                  />
-                ))}
-              </div>
-            </SubmissionCard>
-          </DetailSection>
-        </div>
+        <DetailSection
+          id="submission-availability"
+          title="Availability"
+          description="Days, capacity, and blocked dates"
+        >
+          <SubmissionCard>
+            <SubmissionFieldRows fields={availabilityFields} />
+          </SubmissionCard>
+        </DetailSection>
       </div>
 
-      <AdminVendorSubmissionMediaRail
-        initials={model.initials}
-        businessName={model.businessName}
-        fullName={model.fullName}
-        submittedMedia={submittedMedia}
-        vendorUserId={vendor?.user_id}
-        profileFormData={vendor?.profile_form_data}
-        listingMediaDisabled={busyId === vendor?.user_id}
-        onSaveListingMedia={onSaveListingMedia}
-      />
+      <DetailSection
+        id="submission-pricing"
+        title="Pricing"
+        description="Rates, cancellation, packages, and discounts"
+      >
+        <SubmissionFieldGrid fields={pricingFields} />
+        <SubmissionCard>
+          <SubmissionPricingOptionsList
+            options={pricingOptions}
+            sharedContext={pricingSharedContext}
+            discountLines={discountLines}
+          />
+        </SubmissionCard>
+      </DetailSection>
+
+      {additionalFields.length > 0 ? (
+        <DetailSection
+          id="submission-additional"
+          title="Additional information"
+          description="Dietary and allergen details for catering-style listings"
+        >
+          <SubmissionCard>
+            <SubmissionFieldRows fields={additionalFields} />
+          </SubmissionCard>
+        </DetailSection>
+      ) : null}
+
+      <DetailSection
+        id="submission-media"
+        title="Photos & documents"
+        description="Profile, portfolio, videos, and uploaded files"
+      >
+        <AdminVendorSubmissionMediaRail
+          embedded
+          initials={model.initials}
+          businessName={model.businessName}
+          fullName={model.fullName}
+          submittedMedia={submittedMedia}
+          vendorUserId={vendor?.user_id}
+          profileFormData={vendor?.profile_form_data}
+          listingMediaDisabled={busyId === vendor?.user_id}
+          onSaveListingMedia={onSaveListingMedia}
+        />
+      </DetailSection>
+
+      <DetailSection
+        id="submission-legal"
+        title="Legal confirmations"
+        description="Attestations at submission"
+      >
+        <SubmissionCard>
+          <div className="divide-y divide-neutral-100">
+            {confirmations.map((item) => (
+              <ConfirmationRow
+                key={item.label}
+                label={item.label}
+                accepted={item.accepted}
+              />
+            ))}
+          </div>
+        </SubmissionCard>
+      </DetailSection>
     </div>
   );
+
+  const staffContent =
+    showStaffAside && vendor ? (
+      <div className="ez-split">
+        <div className="ez-split__main flex flex-col gap-8">
+          <VendorDetailsApprovalSection
+            vendor={vendor}
+            busyId={busyId ?? null}
+            onSetApproval={onSetApproval!}
+            onSetListingOverride={onSetListingOverride!}
+          />
+
+          <VendorConsequencesSection vendor={vendor} />
+        </div>
+
+        <div className="ez-split__aside flex flex-col gap-8">
+          <VendorStripeConnectSection
+            vendor={vendor}
+            busy={busyId === vendor.user_id}
+            onRestoreStripe={onRestoreStripe}
+          />
+          <VendorInsuranceSection key={vendor.user_id} vendor={vendor} />
+        </div>
+      </div>
+    ) : null;
+
+  if (panel === "submission") {
+    return submissionContent;
+  }
+
+  if (!staffContent) {
+    return (
+      <p className="text-sm text-neutral-600">Staff actions are not available for this vendor.</p>
+    );
+  }
+
+  return staffContent;
 }

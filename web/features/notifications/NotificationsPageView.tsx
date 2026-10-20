@@ -4,8 +4,9 @@ import Link from "next/link";
 import { Bell, CalendarClock, MessageCircle, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
-  fetchClientNotificationsFeed,
-  fetchVendorNotificationsFeed,
+  fetchClientNotificationsFeedPage,
+  fetchVendorNotificationsFeedPage,
+  NOTIFICATIONS_FEED_PAGE_SIZE,
   type NotificationFeedItem,
 } from "@/lib/notificationsFeedApi";
 import { markAllClientBookingNotificationsRead } from "@/lib/clientNotificationsApi";
@@ -14,6 +15,7 @@ import { formatDateTime } from "@/lib/dateFormat";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { SkeletonListRows } from "@/components/ui/Skeleton";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
 type NotificationsPageViewProps = {
@@ -35,16 +37,22 @@ export function NotificationsPageView({ portal }: NotificationsPageViewProps) {
   const [items, setItems] = useState<NotificationFeedItem[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [total, setTotal] = useState(0);
 
-  const fetchFeed = portal === "client" ? fetchClientNotificationsFeed : fetchVendorNotificationsFeed;
+  const fetchPage =
+    portal === "client" ? fetchClientNotificationsFeedPage : fetchVendorNotificationsFeedPage;
   const markAllRead =
     portal === "client" ? markAllClientBookingNotificationsRead : markAllVendorBookingNotificationsRead;
 
   const load = () => {
     setLoading(true);
     setError(null);
-    void fetchFeed()
-      .then((feed) => setItems(feed))
+    void fetchPage(offset, NOTIFICATIONS_FEED_PAGE_SIZE)
+      .then((page) => {
+        setItems(page.items);
+        setTotal(page.total);
+      })
       .catch(() => setError("Could not load notifications."))
       .finally(() => setLoading(false));
   };
@@ -54,14 +62,13 @@ export function NotificationsPageView({ portal }: NotificationsPageViewProps) {
     void markAllRead().catch(() => {
       /* best-effort - the feed still renders either way */
     });
-    // Runs once per mount; `load`/`markAllRead` are stable for a given portal.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [portal]);
+  }, [portal, offset]);
 
   useRealtimeRefresh(
     ["booking_notifications:refresh", "chat:unread_refresh", "disputes:refresh"],
     load,
-    [portal],
+    [portal, offset],
   );
 
   return (
@@ -80,48 +87,58 @@ export function NotificationsPageView({ portal }: NotificationsPageViewProps) {
             title="You're all caught up"
           />
         ) : (
-          <ul>
-            {items.map((item, i) => {
-              const Icon = KIND_ICON[item.kind] ?? Bell;
-              const content = (
-                <div className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <Icon className="h-4 w-4" strokeWidth={2} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-neutral-900">{item.title}</p>
-                    {item.body ? (
-                      <p className="mt-0.5 line-clamp-2 text-sm text-neutral-500">{item.body}</p>
+          <>
+            <ul>
+              {items.map((item, i) => {
+                const Icon = KIND_ICON[item.kind] ?? Bell;
+                const content = (
+                  <div className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" strokeWidth={2} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-neutral-900">{item.title}</p>
+                      {item.body ? (
+                        <p className="mt-0.5 line-clamp-2 text-sm text-neutral-500">{item.body}</p>
+                      ) : null}
+                      <p className="mt-1 text-xs text-neutral-400">{formatDateTime(item.created_at)}</p>
+                    </div>
+                    {item.unread ? (
+                      <span
+                        className="mt-1.5 h-2 w-2 flex-none rounded-full bg-primary"
+                        aria-label="Unread"
+                      />
                     ) : null}
-                    <p className="mt-1 text-xs text-neutral-400">{formatDateTime(item.created_at)}</p>
                   </div>
-                  {item.unread ? (
-                    <span
-                      className="mt-1.5 h-2 w-2 flex-none rounded-full bg-primary"
-                      aria-label="Unread"
-                    />
-                  ) : null}
-                </div>
-              );
-              return (
-                <li
-                  key={`${item.notification_id ?? item.booking_id ?? i}-${i}`}
-                  className="border-b border-neutral-100 last:border-b-0"
-                >
-                  {item.href ? (
-                    <Link
-                      href={item.href}
-                      className="block min-h-11 px-4 py-3.5 transition duration-150 ease-out hover:bg-neutral-50 active:bg-neutral-100"
-                    >
-                      {content}
-                    </Link>
-                  ) : (
-                    <div className="px-4 py-3">{content}</div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+                );
+                return (
+                  <li
+                    key={`${item.notification_id ?? item.booking_id ?? i}-${i}`}
+                    className="border-b border-neutral-100 last:border-b-0"
+                  >
+                    {item.href ? (
+                      <Link
+                        href={item.href}
+                        className="block min-h-11 px-4 py-3.5 transition duration-150 ease-out hover:bg-neutral-50 active:bg-neutral-100"
+                      >
+                        {content}
+                      </Link>
+                    ) : (
+                      <div className="px-4 py-3">{content}</div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <TablePagination
+              offset={offset}
+              limit={NOTIFICATIONS_FEED_PAGE_SIZE}
+              total={total}
+              pageRowCount={items.length}
+              onPrevious={() => setOffset(Math.max(0, offset - NOTIFICATIONS_FEED_PAGE_SIZE))}
+              onNext={() => setOffset(offset + NOTIFICATIONS_FEED_PAGE_SIZE)}
+            />
+          </>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import {
   fetchAdminVendors,
   type AdminVendorRow,
@@ -20,12 +21,13 @@ export function useAdminVendors() {
   const [rows, setRows] = useState<AdminVendorRow[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
-  const [limit] = useState(50);
+  const [limit] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [approvalStatus, setApprovalStatus] = useState("");
   const [profileStatus, setProfileStatus] = useState("");
+  const [returnedForEdits, setReturnedForEdits] = useState<boolean | undefined>(undefined);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [nudgeBusy, setNudgeBusy] = useState(false);
 
@@ -63,6 +65,7 @@ export function useAdminVendors() {
         q: search.trim() || undefined,
         approval_status: approvalStatus || undefined,
         status: profileStatus || undefined,
+        returned_for_edits: returnedForEdits,
       };
       const res = await fetchAdminVendors(q);
       setRows(res.vendors);
@@ -75,7 +78,7 @@ export function useAdminVendors() {
     } finally {
       setLoading(false);
     }
-  }, [offset, limit, search, approvalStatus, profileStatus]);
+  }, [offset, limit, search, approvalStatus, profileStatus, returnedForEdits]);
 
   useEffect(() => {
     void load();
@@ -153,6 +156,8 @@ export function useAdminVendors() {
     setApprovalStatus,
     profileStatus,
     setProfileStatus,
+    returnedForEdits,
+    setReturnedForEdits,
     selectedUserIds,
     selectableUserIdsOnPage,
     selectedDraftCount,

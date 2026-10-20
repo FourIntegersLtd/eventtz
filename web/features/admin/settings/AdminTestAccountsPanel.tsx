@@ -21,14 +21,10 @@ function CopyFieldButton({
       type="button"
       aria-label={copied ? `${label} copied` : `Copy ${label}`}
       title={copied ? "Copied" : `Copy ${label}`}
-      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-100 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="ez-icon-btn ez-icon-btn--outline shrink-0"
       onClick={() => void onCopy()}
     >
-      {copied ? (
-        <Check className="h-4 w-4 text-emerald-600" aria-hidden />
-      ) : (
-        <Copy className="h-4 w-4" aria-hidden />
-      )}
+      {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
     </button>
   );
 }
@@ -44,20 +40,18 @@ function TestAccountRow({ account }: { account: AdminTestAccount }) {
   };
 
   return (
-    <div className="px-5 py-4 sm:px-6">
-      <p className="text-[13px] font-semibold text-neutral-900">{account.role}</p>
-      <div className="mt-2 flex min-w-0 items-center gap-2">
-        <p className="min-w-0 flex-1 truncate text-sm text-neutral-800" title={account.email}>
-          {account.email}
-        </p>
+    <div className="ez-lines">
+      <p className="ez-strong">{account.role}</p>
+      <div className="ez-hrow">
+        <p className="min-w-0 flex-1 truncate ez-small" title={account.email}>{account.email}</p>
         <CopyFieldButton
           label={`${account.role} email`}
           copied={copied === "email"}
           onCopy={() => void copy("email", account.email)}
         />
       </div>
-      <div className="mt-1 flex min-w-0 items-center gap-2">
-        <p className="min-w-0 flex-1 font-mono text-sm tracking-wider text-neutral-400" aria-hidden>
+      <div className="ez-hrow">
+        <p className="min-w-0 flex-1 font-mono text-sm tracking-wider ez-caption" aria-hidden>
           ••••••••
         </p>
         <span className="sr-only">{account.role} password hidden</span>
@@ -73,15 +67,14 @@ function TestAccountRow({ account }: { account: AdminTestAccount }) {
 
 export function AdminTestAccountsPanel() {
   return (
-    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-      <div className="px-5 py-4 sm:px-6 sm:py-5">
-        <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Test accounts</h2>
-        <p className="mt-0.5 text-[13px] text-neutral-400">
-          Sign in as these vendor and client accounts to QA the product. Passwords stay hidden; use
-          copy.
+    <section className="ez-card overflow-hidden">
+      <div className="ez-card__head">
+        <h2 className="ez-h3">Test accounts</h2>
+        <p className="ez-small">
+          Vendor and client QA sign-ins. Passwords stay hidden; use copy.
         </p>
       </div>
-      <div className="divide-y divide-neutral-100 border-t border-neutral-100">
+      <div className="ez-card__body ez-stack ez-stack--lg">
         {ADMIN_TEST_ACCOUNTS.map((account) => (
           <TestAccountRow key={account.email} account={account} />
         ))}

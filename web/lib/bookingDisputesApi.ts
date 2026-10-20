@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type ParticipantRole = "client" | "vendor";
 
 export type ParticipantDispute = {
@@ -53,11 +54,39 @@ export async function postParticipantBookingDispute(
   return data.dispute;
 }
 
+export const PARTICIPANT_DISPUTES_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
+
+export async function fetchParticipantDisputesPage(
+  role: ParticipantRole,
+  offset = 0,
+  limit = PARTICIPANT_DISPUTES_PAGE_SIZE,
+): Promise<{
+  disputes: ParticipantDispute[];
+  total: number;
+  offset: number;
+  limit: number;
+  open_count: number;
+}> {
+  const { data } = await api.get<{
+    success: boolean;
+    disputes: ParticipantDispute[];
+    total: number;
+    offset: number;
+    limit: number;
+    open_count?: number;
+  }>(participantDisputesPath(role, "disputes"), { params: { offset, limit } });
+  return {
+    disputes: data.disputes ?? [],
+    total: data.total ?? 0,
+    offset: data.offset ?? offset,
+    limit: data.limit ?? limit,
+    open_count: data.open_count ?? 0,
+  };
+}
+
 export async function fetchParticipantDisputes(role: ParticipantRole): Promise<ParticipantDispute[]> {
-  const { data } = await api.get<{ success: boolean; disputes: ParticipantDispute[] }>(
-    participantDisputesPath(role, "disputes"),
-  );
-  return data.disputes ?? [];
+  const page = await fetchParticipantDisputesPage(role, 0, 200);
+  return page.disputes;
 }
 
 export async function fetchParticipantDispute(

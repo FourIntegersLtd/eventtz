@@ -70,6 +70,10 @@ export type AdminMarketplaceAnalytics = {
     avg_booking_value_gbp: number;
     revenue_gbp: number;
   }[];
+  by_category_chart?: AdminMarketplaceAnalytics["by_category"];
+  by_category_total?: number;
+  category_offset?: number;
+  category_limit?: number;
   by_location: {
     key: string;
     enquiries: number;
@@ -96,6 +100,8 @@ export async function fetchAdminMarketplaceAnalytics(params?: {
   from_date?: string;
   to_date?: string;
   country_code?: string;
+  category_offset?: number;
+  category_limit?: number;
 }): Promise<AdminMarketplaceAnalytics> {
   const { data } = await api.get<AdminMarketplaceAnalytics>(
     "/api/v1/admin/marketplace-analytics",

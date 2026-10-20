@@ -1,15 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
+import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
+import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
-import { adminCard } from "@/components/admin-shell/adminTheme";
+import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
 import {
   AdminTable,
   AdminTableBody,
@@ -20,36 +22,75 @@ import {
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
 import {
+  ADMIN_BLOG_PAGE_SIZE,
   createAdminBlogPost,
-  fetchAdminBlogPosts,
+  fetchAdminBlogPostsPage,
   type BlogPostListItem,
+  type BlogPostStatus,
 } from "@/lib/adminBlogApi";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
 
-export function AdminBlogListView() {
+export type AdminBlogListPageHead = {
+  description?: string;
+  actions?: ReactNode;
+};
+
+type AdminBlogListViewProps = {
+  onRegisterPageHead?: (head: AdminBlogListPageHead) => void;
+};
+
+function statusBadge(status: BlogPostStatus) {
+  return status === "published" ? (
+    <span className="ez-badge ez-badge--success">Published</span>
+  ) : (
+    <span className="ez-badge ez-badge--neutral">Draft</span>
+  );
+}
+
+export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps) {
   const router = useRouter();
   const [posts, setPosts] = useState<BlogPostListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"" | BlogPostStatus>("");
+  const [statusFilterOpen, setStatusFilterOpen] = useState(false);
+  const [offset, setOffset] = useState(0);
+
+  const BLOG_STATUS_FILTER_OPTIONS: EzFilterOption<"" | BlogPostStatus>[] = [
+    { id: "", title: "All posts" },
+    { id: "published", title: "Published" },
+    { id: "draft", title: "Draft" },
+  ];
+
+  const blogStatusLabel =
+    BLOG_STATUS_FILTER_OPTIONS.find((option) => option.id === statusFilter)?.title ?? "Status";
+  const [total, setTotal] = useState(0);
 
   const load = useCallback(async () => {
     setError(null);
+    setLoading(true);
     try {
-      setPosts(await fetchAdminBlogPosts());
+      const page = await fetchAdminBlogPostsPage(offset, ADMIN_BLOG_PAGE_SIZE, {
+        search,
+        status: statusFilter,
+      });
+      setPosts(page.posts);
+      setTotal(page.total);
     } catch (e: unknown) {
       setError(getApiErrorDetail(e) ?? "Could not load posts.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [offset, search, statusFilter]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const createPost = async () => {
+  const createPost = useCallback(async () => {
     setCreating(true);
     setError(null);
     try {
@@ -59,127 +100,124 @@ export function AdminBlogListView() {
       setError(getApiErrorDetail(e) ?? "Could not create post.");
       setCreating(false);
     }
+  }, [router]);
+
+  useEffect(() => {
+    if (!onRegisterPageHead) return;
+    onRegisterPageHead({
+      description: total ? `${total} post${total === 1 ? "" : "s"}` : undefined,
+      actions: (
+        <button
+          type="button"
+          className="ez-btn ez-btn--primary ez-btn--sm"
+          disabled={creating}
+          onClick={() => void createPost()}
+        >
+          <Plus className="h-4 w-4" aria-hidden />
+          New post
+        </button>
+      ),
+    });
+    return () => onRegisterPageHead({});
+  }, [onRegisterPageHead, total, creating, createPost]);
+
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("");
+    setOffset(0);
   };
 
-  if (loading) return <AdminLoadingState label="Loading posts…" />;
+  if (loading && posts.length === 0) return <AdminLoadingState label="Loading posts…" />;
 
   return (
-    <div className="space-y-4">
-      {error ? <AdminErrorBanner message={error} /> : null}
-      <AdminPageHeader
-        actions={
-          <Button
-            variant="primary"
-            size="sm"
-            icon={<Plus className="h-4 w-4" aria-hidden />}
-            loading={creating}
-            onClick={() => void createPost()}
-          >
-            New post
-          </Button>
+    <div className="ez-stack">
+      {error ? <AdminErrorBanner message={error} onRetry={() => void load()} /> : null}
+
+      <EzListFilterToolbar
+        searchValue={search}
+        onSearchChange={(value) => {
+          setSearch(value);
+          setOffset(0);
+        }}
+        searchPlaceholder="Search title or slug"
+        searchAriaLabel="Search posts"
+        inputClassName={adminFilterControlClass}
+        onOpenFilter={() => setStatusFilterOpen(true)}
+        activeFilterCount={statusFilter ? 1 : 0}
+        summary={
+          statusFilter
+            ? {
+                label: blogStatusLabel,
+                onClear: () => {
+                  setStatusFilter("");
+                  setOffset(0);
+                },
+              }
+            : null
         }
+      />
+
+      <EzFilterOptionsModal
+        isOpen={statusFilterOpen}
+        onClose={() => setStatusFilterOpen(false)}
+        title="Filter posts"
+        description="Show all posts or narrow by publish status."
+        options={BLOG_STATUS_FILTER_OPTIONS}
+        value={statusFilter}
+        onChange={(id) => {
+          setStatusFilter(id);
+          setOffset(0);
+        }}
+        listAriaLabel="Post status"
+        resetValue=""
+        resetLabel="Show all"
       />
 
       {posts.length === 0 ? (
         <EmptyState
-          title="No posts yet"
-          description="Write your first draft and publish when you’re ready."
+          title={total === 0 && !search && !statusFilter ? "No posts yet" : "No posts match your filters"}
           lottie="searchNoResults"
           action={
-            <Button variant="primary" size="sm" loading={creating} onClick={() => void createPost()}>
-              New post
-            </Button>
+            total === 0 && !search && !statusFilter ? (
+              <button
+                type="button"
+                className="ez-btn ez-btn--primary ez-btn--sm"
+                disabled={creating}
+                onClick={() => void createPost()}
+              >
+                New post
+              </button>
+            ) : (
+              <button type="button" className="ez-btn ez-btn--secondary ez-btn--sm" onClick={clearFilters}>
+                Clear filters
+              </button>
+            )
           }
         />
       ) : (
-        <>
-          <ul className="space-y-3 md:hidden">
-            {posts.map((p) => (
-              <li key={p.id}>
-                <div className={`${adminCard} overflow-hidden`}>
-                  {p.cover_image_url ? (
-                    <div className="aspect-[16/10] w-full overflow-hidden bg-neutral-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={p.cover_image_url}
-                        alt=""
-                        className="block h-full w-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-[16/10] w-full bg-primary-soft/60" aria-hidden />
-                  )}
-                  <div className="flex flex-col gap-3 p-4">
-                    <div className="min-w-0">
-                      <p className="font-medium text-neutral-900">{p.title || "Untitled"}</p>
-                      <p className="mt-0.5 truncate text-xs text-neutral-500">
-                        /{p.slug}
-                        {p.author_name?.trim() ? ` · By ${p.author_name.trim()}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <span
-                        className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${
-                          p.status === "published"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-neutral-100 text-neutral-700"
-                        }`}
-                      >
-                        {p.status}
-                      </span>
-                      <p className="text-xs text-neutral-500">
-                        {p.updated_at ? formatDateTime(p.updated_at) : "-"}
-                      </p>
-                    </div>
-                    <Link
-                      href={`/admin/blog/${p.id}`}
-                      className="inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-neutral-200 bg-white text-sm font-medium text-primary transition hover:border-primary/30 hover:bg-primary/[0.04]"
-                    >
-                      Edit post
-                    </Link>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <AdminTable className="hidden md:block">
-            <AdminTableElement className="min-w-[32rem]">
+        <AdminTable>
+          <AdminTableElement className="min-w-[32rem]">
             <AdminTableHead>
               <AdminTableHeaderCell>Title</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Status</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
-              <AdminTableHeaderCell className="text-right"> </AdminTableHeaderCell>
+              <AdminTableHeaderCell>Author</AdminTableHeaderCell>
+              <AdminTableHeaderCell className="ez-td-status">Status</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Date</AdminTableHeaderCell>
+              <AdminTableHeaderCell> </AdminTableHeaderCell>
             </AdminTableHead>
             <AdminTableBody>
               {posts.map((p) => (
                 <AdminTableRow key={p.id}>
                   <AdminTableCell>
-                    <p className="font-medium text-neutral-900">{p.title || "Untitled"}</p>
-                    <p className="mt-0.5 text-xs text-neutral-500">
-                      /{p.slug}
-                      {p.author_name?.trim() ? ` · By ${p.author_name.trim()}` : ""}
-                    </p>
+                    <p className="ez-td-strong">{p.title || "Untitled"}</p>
+                    <p className="ez-caption">/{p.slug}</p>
                   </AdminTableCell>
-                  <AdminTableCell>
-                    <span
-                      className={`inline-flex rounded-md px-2 py-0.5 text-xs font-medium ${
-                        p.status === "published"
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-neutral-100 text-neutral-700"
-                      }`}
-                    >
-                      {p.status}
-                    </span>
-                  </AdminTableCell>
-                  <AdminTableCell className="text-sm text-neutral-600">
+                  <AdminTableCell>{p.author_name?.trim() || "-"}</AdminTableCell>
+                  <AdminTableCell className="ez-td-status">{statusBadge(p.status)}</AdminTableCell>
+                  <AdminTableCell className="ez-small">
                     {p.updated_at ? formatDateTime(p.updated_at) : "-"}
                   </AdminTableCell>
-                  <AdminTableCell className="text-right">
-                    <Link
-                      href={`/admin/blog/${p.id}`}
-                      className="text-sm font-medium text-primary hover:underline"
-                    >
+                  <AdminTableCell>
+                    <Link href={`/admin/blog/${p.id}`} className="ez-btn ez-btn--secondary ez-btn--sm">
                       Edit
                     </Link>
                   </AdminTableCell>
@@ -188,8 +226,16 @@ export function AdminBlogListView() {
             </AdminTableBody>
           </AdminTableElement>
         </AdminTable>
-        </>
       )}
+
+      <TablePagination
+        offset={offset}
+        limit={ADMIN_BLOG_PAGE_SIZE}
+        total={total}
+        loading={loading}
+        onPrevious={() => setOffset((current) => Math.max(0, current - ADMIN_BLOG_PAGE_SIZE))}
+        onNext={() => setOffset((current) => current + ADMIN_BLOG_PAGE_SIZE)}
+      />
     </div>
   );
 }

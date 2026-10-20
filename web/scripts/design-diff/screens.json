@@ -102,7 +102,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-stepper"
+          "waitFor": "input[type=tel]"
         }
       ],
       "probes": [
@@ -182,7 +182,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-stepper"
+          "waitFor": "textarea.ez-input--area"
         }
       ],
       "probes": [
@@ -277,7 +277,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-stepper"
+          "waitFor": ".ez-media-ph"
         }
       ],
       "probes": [
@@ -372,7 +372,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-stepper"
+          "waitFor": ".ez-card--flat"
         }
       ],
       "probes": [
@@ -467,7 +467,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-stepper"
+          "waitFor": ".ez-option"
         }
       ],
       "probes": [
@@ -562,7 +562,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-stepper"
+          "waitFor": ".ez-cal"
         }
       ],
       "probes": [
@@ -676,7 +676,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-stepper"
+          "waitFor": ".ez-upload"
         }
       ],
       "probes": [
@@ -782,7 +782,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-stepper"
+          "waitFor": ".ez-list-row"
         }
       ],
       "probes": [
@@ -832,11 +832,6 @@
           "page": ".ez-form-grid"
         },
         {
-          "name": "check",
-          "artboard": ".ez-check",
-          "page": ".ez-check"
-        },
-        {
           "name": "list row",
           "artboard": ".ez-list-row",
           "page": ".ez-list-row"
@@ -863,7 +858,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-stepper"
+          "waitFor": ".ez-dl"
         }
       ],
       "probes": [
@@ -898,11 +893,6 @@
           "page": ".ez-split__main .ez-card__head"
         },
         {
-          "name": "card foot",
-          "artboard": ".ez-card__foot",
-          "page": ".ez-card__foot"
-        },
-        {
           "name": "aside first card",
           "artboard": ".ez-split__aside .ez-card",
           "page": ".ez-split__aside .ez-card"
@@ -926,11 +916,6 @@
           "name": "edit button",
           "artboard": ".ez-btn--ghost.ez-btn--sm",
           "page": ".ez-btn--ghost.ez-btn--sm"
-        },
-        {
-          "name": "confirm check",
-          "artboard": ".ez-check",
-          "page": ".ez-check"
         },
         {
           "name": "ready card",
@@ -959,7 +944,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-pagehead h1"
+          "waitFor": ".ez-timeline"
         }
       ],
       "probes": [
@@ -1000,7 +985,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-pagehead h1"
+          "waitFor": "h1.ez-h1"
         }
       ],
       "probes": [
@@ -1022,7 +1007,7 @@
         {
           "name": "help card",
           "artboard": ".ez-split__aside .ez-card",
-          "page": ".ez-split__aside .ez-card"
+          "page": "[data-design-static='returned-help']"
         }
       ]
     },
@@ -1041,7 +1026,7 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-banner--success"
+          "waitFor": ".ez-kpi"
         }
       ],
       "probes": [
@@ -1062,8 +1047,521 @@
         },
         {
           "name": "kpi grid",
-          "artboard": ".ez-kpi",
-          "page": ".ez-kpi"
+          "artboard": ".ez-split__aside .ez-grid-2",
+          "page": "[data-design-static='vendor-kpis']"
+        }
+      ]
+    },
+    {
+      "id": "V12-PayoutAccount",
+      "artboard": "V12-PayoutAccount.dc.html",
+      "path": "/vendor/payments?tab=account",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1600,
+      "artboardRemove": [
+        ".ez-grid-3 > .ez-card:nth-child(2)",
+        ".ez-grid-3 > .ez-card:nth-child(3)"
+      ],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']",
+        "[data-design-runtime]"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-pagehead h1"
+        }
+      ],
+      "probes": [
+        {
+          "name": "payout heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        }
+      ]
+    },
+    {
+      "id": "V13-PayoutRequired",
+      "artboard": "V13-PayoutRequired.dc.html",
+      "path": "/vendor/bookings?designStatic=1&payoutPreview=1",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1100,
+      "artboardRemove": [
+        ".ez-scrim"
+      ],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']",
+        ".ez-scrim"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-pagehead h1"
+        }
+      ],
+      "probes": [
+        {
+          "name": "bookings heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1"
+        }
+      ]
+    },
+    {
+      "id": "V14-Dashboard",
+      "artboard": "V14-Dashboard.dc.html",
+      "path": "/vendor/dashboard",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1800,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "dashboard heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V15-Analytics",
+      "artboard": "V15-Analytics.dc.html",
+      "path": "/vendor/analytics",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1700,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "analytics heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1"
+        }
+      ]
+    },
+    {
+      "id": "V16-Bookings",
+      "artboard": "V16-Bookings.dc.html",
+      "path": "/vendor/bookings",
+      "auth": "vendor",
+      "width": 1440,
+      "height": 1400,
+      "artboardRemove": [],
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "bookings heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1"
+        }
+      ]
+    },
+    {
+      "id": "V17-RequestDetail",
+      "artboard": "V17-RequestDetail.dc.html",
+      "path": "/vendor/bookings/00000000-0000-4000-8000-000000000001",
+      "height": 1700,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V18-AdjustAccept",
+      "artboard": "V18-AdjustAccept.dc.html",
+      "path": "/vendor/bookings/00000000-0000-4000-8000-000000000001",
+      "height": 1400,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']",
+        ".ez-scrim"
+      ],
+      "artboardRemove": [
+        ".ez-scrim"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V19-SendQuote",
+      "artboard": "V19-SendQuote.dc.html",
+      "path": "/vendor/bookings/00000000-0000-4000-8000-000000000001",
+      "height": 1300,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']",
+        ".ez-scrim"
+      ],
+      "artboardRemove": [
+        ".ez-scrim"
+      ],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V20-Chat",
+      "artboard": "V20-Chat.dc.html",
+      "path": "/vendor/messages",
+      "height": 1200,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V21-Complete",
+      "artboard": "V21-Complete.dc.html",
+      "path": "/vendor/bookings/00000000-0000-4000-8000-000000000001",
+      "height": 1400,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V22-CancellationOutcome",
+      "artboard": "V22-CancellationOutcome.dc.html",
+      "path": "/vendor/bookings/00000000-0000-4000-8000-000000000001",
+      "height": 1400,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V23-PaymentRecord",
+      "artboard": "V23-PaymentRecord.dc.html",
+      "path": "/vendor/bookings/00000000-0000-4000-8000-design0001/payment-record",
+      "height": 1400,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V24-PayoutStatement",
+      "artboard": "V24-PayoutStatement.dc.html",
+      "path": "/vendor/bookings/00000000-0000-4000-8000-design0001/payout-statement",
+      "height": 1500,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V25-Payouts",
+      "artboard": "V25-Payouts.dc.html",
+      "path": "/vendor/payments?tab=payouts",
+      "height": 1500,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V26-Disputes",
+      "artboard": "V26-Disputes.dc.html",
+      "path": "/vendor/disputes",
+      "height": 1500,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V27-Reviews",
+      "artboard": "V27-Reviews.dc.html",
+      "path": "/vendor/profile/reviews",
+      "height": 1400,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V28-ProfileEditor",
+      "artboard": "V28-ProfileEditor.dc.html",
+      "path": "/vendor/profile",
+      "height": 1800,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V29-Notifications",
+      "artboard": "V29-Notifications.dc.html",
+      "path": "/vendor/notifications",
+      "height": 1200,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V30-Help",
+      "artboard": "V30-Help.dc.html",
+      "path": "/vendor/help",
+      "height": 1300,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
+        }
+      ]
+    },
+    {
+      "id": "V31-Settings",
+      "artboard": "V31-Settings.dc.html",
+      "path": "/vendor/settings",
+      "height": 1700,
+      "auth": "vendor",
+      "width": 1440,
+      "pageRemove": [
+        ".portal-content > [role=status]",
+        "button[aria-label='Open help']"
+      ],
+      "artboardRemove": [],
+      "setup": [
+        {
+          "waitFor": ".ez-content"
+        }
+      ],
+      "probes": [
+        {
+          "name": "page heading",
+          "artboard": ".ez-pagehead h1",
+          "page": ".ez-pagehead h1, h1.ez-h1"
         }
       ]
     }

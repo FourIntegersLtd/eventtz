@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { BookingDetailAction } from "@/features/bookings/bookingViewModel";
 import { useParticipantBookingsScaffold } from "@/features/bookings/useParticipantBookingsScaffold";
@@ -9,7 +9,8 @@ import { setPendingAcceptBookingId } from "@/features/vendor/payments/payoutAcce
 import { useVendorPayoutsReady } from "@/features/vendor/payments/useVendorPayoutsReady";
 import {
   fetchVendorBookingDetail,
-  fetchVendorBookings,
+  fetchVendorBookingsPage,
+  VENDOR_BOOKINGS_PAGE_SIZE,
   type VendorBookingDetail,
 } from "@/lib/vendorBookingsApi";
 import {
@@ -19,24 +20,35 @@ import {
 import { useVendorBookingActions } from "@/features/vendor/bookings/useVendorBookingActions";
 import { useVendorPayoutAcceptResume } from "@/features/vendor/bookings/useVendorPayoutAcceptResume";
 import { bookingEventGroupsForList } from "@/features/bookings/groupBookingsByEvent";
+import { useDesignDiffPayoutPreview } from "@/features/vendor/design/useDesignDiffStatic";
 
 type UseVendorBookingsControllerArgs = {
   selectedBookingId?: string;
 };
 
 export function useVendorBookingsController({ selectedBookingId }: UseVendorBookingsControllerArgs) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const listStatusFilter = searchParams.get("status") ?? "";
   const urlTab = searchParams.get("tab");
+  const [listSearch, setListSearch] = useState("");
 
-  const fetchList = useCallback(
-    (t: "active" | "closed") =>
-      fetchVendorBookings({
+  const fetchListPage = useCallback(
+    async (t: "active" | "closed", offset: number, limit: number) => {
+      const page = await fetchVendorBookingsPage({
         group: t,
+        offset,
+        limit,
         ...(listStatusFilter === "pending" ? { status: "pending" } : {}),
-      }),
-    [listStatusFilter],
+        ...(listSearch.trim() ? { q: listSearch.trim() } : {}),
+      });
+      return {
+        items: page.bookings,
+        total: page.total,
+        offset: page.offset,
+        limit: page.limit,
+      };
+    },
+    [listStatusFilter, listSearch],
   );
   const fetchDetail = useCallback((id: string) => fetchVendorBookingDetail(id), []);
   const getDetailStatus = useCallback((b: VendorBookingDetail) => b.booking_status, []);
@@ -45,6 +57,10 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     tab,
     setTab,
     list,
+    listTotal,
+    listOffset,
+    listPageSize,
+    setListOffset,
     listLoading,
     listError,
     detail,
@@ -58,7 +74,8 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     setChatOpen,
   } = useParticipantBookingsScaffold({
     selectedBookingId,
-    fetchList,
+    fetchListPage,
+    pageSize: VENDOR_BOOKINGS_PAGE_SIZE,
     fetchDetail,
     getDetailStatus,
   });
@@ -68,6 +85,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   const [confirmAction, setConfirmAction] = useState<null | "withdraw" | "vendor_cancel" | "complete">(
     null,
   );
+  const payoutPreview = useDesignDiffPayoutPreview();
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
 
   useEffect(() => {
@@ -75,6 +93,16 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
       setTab(urlTab);
     }
   }, [urlTab, setTab]);
+
+  useEffect(() => {
+    setListOffset(0);
+  }, [listSearch, setListOffset]);
+
+  useEffect(() => {
+    if (payoutPreview) {
+      setPayoutModalOpen(true);
+    }
+  }, [payoutPreview]);
 
   const {
     payoutsReady,
@@ -225,11 +253,6 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   const showClientResponseFlow =
     detail?.booking_status === "pending" && detail.initiator !== "vendor";
 
-  const selectBooking = useCallback(
-    (id: string) => router.push(`/vendor/bookings/${id}`),
-    [router],
-  );
-
   const handleConfirmAction = useCallback(() => {
     if (!confirmAction) return;
     const action = confirmAction;
@@ -244,6 +267,12 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     tab,
     setTab,
     list,
+    listTotal,
+    listOffset,
+    listPageSize,
+    setListOffset,
+    listSearch,
+    setListSearch,
     listLoading,
     listError,
     detail,
@@ -279,7 +308,6 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     requestAccept,
     applyBookingStatus: updateVendorBookingStatus,
     sendUpdatedPrice: saveVendorPriceAdjustments,
-    selectBooking,
     applyConfirmCompletion: confirmVendorCompletion,
   };
 }

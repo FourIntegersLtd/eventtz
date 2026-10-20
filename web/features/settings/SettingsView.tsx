@@ -98,7 +98,12 @@ function SettingsViewContent({ role }: SettingsViewProps) {
 
   return (
     <div className="w-full min-w-0 max-w-3xl space-y-6">
-      <SettingsTabs tabs={tabs} activeId={tab} basePath={basePath} />
+      <SettingsTabs
+        tabs={tabs}
+        activeId={tab}
+        basePath={basePath}
+        variant={role === "client" ? "ez" : "legacy"}
+      />
 
       <div role="tabpanel" aria-label={tabs.find((item) => item.id === tab)?.label}>
         <SettingsTabPanel role={role} tab={tab} />

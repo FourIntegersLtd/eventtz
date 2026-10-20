@@ -48,34 +48,32 @@ export function AdminDepositClaimCard({ bookingId, booking, canDecide, onResolve
   };
 
   return (
-    <section className="rounded-2xl border border-amber-200 bg-amber-50/70 px-5 py-4">
-      <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Deposit claim</h2>
-      <p className="mt-1 text-sm text-neutral-800">Vendor is claiming £{formatGbp(claim)}.</p>
-      {note ? (
-        <p className="mt-2 whitespace-pre-wrap rounded-xl bg-white px-3 py-2 text-sm text-neutral-700">
-          {note}
-        </p>
-      ) : null}
-      {canDecide ? (
-        <div className="mt-3 space-y-2">
-          <label className="block text-sm text-neutral-800">
-            Award to vendor (£0 to £{formatGbp(claim)})
-            <input
-              type="text"
-              inputMode="decimal"
-              value={award}
-              onChange={(event) => setAward(event.target.value)}
-              className="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
-            />
-          </label>
-          {formError ? <p className="text-xs text-amber-800">{formError}</p> : null}
-          <Button variant="primary" size="md" loading={busy} onClick={() => void decide()}>
-            Decide deposit claim
-          </Button>
-        </div>
-      ) : (
-        <p className="mt-2 text-xs text-neutral-500">Only super admins can decide deposit claims.</p>
-      )}
+    <section className="ez-banner ez-banner--warning">
+      <div className="ez-banner__body">
+        <h2 className="ez-banner__title">Deposit claim</h2>
+        <p>Vendor is claiming £{formatGbp(claim)}.</p>
+        {note ? <p className="whitespace-pre-wrap">{note}</p> : null}
+        {canDecide ? (
+          <div className="ez-stack ez-stack--sm">
+            <label className="block text-sm">
+              Award to vendor (£0 to £{formatGbp(claim)})
+              <input
+                type="text"
+                inputMode="decimal"
+                value={award}
+                onChange={(event) => setAward(event.target.value)}
+                className="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
+              />
+            </label>
+            {formError ? <p className="text-xs">{formError}</p> : null}
+            <Button variant="primary" size="md" loading={busy} onClick={() => void decide()}>
+              Decide deposit claim
+            </Button>
+          </div>
+        ) : (
+          <p className="ez-small">Only super admins can decide deposit claims.</p>
+        )}
+      </div>
     </section>
   );
 }

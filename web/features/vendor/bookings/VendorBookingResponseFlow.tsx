@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Modal } from "@/components/ui/Modal";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { VendorBookingResponseAdjustments } from "@/features/vendor/bookings/VendorBookingResponseAdjustments";
 import { VendorDraftReplyPanel } from "@/features/vendor/copilot/VendorDraftReplyPanel";
@@ -99,14 +99,14 @@ export function VendorBookingResponseFlow({
       detail.pricing?.client_total_label ?? detail.total_label,
     );
     return (
-      <div className="space-y-3">
-        <p className="text-sm text-neutral-600">
+      <div className="ez-stack ez-stack--sm">
+        <p className="ez-small">
           Waiting for them to accept your new price ({currentTotal}).
         </p>
         <button
           type="button"
+          className="ez-btn ez-btn--secondary ez-btn--block"
           onClick={() => openAdjust(draftsFromDetail(detail))}
-          className="text-sm font-medium text-primary hover:underline"
         >
           Edit price
         </button>
@@ -116,15 +116,22 @@ export function VendorBookingResponseFlow({
 
   if (step === "adjust") {
     return (
-      <VendorBookingResponseAdjustments
-        key={`${detail.booking_request_id}-${adjustKey}`}
-        pricing={detail.pricing}
-        initialLines={adjustInitialLines}
-        actionBusy={actionBusy}
-        adjustmentSaving={adjustmentSaving}
-        onBack={() => setStep("review")}
-        onSendUpdatedPrice={onSendUpdatedPrice}
-      />
+      <Modal
+        isOpen
+        onClose={() => setStep("review")}
+        title="Adjust and accept"
+        maxWidthClassName="max-w-xl"
+      >
+        <VendorBookingResponseAdjustments
+          key={`${detail.booking_request_id}-${adjustKey}`}
+          pricing={detail.pricing}
+          initialLines={adjustInitialLines}
+          actionBusy={actionBusy}
+          adjustmentSaving={adjustmentSaving}
+          onBack={() => setStep("review")}
+          onSendUpdatedPrice={onSendUpdatedPrice}
+        />
+      </Modal>
     );
   }
 
@@ -149,36 +156,44 @@ export function VendorBookingResponseFlow({
 
   return (
     <>
-      <div className="space-y-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-          <Button
-            variant="primary"
-            className="w-full sm:w-auto"
-            disabled={actionBusy || adjustmentSaving || !!checkingDecision || payoutsLoading}
-            loading={checkingDecision === "accept"}
-            onClick={() => void requestAcceptDecision()}
-          >
-            Accept booking
-          </Button>
-          <Button
-            variant="secondary"
-            className="w-full sm:w-auto"
-            disabled={actionBusy || adjustmentSaving || !!checkingDecision}
-            onClick={() => openAdjust([])}
-          >
-            Suggest a different price
-          </Button>
-        </div>
-        <div className="flex justify-end">
-          <button
-            type="button"
-            disabled={actionBusy || adjustmentSaving || !!checkingDecision}
-            onClick={() => void requestDecision("decline")}
-            className="text-sm font-medium text-red-700 underline disabled:opacity-60"
-          >
-            Can&apos;t take this one?
-          </button>
-        </div>
+      <div className="ez-stack ez-stack--sm">
+        {detail.price_update_declined ? (
+          <p className="ez-small">
+            The client declined your new price. The buttons below are for the original price.
+          </p>
+        ) : null}
+        <button
+          type="button"
+          className="ez-btn ez-btn--primary ez-btn--block"
+          disabled={actionBusy || adjustmentSaving || !!checkingDecision || payoutsLoading}
+          onClick={() => void requestAcceptDecision()}
+        >
+          {checkingDecision === "accept" ? "Checking…" : "Accept request"}
+        </button>
+        <button
+          type="button"
+          className="ez-btn ez-btn--secondary ez-btn--block"
+          disabled={actionBusy || adjustmentSaving || !!checkingDecision}
+          onClick={() => openAdjust([])}
+        >
+          Adjust and accept
+        </button>
+        <button
+          type="button"
+          className="ez-btn ez-btn--secondary ez-btn--block"
+          disabled={actionBusy || adjustmentSaving || !!checkingDecision}
+          onClick={onOpenChat}
+        >
+          Message client
+        </button>
+        <button
+          type="button"
+          className="ez-btn ez-btn--danger-quiet ez-btn--block"
+          disabled={actionBusy || adjustmentSaving || !!checkingDecision}
+          onClick={() => void requestDecision("decline")}
+        >
+          Decline
+        </button>
         <VendorDraftReplyPanel
           bookingId={detail.booking_request_id}
           onUseDraft={

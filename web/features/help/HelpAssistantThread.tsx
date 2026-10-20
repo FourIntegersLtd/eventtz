@@ -19,6 +19,7 @@ import {
   helpContactPath,
   helpMarkdownToHtml,
 } from "@/features/help/helpContent";
+import { CHAT_BUBBLE_MINE, CHAT_BUBBLE_THEIRS } from "@/lib/chatBubbleClasses";
 
 type Props = {
   audience: HelpAudience;
@@ -148,20 +149,12 @@ function HelpAssistantThreadInner({
           {thread.map((item, i) =>
             item.kind === "user" ? (
               <div key={i} className="flex justify-end">
-                <p
-                  className={
-                    embedded
-                      ? "max-w-[85%] rounded-2xl bg-neutral-900 px-3.5 py-2 text-[14px] text-white"
-                      : "max-w-[85%] rounded-2xl bg-primary px-3.5 py-2 text-sm text-white"
-                  }
-                >
-                  {item.content}
-                </p>
+                <p className={CHAT_BUBBLE_MINE}>{item.content}</p>
               </div>
             ) : (
               <div key={i} className="max-w-[95%] space-y-2">
                 <div
-                  className="rounded-2xl bg-neutral-100 px-3.5 py-2.5 text-[14px] text-neutral-800"
+                  className={CHAT_BUBBLE_THEIRS}
                   dangerouslySetInnerHTML={{
                     __html: helpMarkdownToHtml(item.content),
                   }}

@@ -3,13 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, Info, Mail } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { Select } from "@/components/ui/Select";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import {
   ADMIN_MESSAGE_BODY_HINT,
   EMAIL_HEALTH_FIELD_HINTS,
@@ -35,36 +33,19 @@ import { adminEmailTestSchema, parseForm } from "@/lib/validation";
 function groupTemplates(templates: AdminEmailTemplate[]) {
   const order = ["Recommended", "Layout preview"];
   const byCategory = new Map<string, AdminEmailTemplate[]>();
-  for (const t of templates) {
-    const list = byCategory.get(t.category) ?? [];
-    list.push(t);
-    byCategory.set(t.category, list);
+  for (const template of templates) {
+    const list = byCategory.get(template.category) ?? [];
+    list.push(template);
+    byCategory.set(template.category, list);
   }
   const categories = [
-    ...order.filter((c) => byCategory.has(c)),
-    ...[...byCategory.keys()].filter((c) => !order.includes(c)).sort(),
+    ...order.filter((category) => byCategory.has(category)),
+    ...[...byCategory.keys()].filter((category) => !order.includes(category)).sort(),
   ];
   return categories.map((category) => ({
     category,
     templates: (byCategory.get(category) ?? []).sort((a, b) => a.label.localeCompare(b.label)),
   }));
-}
-
-function LayoutInfoPanel({ templateId }: { templateId: string }) {
-  const info = emailHealthLayoutInfo(templateId);
-  return (
-    <div className="rounded-xl border border-primary/10 bg-primary/[0.03] px-4 py-3">
-      <p className="text-sm font-medium text-neutral-900">{info.title}</p>
-      <p className="mt-1 text-[13px] leading-relaxed text-neutral-600">{info.summary}</p>
-      <p className="mt-2 text-[13px] font-medium text-neutral-800">{info.whenToUse}</p>
-      <p className="mt-2 text-xs font-medium uppercase tracking-wide text-neutral-400">Examples</p>
-      <ul className="mt-1 list-inside list-disc space-y-0.5 text-[13px] text-neutral-600">
-        {info.realWorldExamples.map((example) => (
-          <li key={example}>{example}</li>
-        ))}
-      </ul>
-    </div>
-  );
 }
 
 export function AdminEmailTestingView() {
@@ -88,6 +69,7 @@ export function AdminEmailTestingView() {
 
   const grouped = useMemo(() => groupTemplates(templates), [templates]);
   const activeTemplateId = showAdvanced ? templateId : ADMIN_EMAIL_HEALTH_TEMPLATE_ID;
+  const layoutInfo = emailHealthLayoutInfo(activeTemplateId);
 
   const load = useCallback(async () => {
     if (!canUse) {
@@ -170,9 +152,12 @@ export function AdminEmailTestingView() {
 
   if (!canUse) {
     return (
-      <p className="text-sm text-neutral-600">
-        Only super admins can send test emails. Contact a super admin if you need access.
-      </p>
+      <div className="ez-banner ez-banner--warning">
+        <div className="ez-banner__body">
+          <div className="ez-banner__title">Super admin only</div>
+          <p className="ez-small">Only super admins can send test emails.</p>
+        </div>
+      </div>
     );
   }
 
@@ -181,133 +166,145 @@ export function AdminEmailTestingView() {
   }
 
   return (
-    <div className="w-full min-w-0 max-w-5xl space-y-6">
-      <AdminPageHeader subtitle="Confirm Resend delivery and preview email layouts with your own message text." />
+    <div className="w-full min-w-0 max-w-3xl ez-stack ez-stack--lg">
+      <div className="ez-banner ez-banner--neutral">
+        <div className="ez-banner__body">
+          <div className="ez-banner__title">Super admin only</div>
+          <p className="ez-small">
+            This page shows delivery data and the suppression list. Admins do not see it in the menu.
+          </p>
+        </div>
+      </div>
 
-      {error ? <AdminErrorBanner message={error} /> : null}
-      {success ? <p className="text-sm font-medium text-primary">{success}</p> : null}
+      {error ? <AdminErrorBanner message={error} onRetry={() => void load()} /> : null}
+      {success ? (
+        <div className="ez-banner ez-banner--success">
+          <div className="ez-banner__body">
+            <p className="ez-small">{success}</p>
+          </div>
+        </div>
+      ) : null}
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(280px,22rem)]">
-        <div className="space-y-6">
-          <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-            <div className="px-5 py-4 sm:px-6 sm:py-5">
-              <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Send to</h2>
-              <p className="mt-0.5 text-[13px] text-neutral-400">{EMAIL_HEALTH_FIELD_HINTS.sendTo}</p>
+      <section className="ez-card overflow-hidden">
+        <div className="ez-card__head">
+          <h2 className="ez-h3">Send a test email</h2>
+          <p className="ez-small">
+            No deliverability dashboard yet. Use this to preview layouts and confirm Resend delivery.
+          </p>
+        </div>
+        <div className="ez-card__body ez-stack ez-stack--lg">
+          <label className="ez-field" htmlFor="admin-email-test-to">
+            <span className="ez-label">Send to</span>
+            <span className="ez-caption">{EMAIL_HEALTH_FIELD_HINTS.sendTo}</span>
+            <div className="flex max-w-lg gap-2">
+              <input
+                id="admin-email-test-to"
+                type="text"
+                inputMode="email"
+                autoComplete="off"
+                spellCheck={false}
+                value={toEmail}
+                onChange={(e) => setToEmail(e.target.value)}
+                placeholder="name@example.com"
+                className="ez-input min-w-0 flex-1"
+              />
+              {toEmail ? (
+                <button
+                  type="button"
+                  onClick={() => setToEmail("")}
+                  className="ez-btn ez-btn--secondary ez-btn--sm shrink-0"
+                >
+                  Clear
+                </button>
+              ) : null}
             </div>
-            <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
-              <div className="flex max-w-lg gap-2">
-                <input
-                  id="admin-email-test-to"
-                  type="text"
-                  inputMode="email"
-                  autoComplete="off"
-                  spellCheck={false}
-                  value={toEmail}
-                  onChange={(e) => setToEmail(e.target.value)}
-                  placeholder="name@example.com"
-                  className="min-w-0 flex-1 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-base text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
-                />
-                {toEmail ? (
-                  <button
-                    type="button"
-                    onClick={() => setToEmail("")}
-                    className="shrink-0 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
-                  >
-                    Clear
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          </section>
+          </label>
 
-          <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-            <div className="px-5 py-4 sm:px-6 sm:py-5">
-              <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Message</h2>
-              <p className="mt-0.5 text-[13px] text-neutral-400">{ADMIN_MESSAGE_BODY_HINT}</p>
-            </div>
-            <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
-              <SupportMessageComposer
-                editorKey={String(messageEditorKey)}
-                html={messageDraft.html}
-                textLength={messageDraft.textLength}
-                onChange={setMessageDraft}
-                placeholder="Write your test message…"
-                minHeightClass="min-h-[10rem]"
-                showSendButton={false}
-                middleSlot={
-                  <>
-                    <div className="flex items-center gap-2">
+          <div className="ez-field">
+            <span className="ez-label">Message</span>
+            <span className="ez-caption">{ADMIN_MESSAGE_BODY_HINT}</span>
+            <SupportMessageComposer
+              editorKey={String(messageEditorKey)}
+              html={messageDraft.html}
+              textLength={messageDraft.textLength}
+              onChange={setMessageDraft}
+              placeholder="Write your test message…"
+              minHeightClass="min-h-[10rem]"
+              showSendButton={false}
+              middleSlot={
+                <>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowAdvanced((open) => !open)}
+                      className="ez-btn ez-btn--secondary flex min-w-0 flex-1 justify-between"
+                      aria-expanded={showAdvanced}
+                    >
+                      <span>Advanced: email layout</span>
+                      <ChevronDown
+                        className={`h-4 w-4 shrink-0 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+                        aria-hidden
+                      />
+                    </button>
+                    <Tooltip hint={EMAIL_HEALTH_FIELD_HINTS.layout} widthClassName="w-64">
                       <button
                         type="button"
-                        onClick={() => setShowAdvanced((open) => !open)}
-                        className="flex min-w-0 flex-1 items-center justify-between rounded-xl border border-neutral-100 bg-neutral-50 px-4 py-3 text-left text-sm font-medium text-neutral-800 hover:bg-neutral-100/80"
-                        aria-expanded={showAdvanced}
+                        className="ez-icon-btn ez-icon-btn--outline shrink-0"
+                        aria-label="About email layouts"
                       >
-                        <span>Advanced: email layout</span>
-                        <ChevronDown
-                          className={`h-4 w-4 shrink-0 text-neutral-500 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
-                          aria-hidden
-                        />
+                        <Info className="h-4 w-4" aria-hidden />
                       </button>
-                      <Tooltip hint={EMAIL_HEALTH_FIELD_HINTS.layout} widthClassName="w-64">
-                        <button
-                          type="button"
-                          className="shrink-0 rounded-xl border border-neutral-100 bg-neutral-50 p-3 text-neutral-400 hover:bg-neutral-100/80 hover:text-neutral-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                          aria-label="About email layouts"
-                        >
-                          <Info className="h-4 w-4" aria-hidden />
-                        </button>
-                      </Tooltip>
+                    </Tooltip>
+                  </div>
+
+                  {showAdvanced ? (
+                    <div className="space-y-2">
+                      <Select
+                        label="Layout"
+                        value={templateId}
+                        onChange={(e) => setTemplateId(e.target.value)}
+                      >
+                        {grouped.map(({ category, templates: items }) => (
+                          <optgroup key={category} label={category}>
+                            {items.map((t) => (
+                              <option
+                                key={t.id}
+                                value={t.id}
+                                title={emailHealthLayoutInfo(t.id).tooltip}
+                              >
+                                {t.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </Select>
+                      <p className="text-[13px] text-neutral-500">
+                        {emailHealthLayoutInfo(templateId).tooltip}
+                      </p>
                     </div>
+                  ) : null}
 
-                    {showAdvanced ? (
-                      <div className="space-y-2">
-                        <Select
-                          label="Layout"
-                          value={templateId}
-                          onChange={(e) => setTemplateId(e.target.value)}
-                        >
-                          {grouped.map(({ category, templates: items }) => (
-                            <optgroup key={category} label={category}>
-                              {items.map((t) => (
-                                <option
-                                  key={t.id}
-                                  value={t.id}
-                                  title={emailHealthLayoutInfo(t.id).tooltip}
-                                >
-                                  {t.label}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ))}
-                        </Select>
-                        <p className="text-[13px] text-neutral-500">
-                          {emailHealthLayoutInfo(templateId).tooltip}
-                        </p>
-                      </div>
-                    ) : null}
-                  </>
-                }
-                footerActions={
-                  <Button
-                    type="button"
-                    onClick={() => void sendTest()}
-                    loading={sending}
-                    disabled={!toEmail.trim() || !isSupportDraftValid(messageDraft.textLength)}
-                    icon={<Mail className="h-4 w-4" aria-hidden />}
-                  >
-                    Send test email
-                  </Button>
-                }
-              />
-            </div>
-          </section>
+                  <div className="ez-callout">
+                    <p className="text-sm font-medium text-neutral-900">{layoutInfo.title}</p>
+                    <p className="mt-1 text-[13px] leading-relaxed text-neutral-600">{layoutInfo.summary}</p>
+                  </div>
+                </>
+              }
+              footerActions={
+                <button
+                  type="button"
+                  className="ez-btn ez-btn--primary"
+                  disabled={sending || !toEmail.trim() || !isSupportDraftValid(messageDraft.textLength)}
+                  onClick={() => void sendTest()}
+                >
+                  <Mail className="h-4 w-4" aria-hidden />
+                  {sending ? "Sending…" : "Send test"}
+                </button>
+              }
+            />
+          </div>
         </div>
-
-        <aside className="lg:sticky lg:top-6">
-          <LayoutInfoPanel templateId={activeTemplateId} />
-        </aside>
-      </div>
+      </section>
     </div>
   );
 }

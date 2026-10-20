@@ -6,6 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.features.reviews.domain import MAX_REVIEW_IMAGES, normalized_review_image_urls
 
 
@@ -92,7 +93,11 @@ class VendorOwnerReviewsResponse(BaseModel):
     success: bool = True
     average_rating: float | None = None
     review_count: int = 0
+    five_star_count: int = 0
     reviews: list[VendorOwnerReviewItem] = Field(default_factory=list)
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminReviewRow(BaseModel):

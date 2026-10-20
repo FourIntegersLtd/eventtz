@@ -9,8 +9,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, func, insert, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.db import as_uuid, plain_row
 from app.features.content.models import BlogPost, ContactSubmission, HelpArticle, HelpCategory
@@ -48,14 +49,56 @@ _BLOG_DETAIL_COLUMNS = (
 ADMIN_POST_LIST_LIMIT = 500
 
 
+def _staff_post_filters(status: str | None, search: str | None) -> list[ColumnElement[bool]]:
+    """WHERE clauses for the staff blog list."""
+    clauses: list[ColumnElement[bool]] = []
+    if status and status.strip():
+        clauses.append(BlogPost.status == status.strip())
+    needle = (search or "").strip()
+    if needle:
+        pattern = f"%{needle}%"
+        clauses.append(
+            or_(
+                BlogPost.title.ilike(pattern),
+                BlogPost.slug.ilike(pattern),
+                BlogPost.author_name.ilike(pattern),
+            )
+        )
+    return clauses
+
+
 async def list_posts_newest_first(session: AsyncSession) -> list[BlogPostRow]:
     """Every post, most recently edited first (ties broken by creation time, then id)."""
-    result = await session.execute(
-        select(*_BLOG_LIST_COLUMNS)
-        .order_by(BlogPost.updated_at.desc(), BlogPost.created_at.desc(), BlogPost.id.desc())
-        .limit(ADMIN_POST_LIST_LIMIT)
+    rows, _total = await list_posts_newest_first_page(
+        session, status=None, search=None, offset=0, limit=ADMIN_POST_LIST_LIMIT
     )
-    return [BlogPostRow.model_validate(plain_row(row)) for row in result]
+    return rows
+
+
+async def list_posts_newest_first_page(
+    session: AsyncSession,
+    *,
+    status: str | None,
+    search: str | None,
+    offset: int,
+    limit: int,
+) -> tuple[list[BlogPostRow], int]:
+    """One page of posts for staff plus total count."""
+    filters = _staff_post_filters(status, search)
+    count_query = select(func.count()).select_from(BlogPost)
+    if filters:
+        count_query = count_query.where(*filters)
+    total = (await session.execute(count_query)).scalar_one()
+    query = select(*_BLOG_LIST_COLUMNS)
+    if filters:
+        query = query.where(*filters)
+    result = await session.execute(
+        query.order_by(BlogPost.updated_at.desc(), BlogPost.created_at.desc(), BlogPost.id.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    rows = [BlogPostRow.model_validate(plain_row(row)) for row in result]
+    return rows, int(total)
 
 
 async def list_published_posts(session: AsyncSession, limit: int) -> list[BlogPostRow]:

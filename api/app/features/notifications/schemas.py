@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.core.pagination import DEFAULT_LIST_LIMIT
+
 NotificationFeedKind = Literal["booking_update", "dispute_update", "chat_unread_summary"]
 
 
@@ -43,3 +45,6 @@ class NotificationFeedResponse(BaseModel):
 
     success: bool = True
     items: list[NotificationFeedItem]
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT

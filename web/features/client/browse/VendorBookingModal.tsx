@@ -8,8 +8,10 @@ import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { DateInput } from "@/components/ui/DateInput";
 import {
+  explainVendorDateConflict,
   isoDatesInEventRange,
-  vendorPayloadAllowsEventDates,
+  vendorBlockedDatesSentence,
+  vendorWorkingDaysSentence,
 } from "@/lib/vendorAvailability";
 import {
   computeBookingEstimateGbp,
@@ -126,13 +128,21 @@ export function VendorBookingModal({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  const calendarConflict = useMemo(() => {
-    if (!vendorPayload || !eventDate.trim()) return false;
-    const end = eventEndDate.trim() || null;
-    const range = isoDatesInEventRange(eventDate.trim(), end);
-    if (range.length === 0) return false;
-    return !vendorPayloadAllowsEventDates(vendorPayload, range);
-  }, [vendorPayload, eventDate, eventEndDate]);
+  const minEventDate = todayIsoDate();
+
+  const chosenDates = useMemo(() => {
+    if (!eventDate.trim()) return [];
+    return isoDatesInEventRange(eventDate.trim(), eventEndDate.trim() || null);
+  }, [eventDate, eventEndDate]);
+
+  const workingDaysSentence = vendorPayload ? vendorWorkingDaysSentence(vendorPayload) : null;
+  const blockedDatesSentence = vendorPayload
+    ? vendorBlockedDatesSentence(vendorPayload, minEventDate)
+    : null;
+  const dateConflictMessage =
+    vendorPayload && chosenDates.length > 0
+      ? explainVendorDateConflict(vendorPayload, chosenDates)
+      : null;
 
   const estimate = useMemo(() => {
     const positiveLines = lineItems.map((li) => ({
@@ -189,7 +199,7 @@ export function VendorBookingModal({
     vendorUserId,
     selectedEventId,
     clientSearchContext,
-    calendarConflict,
+    dateConflictMessage,
   });
 
   const clientFeeBreakdown = useMemo(() => {
@@ -199,8 +209,6 @@ export function VendorBookingModal({
       referralFeeDiscountGbp: referralDiscountGbp,
     });
   }, [estimate.sumNumeric, estimate.hasTbc, referralDiscountGbp]);
-
-  const minEventDate = todayIsoDate();
 
   const submit = () => {
     submitBooking({
@@ -318,9 +326,9 @@ export function VendorBookingModal({
           </div>
 
           <div className="max-h-[min(70vh,560px)] space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
-            {calendarConflict ? (
+            {dateConflictMessage ? (
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-                These dates may not work for this vendor. Pick new dates or message them.
+                {dateConflictMessage}
               </div>
             ) : null}
             {bannerVisible && pendingPrefill ? (
@@ -394,6 +402,15 @@ export function VendorBookingModal({
                 />
               </div>
             </div>
+
+            {workingDaysSentence || blockedDatesSentence ? (
+              <div className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs leading-relaxed text-neutral-700">
+                {workingDaysSentence ? <p>{workingDaysSentence}</p> : null}
+                {blockedDatesSentence ? (
+                  <p className={workingDaysSentence ? "mt-1" : ""}>{blockedDatesSentence}</p>
+                ) : null}
+              </div>
+            ) : null}
 
             <div>
               <label

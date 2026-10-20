@@ -1,7 +1,5 @@
 import type { PortalRole } from "@/components/portal-shell/portalNav";
 import type { ParticipantDispute } from "@/lib/bookingDisputesApi";
-import { fetchClientBookings, type ClientBookingsListGroup } from "@/lib/clientBookingsApi";
-import { fetchVendorBookings, type VendorBookingsListGroup } from "@/lib/vendorBookingsApi";
 
 type BookingPartySnapshot = {
   booking_request_id: string;
@@ -106,49 +104,9 @@ export function enrichParticipantDisputes(
   });
 }
 
-const CLIENT_GROUPS: ClientBookingsListGroup[] = ["active", "completed", "closed"];
-const VENDOR_GROUPS: VendorBookingsListGroup[] = ["active", "completed", "closed"];
-
+/** Dispute list payloads from the API already include booking context; no bulk booking fetch. */
 export async function loadParticipantBookingLookup(
-  role: PortalRole,
+  _role: PortalRole,
 ): Promise<Map<string, BookingPartySnapshot>> {
-  const map = new Map<string, BookingPartySnapshot>();
-
-  if (role === "client") {
-    const lists = await Promise.all(CLIENT_GROUPS.map((group) => fetchClientBookings(group)));
-    for (const list of lists) {
-      for (const booking of list) {
-        map.set(booking.booking_request_id, {
-          booking_request_id: booking.booking_request_id,
-          booking_status: booking.booking_status,
-          event_name: booking.event_name,
-          event_date: booking.event_date,
-          payment_status: booking.payment_status,
-          conversation_id: booking.conversation_id,
-          vendor_user_id: booking.vendor_user_id,
-          vendor_display_name: booking.vendor_display_name,
-          client_user_id: undefined,
-          client_email: undefined,
-        });
-      }
-    }
-    return map;
-  }
-
-  const lists = await Promise.all(VENDOR_GROUPS.map((group) => fetchVendorBookings(group)));
-  for (const list of lists) {
-    for (const booking of list) {
-      map.set(booking.booking_request_id, {
-        booking_request_id: booking.booking_request_id,
-        booking_status: booking.booking_status,
-        event_name: booking.event_name,
-        event_date: booking.event_date,
-        payment_status: booking.payment_status,
-        conversation_id: booking.conversation_id,
-        client_user_id: undefined,
-        client_email: booking.client_email,
-      });
-    }
-  }
-  return map;
+  return new Map();
 }

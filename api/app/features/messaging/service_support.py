@@ -169,7 +169,17 @@ async def _inbox_rows(session: AsyncSession, threads: list[ThreadRow]) -> list[A
 
 async def list_support_threads(session: AsyncSession, *, limit: int) -> list[AdminSupportConversationRow]:
     """The newest support threads, for the staff inbox."""
-    return await _inbox_rows(session, await repository.support_threads(session, limit=limit))
+    rows, _total = await list_support_threads_page(session, offset=0, limit=limit)
+    return rows
+
+
+async def list_support_threads_page(
+    session: AsyncSession, *, offset: int, limit: int
+) -> tuple[list[AdminSupportConversationRow], int]:
+    """One page of support threads plus total count."""
+    threads, total = await repository.support_threads_page(session, offset=offset, limit=limit)
+    rows = await _inbox_rows(session, threads)
+    return rows, total
 
 
 async def _support_thread(session: AsyncSession, conversation_id: str) -> ThreadRow:

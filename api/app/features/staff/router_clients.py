@@ -11,6 +11,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import MailerDependency
 from app.features.staff import service_clients
 from app.features.staff.schemas import AdminClientsListResponse, AdminClientSuspendedBody, SuccessResponse
@@ -23,7 +24,7 @@ async def list_clients(
     session: SessionDep,
     principal: CurrentStaff,
     offset: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=200),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
     search_email: str | None = Query(None, alias="q", max_length=200),
     suspended: bool | None = Query(None),
 ) -> AdminClientsListResponse:

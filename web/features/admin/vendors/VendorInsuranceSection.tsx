@@ -73,8 +73,11 @@ export function VendorInsuranceSection({ vendor }: Props) {
   const canVerify = Boolean(insurance.certificate_url) && Boolean(expiresOn) && coverGbp >= MIN_COVER_GBP;
 
   return (
-    <section className="mt-6 space-y-4 rounded-xl border border-neutral-200 bg-white p-4">
-      <h3 className="text-sm font-semibold text-neutral-900">Public liability insurance</h3>
+    <section className="ez-card overflow-hidden">
+      <div className="ez-card__head">
+        <h2 className="ez-h3">Public liability insurance</h2>
+      </div>
+      <div className="ez-card__body ez-stack">
       <p className="text-sm text-neutral-700">
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.tone}`}>
           {status.label}
@@ -146,6 +149,7 @@ export function VendorInsuranceSection({ vendor }: Props) {
             Withdraw check
           </Button>
         ) : null}
+      </div>
       </div>
     </section>
   );

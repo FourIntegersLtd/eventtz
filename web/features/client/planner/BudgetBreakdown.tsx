@@ -1,71 +1,80 @@
 "use client";
 
+import { Send } from "lucide-react";
 import type { CelebrationPlanResponse } from "@/lib/clientPlannerApi";
 import { formatGbp } from "./plannerModel";
 import { PLANNER_COPY } from "./plannerCopy";
 
 type BudgetBreakdownProps = {
   budget: CelebrationPlanResponse["budget"];
+  selectedCount: number;
+  enquiryBusy: boolean;
+  enquiryDisabled: boolean;
+  onSendEnquiry: () => void;
 };
 
-export function BudgetBreakdown({ budget }: BudgetBreakdownProps) {
-  const maxLine = Math.max(
-    1,
-    ...budget.lines.map((l) => l.amount_gbp),
-    budget.user_budget_gbp ?? 0,
-  );
+/** C07 sticky budget card (`ez-lines`, `ez-progress`). */
+export function BudgetBreakdown({
+  budget,
+  selectedCount,
+  enquiryBusy,
+  enquiryDisabled,
+  onSendEnquiry,
+}: BudgetBreakdownProps) {
+  const userBudget = budget.user_budget_gbp ?? budget.total_estimated_gbp ?? 0;
+  const total = budget.total_estimated_gbp ?? 0;
+  const progress =
+    userBudget > 0 ? Math.min(100, Math.round((total / userBudget) * 100)) : total > 0 ? 100 : 0;
+
+  const remainingCaption = () => {
+    if (budget.user_budget_gbp == null) return null;
+    if (budget.over_budget) {
+      return `${formatGbp(Math.abs(budget.remaining_budget_gbp ?? 0))} over your ${formatGbp(budget.user_budget_gbp)} budget.`;
+    }
+    if (budget.remaining_budget_gbp != null && budget.remaining_budget_gbp >= 0) {
+      return `On budget. ${formatGbp(budget.remaining_budget_gbp)} left of ${formatGbp(budget.user_budget_gbp)}.`;
+    }
+    return null;
+  };
 
   return (
-    <section className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
-      <h3 className="font-heading text-lg font-semibold text-neutral-900">Budget breakdown</h3>
-      {budget.over_budget ? (
-        <p className="mt-2 text-xs font-medium text-amber-800">{PLANNER_COPY.overBudget}</p>
-      ) : null}
-      <ul className="mt-4 space-y-3">
-        {budget.lines.map((line) => (
-          <li key={line.need_id}>
-            <div className="flex items-baseline justify-between gap-3 text-sm">
-              <span className="text-neutral-700">{line.label}</span>
-              <span className="font-medium tabular-nums text-neutral-900">
-                {formatGbp(line.amount_gbp)}
-              </span>
-            </div>
-            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-neutral-100">
-              <div
-                className="h-full rounded-full bg-primary/70 transition-all duration-500"
-                style={{ width: `${Math.min(100, (line.amount_gbp / maxLine) * 100)}%` }}
-              />
-            </div>
-            {line.assumption ? (
-              <p className="mt-1 text-[11px] leading-snug text-neutral-500">{line.assumption}</p>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-neutral-100 pt-3 text-sm">
-        <span className="font-semibold text-neutral-900">
-          Total {formatGbp(budget.total_estimated_gbp)}
-        </span>
-        {budget.user_budget_gbp != null ? (
-          <span className="text-neutral-600">
-            {budget.remaining_budget_gbp != null && budget.remaining_budget_gbp >= 0
-              ? `${formatGbp(budget.remaining_budget_gbp)} remaining`
-              : `${formatGbp(Math.abs(budget.remaining_budget_gbp ?? 0))} over`}
-          </span>
-        ) : null}
+    <div className="ez-card ez-card--raised" style={{ position: "sticky", top: 16 }}>
+      <div className="ez-card__head">
+        <span className="ez-h3">{PLANNER_COPY.estimatedBudget}</span>
       </div>
-      {budget.assumptions?.length ? (
-        <div className="mt-4 rounded-lg bg-neutral-50 px-3 py-2.5">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-            How we estimated this
-          </p>
-          <ul className="mt-1.5 list-disc space-y-1 pl-4 text-[11px] leading-snug text-neutral-600">
-            {budget.assumptions.map((note) => (
-              <li key={note}>{note}</li>
-            ))}
-          </ul>
+      <div className="ez-card__body ez-stack">
+        {budget.over_budget ? (
+          <div className="ez-banner ez-banner--warning" role="status">{PLANNER_COPY.overBudget}</div>
+        ) : null}
+        <div className="ez-lines">
+          {budget.lines.map((line) => (
+            <div key={line.need_id} className="ez-lines__row">
+              <span>{line.label}</span>
+              <span>{formatGbp(line.amount_gbp)}</span>
+            </div>
+          ))}
+          <div className="ez-lines__total">
+            <span>Estimated total</span>
+            <span>{formatGbp(budget.total_estimated_gbp)}</span>
+          </div>
         </div>
-      ) : null}
-    </section>
+        <div className="ez-progress" aria-hidden>
+          <div className="ez-progress__bar" style={{ width: `${progress}%` }} />
+        </div>
+        {remainingCaption() ? <span className="ez-caption">{remainingCaption()}</span> : null}
+      </div>
+      <div className="ez-card__foot" style={{ flexDirection: "column" }}>
+        <button
+          type="button"
+          className="ez-btn ez-btn--primary ez-btn--block"
+          disabled={enquiryDisabled || enquiryBusy || selectedCount === 0}
+          onClick={onSendEnquiry}
+        >
+          <Send width={18} height={18} strokeWidth={1.75} aria-hidden />
+          {PLANNER_COPY.sendEnquiryLabel} ({selectedCount})
+        </button>
+        <span className="ez-caption">{PLANNER_COPY.sendEnquiryHint}</span>
+      </div>
+    </div>
   );
 }

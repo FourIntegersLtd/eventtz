@@ -5,7 +5,7 @@ import { AdminMessagesPageContent } from "@/features/admin/messages/AdminMessage
 
 export default function AdminMessagesPage() {
   return (
-    <AdminConsolePage title="Messages">
+    <AdminConsolePage title="Messages" description="Support inbox and compose.">
       <AdminMessagesPageContent />
     </AdminConsolePage>
   );

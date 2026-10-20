@@ -4,7 +4,7 @@ import { useState } from "react";
 import {
   EVENT_TYPE_IDS_ALL,
   EVENT_TYPE_OPTIONS,
-  SERVICE_OPTIONS,
+  BUSINESS_STEP_SERVICE_CHIPS,
   VENDOR_WAITLIST_URL,
 } from "../constants";
 import { STEP_COPY } from "../onboardingCopy";
@@ -19,8 +19,6 @@ export type StepBusinessProps = {
   update: VendorOnboardingUpdate;
   businessNameError: string | null;
   setBusinessNameError: (v: string | null) => void;
-  /** Opens the "What we need here" guide; omitted where the page title already offers it. */
-  onOpenStepInfo?: () => void;
   /** Drafts the public bio with the AI helper (needs the earlier steps filled in). */
   onGenerateBioWithAI?: () => void | Promise<void>;
   generatingBio?: boolean;
@@ -63,7 +61,6 @@ export function StepBusiness({
   update,
   businessNameError,
   setBusinessNameError,
-  onOpenStepInfo,
   onGenerateBioWithAI,
   generatingBio,
 }: StepBusinessProps) {
@@ -71,10 +68,6 @@ export function StepBusiness({
   const [checkingName, setCheckingName] = useState(false);
   const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
   const [waitlistModalOpen, setWaitlistModalOpen] = useState(false);
-  const selectedServiceOption = SERVICE_OPTIONS.find(
-    (option) => option.value === data.servicesOffered[0],
-  );
-
   const verifyBusinessName = async (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) {
@@ -116,20 +109,16 @@ export function StepBusiness({
         onBlur={() => void verifyBusinessName(data.businessName)}
         error={checkingName ? null : businessNameError}
         help={
-          checkingName
-            ? "Checking availability…"
-            : nameAvailable
-              ? "This business name is available."
-              : copy.businessNameSupporting
+          checkingName ? "Checking availability…" : copy.businessNameSupporting
         }
       />
       <div className="ez-stack ez-stack--sm">
         <span className="ez-label">{copy.servicesHeadline}</span>
         <span className="ez-help">{copy.servicesSubtext}</span>
         <div className="ez-chip-row">
-          {SERVICE_OPTIONS.map((option) => (
+          {BUSINESS_STEP_SERVICE_CHIPS.map((option) => (
             <EzChip
-              key={option.value}
+              key={`${option.value}-${option.label}`}
               active={data.servicesOffered.includes(option.value)}
               onClick={() => {
                 if (option.value === "other") {
@@ -145,25 +134,6 @@ export function StepBusiness({
             </EzChip>
           ))}
         </div>
-        {/* Examples for the picked category only, so a vendor whose product has no obvious home (gele, hijab, barbering…) can check it fits. */}
-        {selectedServiceOption?.examples ? (
-          <span className="ez-help">
-            {selectedServiceOption.label}: e.g. {selectedServiceOption.examples}
-          </span>
-        ) : null}
-        {onOpenStepInfo ? (
-          <a
-            className="ez-link"
-            href="#"
-            style={{ fontSize: 14 }}
-            onClick={(event) => {
-              event.preventDefault();
-              onOpenStepInfo();
-            }}
-          >
-            What we need here
-          </a>
-        ) : null}
       </div>
       <div className="ez-stack ez-stack--sm">
         <span className="ez-label">{copy.eventTypesHeadline}</span>
@@ -191,18 +161,6 @@ export function StepBusiness({
         onChange={(value) => update({ aiBioDraft: value })}
         help={`${bioLength} of ${BIO_MAX_CHARACTERS} characters. Clients read this first.`}
       />
-      {onGenerateBioWithAI ? (
-        <button
-          type="button"
-          className="ez-link"
-          style={{ fontSize: 14, alignSelf: "flex-start", background: "none", border: 0, padding: 0, cursor: "pointer" }}
-          disabled={generatingBio}
-          onClick={() => void onGenerateBioWithAI()}
-        >
-          {generatingBio ? "Generating…" : "Write it with AI"}
-        </button>
-      ) : null}
-
       <Modal
         isOpen={waitlistModalOpen}
         onClose={() => setWaitlistModalOpen(false)}

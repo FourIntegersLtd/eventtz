@@ -2,6 +2,10 @@
 /* Canvas design language (web/design/canvas): every class is ez- prefixed and every token --ez-, so it never collides with Tailwind. Screens are transcribed from the artboards with these classes. */
 @import "../design/canvas/project/eventtz.css";
 
+/* Segmented switches are links in the admin console. The design colours them as controls, not brand links. */
+.ez-page a.ez-seg__item { color: var(--ez-ink-2); text-decoration: none; }
+.ez-page a.ez-seg__item--active { color: var(--ez-brand-700); }
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -92,6 +96,15 @@ body {
   background: var(--page-bg);
   color: var(--foreground);
   font-family: var(--font-jakarta), sans-serif;
+}
+
+/* Borders without an explicit color must not inherit dark text (currentColor). */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    border-color: var(--line);
+  }
 }
 
 /*
@@ -980,6 +993,240 @@ body::-webkit-scrollbar:vertical {
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
+}
+
+/* Vendor bar keeps the bell only. The page title already sits in the content, and the
+   design sheet paints `.ez-topbar` white, which made a second strip under the nav. */
+/* A selected choice was a 1px border plus another ring, and focus added a 3px
+   purple outline on top. One thin edge is enough across the signed-in app. */
+.ez-page :focus-visible {
+  outline-width: 1px;
+  outline-offset: 1px;
+}
+
+.ez-option--active {
+  box-shadow: none;
+}
+
+.ez-input:focus,
+.ez-input:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--ez-brand-200);
+}
+
+/* The sidebar brand is a column, so a role chip stretches into a full-width bar.
+   Keep it the width of the word. */
+.ez-side__brand .ez-role {
+  align-self: flex-start;
+  width: fit-content;
+}
+
+/* A bookings row is one link. The cell padding moves onto the link so the whole cell is clickable. */
+.ez-table a.ez-table__celllink {
+  display: flex;
+  align-items: center;
+  margin: -14px -16px;
+  padding: 14px 16px;
+  color: inherit;
+  text-decoration: none;
+  min-height: 48px;
+}
+
+.ez-table a.ez-table__celllink:hover {
+  color: inherit;
+}
+
+.ez-table td.ez-td-num a.ez-table__celllink {
+  justify-content: flex-start;
+}
+
+/* Booking detail: facts on the left, action card stays on the right. */
+.vendor-booking-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 24px;
+  align-items: start;
+}
+
+.vendor-booking-actions {
+  position: sticky;
+  top: 16px;
+}
+
+@media (max-width: 900px) {
+  .vendor-booking-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .vendor-booking-actions {
+    position: static;
+  }
+}
+
+/* Booking detail facts were a 10px grid, so each line sat on the next. */
+.vendor-booking-card.ez-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding-top: 28px;
+  padding-bottom: 28px;
+}
+
+.vendor-booking-card .ez-dl {
+  row-gap: 20px;
+}
+
+.vendor-booking-card .ez-lines {
+  gap: 16px;
+}
+
+.vendor-booking-card .ez-lines__total {
+  margin-top: 8px;
+  padding-top: 16px;
+}
+
+.ez-table tr:has(a.ez-table__celllink):hover td {
+  background: var(--ez-brand-50);
+}
+
+.ez-topbar.ez-topbar--icon {
+  background: transparent;
+  border-bottom: none;
+  justify-content: flex-end;
+  min-height: 0;
+  padding-top: 16px;
+  padding-bottom: 0;
+}
+
+/* Vendor setup steps share ez-stack. The design default (8px / 16px) reads as
+   cramped once a section is a full profile card, so only this surface is opened up. */
+.vendor-setup .ez-stack {
+  gap: 28px;
+}
+
+.vendor-setup .ez-stack--sm {
+  gap: 14px;
+}
+
+.vendor-setup .ez-field {
+  gap: 10px;
+}
+
+.vendor-setup .ez-form-grid {
+  gap: 24px;
+}
+
+/* One stack: the week, the daily limit, then a wide short month. Day cells stay
+   short so the month fills the card without a second column of empty space. */
+.ez-availability {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.ez-availability__days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 14px 10px;
+  align-items: center;
+}
+
+.ez-availability__days .ez-label {
+  grid-column: 1 / -1;
+}
+
+.ez-availability__days .ez-chip {
+  justify-content: center;
+  width: 100%;
+  padding-inline: 4px;
+}
+
+.ez-availability__limit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+}
+
+.ez-cal-block {
+  width: 100%;
+  gap: 12px;
+}
+
+.vendor-setup .ez-cal-block {
+  gap: 20px;
+}
+
+.ez-cal-block__month {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+}
+
+.ez-cal-block__month .ez-strong {
+  text-align: center;
+}
+
+.ez-cal-block .ez-cal {
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ez-cal-block .ez-cal__dow,
+.ez-cal-block .ez-cal__day {
+  width: auto;
+  aspect-ratio: auto;
+}
+
+.ez-cal-block .ez-cal__day {
+  height: 48px;
+}
+
+.ez-cal-block .ez-cal__dow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0;
+}
+
+/* Referrals: the booking table is the wide column; the share card is the rest.
+   The share URL must not stretch that column over the table. */
+.vendor-referrals-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(280px, 3fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.vendor-referrals-layout .ez-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.vendor-referrals-layout > * {
+  min-width: 0;
+}
+
+.vendor-referrals-layout .ez-table {
+  min-width: 0;
+}
+
+.vendor-referrals-layout__share .ez-input {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 800px) {
+  .vendor-referrals-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .vendor-referrals-layout__share {
+    order: -1;
+  }
 }
 
 .app-viewport-shell__mobile-nav {

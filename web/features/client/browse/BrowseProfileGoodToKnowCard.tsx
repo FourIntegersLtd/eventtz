@@ -48,7 +48,7 @@ function RefundTierTable({ tiers }: { tiers: BrowseVendorProfileFacts["cancellat
           <th scope="col" className="pb-1.5 font-medium">
             If you cancel
           </th>
-          <th scope="col" className="pb-1.5 text-right font-medium">
+          <th scope="col" className="pb-1.5 font-medium">
             You get back
           </th>
         </tr>
@@ -58,7 +58,7 @@ function RefundTierTable({ tiers }: { tiers: BrowseVendorProfileFacts["cancellat
           <tr key={tier.window}>
             <td className="py-2 pr-3 text-ink-2">{tier.window}</td>
             <td
-              className={`py-2 text-right font-semibold ${
+              className={`py-2 font-semibold ${
                 tier.refund === "No refund" ? "text-ink-3" : "text-ink"
               }`}
             >

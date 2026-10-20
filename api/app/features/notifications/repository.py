@@ -77,6 +77,42 @@ async def mark_read(session: AsyncSession, *, user_id: str, notification_id: str
     return updated_id is not None
 
 
+async def latest_notice(
+    session: AsyncSession, *, booking_id: str, kinds: tuple[str, ...]
+) -> tuple[str, str] | None:
+    """The newest notice among `kinds` for this booking, as (kind, recipient user id)."""
+    parsed_booking_id = as_uuid(booking_id)
+    if parsed_booking_id is None or not kinds:
+        return None
+    row = (
+        await session.execute(
+            select(BookingNotification.kind, BookingNotification.user_id)
+            .where(
+                BookingNotification.booking_id == parsed_booking_id,
+                BookingNotification.kind.in_(kinds),
+            )
+            .order_by(BookingNotification.created_at.desc(), BookingNotification.id.desc())
+            .limit(1)
+        )
+    ).first()
+    if row is None:
+        return None
+    return row.kind, str(row.user_id)
+
+
+async def notification_exists(session: AsyncSession, *, booking_id: str, kind: str) -> bool:
+    """True when this booking already has a notice of `kind` (for either party)."""
+    parsed_booking_id = as_uuid(booking_id)
+    if parsed_booking_id is None:
+        return False
+    found = await session.scalar(
+        select(BookingNotification.id)
+        .where(BookingNotification.booking_id == parsed_booking_id, BookingNotification.kind == kind)
+        .limit(1)
+    )
+    return found is not None
+
+
 async def insert_notification_if_absent(
     session: AsyncSession, *, user_id: str, booking_id: str, kind: str
 ) -> bool:

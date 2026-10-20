@@ -230,22 +230,19 @@ def _discount_saved(booking: ReferralBookingRow, owners: dict[str, str]) -> tupl
     return breakdown.vendor_portion_gbp, saved
 
 
-async def referral_bookings(session: AsyncSession, vendor_user_id: str) -> VendorReferralBookingsResponse:
-    """Every booking made with the vendor's codes (current or retired), and the clients' total savings."""
-    bookings = [
-        booking
-        for booking in await repository.list_referral_bookings(session, vendor_user_id)
-        if (booking.vendor_referral_code or "").strip()
-    ]
-    stored_codes = {normalise_client_code(booking.vendor_referral_code) for booking in bookings}
+async def _referral_booking_rows(
+    session: AsyncSession, bookings: list[ReferralBookingRow]
+) -> tuple[list[VendorReferralBookingRow], float]:
+    """Map stored referral bookings to API rows and sum client savings."""
+    filtered = [booking for booking in bookings if (booking.vendor_referral_code or "").strip()]
+    stored_codes = {normalise_client_code(booking.vendor_referral_code) for booking in filtered}
     owners = await repository.code_owners(session, {code for code in stored_codes if code})
     client_names = await identity.client_display_names(
-        session, [booking.client_user_id for booking in bookings if booking.client_user_id]
+        session, [booking.client_user_id for booking in filtered if booking.client_user_id]
     )
-
-    views = []
+    views: list[VendorReferralBookingRow] = []
     total_saved = 0.0
-    for booking in bookings:
+    for booking in filtered:
         vendor_portion, saved = _discount_saved(booking, owners)
         total_saved += saved
         views.append(
@@ -262,6 +259,32 @@ async def referral_bookings(session: AsyncSession, vendor_user_id: str) -> Vendo
                 created_at=booking.created_at if isinstance(booking.created_at, str) else None,
             )
         )
+    return views, total_saved
+
+
+async def referral_bookings(session: AsyncSession, vendor_user_id: str) -> VendorReferralBookingsResponse:
+    """Every booking made with the vendor's codes (current or retired), and the clients' total savings."""
+    response = await referral_bookings_page(
+        session, vendor_user_id, offset=0, limit=repository.REFERRAL_BOOKINGS_LIMIT
+    )
+    return response
+
+
+async def referral_bookings_page(
+    session: AsyncSession, vendor_user_id: str, *, offset: int, limit: int
+) -> VendorReferralBookingsResponse:
+    """One page of referral bookings plus aggregate totals."""
+    page_bookings, total = await repository.list_referral_bookings_page(
+        session, vendor_user_id, offset=offset, limit=limit
+    )
+    all_bookings = await repository.list_referral_bookings(session, vendor_user_id)
+    _all_views, total_saved = await _referral_booking_rows(session, all_bookings)
+    views, _page_saved = await _referral_booking_rows(session, page_bookings)
     return VendorReferralBookingsResponse(
-        total_referral_bookings=len(views), total_fee_savings_gbp=round(total_saved, 2), bookings=views
+        total_referral_bookings=total,
+        total_fee_savings_gbp=round(total_saved, 2),
+        bookings=views,
+        total=total,
+        offset=offset,
+        limit=limit,
     )

@@ -9,6 +9,8 @@ type BrowsePricingPackagesSectionProps = {
   getItemClassName?: (opt: BrowsePricingOption) => string;
   /** Inside another white card (admin) — no outer section divider. */
   nested?: boolean;
+  /** Drop extra horizontal padding when the parent card already pads the body. */
+  flush?: boolean;
   children: (opt: BrowsePricingOption) => ReactNode;
 };
 
@@ -18,6 +20,7 @@ export function BrowsePricingPackagesSection({
   listClassName = "",
   getItemClassName,
   nested = false,
+  flush = false,
   children,
 }: BrowsePricingPackagesSectionProps) {
   const safeOptions = options ?? [];
@@ -29,8 +32,10 @@ export function BrowsePricingPackagesSection({
     <section
       className={
         nested
-          ? "px-5 pb-5 pt-4"
-          : "border-t border-neutral-100 px-5 pb-5 pt-4"
+          ? flush
+            ? "min-w-0 pb-0 pt-0"
+            : "min-w-0 px-5 pb-5 pt-4"
+          : "min-w-0 border-t border-neutral-100 px-5 pb-5 pt-4"
       }
       aria-labelledby="vendor-pricing-packages-heading"
     >
@@ -43,7 +48,7 @@ export function BrowsePricingPackagesSection({
       <div className="overflow-hidden rounded-xl border border-neutral-100 bg-neutral-50">
         <ul className={`divide-y divide-neutral-200/60 ${listClassName}`.trim()}>
           {safeOptions.map((opt) => (
-            <li key={opt.id} className={getItemClassName?.(opt) ?? "px-4 py-4"}>
+            <li key={opt.id} className={`min-w-0 ${getItemClassName?.(opt) ?? "px-4 py-4"}`}>
               {children(opt)}
             </li>
           ))}

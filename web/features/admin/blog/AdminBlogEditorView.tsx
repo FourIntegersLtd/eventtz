@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Trash2, Upload } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
@@ -20,15 +19,19 @@ import {
 import { uploadImage } from "@/lib/mediaApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { adminBlogSaveSchema, parseForm } from "@/lib/validation";
-import { formControlClass } from "@/components/ui/tokens";
+
+export type AdminBlogEditorPageHead = {
+  title?: string;
+  description?: string;
+  actions?: ReactNode;
+};
 
 type AdminBlogEditorViewProps = {
   postId: string;
+  onRegisterPageHead?: (head: AdminBlogEditorPageHead) => void;
 };
 
-const inputClass = formControlClass();
-
-export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
+export function AdminBlogEditorView({ postId, onRegisterPageHead }: AdminBlogEditorViewProps) {
   const router = useRouter();
   const { showToast } = useToast();
   const coverRef = useRef<HTMLInputElement>(null);
@@ -45,6 +48,7 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedHint, setSavedHint] = useState<string | null>(null);
+  const [coverError, setCoverError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setError(null);
@@ -82,7 +86,6 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
     }
     const titleTrim = parsed.data.title;
     const subtitleTrim = (parsed.data.subtitle ?? "").trim();
-    // Avoid storing a subtitle that just repeats the title (shows twice on the public post page).
     const subtitleOut =
       subtitleTrim && subtitleTrim.toLowerCase() !== titleTrim.toLowerCase()
         ? subtitleTrim
@@ -109,7 +112,7 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
     setSavedHint(null);
     try {
       await persistBody();
-      setSavedHint(post?.status === "published" ? "Changes saved" : "Draft saved");
+      setSavedHint(post?.status === "published" ? "Saved" : "Saved");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : getApiErrorDetail(e) ?? "Could not save.");
     } finally {
@@ -128,7 +131,7 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
           ? await unpublishAdminBlogPost(postId)
           : await publishAdminBlogPost(postId);
       setPost(updated);
-      setSavedHint(updated.status === "published" ? "Published" : "Moved to draft");
+      setSavedHint(updated.status === "published" ? "Published" : "Draft");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : getApiErrorDetail(e) ?? "Could not update publish state.");
     } finally {
@@ -147,192 +150,70 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
   };
 
   const onCover = async (file: File) => {
+    setCoverError(null);
     try {
       const uploaded = await uploadImage(file);
       setCoverUrl(uploaded.public_url);
       showToast({ title: "Cover image uploaded", tone: "success" });
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not upload cover.");
+      const message = getApiErrorDetail(e) ?? "Could not upload cover.";
+      setCoverError(message);
+      setError(message);
     }
   };
+
+  const isPublished = post?.status === "published";
+
+  useEffect(() => {
+    if (!onRegisterPageHead || !post) return;
+    onRegisterPageHead({
+      title: post.title?.trim() && post.title !== "Untitled" ? "Edit post" : "Edit post",
+      description: savedHint ?? undefined,
+      actions: (
+        <span className={isPublished ? "ez-badge ez-badge--success" : "ez-badge ez-badge--neutral"}>
+          {isPublished ? "Published" : "Draft"}
+        </span>
+      ),
+    });
+    return () => onRegisterPageHead({});
+  }, [onRegisterPageHead, post, isPublished, savedHint]);
 
   if (loading) return <AdminLoadingState label="Loading editor…" />;
   if (!post) {
     return (
-      <div className="space-y-4">
-        {error ? <AdminErrorBanner message={error} /> : null}
-        <Link href="/admin/blog" className="text-sm text-primary hover:underline">
-          Back to blog
+      <div className="ez-stack">
+        {error ? <AdminErrorBanner message={error} onRetry={() => void load()} /> : null}
+        <Link href="/admin/blog" className="ez-back">
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          All posts
         </Link>
       </div>
     );
   }
 
-  const isPublished = post.status === "published";
-
   return (
-    <div className="w-full max-w-none space-y-6 text-left">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-wrap items-center gap-3">
-          <Link
-            href="/admin/blog"
-            className="inline-flex items-center gap-1.5 text-sm text-neutral-600 hover:text-neutral-900"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden />
-            All posts
-          </Link>
-          <span
-            className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-              isPublished
-                ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200/80"
-                : "bg-neutral-100 text-neutral-700 ring-1 ring-neutral-200/80"
-            }`}
-          >
-            {isPublished ? "Published" : "Draft"}
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {savedHint ? <span className="text-xs text-neutral-500">{savedHint}</span> : null}
-          <Button
-            variant={isPublished ? "primary" : "secondary"}
-            size="sm"
-            loading={saving}
-            onClick={() => void save()}
-          >
-            {isPublished ? "Save changes" : "Save draft"}
-          </Button>
-          <Button
-            variant={isPublished ? "secondary" : "primary"}
-            size="sm"
-            loading={publishing}
-            onClick={() => void togglePublish()}
-          >
-            {isPublished ? "Unpublish" : "Publish"}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<Trash2 className="h-4 w-4" aria-hidden />}
-            onClick={() => void remove()}
-          >
-            Delete
-          </Button>
-        </div>
-      </div>
+    <div className="w-full max-w-none ez-stack ez-stack--lg text-left">
+      <Link href="/admin/blog" className="ez-back">
+        <ArrowLeft className="h-4 w-4" aria-hidden />
+        All posts
+      </Link>
 
       {error ? <AdminErrorBanner message={error} /> : null}
 
-      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-        <div className="px-5 py-4 sm:px-6 sm:py-5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Details</h2>
-          <p className="mt-0.5 text-[13px] text-neutral-400">
-            {isPublished
-              ? "This post is live. Save changes to update it, or unpublish to take it offline."
-              : "Draft stays private until you publish."}
-            {isPublished ? (
-              <>
-                {" "}
-                Live at{" "}
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="font-medium text-primary hover:underline"
-                  target="_blank"
-                >
-                  /blog/{post.slug}
-                </Link>
-                .
-              </>
-            ) : null}
-          </p>
-        </div>
-
-        <div className="divide-y divide-neutral-100 border-t border-neutral-100">
-          <div className="space-y-3 px-5 py-4 sm:px-6">
+      <div className="ez-split">
+        <div className="ez-split__main ez-stack ez-stack--lg">
+          <label className="ez-field">
+            <span className="ez-label">Title</span>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title"
-              className="w-full border-0 bg-transparent text-left font-heading text-3xl font-semibold text-neutral-900 placeholder:text-neutral-300 focus:outline-none sm:text-4xl"
+              placeholder="Post title"
+              className="ez-input"
+              style={{ fontSize: "1.35rem", fontWeight: 600 }}
             />
-            <input
-              value={subtitle}
-              onChange={(e) => setSubtitle(e.target.value)}
-              placeholder="Subtitle"
-              className="w-full border-0 bg-transparent text-left text-lg text-neutral-600 placeholder:text-neutral-300 focus:outline-none"
-            />
-          </div>
+          </label>
 
-          <div className="grid gap-4 px-5 py-4 sm:grid-cols-2 sm:px-6">
-            <label className="block text-sm text-neutral-600">
-              <span className="mb-1 block text-[13px] text-neutral-500">Author</span>
-              <input
-                value={authorName}
-                onChange={(e) => setAuthorName(e.target.value)}
-                placeholder="Shown as “By …” on the public blog"
-                maxLength={120}
-                className={inputClass}
-              />
-            </label>
-            <label className="block text-sm text-neutral-600">
-              <span className="mb-1 block text-[13px] text-neutral-500">Slug</span>
-              <input
-                value={slug}
-                onChange={(e) => setSlug(e.target.value)}
-                className={inputClass}
-              />
-            </label>
-          </div>
-        </div>
-      </section>
-
-      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-        <div className="px-5 py-4 sm:px-6 sm:py-5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Cover image</h2>
-          <p className="mt-0.5 text-[13px] text-neutral-400">Shown at the top of the public post.</p>
-        </div>
-        <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
-          {coverUrl ? (
-            <div className="mb-3 overflow-hidden rounded-xl bg-neutral-100">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={coverUrl}
-                alt=""
-                className="mx-auto max-h-80 w-full object-contain object-top"
-              />
-            </div>
-          ) : null}
-          <Button
-            variant="secondary"
-            size="sm"
-            icon={<Upload className="h-4 w-4" aria-hidden />}
-            onClick={() => coverRef.current?.click()}
-          >
-            {coverUrl ? "Replace cover" : "Upload cover"}
-          </Button>
-          <input
-            ref={coverRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const f = e.target.files?.[0];
-              e.target.value = "";
-              if (f) void onCover(f);
-            }}
-          />
-        </div>
-      </section>
-
-      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-        <div className="px-5 py-4 sm:px-6 sm:py-5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Body</h2>
-          <p className="mt-0.5 text-[13px] text-neutral-400">
-            Drag image files into the editor. Best inline size: 1200×675 (landscape) or 800×800 max
-            for square graphics. They display up to ~75% width and ~320px tall.
-          </p>
-        </div>
-        <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
-          {bodyJson !== null || !loading ? (
+          {bodyJson !== null ? (
             <BlogRichTextEditor
               key={post.id}
               initialJson={bodyJson}
@@ -343,7 +224,124 @@ export function AdminBlogEditorView({ postId }: AdminBlogEditorViewProps) {
             />
           ) : null}
         </div>
-      </section>
+
+        <div className="ez-split__aside ez-stack ez-stack--lg lg:sticky lg:top-4">
+          <section className="ez-card overflow-hidden">
+            <div className="ez-card__head">
+              <h2 className="ez-h3">Publish</h2>
+            </div>
+            <div className="ez-card__body ez-stack ez-stack--sm">
+              {savedHint ? <p className="ez-caption">{savedHint}</p> : null}
+              <button
+                type="button"
+                className="ez-btn ez-btn--secondary ez-btn--block"
+                disabled={saving}
+                onClick={() => void save()}
+              >
+                {saving ? "Saving…" : isPublished ? "Update" : "Save draft"}
+              </button>
+              <button
+                type="button"
+                className="ez-btn ez-btn--primary ez-btn--block"
+                disabled={publishing}
+                onClick={() => void togglePublish()}
+              >
+                {publishing ? "Working…" : isPublished ? "Unpublish" : "Publish"}
+              </button>
+              {isPublished ? (
+                <Link
+                  href={`/blog/${post.slug}`}
+                  className="ez-btn ez-btn--secondary ez-btn--block"
+                  target="_blank"
+                >
+                  Preview
+                </Link>
+              ) : (
+                <button type="button" className="ez-btn ez-btn--secondary ez-btn--block" disabled>
+                  Preview
+                </button>
+              )}
+              <button
+                type="button"
+                className="ez-btn ez-btn--secondary ez-btn--block"
+                onClick={() => void remove()}
+              >
+                <Trash2 className="h-4 w-4" aria-hidden />
+                Delete
+              </button>
+            </div>
+          </section>
+
+          <section className="ez-card overflow-hidden">
+            <div className="ez-card__head">
+              <h2 className="ez-h3">Details</h2>
+            </div>
+            <div className="ez-card__body ez-stack ez-stack--sm">
+              <label className="ez-field">
+                <span className="ez-label">Author</span>
+                <input
+                  value={authorName}
+                  onChange={(e) => setAuthorName(e.target.value)}
+                  className="ez-input"
+                  maxLength={120}
+                />
+              </label>
+              <label className="ez-field">
+                <span className="ez-label">URL slug</span>
+                <input value={slug} onChange={(e) => setSlug(e.target.value)} className="ez-input" />
+              </label>
+              <label className="ez-field">
+                <span className="ez-label">Excerpt</span>
+                <textarea
+                  value={subtitle}
+                  onChange={(e) => setSubtitle(e.target.value)}
+                  rows={3}
+                  className="ez-input ez-input--area"
+                  placeholder="Short summary for listings"
+                />
+              </label>
+            </div>
+          </section>
+
+          <section className="ez-card overflow-hidden">
+            <div className="ez-card__head">
+              <h2 className="ez-h3">Cover image</h2>
+              <p className="ez-small">JPG or PNG, at least 1600px wide</p>
+            </div>
+            <div className="ez-card__body ez-stack ez-stack--sm">
+              {coverUrl ? (
+                <div className="overflow-hidden rounded-lg">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={coverUrl} alt="" className="w-full object-cover" />
+                </div>
+              ) : (
+                <div className="ez-upload">
+                  <p className="ez-small">Drop an image or choose a file</p>
+                </div>
+              )}
+              <button
+                type="button"
+                className="ez-btn ez-btn--secondary ez-btn--sm"
+                onClick={() => coverRef.current?.click()}
+              >
+                {coverUrl ? "Replace cover" : "Choose file"}
+              </button>
+              {coverError ? <p className="text-sm text-red-700">{coverError}</p> : null}
+              <input
+                ref={coverRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  e.target.value = "";
+                  if (file) void onCover(file);
+                }}
+              />
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

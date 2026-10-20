@@ -130,7 +130,7 @@ export function SupportRichTextEditor({
   if (!editor) return null;
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-neutral-50/80 text-left focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20">
+    <div className="ez-input ez-input--area min-h-[4rem] resize-y bg-neutral-50/80 p-0 text-left focus-within:bg-white [&_.ProseMirror]:min-h-[4rem] [&_.ProseMirror]:px-3 [&_.ProseMirror]:py-2">
       <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-100 px-2 py-1.5">
         <ToolbarButton
           label="Bold"

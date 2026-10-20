@@ -7,10 +7,11 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+# --- creator partners --------------------------------------------------------------------------
+from app.core.pagination import DEFAULT_LIST_LIMIT
+
 # Re-exported for the admin router's `shoutout` query parameter.
 from app.features.referrals.domain import ShoutoutFilter as ShoutoutFilter
-
-# --- creator partners --------------------------------------------------------------------------
 
 
 class ReferralPartnerRow(BaseModel):
@@ -32,6 +33,9 @@ class ReferralPartnerListResponse(BaseModel):
 
     success: bool = True
     partners: list[ReferralPartnerRow]
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT
 
 
 class CreateReferralPartnerRequest(BaseModel):
@@ -171,3 +175,6 @@ class VendorReferralBookingsResponse(BaseModel):
     total_referral_bookings: int
     total_fee_savings_gbp: float
     bookings: list[VendorReferralBookingRow]
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT

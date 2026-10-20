@@ -13,8 +13,7 @@ export const STEP_COPY = {
     subtext: "Who you are and what events you serve.",
     businessNameSupporting: "Must be unique.",
     servicesHeadline: "What services do you offer?",
-    servicesSubtext:
-      "Pick your main service. Tap “What we need here” if you’re unsure which category fits.",
+    servicesSubtext: "Pick your main service.",
     eventTypesHeadline: "Which events do you work on?",
   },
   3: {

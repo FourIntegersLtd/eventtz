@@ -12,6 +12,7 @@ from typing import Any
 
 from sqlalchemy import Date, Text, Uuid, column, func, insert, select, table, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.db import as_uuid, plain_row
 from app.features.reviews.models import BookingReview
@@ -118,16 +119,59 @@ async def visible_reviews_for_vendor(
     session: AsyncSession, vendor_user_id: str, *, limit: int
 ) -> list[ReviewRow]:
     """The vendor's visible (not hidden) reviews, most recent first - matches their public profile."""
+    rows, _total = await visible_reviews_for_vendor_page(
+        session, vendor_user_id, min_rating=None, offset=0, limit=limit
+    )
+    return rows
+
+
+async def visible_reviews_for_vendor_page(
+    session: AsyncSession,
+    vendor_user_id: str,
+    *,
+    min_rating: int | None,
+    offset: int,
+    limit: int,
+) -> tuple[list[ReviewRow], int]:
+    """Visible reviews for the vendor owner list, optionally filtered by minimum rating."""
+    vendor_uuid = as_uuid(vendor_user_id)
+    if vendor_uuid is None:
+        return [], 0
+    filters: list[ColumnElement[bool]] = [
+        BookingReview.vendor_user_id == vendor_uuid,
+        BookingReview.hidden_at.is_(None),
+    ]
+    if min_rating is not None:
+        filters.append(BookingReview.rating >= min_rating)
+    base = tuple(filters)
+    total = (await session.execute(select(func.count(BookingReview.id)).where(*base))).scalar_one()
     result = await session.execute(
         select(*_REVIEW_COLUMNS)
-        .where(
-            BookingReview.vendor_user_id == as_uuid(vendor_user_id),
-            BookingReview.hidden_at.is_(None),
-        )
+        .where(*base)
         .order_by(BookingReview.created_at.desc())
+        .offset(offset)
         .limit(limit)
     )
-    return [_review_row(found) for found in result]
+    return [_review_row(found) for found in result], int(total)
+
+
+async def visible_five_star_count_for_vendor(session: AsyncSession, vendor_user_id: str) -> int:
+    """How many visible 5-star reviews the vendor has (for dashboard KPIs)."""
+    vendor_uuid = as_uuid(vendor_user_id)
+    if vendor_uuid is None:
+        return 0
+    return int(
+        (
+            await session.execute(
+                select(func.count(BookingReview.id)).where(
+                    BookingReview.vendor_user_id == vendor_uuid,
+                    BookingReview.hidden_at.is_(None),
+                    BookingReview.rating >= 5,
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
 
 
 async def visible_review_stats_for_vendor(session: AsyncSession, vendor_user_id: str) -> VendorReviewStatsRow:
@@ -146,7 +190,12 @@ async def visible_review_stats_for_vendor(session: AsyncSession, vendor_user_id:
 
 
 async def all_reviews_for_admin(
-    session: AsyncSession, *, offset: int, limit: int, vendor_user_id: str | None
+    session: AsyncSession,
+    *,
+    offset: int,
+    limit: int,
+    vendor_user_id: str | None,
+    visibility: str = "all",
 ) -> tuple[list[ReviewRow], int]:
     """Every review (hidden included), most recent first, optionally narrowed to one vendor."""
     conditions = []
@@ -154,6 +203,10 @@ async def all_reviews_for_admin(
         vendor_uuid = as_uuid(vendor_user_id)
         # An unparsable id names no vendor, so the filter matches nothing (not everything).
         conditions.append(BookingReview.vendor_user_id == vendor_uuid)
+    if visibility == "published":
+        conditions.append(BookingReview.hidden_at.is_(None))
+    elif visibility == "hidden":
+        conditions.append(BookingReview.hidden_at.is_not(None))
     total = (await session.execute(select(func.count(BookingReview.id)).where(*conditions))).scalar_one()
     result = await session.execute(
         select(*_REVIEW_COLUMNS)

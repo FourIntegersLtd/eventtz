@@ -1,34 +1,48 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SettingsTabs } from "@/features/settings/SettingsTabs";
+import { Calendar, Clock, TrendingUp, Wallet } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { VendorPaymentHistory } from "@/features/vendor/payments/VendorPaymentHistory";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { VendorPayoutAccountPanel } from "@/features/vendor/payments/VendorPayoutAccountPanel";
 import {
   isVendorPayoutsReady,
   useVendorPayoutsReady,
 } from "@/features/vendor/payments/useVendorPayoutsReady";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { formatEventDate } from "@/lib/dateFormat";
+import { formatMoney } from "@/lib/markets";
+import { TablePagination } from "@/components/ui/TablePagination";
+import {
+  fetchVendorPayoutHistoryPage,
+  VENDOR_PAYOUTS_PAGE_SIZE,
+  type VendorPayoutHistory,
+  type VendorPayoutRow,
+} from "@/lib/vendorPaymentsApi";
 
-const TABS = [
-  { id: "account", label: "Payout account" },
-  { id: "history", label: "Payout history" },
-] as const;
-
-type VendorPaymentsTabId = (typeof TABS)[number]["id"];
+type VendorPaymentsTabId = "payouts" | "payments" | "account";
 
 function resolvePaymentsTab(value: string | null): VendorPaymentsTabId {
-  if (value && TABS.some((tab) => tab.id === value)) {
-    return value as VendorPaymentsTabId;
-  }
-  return "account";
+  if (value === "account") return "account";
+  if (value === "payments") return "payments";
+  if (value === "history" || value === "payouts") return "payouts";
+  return "payouts";
+}
+
+function payoutBadge(status: string): { label: string; className: string } {
+  if (status === "paid_out") return { label: "Payout sent", className: "ez-badge ez-badge--success" };
+  if (status === "awaiting_payout") return { label: "Payout held", className: "ez-badge ez-badge--warning" };
+  if (status === "refunded") return { label: "Refunded", className: "ez-badge ez-badge--info" };
+  return { label: status, className: "ez-badge ez-badge--neutral" };
 }
 
 /**
- * Standalone payout status + Stripe Connect entry point, reachable from the
- * portal nav at any time (and from Accept booking when payouts are not ready).
+ * Payments and payouts (design V25). Stripe Connect is unchanged; this only
+ * lays out the existing status and payout history.
  */
 export function VendorPaymentsView() {
   const router = useRouter();
@@ -39,6 +53,9 @@ export function VendorPaymentsView() {
     [searchParams],
   );
   const stripeReturnHandled = useRef(false);
+  const [history, setHistory] = useState<VendorPayoutHistory | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [payoutOffset, setPayoutOffset] = useState(0);
 
   const {
     status,
@@ -48,6 +65,12 @@ export function VendorPaymentsView() {
     refresh,
     connectPayouts,
   } = useVendorPayoutsReady(true);
+
+  useEffect(() => {
+    void fetchVendorPayoutHistoryPage(payoutOffset, VENDOR_PAYOUTS_PAGE_SIZE)
+      .then(setHistory)
+      .catch(() => setHistoryError("Could not load payout history."));
+  }, [payoutOffset]);
 
   useEffect(() => {
     const stripeParam = searchParams.get("stripe");
@@ -72,28 +95,156 @@ export function VendorPaymentsView() {
   }, [searchParams, router, refresh, showToast]);
 
   const startStripeConnectOnboarding = () => {
-    void connectPayouts("/vendor/payments");
+    void connectPayouts("/vendor/payments?tab=account");
   };
 
-  const activeLabel = TABS.find((item) => item.id === tab)?.label;
+  const rows = history?.payouts ?? [];
+  const payoutTotal = history?.total ?? rows.length;
+  const held = history?.total_awaiting_gbp ?? 0;
+  const nextHeld = rows.find((row) => row.status === "awaiting_payout");
+  const payoutsReady = isVendorPayoutsReady(status);
 
   return (
-    <div className="w-full min-w-0 max-w-6xl space-y-6">
-      <SettingsTabs tabs={TABS} activeId={tab} basePath="/vendor/payments" />
+    <div className="ez-stack ez-stack--lg">
+      <VendorEzPageHead
+        eyebrow="Payments"
+        title="Payments and payouts"
+        description="Track every payment in and every payout out."
+      />
 
-      <div role="tabpanel" aria-label={activeLabel}>
-        {tab === "account" ? (
-          <VendorPayoutAccountPanel
-            status={status}
-            loading={loading}
-            connecting={connecting}
-            error={error}
-            onConnect={startStripeConnectOnboarding}
-          />
-        ) : (
-          <VendorPaymentHistory />
-        )}
+      {held > 0 ? (
+        <div className="ez-banner ez-banner--warning">
+          <Wallet size={20} strokeWidth={1.75} aria-hidden />
+          <div className="ez-banner__body">
+            <div className="ez-banner__title">{history?.total_awaiting_label ?? formatMoney(held)} is held</div>
+            <p className="ez-small" style={{ color: "inherit" }}>
+              Held payouts are released when the event is confirmed complete.
+              {payoutsReady ? "" : " Finish payout setup so they can be sent."}
+            </p>
+          </div>
+          {payoutsReady ? null : (
+            <div className="ez-banner__actions">
+              <button className="ez-btn ez-btn--secondary" type="button" disabled={connecting} onClick={startStripeConnectOnboarding}>
+                {connecting ? "Opening Stripe…" : "Open payout account"}
+              </button>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      <div className="ez-grid-4">
+        <div className="ez-kpi">
+          <span className="ez-kpi__label">
+            <Clock size={16} strokeWidth={1.75} aria-hidden />
+            Held
+          </span>
+          <span className="ez-kpi__value">{history?.total_awaiting_label ?? "-"}</span>
+          <span className="ez-kpi__delta">
+            {rows.filter((row) => row.status === "awaiting_payout").length} bookings
+          </span>
+        </div>
+        <div className="ez-kpi">
+          <span className="ez-kpi__label">
+            <Wallet size={16} strokeWidth={1.75} aria-hidden />
+            Paid out, last 30 days
+          </span>
+          <span className="ez-kpi__value">{history?.paid_out_last_30_days_label ?? "-"}</span>
+        </div>
+        <div className="ez-kpi">
+          <span className="ez-kpi__label">
+            <Calendar size={16} strokeWidth={1.75} aria-hidden />
+            Next release
+          </span>
+          <span className="ez-kpi__value">{nextHeld?.event_date ? formatEventDate(nextHeld.event_date) : "-"}</span>
+          <span className="ez-kpi__delta">{nextHeld?.client_display_name ?? nextHeld?.event_name ?? ""}</span>
+        </div>
+        <div className="ez-kpi">
+          <span className="ez-kpi__label">
+            <TrendingUp size={16} strokeWidth={1.75} aria-hidden />
+            Paid out
+          </span>
+          <span className="ez-kpi__value">{history?.total_paid_out_label ?? "-"}</span>
+        </div>
       </div>
+
+      <div className="ez-tabs" role="tablist">
+        <Link className={`ez-tab${tab === "payouts" ? " ez-tab--active" : ""}`} href="/vendor/payments?tab=payouts">
+          Payouts<span className="ez-tab__count">{payoutTotal}</span>
+        </Link>
+        <Link className={`ez-tab${tab === "payments" ? " ez-tab--active" : ""}`} href="/vendor/payments?tab=payments">
+          Payments received<span className="ez-tab__count">{payoutTotal}</span>
+        </Link>
+        <Link className={`ez-tab${tab === "account" ? " ez-tab--active" : ""}`} href="/vendor/payments?tab=account">
+          Payout account
+        </Link>
+      </div>
+
+      {historyError ? <p className="ez-small">{historyError}</p> : null}
+
+      {tab === "account" ? (
+        <VendorPayoutAccountPanel
+          status={status}
+          loading={loading}
+          connecting={connecting}
+          error={error}
+          onConnect={startStripeConnectOnboarding}
+        />
+      ) : history ? (
+        // One history list exists. Payouts and Payments received are the same rows.
+        <>
+          <PayoutTable rows={rows} />
+          <TablePagination
+            offset={payoutOffset}
+            limit={VENDOR_PAYOUTS_PAGE_SIZE}
+            total={payoutTotal}
+            onPrevious={() =>
+              setPayoutOffset((current) => Math.max(0, current - VENDOR_PAYOUTS_PAGE_SIZE))
+            }
+            onNext={() => setPayoutOffset((current) => current + VENDOR_PAYOUTS_PAGE_SIZE)}
+          />
+        </>
+      ) : (
+        <LoadingState label="Loading payouts…" variant="inline" />
+      )}
+    </div>
+  );
+}
+
+function PayoutTable({ rows }: { rows: VendorPayoutRow[] }) {
+  if (rows.length === 0) {
+    return <EmptyState className="border-0" variant="payments" title="No payouts yet" />;
+  }
+  return (
+    <div className="ez-table-wrap">
+      <table className="ez-table">
+        <thead>
+          <tr>
+            <th>Booking</th>
+            <th>Client</th>
+            <th>Event date</th>
+            <th className="ez-td-num">Amount</th>
+            <th className="ez-td-status">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const badge = payoutBadge(row.status);
+            return (
+              <tr key={`${row.booking_id}-${row.kind ?? "event"}`}>
+                <td className="ez-td-strong">
+                  <Link href={`/vendor/bookings/${row.booking_id}`}>{row.event_name}</Link>
+                </td>
+                <td>{row.client_display_name ?? "-"}</td>
+                <td>{row.event_date ? formatEventDate(row.event_date) : "-"}</td>
+                <td className="ez-td-num">{row.amount_label}</td>
+                <td className="ez-td-status">
+                  <span className={badge.className}>{badge.label}</span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -9,10 +9,10 @@ import type {
 import { getMissingChecklistGroups } from "./adminVendorSubmissionReviewModel";
 
 const GROUP_SECTION_IDS: Record<string, string> = {
-  identity: "submission-identity",
+  identity: "submission-contact",
   listing: "submission-listing",
   pricing: "submission-pricing",
-  media: "submission-availability",
+  media: "submission-media",
   legal: "submission-legal",
 };
 
@@ -40,35 +40,49 @@ function missingItems(groups: AdminSubmissionChecklistGroup[]): AdminSubmissionC
 
 type Props = {
   groups: AdminSubmissionChecklistGroup[];
+  /** When true, omit the outer heading (parent supplies `ez-card__head`). */
+  embedded?: boolean;
 };
 
-export function AdminVendorSubmissionChecklist({ groups }: Props) {
+export function AdminVendorSubmissionChecklist({ groups, embedded = false }: Props) {
   const actionGroups = missingItems(groups);
   const missingCount = actionGroups.reduce((sum, group) => sum + group.items.length, 0);
 
+  const statusBadge =
+    missingCount === 0 ? (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-200/60">
+        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+        Ready to review
+      </span>
+    ) : (
+      <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900 ring-1 ring-inset ring-amber-200/60">
+        <AlertCircle className="h-3.5 w-3.5" aria-hidden />
+        {missingCount} missing
+      </span>
+    );
+
   return (
     <section>
-      <VendorPanelSectionHeader
-        title="Pre-approval checklist"
-        description={
-          missingCount === 0
-            ? "All required items are complete"
-            : `${missingCount} item${missingCount === 1 ? "" : "s"} still needed before approval`
-        }
-        trailing={
-          missingCount === 0 ? (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-200/60">
-              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-              Ready to review
-            </span>
-          ) : (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900 ring-1 ring-inset ring-amber-200/60">
-              <AlertCircle className="h-3.5 w-3.5" aria-hidden />
-              {missingCount} missing
-            </span>
-          )
-        }
-      />
+      {embedded ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <p className="ez-small">
+            {missingCount === 0
+              ? "All required items are complete"
+              : `${missingCount} item${missingCount === 1 ? "" : "s"} still needed before approval`}
+          </p>
+          {statusBadge}
+        </div>
+      ) : (
+        <VendorPanelSectionHeader
+          title="Pre-approval checklist"
+          description={
+            missingCount === 0
+              ? "All required items are complete"
+              : `${missingCount} item${missingCount === 1 ? "" : "s"} still needed before approval`
+          }
+          trailing={statusBadge}
+        />
+      )}
 
       {missingCount === 0 ? (
         <VendorPanelCard>

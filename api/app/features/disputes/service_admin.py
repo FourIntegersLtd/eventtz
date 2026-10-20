@@ -51,9 +51,25 @@ _PLAIN_PATCH_FIELDS = (
 
 async def list_disputes(session: AsyncSession, *, status: str) -> list[AdminDisputeCase]:
     """Every dispute in the requested status bucket ("open" also surfaces under_review)."""
+    cases, _total = await list_disputes_page(session, status=status, search=None, offset=0, limit=500)
+    return cases
+
+
+async def list_disputes_page(
+    session: AsyncSession,
+    *,
+    status: str,
+    search: str | None,
+    offset: int,
+    limit: int,
+) -> tuple[list[AdminDisputeCase], int]:
+    """One page of staff disputes plus total count."""
     statuses = domain.status_filter_buckets(status)
-    disputes = await repository.list_disputes_for_admin(session, statuses=statuses)
-    return [await _to_admin_case(session, dispute) for dispute in disputes]
+    disputes, total = await repository.list_disputes_for_admin_page(
+        session, statuses=statuses, search=search, offset=offset, limit=limit
+    )
+    cases = [await _to_admin_case(session, dispute) for dispute in disputes]
+    return cases, total
 
 
 def _validate_patch_permissions(principal: Principal, patch_fields: dict[str, Any]) -> None:

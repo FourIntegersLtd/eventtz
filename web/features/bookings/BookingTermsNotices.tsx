@@ -96,9 +96,12 @@ export function ClientBookingTermsNotices({
 export function VendorBookingTermsNotices({
   detail,
   onChanged,
+  showPaymentDeadline = true,
 }: {
   detail: VendorBookingDetail;
   onChanged: () => void;
+  /** The vendor detail page shows this line in the right-hand card instead. */
+  showPaymentDeadline?: boolean;
 }) {
   const { showToast } = useToast();
   const [amount, setAmount] = useState("");
@@ -135,7 +138,7 @@ export function VendorBookingTermsNotices({
 
   return (
     <>
-      {deadline ? (
+      {showPaymentDeadline && deadline ? (
         <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-950">
           {deadline}
         </div>

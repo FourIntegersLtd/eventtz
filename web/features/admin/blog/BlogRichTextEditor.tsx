@@ -168,7 +168,7 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
   const uploading = uploadingCount > 0;
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white text-left">
+    <div className="ez-card overflow-hidden text-left">
       <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-100 px-2 py-1.5">
         <ToolbarButton
           label="Heading 1"

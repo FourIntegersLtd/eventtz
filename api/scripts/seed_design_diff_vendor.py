@@ -91,6 +91,15 @@ def _scenario_columns(scenario: str, payload: dict[str, object]) -> dict[str, ob
             "stripe_charges_enabled": True,
             "stripe_payouts_enabled": False,
         }
+    if scenario == "payout-linked":
+        return {
+            "status": "submitted",
+            "approval_status": "approved",
+            "current_step": 10,
+            "payload": payload,
+            "stripe_charges_enabled": True,
+            "stripe_payouts_enabled": True,
+        }
     raise ValueError(f"Unknown scenario: {scenario}")
 
 
@@ -139,7 +148,7 @@ def main() -> None:
     parser.add_argument(
         "--scenario",
         default="step-1",
-        help="step-1..step-10, submitted, returned, or approved",
+        help="step-1..step-10, submitted, returned, approved, or payout-linked",
     )
     args = parser.parse_args()
     try:

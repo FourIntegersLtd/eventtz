@@ -14,6 +14,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
+from app.core.pagination import DEFAULT_LIST_LIMIT
+
 
 class AdminDashboardSummary(BaseModel):
     """Headline counts across users, vendors, bookings, conversations and reviews."""
@@ -73,6 +75,10 @@ class AdminMarketplaceAnalyticsResponse(BaseModel):
     enquiries_by_month: list[dict[str, Any]] = Field(default_factory=list)
     completed_by_month: list[dict[str, Any]] = Field(default_factory=list)
     by_category: list[dict[str, Any]] = Field(default_factory=list)
+    by_category_chart: list[dict[str, Any]] = Field(default_factory=list)
+    by_category_total: int = 0
+    category_offset: int = 0
+    category_limit: int = DEFAULT_LIST_LIMIT
     by_location: list[dict[str, Any]] = Field(default_factory=list)
     failure_reasons: list[dict[str, Any]] = Field(default_factory=list)
     top_vendors: list[dict[str, Any]] = Field(default_factory=list)

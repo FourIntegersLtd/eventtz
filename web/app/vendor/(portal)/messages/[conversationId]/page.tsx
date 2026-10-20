@@ -1,16 +1,15 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { ChatPortalView } from "@/features/chat/ChatPortalView";
+import { VendorMessagesEzView } from "@/features/chat/VendorMessagesEzView";
 
 export default function VendorMessagesThreadPage() {
   const params = useParams();
-  const conversationId =
-    typeof params?.conversationId === "string" ? params.conversationId : "";
+  const conversationId = typeof params?.conversationId === "string" ? params.conversationId : "";
 
   if (!conversationId) {
-    return <p className="text-sm text-neutral-600">Invalid conversation.</p>;
+    return <p className="ez-small">Invalid conversation.</p>;
   }
 
-  return <ChatPortalView portal="vendor" selectedConversationId={conversationId} />;
+  return <VendorMessagesEzView selectedConversationId={conversationId} />;
 }

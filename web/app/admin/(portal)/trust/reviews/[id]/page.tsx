@@ -9,7 +9,7 @@ export default function AdminReviewDetailPage() {
   const id = typeof params?.id === "string" ? params.id : "";
 
   return (
-    <AdminConsolePage title="Review detail">
+    <AdminConsolePage title="Review" showPageHead={false}>
       {id ? <AdminReviewDetailView reviewId={id} /> : <p className="text-sm text-neutral-600">Invalid id.</p>}
     </AdminConsolePage>
   );

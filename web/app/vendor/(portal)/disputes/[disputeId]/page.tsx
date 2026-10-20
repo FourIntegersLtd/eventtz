@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { DisputesPortalPage } from "@/features/disputes/DisputesPortalPage";
+import { VendorDisputesEzView } from "@/features/disputes/VendorDisputesEzView";
 
 type PageProps = {
   params: Promise<{ disputeId: string }>;
@@ -9,5 +9,5 @@ type PageProps = {
 
 export default function VendorDisputeDetailPage({ params }: PageProps) {
   const { disputeId } = use(params);
-  return <DisputesPortalPage role="vendor" selectedDisputeId={disputeId} />;
+  return <VendorDisputesEzView selectedDisputeId={disputeId} />;
 }

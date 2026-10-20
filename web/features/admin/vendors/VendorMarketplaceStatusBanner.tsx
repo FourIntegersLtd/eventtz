@@ -79,7 +79,7 @@ export function VendorMarketplaceStatusBanner({ vendor }: Props) {
   const { label, labelClass, headline, detail } = statusCopy(vendor);
 
   return (
-    <div className="flex items-start justify-between gap-4 rounded-xl border border-neutral-200/90 bg-neutral-50/50 px-4 py-3.5">
+    <div className="ez-banner flex items-start justify-between gap-4">
       <div className="min-w-0">
         <p className="font-medium text-neutral-900">{headline}</p>
         <p className="mt-0.5 text-sm leading-relaxed text-neutral-600">{detail}</p>

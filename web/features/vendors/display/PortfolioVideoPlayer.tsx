@@ -93,7 +93,9 @@ export function PortfolioVideoPlayer({
         aria-label={label}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
-        className={`block h-auto w-full md:w-auto ${compact ? "md:max-h-72" : "md:max-h-80"}`}
+        className={`block h-auto w-full md:w-auto ${
+          compact ? "max-h-24 md:max-h-24" : "md:max-h-80"
+        }`}
       >
         Your browser does not support embedded video.
       </video>

@@ -52,6 +52,10 @@ ADDITIVE_OPERATIONS = frozenset(
     {
         # One vendor for the staff vendor page (the baseline only had the list, shown in a popup).
         ("GET", "/api/v1/admin/vendors/{}"),
+        # Portal home dashboards and admin daily financials (server-side aggregates).
+        ("GET", "/api/v1/client/dashboard"),
+        ("GET", "/api/v1/vendor/dashboard"),
+        ("GET", "/api/v1/admin/financials/daily"),
     }
 )
 

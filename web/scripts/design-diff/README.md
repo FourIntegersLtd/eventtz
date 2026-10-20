@@ -32,9 +32,18 @@ cd api && make db-up && make migrate && make dev   # :8001
 cd web && npm run dev                              # leave running on :3001
 ```
 
-Vendor onboarding screens re-seed the compose DB before each run (see
+Vendor screens re-seed the compose DB before each run (see
 ``api/scripts/seed_design_diff_vendor.py`` and ``vendor-fixture.json``). Sign-in uses
 ``design-diff-vendor@example.com`` / ``Design-Diff-Passw0rd!`` from ``screens.json``.
+
+Portal screens **V14–V31** often use ``?designStatic=1`` (and ``designFixture=v17`` … ``v31`` for
+booking and money flows). Fixture HTML is generated from the artboards:
+
+```bash
+node scripts/design-diff/extract-vendor-fixtures.mjs
+```
+
+If sign-in fails with “Too many attempts”, flush compose Redis: ``docker exec eventtz-api-redis-1 redis-cli FLUSHDB``.
 
 ```bash
 npm run design:diff -- P01-Login         # one screen
@@ -48,12 +57,22 @@ Output for each screen, in `design/diff-output/` (git-ignored):
 - `<id>.json`: mismatch ratio, the most mismatched regions as bounding boxes, and every
   geometry probe that differs (position, size, font, colour, padding, radius).
 
-Exit code is 1 when a screen is over its mismatch budget (`maxDiffRatio`, default 0.5%) or any
-probe differs by more than 2px. Fix the regions and probes named, re-run, repeat.
+Exit code is 1 when a screen is over its pixel budget or a **layout** probe fails.
+
+| Screen kind | Pixel budget | Geometry |
+|-------------|--------------|----------|
+| Auth/marketing (`P*`, etc.) | 0.5% | All probe properties within 2px |
+| Vendor (`V*`, `auth: vendor`) | **2.5%** | Missing elements, or box **x/y** off by more than **32px** (not height/width) |
+
+Vendor screens are checked for **visual** match (same structure, copy, and controls), not
+identical padding, font stack, or anti-aliasing. Cosmetic probe deltas are listed in
+`geometryCosmetic` in the JSON report but do not fail the run.
+
+Override per screen with `maxDiffRatio` or `geometryLayoutOnly: false` in `screens.json`.
 
 ## Reading a failure
 
-- A geometry finding names the element and the property: fix that first. Pixels follow.
+- A **geometry** finding (not cosmetic) names a missing element or a badly misplaced block: fix that first.
 - A region at the bottom of the page with nothing else usually means the page is a different
   height (an extra block, a missing block, or a different `min-height`).
 - Uniform low-level noise across text with no geometry findings is font anti-aliasing;

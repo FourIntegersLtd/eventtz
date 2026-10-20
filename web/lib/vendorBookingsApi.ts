@@ -9,6 +9,7 @@ import type {
   VendorAdjustmentItem,
 } from "@/lib/domain-types";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type {
   BookingInitiator,
   BookingLineItem as VendorBookingLineItem,
@@ -60,7 +61,19 @@ export type VendorBookingListItem = {
 export type VendorBookingsListResponse = {
   success: boolean;
   bookings: VendorBookingListItem[];
+  total?: number;
+  offset?: number;
+  limit?: number;
 };
+
+export type VendorBookingsPage = {
+  bookings: VendorBookingListItem[];
+  total: number;
+  offset: number;
+  limit: number;
+};
+
+export const VENDOR_BOOKINGS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export type VendorBookingDetail = BookingTermsFields & {
   booking_request_id: string;
@@ -95,6 +108,10 @@ export type VendorBookingDetail = BookingTermsFields & {
   completion_waiting_on?: "client" | "vendor" | "both" | null;
   review: VendorReviewSummary | null;
   initiator?: BookingInitiator;
+  /** The client declined a new price; the booking is open again at the original price. */
+  price_update_declined?: boolean;
+  /** The client declined this vendor's date-change request; the original date stands. */
+  date_change_declined?: boolean;
   counterparty_phone?: string | null;
   conversation_id: string | null;
   /** Client-facing total at request time (before vendor price changes). */
@@ -123,27 +140,57 @@ export type VendorBookingsListParams = {
   status?: string;
   payment_status?: string;
   exclude_payment_status?: string;
+  q?: string;
+  conversation_id?: string;
 };
 
-export async function fetchVendorBookings(
-  groupOrParams: VendorBookingsListGroup | "all" | VendorBookingsListParams = "active",
-): Promise<VendorBookingListItem[]> {
-  const params: VendorBookingsListParams =
+export type VendorBookingsListParamsWithPage = VendorBookingsListParams & {
+  offset?: number;
+  limit?: number;
+};
+
+export async function fetchVendorBookingsPage(
+  groupOrParams: VendorBookingsListGroup | "all" | VendorBookingsListParamsWithPage = "active",
+): Promise<VendorBookingsPage> {
+  const params: VendorBookingsListParamsWithPage =
     typeof groupOrParams === "string" ? { group: groupOrParams } : groupOrParams;
+  const offset = params.offset ?? 0;
+  const limit = params.limit ?? VENDOR_BOOKINGS_PAGE_SIZE;
   const { data } = await api.get<VendorBookingsListResponse>(
     "/api/v1/vendor/booking-requests",
     {
       params: {
         group: params.group ?? "active",
+        offset,
+        limit,
         ...(params.status ? { status: params.status } : {}),
         ...(params.payment_status ? { payment_status: params.payment_status } : {}),
         ...(params.exclude_payment_status
           ? { exclude_payment_status: params.exclude_payment_status }
           : {}),
+        ...(params.q?.trim() ? { q: params.q.trim() } : {}),
+        ...(params.conversation_id ? { conversation_id: params.conversation_id } : {}),
       },
     },
   );
-  return data.bookings ?? [];
+  return {
+    bookings: data.bookings ?? [],
+    total: data.total ?? data.bookings?.length ?? 0,
+    offset: data.offset ?? offset,
+    limit: data.limit ?? limit,
+  };
+}
+
+/** @deprecated Prefer paginated `fetchVendorBookingsPage` or portal dashboard APIs. */
+export async function fetchVendorBookings(
+  groupOrParams: VendorBookingsListGroup | "all" | VendorBookingsListParamsWithPage = "active",
+): Promise<VendorBookingListItem[]> {
+  const page = await fetchVendorBookingsPage({
+    ...(typeof groupOrParams === "string" ? { group: groupOrParams } : groupOrParams),
+    offset: 0,
+    limit: 200,
+  });
+  return page.bookings;
 }
 
 export async function patchVendorBookingStatus(

@@ -15,6 +15,7 @@ import {
   type CopilotAskMessage,
   vendorCopilotErrorMessage,
 } from "@/lib/vendorCopilotApi";
+import { CHAT_BUBBLE_MINE, CHAT_BUBBLE_THEIRS } from "@/lib/chatBubbleClasses";
 import { formControlClass } from "@/components/ui/tokens";
 
 type ThreadItem =
@@ -136,14 +137,12 @@ export function VendorCopilotThread({
           {thread.map((item, i) =>
             item.kind === "user" ? (
               <div key={i} className="flex justify-end">
-                <p className="max-w-[85%] rounded-2xl rounded-br-md bg-primary px-3.5 py-2.5 text-sm text-white">
-                  {item.content}
-                </p>
+                <p className={CHAT_BUBBLE_MINE}>{item.content}</p>
               </div>
             ) : (
               <div key={i} className="space-y-2">
                 <div
-                  className={`max-w-[95%] rounded-2xl rounded-bl-md border border-neutral-200 bg-white px-3.5 py-2.5 text-sm text-neutral-800 ${helpMarkdownProseClassName}`}
+                  className={`max-w-[95%] ${CHAT_BUBBLE_THEIRS} ${helpMarkdownProseClassName}`}
                   dangerouslySetInnerHTML={{ __html: helpMarkdownToHtml(item.content) }}
                 />
                 {item.actions.length > 0 ? (

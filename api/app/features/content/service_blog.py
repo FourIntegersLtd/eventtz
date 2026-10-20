@@ -155,7 +155,25 @@ async def _write(
 
 async def list_posts_for_staff(session: AsyncSession) -> list[BlogPostListItem]:
     """Every post, draft or published, most recently edited first."""
-    return [_list_item(row) for row in await repository.list_posts_newest_first(session)]
+    items, _total = await list_posts_for_staff_page(
+        session, status=None, search=None, offset=0, limit=repository.ADMIN_POST_LIST_LIMIT
+    )
+    return items
+
+
+async def list_posts_for_staff_page(
+    session: AsyncSession,
+    *,
+    status: str | None,
+    search: str | None,
+    offset: int,
+    limit: int,
+) -> tuple[list[BlogPostListItem], int]:
+    """One page of staff posts plus total count."""
+    rows, total = await repository.list_posts_newest_first_page(
+        session, status=status, search=search, offset=offset, limit=limit
+    )
+    return [_list_item(row) for row in rows], total
 
 
 async def get_post_for_staff(session: AsyncSession, post_id: str) -> BlogPostAdminDetail:

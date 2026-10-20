@@ -2,32 +2,47 @@
 
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LoadingState } from "@/components/ui/LoadingState";
+import { BackLink } from "@/components/ui/BackLink";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
-import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { ensurePlanClientEvent } from "@/lib/clientPlannerApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import { ClientEzPageHead } from "@/features/client/ui/ClientEzPageHead";
 import { BudgetBreakdown } from "./BudgetBreakdown";
-import { CelebrationSummary } from "./CelebrationSummary";
-import { ConfidenceBadge } from "./ConfidenceBadge";
-import { PlannerNextSteps } from "./PlannerNextSteps";
+import { PlannerGeneratingState } from "./PlannerGeneratingState";
 import { PlannerPromptHero } from "./PlannerPromptHero";
+import { PlannerSavedPlansList } from "./PlannerSavedPlansList";
 import { RecommendationSection } from "./RecommendationSection";
 import { PLANNER_COPY } from "./plannerCopy";
-import { buildPlannerBrowseUrl, primaryVendorsFromPlan } from "./plannerModel";
+import {
+  buildPlannerBrowseUrl,
+  celebrationMetaLine,
+  primaryVendorsFromPlan,
+} from "./plannerModel";
+import {
+  composePlannerPrompt,
+  EMPTY_PLANNER_FORM,
+  plannerFormFromPrompt,
+  type PlannerFormFields,
+} from "./plannerFormModel";
+import { plannerConfidenceBadge } from "./plannerConfidence";
 import { useGeneratePlan } from "./useGeneratePlan";
 
 export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const qFromUrl = searchParams.get("q")?.trim() || "";
-  const [prompt, setPrompt] = useState(qFromUrl);
+
+  const [form, setForm] = useState<PlannerFormFields>(() =>
+    qFromUrl ? plannerFormFromPrompt(qFromUrl) : { ...EMPTY_PLANNER_FORM },
+  );
   const [loadingTick, setLoadingTick] = useState(0);
   const [browseHandoffBusy, setBrowseHandoffBusy] = useState(false);
   const [browseHandoffError, setBrowseHandoffError] = useState<string | null>(null);
+  const [selectedVendorIds, setSelectedVendorIds] = useState<Set<string>>(() => new Set());
 
   const {
     loading,
@@ -40,6 +55,7 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
     loadPlan,
     replaceNeed,
     refreshList,
+    setPlan,
   } = useGeneratePlan();
 
   const onMount = useEffectEvent(() => {
@@ -62,16 +78,10 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
       return;
     }
     const id = window.setInterval(() => {
-      setLoadingTick((n) => (n + 1) % PLANNER_COPY.loadingLabels.length);
+      setLoadingTick((step) => (step + 1) % PLANNER_COPY.loadingLabels.length);
     }, 2200);
     return () => window.clearInterval(id);
   }, [loading]);
-
-  const handleSubmit = () => {
-    void (async () => {
-      await generate(prompt);
-    })();
-  };
 
   useEffect(() => {
     if (plan?.plan_id && plan.plan_id !== initialPlanId) {
@@ -79,15 +89,43 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
     }
   }, [plan?.plan_id, initialPlanId, router]);
 
-  const hasBrowseHandoff = useMemo(
-    () => (plan ? primaryVendorsFromPlan(plan).length > 0 : false),
-    [plan],
-  );
+  useEffect(() => {
+    if (!plan) {
+      setSelectedVendorIds(new Set());
+      return;
+    }
+    setSelectedVendorIds(new Set(primaryVendorsFromPlan(plan).map((vendor) => vendor.user_id)));
+  }, [plan?.plan_id]);
+
+  const showForm = !initialPlanId && !plan;
+  const showResults = Boolean(plan);
+
+  const handleSubmit = () => {
+    const prompt = composePlannerPrompt(form);
+    if (!prompt.trim()) return;
+    void generate(prompt);
+  };
+
+  const handleFormChange = (patch: Partial<PlannerFormFields>) => {
+    setForm((current) => ({ ...current, ...patch }));
+  };
+
+  const toggleVendor = (vendorUserId: string) => {
+    setSelectedVendorIds((current) => {
+      const next = new Set(current);
+      if (next.has(vendorUserId)) next.delete(vendorUserId);
+      else next.add(vendorUserId);
+      return next;
+    });
+  };
+
+  const selectedCount = selectedVendorIds.size;
 
   const handleBrowseHandoff = () => {
     if (!plan) return;
     setBrowseHandoffError(null);
     setBrowseHandoffBusy(true);
+    const vendorIds = [...selectedVendorIds];
     void (async () => {
       try {
         const ensured = plan.client_event_id
@@ -98,7 +136,7 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
           plan_id: plan.plan_id,
           event_id: ensured.event_id,
         });
-        router.push(buildPlannerBrowseUrl(plan, ensured.event_id));
+        router.push(buildPlannerBrowseUrl(plan, ensured.event_id, vendorIds));
       } catch (err: unknown) {
         setBrowseHandoffError(getApiErrorDetail(err) ?? "Could not open marketplace.");
         setBrowseHandoffBusy(false);
@@ -106,75 +144,96 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
     })();
   };
 
+  const handleEditDetails = () => {
+    if (!plan) return;
+    setPlan(null);
+    setForm({
+      ...EMPTY_PLANNER_FORM,
+      details: plan.brief.raw_prompt?.trim() || "",
+      location: plan.celebration.location ?? plan.brief.location ?? "",
+      guestCount: plan.celebration.guest_count ? String(plan.celebration.guest_count) : "",
+      budget:
+        plan.celebration.budget_gbp != null ? `£${plan.celebration.budget_gbp.toLocaleString("en-GB")}` : "",
+      preferredDate: plan.celebration.preferred_date ?? plan.brief.preferred_date ?? "",
+    });
+    router.push("/client/planner");
+  };
+
+  const confidence = useMemo(
+    () => (plan ? plannerConfidenceBadge(plan.confidence.score) : null),
+    [plan],
+  );
+
   return (
-    <div className="w-full max-w-5xl space-y-8">
-      <PlannerPromptHero
-        prompt={prompt}
-        onPromptChange={setPrompt}
-        onSubmit={handleSubmit}
-        loading={loading && !plan}
-      />
+    <div className="ez-stack ez-stack--lg">
+      {showForm ? (
+        <>
+          <PlannerPromptHero
+            form={form}
+            onFormChange={handleFormChange}
+            onSubmit={handleSubmit}
+            loading={loading}
+          />
 
-      {simpleIntent ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          <p>{error || PLANNER_COPY.simpleIntentHint}</p>
-          <ButtonLink
-            href={`/client/browse?q=${encodeURIComponent(prompt.trim())}`}
-            variant="secondary"
-            size="sm"
-            className="mt-3"
-          >
-            {PLANNER_COPY.browseCta}
-          </ButtonLink>
-        </div>
-      ) : null}
-
-      {error && !simpleIntent ? <LottieFailureInline message={error} /> : null}
-
-      {loading && !plan ? (
-        <LoadingState
-          label={PLANNER_COPY.loadingLabels[loadingTick] ?? PLANNER_COPY.loadingLabels[0]}
-          variant="centered"
-          className="py-16"
-          lottie="aiThinking"
-        />
-      ) : null}
-
-      {plan ? (
-        <div className="space-y-6">
-          <div className="grid gap-4 lg:grid-cols-[1fr_220px] lg:items-start">
-            <CelebrationSummary plan={plan} />
-            <ConfidenceBadge
-              score={plan.confidence.score}
-              reasons={plan.confidence.reasons}
-            />
-          </div>
-
-          {hasBrowseHandoff ? (
-            <div className="rounded-2xl border border-primary/15 bg-[#faf8fc] px-5 py-4">
-              <p className="text-sm text-neutral-800">{PLANNER_COPY.browseRecommendationsHint}</p>
-              {browseHandoffError ? (
-                <p className="mt-2 text-sm text-red-800">{browseHandoffError}</p>
-              ) : null}
-              <Button
-                type="button"
-                variant="primary"
+          {simpleIntent ? (
+            <div className="ez-banner ez-banner--warning" role="status">
+              <p>{error || PLANNER_COPY.simpleIntentHint}</p>
+              <ButtonLink
+                href={`/client/browse?q=${encodeURIComponent(composePlannerPrompt(form))}`}
+                variant="secondary"
                 size="sm"
                 className="mt-3"
-                loading={browseHandoffBusy}
-                disabled={browseHandoffBusy}
-                onClick={handleBrowseHandoff}
               >
-                {PLANNER_COPY.browseRecommendationsLabel}
-              </Button>
+                {PLANNER_COPY.browseCta}
+              </ButtonLink>
             </div>
           ) : null}
 
-          <div className="grid gap-6 lg:grid-cols-[1fr_280px] lg:items-start">
-            <div className="space-y-5">
-              <h3 className="font-heading text-xl font-semibold text-neutral-900">
-                Recommended vendors
-              </h3>
+          {error && !simpleIntent ? <LottieFailureInline message={error} /> : null}
+
+          {loading ? <PlannerGeneratingState activeStepIndex={loadingTick} /> : null}
+
+          {!loading ? <PlannerSavedPlansList plans={recentPlans} /> : null}
+
+          <p className="ez-caption">
+            Prefer browsing?{" "}
+            <Link href="/client/browse" className="ez-link">Open the marketplace</Link>
+          </p>
+        </>
+      ) : null}
+
+      {initialPlanId && loading && !plan ? (
+        <PlannerGeneratingState activeStepIndex={loadingTick} />
+      ) : null}
+
+      {initialPlanId && error && !plan && !loading ? <LottieFailureInline message={error} /> : null}
+
+      {showResults && plan ? (
+        <div className="ez-stack ez-stack--lg">
+          {initialPlanId ? (
+            <BackLink href="/client/planner" label={PLANNER_COPY.backToPlanner} className="ez-back" />
+          ) : null}
+
+          <ClientEzPageHead
+            eyebrow="Your plan"
+            title={plan.celebration.title}
+            actions={
+              <button type="button" className="ez-btn ez-btn--secondary" onClick={handleEditDetails}>
+                <Pencil width={18} height={18} strokeWidth={1.75} aria-hidden />
+                {PLANNER_COPY.editDetails}
+              </button>
+            }
+          />
+          {celebrationMetaLine(plan) && confidence ? (
+            <p className="ez-body">
+              {celebrationMetaLine(plan)} · <span className={confidence.className}>{confidence.label}</span>
+            </p>
+          ) : null}
+
+          {browseHandoffError ? <LottieFailureInline message={browseHandoffError} /> : null}
+
+          <div className="ez-split">
+            <div className="ez-split__main ez-stack ez-stack--xl">
               {plan.recommendations.map((rec) => (
                 <RecommendationSection
                   key={rec.need_id}
@@ -182,58 +241,23 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
                   recommendation={rec}
                   replacing={replacingNeedId === rec.need_id}
                   onReplace={() => void replaceNeed(rec.need_id)}
+                  selectedVendorIds={selectedVendorIds}
+                  onToggleVendor={toggleVendor}
                 />
               ))}
             </div>
-            <div className="space-y-5 lg:sticky lg:top-20">
-              <BudgetBreakdown budget={plan.budget} />
-              <PlannerNextSteps steps={plan.next_steps} />
+            <div className="ez-split__aside" style={{ flex: "0 1 340px" }}>
+              <BudgetBreakdown
+                budget={plan.budget}
+                selectedCount={selectedCount}
+                enquiryBusy={browseHandoffBusy}
+                enquiryDisabled={selectedCount === 0}
+                onSendEnquiry={handleBrowseHandoff}
+              />
             </div>
           </div>
         </div>
       ) : null}
-
-      {!loading && !plan && recentPlans.length ? (
-        <section>
-          <h3 className="font-heading text-lg font-semibold text-neutral-900">Your recent plans</h3>
-          <ul className="mt-3 divide-y divide-neutral-100 rounded-2xl border border-neutral-100 bg-white">
-            {recentPlans.slice(0, 8).map((item) => (
-              <li key={item.plan_id}>
-                <button
-                  type="button"
-                  className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left text-sm hover:bg-neutral-50"
-                  onClick={() => {
-                    router.push(`/client/planner/${item.plan_id}`);
-                  }}
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate font-medium text-neutral-900">{item.title}</span>
-                    <span className="text-xs text-neutral-500">
-                      {[item.location, item.event_type?.replace(/_/g, " ")].filter(Boolean).join(" · ")}
-                    </span>
-                  </span>
-                  {item.confidence_score != null ? (
-                    <span className="shrink-0 text-xs tabular-nums text-neutral-500">
-                      {item.confidence_score}%
-                    </span>
-                  ) : null}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {!loading && !plan && !recentPlans.length && !error ? (
-        <p className="text-left text-sm text-neutral-500">{PLANNER_COPY.emptyPlans}</p>
-      ) : null}
-
-      <p className="text-left text-xs text-neutral-400">
-        Prefer browsing?{" "}
-        <Link href="/client/browse" className="text-primary underline-offset-2 hover:underline">
-          Open the marketplace
-        </Link>
-      </p>
     </div>
   );
 }

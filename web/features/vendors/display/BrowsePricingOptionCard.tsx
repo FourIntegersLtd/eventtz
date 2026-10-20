@@ -66,24 +66,28 @@ export function BrowsePricingOptionCard({
         />
       ) : null}
       <div className="min-w-0 flex-1 space-y-2.5">
-        <div className="flex items-baseline justify-between gap-3">
-          <p className="text-sm font-semibold text-neutral-900">{opt.heading}</p>
-          <p className="shrink-0 text-sm font-semibold tabular-nums text-neutral-900">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <p className="min-w-0 flex-1 text-sm font-semibold leading-snug text-neutral-900">
+            {opt.heading}
+          </p>
+          <p className="shrink-0 text-left text-sm font-semibold tabular-nums text-neutral-900 sm:text-right">
             {opt.priceDisplay != null ? (
-              <>
+              <span className="inline-flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:justify-end">
                 {opt.compareAtDisplay ? (
-                  <span className="mr-1.5 text-xs font-normal text-neutral-400 line-through">
+                  <span className="text-xs font-normal text-neutral-400 line-through">
                     £{opt.compareAtDisplay}
                     {opt.priceSuffix ? ` ${opt.priceSuffix}` : ""}
                   </span>
                 ) : null}
-                £{opt.priceDisplay}
-                {opt.priceSuffix ? (
-                  <span className="ml-1 text-xs font-medium text-neutral-500">
-                    {opt.priceSuffix}
-                  </span>
-                ) : null}
-              </>
+                <span>
+                  £{opt.priceDisplay}
+                  {opt.priceSuffix ? (
+                    <span className="ml-1 text-xs font-medium text-neutral-500">
+                      {opt.priceSuffix}
+                    </span>
+                  ) : null}
+                </span>
+              </span>
             ) : (
               <span className="font-medium text-neutral-500">Quote</span>
             )}

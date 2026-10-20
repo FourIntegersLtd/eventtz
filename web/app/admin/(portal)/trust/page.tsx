@@ -13,28 +13,38 @@ const TABS = [
   { id: "reviews", label: "Reviews" },
 ] as const;
 
-function TrustTabs() {
+function TrustScreen() {
   const searchParams = useSearchParams();
   const tab = useMemo((): "disputes" | "reviews" => {
-    const t = searchParams.get("tab");
-    if (t === "reviews") return "reviews";
-    return "disputes";
+    return searchParams.get("tab") === "reviews" ? "reviews" : "disputes";
   }, [searchParams]);
 
   return (
-    <>
+    <AdminConsolePage
+
+      title={tab === "reviews" ? "Reviews" : "Disputes"}
+      description={
+        tab === "reviews"
+          ? "Moderate published and hidden reviews."
+          : "Funds stay held until a decision is recorded."
+      }
+    >
       <AdminSectionTabs tabs={TABS} activeId={tab} basePath="/admin/trust" />
       {tab === "reviews" ? <AdminReviewsView /> : <AdminDisputesView />}
-    </>
+    </AdminConsolePage>
   );
 }
 
 export default function AdminTrustPage() {
   return (
-    <AdminConsolePage title="Trust & safety">
-      <Suspense fallback={<AdminLoadingState />}>
-        <TrustTabs />
-      </Suspense>
-    </AdminConsolePage>
+    <Suspense
+      fallback={
+        <AdminConsolePage title="Disputes">
+          <AdminLoadingState />
+        </AdminConsolePage>
+      }
+    >
+      <TrustScreen />
+    </Suspense>
   );
 }

@@ -182,7 +182,7 @@ export function normalizePublicBioText(text: string): string {
 }
 
 const DELIVERY_LABELS: Record<string, string> = {
-  travel_to_client: "I travel to the client",
+  travel_to_client: "I travel to the event",
   client_comes: "Clients come to me",
   travel_both: "I travel to clients and clients also travel to me",
   ship_to_client: "I deliver to clients (e.g. courier)",

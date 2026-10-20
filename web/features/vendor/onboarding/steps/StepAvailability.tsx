@@ -107,27 +107,27 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
   };
 
   return (
-    <div className="ez-stack">
-      <div className="ez-stack ez-stack--sm">
+    <div className="ez-availability">
+      <div className="ez-availability__days">
         <span className="ez-label">Which days do you take bookings?</span>
-        <div className="ez-chip-row">
-          {WEEKDAY_SHORT_LABELS.map((label, weekday) => (
-            <EzChip
-              key={label}
-              active={data.availableWeekdays.includes(weekday)}
-              onClick={() => toggleDay(weekday)}
-            >
-              {label}
-            </EzChip>
-          ))}
-        </div>
+        {WEEKDAY_SHORT_LABELS.map((label, weekday) => (
+          <EzChip
+            key={label}
+            active={data.availableWeekdays.includes(weekday)}
+            onClick={() => toggleDay(weekday)}
+          >
+            {label}
+          </EzChip>
+        ))}
       </div>
-      <div className="ez-stack ez-stack--sm">
-        <span className="ez-label">Bookings per day</span>
-        <span className="ez-help">
-          How many events you can do on the same day ({MIN_BOOKINGS_PER_DAY} to{" "}
-          {MAX_BOOKINGS_PER_DAY}).
-        </span>
+      <div className="ez-availability__limit">
+        <div className="ez-stack ez-stack--sm">
+          <span className="ez-label">Bookings per day</span>
+          <span className="ez-help">
+            How many events you can do on the same day ({MIN_BOOKINGS_PER_DAY} to{" "}
+            {MAX_BOOKINGS_PER_DAY}).
+          </span>
+        </div>
         <div className="ez-hrow">
           <button
             className="ez-icon-btn ez-icon-btn--outline"
@@ -135,7 +135,7 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
             aria-label="Fewer"
             onClick={() => stepBookingsPerDay(-1)}
           >
-            <Minus strokeWidth={1.75} aria-hidden />
+            <Minus size={16} strokeWidth={1.75} aria-hidden />
           </button>
           <input
             className="ez-input"
@@ -155,35 +155,33 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
             aria-label="More"
             onClick={() => stepBookingsPerDay(1)}
           >
-            <Plus strokeWidth={1.75} aria-hidden />
+            <Plus size={16} strokeWidth={1.75} aria-hidden />
           </button>
         </div>
       </div>
-      <div className="ez-stack ez-stack--sm">
-        <div className="ez-between">
-          <span className="ez-label">
-            Dates you are not available{" "}
-            <span className="ez-label__opt">(optional)</span>
-          </span>
-          <div className="ez-hrow">
-            <button
-              className="ez-icon-btn"
-              type="button"
-              aria-label="Previous month"
-              onClick={() => shiftMonth(-1)}
-            >
-              <ChevronLeft strokeWidth={1.75} aria-hidden />
-            </button>
-            <span className="ez-strong">{monthLabel}</span>
-            <button
-              className="ez-icon-btn"
-              type="button"
-              aria-label="Next month"
-              onClick={() => shiftMonth(1)}
-            >
-              <ChevronRight strokeWidth={1.75} aria-hidden />
-            </button>
-          </div>
+      <div className="ez-stack ez-stack--sm ez-cal-block">
+        <span className="ez-label">
+          Dates you are not available{" "}
+          <span className="ez-label__opt">(optional)</span>
+        </span>
+        <div className="ez-cal-block__month">
+          <button
+            className="ez-icon-btn"
+            type="button"
+            aria-label="Previous month"
+            onClick={() => shiftMonth(-1)}
+          >
+            <ChevronLeft strokeWidth={1.75} aria-hidden />
+          </button>
+          <span className="ez-strong">{monthLabel}</span>
+          <button
+            className="ez-icon-btn"
+            type="button"
+            aria-label="Next month"
+            onClick={() => shiftMonth(1)}
+          >
+            <ChevronRight strokeWidth={1.75} aria-hidden />
+          </button>
         </div>
         <div className="ez-cal">
           {WEEKDAY_SHORT_LABELS.map((label) => (
@@ -204,7 +202,6 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
                   className={classes.join(" ")}
                   style={{
                     border: 0,
-                    font: "inherit",
                     cursor: "pointer",
                     background: blocked ? undefined : "none",
                   }}

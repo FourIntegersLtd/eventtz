@@ -3,17 +3,18 @@
 import Link from "next/link";
 import { useState } from "react";
 import { AlertTriangle, ChevronRight, type LucideIcon } from "lucide-react";
-import { SectionBlock, ContentCard } from "@/components/ui/SectionBlock";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { adminCard } from "@/components/admin-shell/adminTheme";
 import type { AdminBookingSupportMeta } from "@/lib/adminPlatformApi";
 import { shortId } from "./adminBookingDetailUtils";
 
 export function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <SectionBlock title={title}>
-      <ContentCard>{children}</ContentCard>
-    </SectionBlock>
+    <section className="ez-card">
+      <div className="ez-card__head">
+        <h2 className="ez-h3">{title}</h2>
+      </div>
+      <div className="ez-card__body">{children}</div>
+    </section>
   );
 }
 
@@ -26,11 +27,21 @@ export function Field({ label, value }: { label: string; value: React.ReactNode 
   );
 }
 
-export function ExpandableId({ value }: { value: unknown; label: string }) {
+/** Mask Stripe-style ids for support screens (full value on expand). */
+export function maskStripeId(value: unknown): string | null {
+  const full = value != null ? String(value).trim() : "";
+  if (!full) return null;
+  if (full.length <= 12) return full;
+  const prefix = full.includes("_") ? `${full.split("_")[0]}_` : full.slice(0, 3);
+  const tail = full.slice(-4);
+  return `${prefix}••••••••${tail}`;
+}
+
+export function ExpandableId({ value, label }: { value: unknown; label: string }) {
   const full = value != null ? String(value).trim() : "";
   const [open, setOpen] = useState(false);
   if (!full) return <span className="text-neutral-400">-</span>;
-  const compact = shortId(full);
+  const compact = maskStripeId(full) ?? shortId(full) ?? full;
   return (
     <div className="text-left">
       <button
@@ -38,18 +49,19 @@ export function ExpandableId({ value }: { value: unknown; label: string }) {
         onClick={() => setOpen((v) => !v)}
         className="font-mono text-sm text-neutral-800 hover:text-primary"
         aria-expanded={open}
+        aria-label={open ? `Hide full ${label}` : `Show full ${label}`}
       >
-        {open ? full : compact}
-      </button>
-      {!open && full.length > (compact?.length ?? 0) ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="ml-2 text-[12px] font-medium text-primary hover:underline"
+        <code
+          style={{
+            fontSize: "13px",
+            background: "var(--ez-surface-3, #f4f2f7)",
+            padding: "2px 8px",
+            borderRadius: "6px",
+          }}
         >
-          Show full
-        </button>
-      ) : null}
+          {open ? full : compact}
+        </code>
+      </button>
     </div>
   );
 }
@@ -92,21 +104,15 @@ export function CompactActionRow({
         type="button"
         disabled={busy}
         onClick={() => onSelect(action)}
-        className={`flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left transition hover:bg-neutral-50 disabled:opacity-50 ${
-          action.destructive ? "hover:bg-red-50/60" : ""
-        }`}
+        className={
+          action.destructive
+            ? "ez-btn ez-btn--danger-quiet w-full justify-start"
+            : "ez-btn ez-btn--secondary w-full justify-start"
+        }
       >
-        <span
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-            action.destructive ? "bg-red-50 text-red-700" : "bg-neutral-100 text-neutral-600"
-          }`}
-        >
-          <Icon className="h-4 w-4" aria-hidden />
-        </span>
-        <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-neutral-900">
-          {action.title}
-        </span>
-        <ChevronRight className="h-4 w-4 shrink-0 text-neutral-300" aria-hidden />
+        <Icon className="h-4 w-4 shrink-0" aria-hidden />
+        <span className="min-w-0 flex-1 truncate text-left">{action.title}</span>
+        <ChevronRight className="h-4 w-4 shrink-0 opacity-40" aria-hidden />
       </button>
     </ActionTooltip>
   );
@@ -121,39 +127,22 @@ export function NeedsAttentionBanner({
 }) {
   const hasCritical = support.needs_attention.some((f) => f.severity === "critical");
   return (
-    <div
-      className={`overflow-hidden rounded-2xl border px-5 py-4 ${
-        hasCritical
-          ? "border-red-200/80 bg-red-50/40"
-          : "border-amber-200/80 bg-amber-50/40"
-      }`}
-    >
-      <p
-        className={`flex items-center gap-2 text-sm font-semibold ${
-          hasCritical ? "text-red-900" : "text-amber-900"
-        }`}
-      >
-        <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
-        Needs attention
-      </p>
-      <ul className="mt-2 space-y-1 text-sm text-neutral-800">
-        {support.needs_attention.map((flag) => (
-          <li key={flag.code}>{flag.label}</li>
-        ))}
-      </ul>
-      {support.next_action ? (
-        <p className="mt-2 text-[13px] text-neutral-600">
-          Try next: <span className="font-medium text-neutral-900">{support.next_action}</span>
-        </p>
-      ) : null}
-      {openDispute ? (
-        <Link
-          href={`/admin/commerce?tab=disputes&dispute=${openDispute.id}`}
-          className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
-        >
-          View open dispute
-        </Link>
-      ) : null}
+    <div className={hasCritical ? "ez-banner ez-banner--danger" : "ez-banner ez-banner--warning"}>
+      <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
+      <div className="ez-banner__body">
+        <p className="ez-banner__title">Needs attention</p>
+        <ul>
+          {support.needs_attention.map((flag) => (
+            <li key={flag.code}>{flag.label}</li>
+          ))}
+        </ul>
+        {support.next_action ? <p>Try next: {support.next_action}</p> : null}
+        {openDispute ? (
+          <Link href={`/admin/commerce?tab=disputes&dispute=${openDispute.id}`} className="ez-link">
+            View open dispute
+          </Link>
+        ) : null}
+      </div>
     </div>
   );
 }

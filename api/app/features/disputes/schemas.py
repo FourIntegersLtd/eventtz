@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.core.pagination import DEFAULT_LIST_LIMIT
+
 
 class CreateDisputeBody(BaseModel):
     """Open a dispute on a booking."""
@@ -42,6 +44,10 @@ class DisputesListResponse(BaseModel):
     """A participant's disputes, most recently opened first."""
 
     disputes: list[DisputePublic]
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT
+    open_count: int = 0
 
 
 class DisputeDetailResponse(BaseModel):
@@ -93,6 +99,9 @@ class AdminDisputesListResponse(BaseModel):
     """Every dispute matching the admin list's status filter."""
 
     disputes: list[AdminDisputeCase]
+    total: int = 0
+    offset: int = 0
+    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminDisputePatchBody(BaseModel):

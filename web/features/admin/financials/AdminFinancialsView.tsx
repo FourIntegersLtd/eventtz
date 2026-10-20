@@ -1,43 +1,66 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { PoundSterling, Receipt, ShoppingBag } from "lucide-react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import {
+  downloadAdminFinancialsCsv,
   fetchAdminFinancials,
+  fetchAdminFinancialsDailyPage,
+  ADMIN_FINANCIALS_DAILY_PAGE_SIZE,
+  type AdminFinancialsDailyBucket,
   type AdminFinancialsSummary,
-} from "@/lib/adminPlatformApi";
+} from "@/lib/adminFinancialsApi";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminCommercePeriodFilter } from "@/features/admin/components/AdminCommercePeriodFilter";
 import { AdminFinancialsCharts } from "@/features/admin/financials/AdminFinancialsCharts";
 import {
+  AdminTable,
+  AdminTableBody,
+  AdminTableCell,
+  AdminTableElement,
+  AdminTableHead,
+  AdminTableHeaderCell,
+  AdminTableRow,
+} from "@/features/admin/components/AdminTable";
+import {
   commercePeriodRange,
   type CommercePeriodDays,
 } from "@/features/admin/commerce/commercePeriod";
+import { TablePagination } from "@/components/ui/TablePagination";
 
 function formatGbp(value: number): string {
   return `£${value.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export function AdminFinancialsView() {
+type AdminFinancialsViewProps = {
+  onRegisterPageActions?: (actions: ReactNode | null) => void;
+};
+
+export function AdminFinancialsView({ onRegisterPageActions }: AdminFinancialsViewProps) {
   const [period, setPeriod] = useState<CommercePeriodDays>(30);
   const [range, setRange] = useState(() => commercePeriodRange(30));
   const [summary, setSummary] = useState<AdminFinancialsSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dailyOffset, setDailyOffset] = useState(0);
+  const [dailyRows, setDailyRows] = useState<AdminFinancialsDailyBucket[]>([]);
+  const [dailyTotal, setDailyTotal] = useState(0);
+  const [dailyLoading, setDailyLoading] = useState(false);
 
   const handlePeriodChange = useCallback((next: CommercePeriodDays) => {
     setPeriod(next);
     setRange(commercePeriodRange(next));
+    setDailyOffset(0);
   }, []);
 
   const load = useCallback(async () => {
     setError(null);
     setLoading(true);
     try {
-      const s = await fetchAdminFinancials(range.from, range.to);
-      setSummary(s);
+      const summaryResult = await fetchAdminFinancials(range.from, range.to);
+      setSummary(summaryResult);
     } catch {
       setError("Could not load financials.");
     } finally {
@@ -49,42 +72,122 @@ export function AdminFinancialsView() {
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (!summary) return;
+    setDailyLoading(true);
+    void fetchAdminFinancialsDailyPage(range.from, range.to, dailyOffset, ADMIN_FINANCIALS_DAILY_PAGE_SIZE)
+      .then((page) => {
+        setDailyRows(page.daily);
+        setDailyTotal(page.total);
+      })
+      .catch(() => {
+        setDailyRows([]);
+        setDailyTotal(0);
+      })
+      .finally(() => setDailyLoading(false));
+  }, [summary, range.from, range.to, dailyOffset]);
+
+  useEffect(() => {
+    if (!onRegisterPageActions) return;
+    onRegisterPageActions(
+      <button
+        type="button"
+        className="ez-btn ez-btn--secondary ez-btn--sm"
+        disabled={exporting}
+        onClick={() => {
+          setExporting(true);
+          void downloadAdminFinancialsCsv(range.from, range.to)
+            .catch(() => setError("Could not export financials."))
+            .finally(() => setExporting(false));
+        }}
+      >
+        {exporting ? "Exporting…" : "Export CSV"}
+      </button>,
+    );
+    return () => onRegisterPageActions(null);
+  }, [exporting, onRegisterPageActions, range.from, range.to]);
+
   return (
-    <div className="min-w-0 max-w-full space-y-6">
+    <div className="ez-stack ez-stack--lg min-w-0 max-w-full">
       {error ? <AdminErrorBanner message={error} /> : null}
 
-      <div className="flex justify-end">
-        <AdminCommercePeriodFilter period={period} onPeriodChange={handlePeriodChange} />
-      </div>
+      <AdminCommercePeriodFilter period={period} onPeriodChange={handlePeriodChange} />
 
       {loading ? (
         <AdminLoadingState />
       ) : summary ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="ez-grid-4">
             <AdminKpiCard
-              label="Client spend"
+              label="Gross merchandise value"
               value={formatGbp(summary.gmv_gbp)}
-              hint="Total paid by clients"
-              icon={PoundSterling}
-              tone="primary"
+              hint={`${summary.paid_booking_count} paid bookings`}
             />
             <AdminKpiCard
-              label="Platform fee"
+              label="Platform fees"
               value={formatGbp(summary.platform_fee_gbp)}
-              hint={`${summary.service_fee_percent}% service fee on paid bookings`}
-              icon={Receipt}
-              tone="success"
+              hint={`${summary.service_fee_percent}% service fee`}
             />
             <AdminKpiCard
-              label="Paid bookings"
-              value={summary.paid_booking_count}
-              icon={ShoppingBag}
-              tone="info"
+              label="Payouts sent"
+              value={formatGbp(summary.payout_released_gbp)}
+              hint="Already transferred to vendors"
+            />
+            <AdminKpiCard
+              label="Payouts held"
+              value={formatGbp(summary.held_in_platform_balance_gbp)}
+              hint="Still with Eventtz"
             />
           </div>
 
           <AdminFinancialsCharts summary={summary} />
+
+          {dailyTotal > 0 || dailyLoading ? (
+            <section className="ez-card">
+              <div className="ez-card__head">
+                <h2 className="ez-h3">Daily totals</h2>
+              </div>
+              <AdminTable>
+                <AdminTableElement>
+                  <AdminTableHead>
+                    <AdminTableHeaderCell>Date</AdminTableHeaderCell>
+                    <AdminTableHeaderCell className="ez-td-num">Bookings</AdminTableHeaderCell>
+                    <AdminTableHeaderCell className="ez-td-num">GMV</AdminTableHeaderCell>
+                    <AdminTableHeaderCell className="ez-td-num">Platform fee</AdminTableHeaderCell>
+                    <AdminTableHeaderCell className="ez-td-num">Vendor portion</AdminTableHeaderCell>
+                  </AdminTableHead>
+                  <AdminTableBody>
+                    {dailyRows.map((bucket) => (
+                      <AdminTableRow key={bucket.date}>
+                        <AdminTableCell className="ez-td-strong">{bucket.date}</AdminTableCell>
+                        <AdminTableCell className="ez-td-num tabular-nums">{bucket.count}</AdminTableCell>
+                        <AdminTableCell className="ez-td-num tabular-nums">
+                          {formatGbp(bucket.gmv_gbp)}
+                        </AdminTableCell>
+                        <AdminTableCell className="ez-td-num tabular-nums">
+                          {formatGbp(bucket.platform_fee_gbp)}
+                        </AdminTableCell>
+                        <AdminTableCell className="ez-td-num tabular-nums">
+                          {formatGbp(bucket.vendor_portion_gbp)}
+                        </AdminTableCell>
+                      </AdminTableRow>
+                    ))}
+                  </AdminTableBody>
+                </AdminTableElement>
+              </AdminTable>
+              <TablePagination
+                offset={dailyOffset}
+                limit={ADMIN_FINANCIALS_DAILY_PAGE_SIZE}
+                total={dailyTotal}
+                pageRowCount={dailyRows.length}
+                loading={dailyLoading}
+                onPrevious={() =>
+                  setDailyOffset((current) => Math.max(0, current - ADMIN_FINANCIALS_DAILY_PAGE_SIZE))
+                }
+                onNext={() => setDailyOffset((current) => current + ADMIN_FINANCIALS_DAILY_PAGE_SIZE)}
+              />
+            </section>
+          ) : null}
         </>
       ) : null}
     </div>

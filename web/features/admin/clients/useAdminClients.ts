@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import {
   fetchAdminClients,
   type AdminClientRow,
@@ -11,7 +12,7 @@ export function useAdminClients() {
   const [rows, setRows] = useState<AdminClientRow[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
-  const [limit] = useState(50);
+  const [limit] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");

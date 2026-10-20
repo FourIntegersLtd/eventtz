@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import {
   fetchAdminBookings,
   type AdminBookingListItem,
@@ -11,7 +12,7 @@ export function useAdminBookings(initial?: Partial<AdminBookingsQuery>) {
   const [rows, setRows] = useState<AdminBookingListItem[]>([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
-  const [limit] = useState(50);
+  const [limit] = useState(DEFAULT_LIST_PAGE_SIZE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState(initial?.status ?? "");

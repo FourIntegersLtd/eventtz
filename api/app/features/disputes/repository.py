@@ -11,8 +11,23 @@ from __future__ import annotations
 
 from typing import Any
 
-from sqlalchemy import Boolean, Date, Numeric, Text, Uuid, column, exists, insert, select, table, update
+from sqlalchemy import (
+    Boolean,
+    Date,
+    Numeric,
+    Text,
+    Uuid,
+    column,
+    exists,
+    func,
+    insert,
+    or_,
+    select,
+    table,
+    update,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.db import as_uuid, plain_row
 from app.features.disputes.domain import ACTIVE_STATUSES
@@ -85,15 +100,23 @@ async def list_disputes_on_booking(session: AsyncSession, booking_id: str) -> li
     return [_dispute_row(found) for found in result]
 
 
-async def list_disputes_for_party(session: AsyncSession, user_id: str) -> list[DisputeRow]:
-    """Every dispute on a booking this user is the client or vendor of, most recent first."""
-    user_uuid = as_uuid(user_id)
+def _party_disputes_base(user_uuid: object) -> tuple[Any, Any]:
+    """Join and party filter for client/vendor dispute lists."""
     joined = DisputeCase.__table__.join(
         _booking_requests, _booking_requests.c.id == DisputeCase.booking_request_id
     )
     is_party = (_booking_requests.c.client_user_id == user_uuid) | (
         _booking_requests.c.vendor_user_id == user_uuid
     )
+    return joined, is_party
+
+
+async def list_disputes_for_party(session: AsyncSession, user_id: str) -> list[DisputeRow]:
+    """Every dispute on a booking this user is the client or vendor of, most recent first."""
+    user_uuid = as_uuid(user_id)
+    if user_uuid is None:
+        return []
+    joined, is_party = _party_disputes_base(user_uuid)
     result = await session.execute(
         select(*_DISPUTE_COLUMNS)
         .select_from(joined)
@@ -104,15 +127,92 @@ async def list_disputes_for_party(session: AsyncSession, user_id: str) -> list[D
     return [_dispute_row(found) for found in result]
 
 
+async def list_disputes_for_party_page(
+    session: AsyncSession, user_id: str, *, offset: int, limit: int
+) -> tuple[list[DisputeRow], int]:
+    """One page of disputes for a booking party plus total count."""
+    user_uuid = as_uuid(user_id)
+    if user_uuid is None:
+        return [], 0
+    joined, is_party = _party_disputes_base(user_uuid)
+    total = (await session.execute(select(func.count()).select_from(joined).where(is_party))).scalar_one()
+    result = await session.execute(
+        select(*_DISPUTE_COLUMNS)
+        .select_from(joined)
+        .where(is_party)
+        .order_by(DisputeCase.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    rows = [_dispute_row(found) for found in result]
+    return rows, int(total)
+
+
+async def count_open_disputes_for_party(session: AsyncSession, user_id: str) -> int:
+    """Disputes still open or under staff review for this booking party."""
+    user_uuid = as_uuid(user_id)
+    if user_uuid is None:
+        return 0
+    joined, is_party = _party_disputes_base(user_uuid)
+    return int(
+        (
+            await session.execute(
+                select(func.count())
+                .select_from(joined)
+                .where(is_party, DisputeCase.status.in_(("open", "under_review")))
+            )
+        ).scalar_one()
+        or 0
+    )
+
+
+def _admin_dispute_filters(statuses: tuple[str, ...] | None, search: str | None) -> list[ColumnElement[bool]]:
+    """WHERE clauses for the staff disputes list."""
+    clauses: list[ColumnElement[bool]] = []
+    if statuses is not None:
+        clauses.append(DisputeCase.status.in_(statuses))
+    needle = (search or "").strip()
+    if needle:
+        pattern = f"%{needle}%"
+        clauses.append(
+            or_(
+                DisputeCase.summary.ilike(pattern),
+                func.cast(DisputeCase.booking_request_id, Text).ilike(pattern),
+            )
+        )
+    return clauses
+
+
 async def list_disputes_for_admin(
     session: AsyncSession, *, statuses: tuple[str, ...] | None
 ) -> list[DisputeRow]:
     """Every dispute in the given statuses (or every dispute, when `statuses` is `None`)."""
+    rows, _total = await list_disputes_for_admin_page(
+        session, statuses=statuses, search=None, offset=0, limit=500
+    )
+    return rows
+
+
+async def list_disputes_for_admin_page(
+    session: AsyncSession,
+    *,
+    statuses: tuple[str, ...] | None,
+    search: str | None,
+    offset: int,
+    limit: int,
+) -> tuple[list[DisputeRow], int]:
+    """One page of staff disputes plus total count."""
+    filters = _admin_dispute_filters(statuses, search)
+    count_query = select(func.count()).select_from(DisputeCase)
+    if filters:
+        count_query = count_query.where(*filters)
+    total = (await session.execute(count_query)).scalar_one()
     query = select(*_DISPUTE_COLUMNS)
-    if statuses is not None:
-        query = query.where(DisputeCase.status.in_(statuses))
-    result = await session.execute(query.order_by(DisputeCase.created_at.desc()).limit(500))
-    return [_dispute_row(found) for found in result]
+    if filters:
+        query = query.where(*filters)
+    result = await session.execute(query.order_by(DisputeCase.created_at.desc()).offset(offset).limit(limit))
+    rows = [_dispute_row(found) for found in result]
+    return rows, int(total)
 
 
 async def has_active_dispute(session: AsyncSession, booking_id: str) -> bool:

@@ -18,7 +18,8 @@ export type BookingLineItemRow = {
   unit_label?: string | null;
 };
 
-function formatLineUnitPrice(unitPriceGbp: number | null, lineId?: string): string {
+/** Price for one included line. A missing price is "TBC"; a discount line keeps its minus sign. */
+export function formatLineUnitPrice(unitPriceGbp: number | null, lineId?: string): string {
   if (unitPriceGbp == null) return "TBC";
   const isAutoDiscount =
     (lineId?.startsWith("auto-") ?? false) || unitPriceGbp < 0;
@@ -30,7 +31,8 @@ function formatLineUnitPrice(unitPriceGbp: number | null, lineId?: string): stri
   return isAutoDiscount ? `-£${formatted}` : `£${formatted}`;
 }
 
-function isAutoDiscountLine(lineId: string, unitPriceGbp: number | null): boolean {
+/** True for an automatic discount row or any line stored as a negative amount. */
+export function isAutoDiscountLine(lineId: string, unitPriceGbp: number | null): boolean {
   return lineId.startsWith("auto-") || (unitPriceGbp != null && unitPriceGbp < 0);
 }
 

@@ -52,9 +52,12 @@ export function primaryVendorsFromPlan(plan: CelebrationPlanResponse): PlannerVe
 export function buildPlannerBrowseUrl(
   plan: CelebrationPlanResponse,
   linkedEventId: string,
+  vendorUserIds?: string[],
 ): string {
   const prefill = eventPrefillFromCelebrationPlan(plan);
-  const vendorIds = primaryVendorsFromPlan(plan).map((v) => v.user_id);
+  const vendorIds =
+    vendorUserIds ??
+    primaryVendorsFromPlan(plan).map((vendor) => vendor.user_id);
   const state: MarketplaceSearchState = {
     query: plan.brief.raw_prompt?.trim() || plan.celebration.title?.trim() || "",
     types: [],

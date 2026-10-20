@@ -19,6 +19,7 @@ import {
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
+import { adminBookingRef } from "@/features/admin/bookings/adminBookingRef";
 import {
   adminTrustReviewsHref,
   formatReviewEventDate,
@@ -93,79 +94,81 @@ export function AdminReviewDetailView({ reviewId }: Props) {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="ez-stack ez-stack--lg">
       <BackLink href={backHref} label="Reviews" icon="chevron" tone="muted" />
       {actionError ? <AdminErrorBanner message={actionError} /> : null}
 
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <StarRating rating={review.rating} size="md" />
-            <ReviewVisibilityBadge hidden={Boolean(review.hidden_at)} />
-          </div>
-          <h1 className="mt-2 font-heading text-2xl font-semibold text-neutral-900">{vendorName}</h1>
-          <p className="mt-1 text-sm text-neutral-600">{formatReviewWhen(review.created_at)}</p>
+      <div className="ez-pagehead">
+        <div className="ez-pagehead__text">
+          <h1 className="ez-h1">Review of {vendorName}</h1>
+          <p className="ez-small">
+            {review.rating} star{review.rating === 1 ? "" : "s"} · {review.client_email ?? "Client"}
+          </p>
         </div>
         {canModerateReviews ? (
-          <Button
-            variant={review.hidden_at ? "primary" : "destructive"}
-            size="sm"
-            loading={busy}
-            onClick={() => setConfirmHide(true)}
-          >
-            {review.hidden_at ? "Show publicly" : "Hide from profile"}
-          </Button>
+          <div className="ez-pagehead__actions">
+            <Button
+              variant={review.hidden_at ? "primary" : "destructive"}
+              size="sm"
+              loading={busy}
+              onClick={() => setConfirmHide(true)}
+            >
+              {review.hidden_at ? "Show publicly" : "Hide from profile"}
+            </Button>
+          </div>
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-        <div className="px-5 py-4">
-          <p className="text-[13px] font-medium text-neutral-500">Review</p>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
-            {review.body || "-"}
-          </p>
+      <div className="ez-split">
+        <div className="ez-split__main ez-stack ez-stack--lg">
+          <section className="ez-card">
+            <div className="ez-card__head">
+              <h2 className="ez-h3">Review</h2>
+              <ReviewVisibilityBadge hidden={Boolean(review.hidden_at)} />
+            </div>
+            <div className="ez-card__body">
+              <div className="ez-stack">
+                <StarRating rating={review.rating} size="md" />
+                <p className="ez-body whitespace-pre-wrap">{review.body || "-"}</p>
+                <p className="ez-caption">
+                  Posted {formatReviewWhen(review.created_at)} by {review.client_email ?? "client"}{" "}
+                  for booking {adminBookingRef(review.booking_request_id)}
+                </p>
+              </div>
+            </div>
+          </section>
         </div>
 
-        <dl className="divide-y divide-neutral-100 border-t border-neutral-100">
-          <div className="grid gap-0 sm:grid-cols-2">
-            <div className="px-5 py-4 sm:border-r sm:border-neutral-100">
-              <dt className="text-[13px] text-neutral-500">Client</dt>
-              <dd className="mt-0.5 text-sm font-medium text-neutral-900">
-                {review.client_email ?? "-"}
-              </dd>
+        <div className="ez-split__aside ez-stack ez-stack--lg">
+          <section className="ez-card">
+            <div className="ez-card__head">
+              <h2 className="ez-h3">Booking</h2>
             </div>
-            <div className="border-t border-neutral-100 px-5 py-4 sm:border-t-0">
-              <dt className="text-[13px] text-neutral-500">Event</dt>
-              <dd className="mt-0.5 text-sm font-medium text-neutral-900">
-                {review.booking_event_name ?? "-"}
-              </dd>
-              <p className="mt-0.5 text-xs text-neutral-500">
-                {formatReviewEventDate(review.booking_event_date)}
-              </p>
+            <div className="ez-card__body">
+              <dl className="ez-dl">
+                <dt>Event</dt>
+                <dd>{review.booking_event_name ?? "-"}</dd>
+                <dt>Event date</dt>
+                <dd>{formatReviewEventDate(review.booking_event_date)}</dd>
+                <dt>Request status</dt>
+                <dd>
+                  {review.booking_status ? <StatusBadge status={review.booking_status} /> : "-"}
+                </dd>
+              </dl>
+              <div className="ez-hrow" style={{ marginTop: "12px" }}>
+                <Link
+                  href={`/admin/bookings/${review.booking_request_id}`}
+                  className="ez-btn ez-btn--secondary ez-btn--sm"
+                >
+                  Open booking
+                </Link>
+                <Link href={backHref} className="ez-btn ez-btn--ghost ez-btn--sm">
+                  All vendor reviews
+                </Link>
+              </div>
             </div>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-primary/[0.04] px-5 py-4">
-            <div className="flex flex-wrap items-center gap-2">
-              {review.booking_status ? <StatusBadge status={review.booking_status} /> : null}
-              <Link
-                href={adminTrustReviewsHref({
-                  vendorUserId: review.vendor_user_id,
-                  vendorName,
-                })}
-                className="text-sm font-medium text-primary hover:underline"
-              >
-                All vendor reviews
-              </Link>
-            </div>
-            <Link
-              href={`/admin/bookings/${review.booking_request_id}`}
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              Open booking
-            </Link>
-          </div>
-        </dl>
+          </section>
+        </div>
       </div>
 
       <ConfirmDialog

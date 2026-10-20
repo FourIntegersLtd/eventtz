@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import Link from "next/link";
 import { ChevronRight, FileText, MessageSquare, Receipt } from "lucide-react";
 import { portalCard } from "@/components/portal-shell/portalTheme";
@@ -28,9 +29,10 @@ import {
   postConversationRead,
   postMessage,
 } from "@/lib/chatApi";
-import { fetchVendorBookings } from "@/lib/vendorBookingsApi";
+import { fetchVendorBookingsPage } from "@/lib/vendorBookingsApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
+import { chatBubbleClass } from "@/lib/chatBubbleClasses";
 import { chatMessageSchema, parseForm } from "@/lib/validation";
 
 type ChatThreadViewProps = {
@@ -131,11 +133,20 @@ export function ChatThreadView({
     let cancelled = false;
     void (async () => {
       try {
-        const bookings = await fetchVendorBookings("active");
+        const byConversation = await fetchVendorBookingsPage({
+          group: "active",
+          conversation_id: conversationId,
+          limit: 1,
+        });
+        const pendingPage = await fetchVendorBookingsPage({
+          group: "active",
+          status: "pending",
+          limit: DEFAULT_LIST_PAGE_SIZE,
+        });
         if (cancelled) return;
         const match =
-          bookings.find((b) => b.conversation_id === conversationId) ??
-          bookings.find((b) => b.initiator === "client" && b.booking_status === "pending");
+          byConversation.bookings[0] ??
+          pendingPage.bookings.find((b) => b.initiator === "client" && b.booking_status === "pending");
         if (match) {
           setQuotePrefill({
             eventName: match.event_name || undefined,
@@ -356,13 +367,7 @@ export function ChatThreadView({
                   stagger={false}
                   className={`flex ${mine ? "justify-end" : "justify-start"}`}
                 >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed sm:max-w-[70%] ${
-                      mine
-                        ? "rounded-br-md bg-primary-muted text-neutral-900 ring-1 ring-primary/10"
-                        : "rounded-bl-md bg-white text-neutral-900 ring-1 ring-neutral-200/70"
-                    }`}
-                  >
+                  <div className={`${chatBubbleClass(mine)} sm:max-w-[70%]`}>
                     {!mine && m.sender_display_name ? (
                       <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
                         {m.sender_display_name}
@@ -375,11 +380,7 @@ export function ChatThreadView({
                         isHtmlMessage(m.metadata) ? "" : "whitespace-pre-wrap"
                       }`}
                     />
-                    <p
-                      className={`mt-1.5 text-[11px] tabular-nums ${
-                        mine ? "text-primary/55" : "text-neutral-400"
-                      }`}
-                    >
+                    <p className="ez-bubble-meta mt-1.5 text-[11px] tabular-nums">
                       {formatBubbleTime(m.created_at)}
                     </p>
                   </div>

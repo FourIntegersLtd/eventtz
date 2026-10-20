@@ -1,7 +1,7 @@
 "use client";
 
-import { ChatPortalView } from "@/features/chat/ChatPortalView";
+import { VendorMessagesEzView } from "@/features/chat/VendorMessagesEzView";
 
 export default function VendorMessagesPage() {
-  return <ChatPortalView portal="vendor" />;
+  return <VendorMessagesEzView />;
 }

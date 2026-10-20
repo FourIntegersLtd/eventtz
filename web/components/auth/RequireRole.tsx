@@ -23,13 +23,15 @@ export function RequireRole({
 }: RequireRoleProps) {
   const router = useRouter();
   const { user, loading } = useAuth();
+  // Callers pass inline arrays (`roles={["client"]}`); depend on content, not reference.
+  const rolesKey = roles.join("\0");
 
   useEffect(() => {
     if (loading || !user) return;
     if (!user.user_type || !roles.includes(user.user_type)) {
       router.replace(redirectTo ?? dashboardPathForUserType(user.user_type));
     }
-  }, [loading, user, roles, redirectTo, router]);
+  }, [loading, user, rolesKey, redirectTo, router]);
 
   if (loading || !user || !user.user_type || !roles.includes(user.user_type)) {
     return (

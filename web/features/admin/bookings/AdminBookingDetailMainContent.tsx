@@ -1,14 +1,16 @@
 "use client";
 
-import {
-  BookingPricingBreakdown,
-  type BookingLineItemRow,
-  type BookingPricing,
-} from "@/features/bookings/BookingPricingBreakdown";
+import { StatusBadge } from "@/components/badges/StatusBadge";
+import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
+import type { BookingLineItemRow, BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
 import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";
 import type { BookingReviewDisplay } from "@/lib/reviewTypes";
-import { ContentCard, SectionBlock } from "@/components/ui/SectionBlock";
-import { ExpandableId, Field, formatTs } from "./AdminBookingDetailShared";
+import { AdminBookingTimeline } from "./AdminBookingTimeline";
+import {
+  buildPaymentLifecycleTimeline,
+  buildRequestLifecycleTimeline,
+} from "./adminBookingLifecycle";
+import { DetailSection, ExpandableId, Field, formatTs } from "./AdminBookingDetailShared";
 
 type Props = {
   booking: Record<string, unknown>;
@@ -18,6 +20,46 @@ type Props = {
   reviewVendor: BookingReviewDisplay | null;
 };
 
+function moneyLines(pricing: BookingPricing | null, quoteTotalLabel: string) {
+  if (!pricing) {
+    return (
+      <div className="ez-lines">
+        <div className="ez-lines__row">
+          <span>Total</span>
+          <span>{quoteTotalLabel}</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ez-lines">
+      {pricing.line_items_subtotal_label ? (
+        <div className="ez-lines__row">
+          <span>Vendor quote</span>
+          <span>{pricing.line_items_subtotal_label}</span>
+        </div>
+      ) : null}
+      {pricing.service_fee_label ? (
+        <div className="ez-lines__row">
+          <span>Service fee (client)</span>
+          <span>{pricing.service_fee_label}</span>
+        </div>
+      ) : null}
+      <div className="ez-lines__total">
+        <span>Client pays</span>
+        <span>{quoteTotalLabel}</span>
+      </div>
+      {pricing.vendor_portion_label ? (
+        <div className="ez-lines__row">
+          <span>Vendor payout</span>
+          <span>{pricing.vendor_portion_label}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function AdminBookingDetailMainContent({
   booking,
   lineItems,
@@ -25,99 +67,102 @@ export function AdminBookingDetailMainContent({
   quoteTotalLabel,
   reviewVendor,
 }: Props) {
+  const requestTimeline = buildRequestLifecycleTimeline(booking);
+  const paymentTimeline = buildPaymentLifecycleTimeline(booking);
+  const status = String(booking.status ?? "");
+  const paymentStatus = String(booking.payment_status ?? "unpaid");
+
   return (
-    <div className="min-w-0 space-y-8">
-      <SectionBlock title="Overview" description="Booking, people, payment, and payout">
-        <ContentCard padding="none" className="overflow-hidden">
-          <dl className="divide-y divide-neutral-100">
-            <div className="grid gap-0 sm:grid-cols-2">
-              <div className="space-y-3 px-5 py-4 sm:border-r sm:border-neutral-100">
-                <Field label="Event date" value={String(booking.event_date ?? "-")} />
-                <Field
-                  label="Postcode"
-                  value={booking.event_postcode != null ? String(booking.event_postcode) : "-"}
-                />
-                <Field label="Paid" value={formatTs(booking.paid_at)} />
-              </div>
-              <div className="space-y-3 border-t border-neutral-100 px-5 py-4 sm:border-t-0">
-                <Field label="Client" value={String(booking.client_email ?? "-")} />
-                <Field label="Vendor" value={String(booking.vendor_display_name ?? "-")} />
-                <Field label="Vendor email" value={String(booking.vendor_email ?? "-")} />
-              </div>
-            </div>
+    <div className="ez-stack ez-stack--lg min-w-0">
+      <DetailSection title="Request lifecycle">
+        <div className="ez-between" style={{ marginBottom: "12px" }}>
+          <span className="ez-small">Booking request status</span>
+          <StatusBadge status={status} />
+        </div>
+        <AdminBookingTimeline items={requestTimeline} />
+      </DetailSection>
 
-            <div className="grid gap-0 sm:grid-cols-2">
-              <div className="space-y-3 px-5 py-4 sm:border-r sm:border-neutral-100">
-                <Field
-                  label="Amount"
-                  value={
-                    booking.payment_amount_gbp != null
-                      ? `£${Number(booking.payment_amount_gbp).toFixed(2)}`
-                      : "-"
-                  }
-                />
-                <Field label="Client confirmed" value={formatTs(booking.client_completion_confirmed_at)} />
-                <Field label="Vendor confirmed" value={formatTs(booking.vendor_completion_confirmed_at)} />
-              </div>
-              <div className="space-y-3 border-t border-neutral-100 px-5 py-4 sm:border-t-0">
-                <Field label="Payout sent" value={formatTs(booking.payout_released_at)} />
-                <details className="group">
-                  <summary className="cursor-pointer list-none text-[13px] font-medium text-primary hover:underline [&::-webkit-details-marker]:hidden">
-                    Payment refs
-                  </summary>
-                  <div className="mt-3 space-y-3">
-                    <Field
-                      label="Payment intent"
-                      value={
-                        <ExpandableId
-                          value={booking.stripe_payment_intent_id}
-                          label="payment intent"
-                        />
-                      }
-                    />
-                    <Field
-                      label="Charge"
-                      value={<ExpandableId value={booking.stripe_charge_id} label="charge" />}
-                    />
-                    <Field
-                      label="Checkout"
-                      value={
-                        <ExpandableId
-                          value={booking.stripe_checkout_session_id}
-                          label="checkout session"
-                        />
-                      }
-                    />
-                    <Field
-                      label="Transfer"
-                      value={<ExpandableId value={booking.stripe_transfer_id} label="transfer" />}
-                    />
-                  </div>
-                </details>
-              </div>
-            </div>
-          </dl>
-        </ContentCard>
-      </SectionBlock>
+      <DetailSection title="Payment lifecycle">
+        <div className="ez-between" style={{ marginBottom: "12px" }}>
+          <span className="ez-small">Money status</span>
+          <PaymentStatusBadge status={paymentStatus} />
+        </div>
+        <AdminBookingTimeline items={paymentTimeline} />
+      </DetailSection>
 
-      <section>
-        <BookingPricingBreakdown
-          quoteTotalLabel={quoteTotalLabel}
-          pricing={pricing}
-          variant="client"
-          lineItems={lineItems}
+      <DetailSection title="Money breakdown">{moneyLines(pricing, quoteTotalLabel)}</DetailSection>
+
+      {lineItems.length > 0 ? (
+        <DetailSection title="Line items">
+          <div className="ez-lines">
+            {lineItems.map((line) => (
+              <div key={line.id} className="ez-lines__row">
+                <span>{line.heading}</span>
+                <span>
+                  {line.unit_price_gbp != null
+                    ? `£${line.unit_price_gbp.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : "TBC"}
+                </span>
+              </div>
+            ))}
+          </div>
+        </DetailSection>
+      ) : null}
+
+      <DetailSection title="Parties">
+        <dl className="ez-dl">
+          <dt>Client</dt>
+          <dd>{String(booking.client_email ?? "-")}</dd>
+          <dt>Vendor</dt>
+          <dd>{String(booking.vendor_display_name ?? "-")}</dd>
+          <dt>Vendor email</dt>
+          <dd>{String(booking.vendor_email ?? "-")}</dd>
+          <dt>Event date</dt>
+          <dd>{String(booking.event_date ?? "-")}</dd>
+          <dt>Postcode</dt>
+          <dd>{booking.event_postcode != null ? String(booking.event_postcode) : "-"}</dd>
+          <dt>Paid</dt>
+          <dd>{formatTs(booking.paid_at)}</dd>
+          <dt>Payout sent</dt>
+          <dd>{formatTs(booking.payout_released_at)}</dd>
+        </dl>
+      </DetailSection>
+
+      <DetailSection title="Stripe references">
+        <dl className="ez-dl">
+          <dt>Checkout session</dt>
+          <dd>
+            <ExpandableId value={booking.stripe_checkout_session_id} label="checkout session" />
+          </dd>
+          <dt>Payment intent</dt>
+          <dd>
+            <ExpandableId value={booking.stripe_payment_intent_id} label="payment intent" />
+          </dd>
+          <dt>Charge</dt>
+          <dd>
+            <ExpandableId value={booking.stripe_charge_id} label="charge" />
+          </dd>
+          <dt>Transfer</dt>
+          <dd>
+            <ExpandableId value={booking.stripe_transfer_id} label="transfer" />
+          </dd>
+          <dt>Vendor Connect account</dt>
+          <dd>
+            <ExpandableId value={booking.vendor_stripe_account_id} label="vendor account" />
+          </dd>
+        </dl>
+        <p className="ez-caption" style={{ marginTop: "12px" }}>
+          Ids are masked. Open in Stripe for the full value.
+        </p>
+      </DetailSection>
+
+      <DetailSection title="Review">
+        <BookingReviewPanel
+          title="Client review of vendor"
+          review={reviewVendor}
+          emptyLabel="No review yet."
         />
-      </section>
-
-      <SectionBlock title="Review">
-        <ContentCard>
-          <BookingReviewPanel
-            title="Client review of vendor"
-            review={reviewVendor}
-            emptyLabel="No review yet."
-          />
-        </ContentCard>
-      </SectionBlock>
+      </DetailSection>
     </div>
   );
 }

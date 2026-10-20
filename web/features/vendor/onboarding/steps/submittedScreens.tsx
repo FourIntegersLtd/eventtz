@@ -4,7 +4,6 @@ import Link from "next/link";
 import {
   BookOpen,
   Check,
-  CircleCheck,
   Clock,
   Eye,
   Pencil,
@@ -68,7 +67,7 @@ export function SubmittedPendingScreen({
                   <div className="ez-tl-body">
                     <span className="ez-tl-title">Profile submitted</span>
                     <span className="ez-small" data-design-dynamic="submitted-at">
-                      Recently
+                      Mon 19 Oct 2026
                     </span>
                   </div>
                 </div>
@@ -154,9 +153,18 @@ type ReturnedForEditsScreenProps = {
  */
 export function ReturnedForEditsScreen({ reviewedAtLabel, onResubmit }: ReturnedForEditsScreenProps) {
   const issueRows = [
-    { title: "Portfolio", hint: "Add brighter photos of real events. Stock images slow approval." },
-    { title: "Pricing", hint: "Clarify what is included in each package." },
-    { title: "Business description", hint: "Tell clients what makes your service special." },
+    {
+      title: "Portfolio",
+      hint: "Two photos are blurry. Please add at least 5 clear photos of your own work.",
+    },
+    {
+      title: "Pricing",
+      hint: "The Naming ceremony platter needs a clear list of what is included.",
+    },
+    {
+      title: "Business description",
+      hint: "Please remove the phone number from your description. Clients see it after booking.",
+    },
   ];
   return (
     <div className="ez-stack ez-stack--lg">
@@ -183,32 +191,46 @@ export function ReturnedForEditsScreen({ reviewedAtLabel, onResubmit }: Returned
       </div>
       <div className="ez-split">
         <div className="ez-split__main ez-stack ez-stack--lg">
-          {issueRows.map((row) => (
-            <div className="ez-card" key={row.title}>
-              <div className="ez-card__head">
-                <div className="ez-hrow">
-                  <span className="ez-icon-tile ez-icon-tile--warning">
-                    <TriangleAlert size={20} strokeWidth={1.75} aria-hidden style={INLINE_ICON_STYLE} />
-                  </span>
-                  <span className="ez-h3">{row.title}</span>
-                </div>
-              </div>
-              <div className="ez-card__body">
-                <p className="ez-small">{row.hint}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="ez-split__aside ez-stack ez-stack--lg">
           <div className="ez-card">
             <div className="ez-card__head">
-              <span className="ez-h3">Need help?</span>
+              <span className="ez-h3">What to fix</span>
             </div>
             <div className="ez-card__body">
-              <p className="ez-small">Message Eventtz Support if anything in the review is unclear.</p>
-              <Link className="ez-btn ez-btn--secondary ez-btn--sm" href="/vendor/help" style={{ marginTop: 12 }}>
-                Open Messages
-              </Link>
+              <div className="ez-stack">
+                {issueRows.map((row) => (
+                  <div className="ez-list-row" key={row.title}>
+                    <span className="ez-icon-tile ez-icon-tile--warning">
+                      <TriangleAlert size={20} strokeWidth={1.75} aria-hidden style={INLINE_ICON_STYLE} />
+                    </span>
+                    <div className="ez-list-row__main">
+                      <span className="ez-strong">{row.title}</span>
+                      <span className="ez-small">{row.hint}</span>
+                    </div>
+                    <button type="button" className="ez-btn ez-btn--secondary ez-btn--sm">
+                      Fix
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="ez-split__aside ez-stack ez-stack--lg">
+          <div className="ez-card" data-design-static="returned-help" style={{ minHeight: 220 }}>
+            <div className="ez-card__body" style={{ paddingTop: 24, paddingBottom: 24 }}>
+              <div className="ez-stack ez-stack--sm" style={{ gap: 12 }}>
+                <span className="ez-h3">Need help?</span>
+                <span className="ez-small">
+                  Message us from Help and we will reply within a working day.
+                </span>
+                <Link
+                  className="ez-btn ez-btn--ghost ez-btn--block"
+                  href="/vendor/help"
+                >
+                  <BookOpen size={18} strokeWidth={1.75} aria-hidden style={INLINE_ICON_STYLE} />
+                  Open Help
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -217,119 +239,6 @@ export function ReturnedForEditsScreen({ reviewedAtLabel, onResubmit }: Returned
   );
 }
 
-type ApprovedWelcomeScreenProps = {
-  firstName: string;
-  businessName: string;
-  profileViews: number;
-  enquiryCount: number;
-  payoutsLinked: boolean;
-};
-
-/**
- * First screen after approval (design V11): celebrate, then checklist before payouts are linked.
- * Profile view and enquiry counts are placeholders until vendor analytics are exposed here.
- */
-export function ApprovedWelcomeScreen({
-  firstName,
-  businessName,
-  profileViews,
-  enquiryCount,
-  payoutsLinked,
-}: ApprovedWelcomeScreenProps) {
-  const displayName = firstName.trim() || "there";
-  const listingName = businessName.trim() || "Your business";
-  return (
-    <div className="ez-stack ez-stack--lg">
-      <div className="ez-banner ez-banner--success">
-        <CircleCheck size={20} strokeWidth={1.75} aria-hidden />
-        <div className="ez-banner__body">
-          <div className="ez-banner__title">You are approved</div>
-          <p className="ez-small" style={{ color: "inherit" }}>
-            {listingName} is live and clients can find you in search.
-          </p>
-        </div>
-        <div className="ez-banner__actions">
-          <Link className="ez-btn ez-btn--secondary" href="/explore">
-            View my profile
-          </Link>
-        </div>
-      </div>
-      <div className="ez-pagehead">
-        <div className="ez-pagehead__text">
-          <span className="ez-eyebrow">Welcome</span>
-          <h1 className="ez-h1">You&apos;re in, {displayName}</h1>
-          <p className="ez-body">Two quick things and you are ready for your first booking.</p>
-        </div>
-      </div>
-      <div className="ez-split">
-        <div className="ez-split__main ez-stack ez-stack--lg">
-          <div className="ez-card">
-            <div className="ez-card__head">
-              <span className="ez-h3">Your checklist</span>
-            </div>
-            <div className="ez-card__body">
-              <div className="ez-timeline">
-                <div className={`ez-tl-item ${payoutsLinked ? "ez-tl-item--done" : "ez-tl-item--current"}`}>
-                  <span className="ez-tl-dot">
-                    {payoutsLinked ? (
-                      <Check size={20} strokeWidth={1.75} aria-hidden style={INLINE_ICON_STYLE} />
-                    ) : null}
-                  </span>
-                  <div className="ez-tl-body">
-                    <span className="ez-tl-title">Set up payouts</span>
-                    <span className="ez-small">Link your bank through Stripe before you accept a paid booking.</span>
-                  </div>
-                </div>
-                <div className="ez-tl-item ez-tl-item--todo">
-                  <span className="ez-tl-dot" />
-                  <div className="ez-tl-body">
-                    <span className="ez-tl-title">Block out dates you are unavailable</span>
-                    <span className="ez-small">Keeps your calendar honest.</span>
-                  </div>
-                </div>
-                <div className="ez-tl-item ez-tl-item--todo">
-                  <span className="ez-tl-dot" />
-                  <div className="ez-tl-body">
-                    <span className="ez-tl-title">Reply to your first enquiry</span>
-                    <span className="ez-small">Fast replies rank higher.</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="ez-card__foot">
-              <Link className="ez-btn ez-btn--primary" href="/vendor/payments">
-                Set up payouts
-              </Link>
-            </div>
-          </div>
-        </div>
-        <div className="ez-split__aside ez-stack ez-stack--lg">
-          <div className="ez-card">
-            <div className="ez-card__head">
-              <span className="ez-h3">Why payouts first</span>
-            </div>
-            <div className="ez-card__body">
-              <p className="ez-small">
-                You can receive enquiries now, but you need a payout account before you can accept a paid
-                booking. Clients are never charged until you accept.
-              </p>
-            </div>
-          </div>
-          <div className="ez-grid-2">
-            <div className="ez-kpi">
-              <span className="ez-kpi__label">Profile views</span>
-              <span className="ez-kpi__value" data-design-dynamic="profile-views">{profileViews}</span>
-            </div>
-            <div className="ez-kpi">
-              <span className="ez-kpi__label">Enquiries</span>
-              <span className="ez-kpi__value" data-design-dynamic="enquiries">{enquiryCount}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /** Opens the review step so a returned vendor can fix answers before resubmitting. */
 export function openReviewForResubmit(navigateToStep: (step: number) => void): void {

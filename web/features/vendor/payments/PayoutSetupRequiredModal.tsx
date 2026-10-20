@@ -1,13 +1,14 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
-import { Modal } from "@/components/ui/Modal";
-import { LottieIllustration } from "@/components/ui/LottieIllustration";
+import { ArrowRight, Wallet } from "lucide-react";
 
 type PayoutSetupRequiredModalProps = {
   isOpen: boolean;
   connecting: boolean;
   error?: string | null;
+  clientName?: string | null;
+  /** e.g. ``wedding`` for design V13 fixture copy. */
+  eventDescriptor?: string;
   onClose: () => void;
   onCompleteSetup: () => void;
 };
@@ -20,35 +21,41 @@ export function PayoutSetupRequiredModal({
   isOpen,
   connecting,
   error,
+  clientName,
+  eventDescriptor = "event",
   onClose,
   onCompleteSetup,
 }: PayoutSetupRequiredModalProps) {
+  if (!isOpen) return null;
+
+  const payoutCopy = clientName?.trim()
+    ? `Link your bank through Stripe so we can pay you once ${clientName.trim()}'s ${eventDescriptor} is complete. We will bring you straight back to this request.`
+    : "Link your bank through Stripe so we can pay you once the event is complete. We will bring you straight back to this request.";
+
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="You are one step away from accepting bookings"
-      maxWidthClassName="max-w-md"
-      zIndexClassName="z-[70]"
-      footer={
-        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-          <Button variant="secondary" onClick={onClose} disabled={connecting}>
-            Not now
-          </Button>
-          <Button variant="primary" loading={connecting} onClick={onCompleteSetup}>
-            {connecting ? "Opening Stripe…" : "Complete payout setup"}
-          </Button>
+    <div className="ez-scrim">
+      <div className="ez-modal" role="dialog" aria-modal="true" aria-label="Payout setup required">
+        <div className="ez-modal__head">
+          <span className="ez-icon-tile ez-icon-tile--warning">
+            <Wallet size={20} strokeWidth={1.75} aria-hidden />
+          </span>
+          <h2 className="ez-h2">You are one step away from accepting bookings</h2>
         </div>
-      }
-    >
-      <div className="space-y-3 text-sm leading-relaxed text-neutral-700">
-        <LottieIllustration asset="paymentSecure" size="status" />
-        <p>
-          To receive secure payments through Eventzz, you need to complete payout setup.
-        </p>
-        <p>This usually takes 2-3 minutes.</p>
-        {error ? <p className="font-medium text-red-700">{error}</p> : null}
+        <div className="ez-modal__body ez-stack">
+          <p className="ez-body">{payoutCopy}</p>
+          <p className="ez-small">This usually takes 2-3 minutes.</p>
+          {error ? <p className="ez-small" style={{ color: "var(--ez-danger, #b42318)" }}>{error}</p> : null}
+        </div>
+        <div className="ez-modal__foot">
+          <button className="ez-btn ez-btn--ghost" type="button" onClick={onClose} disabled={connecting}>
+            Not now
+          </button>
+          <button className="ez-btn ez-btn--primary" type="button" disabled={connecting} onClick={onCompleteSetup}>
+            <ArrowRight size={18} strokeWidth={1.75} aria-hidden />
+            {connecting ? "Opening Stripe…" : "Complete payout setup"}
+          </button>
+        </div>
       </div>
-    </Modal>
+    </div>
   );
 }

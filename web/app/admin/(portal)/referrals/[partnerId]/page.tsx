@@ -11,7 +11,7 @@ type PageProps = {
 export default function AdminReferralPartnerPage({ params }: PageProps) {
   const { partnerId } = use(params);
   return (
-    <AdminConsolePage title="Creator signups">
+    <AdminConsolePage title="Partner signups" description="People who joined through this partner's link.">
       <AdminReferralSignupsView partnerId={partnerId} />
     </AdminConsolePage>
   );

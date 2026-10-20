@@ -45,6 +45,8 @@ cancellation, disputes blocking payouts, deletion or visibility.
 
 ## What a failure looks like here
 - A booking write that skips the "status I read" condition, so two clicks both succeed or one overwrites a cancel.
+- A price decline that restores the old total but leaves the vendor's booking looking unchanged.
+- A declined date change that clears the proposal and leaves the requester's booking looking unchanged.
 - Bookings code writing `payment_status`, or treating `status = completed` as proof the vendor was paid.
 - A new notice kind for the second party that reuses the first party's kind (insert silently dropped).
 - A price, total or discount taken from the request body instead of the stored price list or quote lines.

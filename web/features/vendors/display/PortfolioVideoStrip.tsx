@@ -30,13 +30,17 @@ export function PortfolioVideoStrip({
   return (
     <>
       <div
-        className={`flex snap-x snap-mandatory items-start overflow-x-auto ${className}`.trim()}
+        className={`flex snap-x snap-mandatory items-start gap-2 overflow-x-auto ${className}`.trim()}
       >
         {videos.map((video, index) => (
           <div
             key={video.src}
             className={`shrink-0 snap-start ${
-              pairOnMobile ? "w-1/2 md:w-auto" : "w-full md:w-auto"
+              compact
+                ? "w-36"
+                : pairOnMobile
+                  ? "w-1/2 md:w-auto"
+                  : "w-full md:w-auto"
             }`}
           >
             <PortfolioVideoPlayer

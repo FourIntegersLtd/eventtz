@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
-import { EzTextField } from "./ez-form";
+import { EzCheck, EzTextField } from "./ez-form";
 import { isValidPhoneNumber } from "@/lib/validation/phone";
 
 export type StepAccountProps = {
@@ -78,6 +78,12 @@ export function StepAccount({
         readOnly
         help="This is your sign-in email. Change it in Settings."
       />
+      <EzCheck
+        checked={data.emailOnEnquiry}
+        onChange={(checked) => update({ emailOnEnquiry: checked })}
+      >
+        Email me when a client sends an enquiry (recommended)
+      </EzCheck>
     </div>
   );
 }

@@ -13,6 +13,8 @@ import { EzChip, EzOption, EzTextField } from "./ez-form";
 export type StepLocationProps = {
   data: VendorOnboardingData;
   update: VendorOnboardingUpdate;
+  /** Wizard screens use the shorter delivery and fee option sets from the V03 artboard. */
+  useOnboardingLayout?: boolean;
 };
 
 const DELIVERY_OPTIONS: { value: DeliveryMode; label: string }[] = [
@@ -23,6 +25,24 @@ const DELIVERY_OPTIONS: { value: DeliveryMode; label: string }[] = [
     label: "I travel to clients and clients also travel to me",
   },
   { value: "ship_to_client", label: "I deliver to clients (e.g. courier)" },
+];
+
+/** V03 artboard copy for the onboarding wizard. */
+const ONBOARDING_DELIVERY_OPTIONS: {
+  value: DeliveryMode;
+  title: string;
+  description: string;
+}[] = [
+  {
+    value: "travel_to_client",
+    title: "I travel to the event",
+    description: "Cooked on site or delivered to the venue.",
+  },
+  {
+    value: "client_comes",
+    title: "Clients come to me",
+    description: "Collection from my kitchen.",
+  },
 ];
 
 const TRAVEL_DELIVERY_POLICY_OPTIONS: {
@@ -52,56 +72,58 @@ const TRAVEL_DELIVERY_POLICY_OPTIONS: {
   },
 ];
 
-function hasBothDirections(modes: DeliveryMode[]): boolean {
-  return (
-    modes.includes("travel_both") ||
-    (modes.includes("travel_to_client") && modes.includes("client_comes"))
-  );
-}
+const ONBOARDING_TRAVEL_FEE_OPTIONS: {
+  value: TravelDeliveryPolicy;
+  title: string;
+  description: string;
+}[] = [
+  {
+    value: "fee_included",
+    title: "Included in my prices",
+    description: "No extra charge to the client.",
+  },
+  {
+    value: "custom",
+    title: "Charge per mile beyond 10 miles",
+    description: "Shown to clients before they enquire.",
+  },
+];
 
-function isDeliveryModeActive(modes: DeliveryMode[], value: DeliveryMode): boolean {
-  if (value === "travel_both") return hasBothDirections(modes);
-  if (value === "travel_to_client" || value === "client_comes") {
-    // Combined option owns the highlight when both directions apply.
-    if (hasBothDirections(modes)) return false;
-    return modes.includes(value);
-  }
+/** A delivery option is on only when that exact mode is stored. */
+export function isDeliveryModeActive(modes: DeliveryMode[], value: DeliveryMode): boolean {
   return modes.includes(value);
 }
 
-function toggleDeliveryMode(
+/** Adds or removes the option that was clicked, and leaves the others alone. */
+export function toggleDeliveryMode(
   current: DeliveryMode[],
   value: DeliveryMode,
 ): DeliveryMode[] {
-  if (value === "travel_both") {
-    if (hasBothDirections(current)) {
-      return current.filter(
-        (x) => x !== "travel_both" && x !== "travel_to_client" && x !== "client_comes",
-      );
-    }
-    return [
-      ...current.filter((x) => x !== "travel_to_client" && x !== "client_comes"),
-      "travel_both",
-    ];
-  }
-  if (value === "travel_to_client" || value === "client_comes") {
-    const withoutBoth = current.filter((x) => x !== "travel_both");
-    return withoutBoth.includes(value)
-      ? withoutBoth.filter((x) => x !== value)
-      : [...withoutBoth, value];
-  }
   return current.includes(value)
-    ? current.filter((x) => x !== value)
+    ? current.filter((mode) => mode !== value)
     : [...current, value];
 }
 
-export function StepLocation({ data, update }: StepLocationProps) {
+export function StepLocation({
+  data,
+  update,
+  useOnboardingLayout = true,
+}: StepLocationProps) {
   const copy = STEP_COPY[3];
   const market = getMarket(data.countryCode);
   const markets = enabledMarkets();
   const showCountryPicker = markets.length > 1;
   const radiusOptions = radiusOptionsForMarket(market);
   const distanceUnit = market.distanceUnit === "km" ? "km" : "miles";
+  const deliveryOptions = useOnboardingLayout
+    ? ONBOARDING_DELIVERY_OPTIONS
+    : DELIVERY_OPTIONS.map(({ value, label }) => ({ value, title: label }));
+  const feeOptions = useOnboardingLayout
+    ? ONBOARDING_TRAVEL_FEE_OPTIONS
+    : TRAVEL_DELIVERY_POLICY_OPTIONS.map(({ value, label }) => ({
+        value,
+        title: label,
+      }));
 
   return (
     <div className="ez-stack">
@@ -151,18 +173,23 @@ export function StepLocation({ data, update }: StepLocationProps) {
       <div className="ez-stack ez-stack--sm">
         <span className="ez-label">{copy.deliveryHeadline}</span>
         <span className="ez-help">{copy.deliverySubtext}</span>
-        {DELIVERY_OPTIONS.map(({ value, label }) => (
+        {deliveryOptions.map((option) => (
           <EzOption
-            key={value}
+            key={option.value}
             type="checkbox"
             name="deliv"
-            checked={isDeliveryModeActive(data.deliveryModes, value)}
+            checked={isDeliveryModeActive(data.deliveryModes, option.value)}
             onChange={() =>
               update({
-                deliveryModes: toggleDeliveryMode(data.deliveryModes, value),
+                deliveryModes: toggleDeliveryMode(data.deliveryModes, option.value),
               })
             }
-            title={label}
+            title={option.title}
+            description={
+              "description" in option && typeof option.description === "string"
+                ? option.description
+                : undefined
+            }
           />
         ))}
       </div>
@@ -189,22 +216,35 @@ export function StepLocation({ data, update }: StepLocationProps) {
       <div className="ez-stack ez-stack--sm">
         <span className="ez-label">{copy.policyHeadline}</span>
         <span className="ez-help">{copy.policySubtext}</span>
-        {TRAVEL_DELIVERY_POLICY_OPTIONS.map(({ value, label }) => (
+        {feeOptions.map((option) => (
           <EzOption
-            key={value}
+            key={option.value}
             type="radio"
             name="fee"
-            checked={data.travelDeliveryPolicy === value}
-            onChange={() => update({ travelDeliveryPolicy: value })}
-            title={label}
+            checked={data.travelDeliveryPolicy === option.value}
+            onChange={() => update({ travelDeliveryPolicy: option.value })}
+            title={option.title}
+            description={
+              "description" in option && typeof option.description === "string"
+                ? option.description
+                : undefined
+            }
           />
         ))}
         {data.travelDeliveryPolicy === "custom" ? (
           <EzTextField
-            label="Describe your travel / delivery rule"
+            label={
+              <>
+                Fee details <span className="ez-label__opt">(optional)</span>
+              </>
+            }
             value={data.travelDeliveryPolicyCustomText}
             onChange={(value) => update({ travelDeliveryPolicyCustomText: value })}
-            placeholder={`e.g. £1.50 per ${distanceUnit === "km" ? "kilometre" : "mile"} beyond 10 ${distanceUnit} from base city`}
+            placeholder={
+              useOnboardingLayout
+                ? ""
+                : `e.g. £1.50 per ${distanceUnit === "km" ? "kilometre" : "mile"} beyond 10 ${distanceUnit} from base city`
+            }
           />
         ) : null}
       </div>

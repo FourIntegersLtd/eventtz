@@ -17,11 +17,10 @@ import { OnboardingStepContent } from "./OnboardingStepContent";
 import { draftSavedLabel } from "./draftSavedLabel";
 import { WizardAside } from "./ui/WizardAside";
 import { WizardFrame } from "./ui/WizardFrame";
-import { ApprovedWelcomeScreen } from "./steps/submittedScreens";
 import { OnboardingStepInfoModal } from "./ui/OnboardingStepInfoModal";
-import { RETURNED_FOR_EDITS_BODY, RETURNED_FOR_EDITS_TITLE } from "./returnedForEditsCopy";
 import { VendorProfilePhotoField } from "./VendorProfilePhotoField";
 import { VendorProfileSectionTabs } from "./VendorProfileSectionTabs";
+import { VendorProfileEditorView } from "@/features/vendor/profile/VendorProfileEditorView";
 import { useVendorOnboardingController } from "./useVendorOnboardingController";
 import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import { Button } from "@/components/ui/Button";
@@ -34,7 +33,7 @@ export function VendorOnboarding() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isWalkthrough = searchParams.get("walkthrough") === "1";
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const {
     step,
     data,
@@ -95,8 +94,7 @@ export function VendorOnboarding() {
     onboarding_status: profileStatus,
     approval_status: approvalStatus,
   });
-  const showApprovedWelcome = isApprovedLive && !payoutsVerified && !isWalkthrough;
-  const useWizardLayout = isWalkthrough || !isApprovedLive || showApprovedWelcome;
+  const useWizardLayout = isWalkthrough || !isApprovedLive;
 
   const isLiveEdit = !useWizardLayout;
   /** Jumped from review to fix one section — "Back to review" replaces linear Back. */
@@ -123,9 +121,9 @@ export function VendorOnboarding() {
     : navigateToStep;
 
   useEffect(() => {
-    if (isLiveEdit || step > ONBOARDING_STEP.review) return;
+    if (step > ONBOARDING_STEP.review) return;
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [step, isLiveEdit]);
+  }, [step]);
 
   const portfolioBlockedCopy =
     canAddPortfolioWhilePending ? portfolioApprovalBlockedCopy(portfolioImageCount) : null;
@@ -256,22 +254,6 @@ export function VendorOnboarding() {
           </Link>
         </div>
       )}
-      {returnedForEditsPending && step === ONBOARDING_STEP.review ? (
-        <div className="mb-8 rounded-2xl bg-sky-50 p-5 text-sm text-sky-950 shadow-sm ring-1 ring-sky-200/70">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <p className="font-semibold text-sky-950">{RETURNED_FOR_EDITS_TITLE}</p>
-              <p className="mt-1 leading-relaxed text-sky-900/90">{RETURNED_FOR_EDITS_BODY}</p>
-            </div>
-            <Link
-              href="/vendor/help"
-              className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:opacity-95 sm:min-w-[10rem]"
-            >
-              Open Messages
-            </Link>
-          </div>
-        </div>
-      ) : null}
       {lockedPendingReview && step !== ONBOARDING_STEP.submitted && (
         <div className="mb-8 rounded-2xl bg-amber-50 p-5 text-sm text-amber-950 shadow-sm ring-1 ring-amber-200/50">
           <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
@@ -321,61 +303,21 @@ export function VendorOnboarding() {
       />
 
       {isLiveEdit ? (
-        <div className="space-y-4 lg:space-y-6">
-          <div className="space-y-4 lg:hidden">
-            <VendorProfilePhotoField variant="header" {...profilePhotoProps} />
-            <VendorProfileSectionTabs activeSection={reviewsActive ? null : activeSection} />
-          </div>
-
-          <header className="hidden lg:block">
-            <h1 className="font-heading text-2xl font-semibold tracking-tight text-neutral-900">
-              Profile
-            </h1>
-            <p className="mt-1 text-sm text-neutral-500">
-              Your public listing. Save to publish updates.
-            </p>
-          </header>
-
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(12rem,14rem)_minmax(0,1fr)]">
-            <aside className="hidden min-w-0 lg:block lg:sticky lg:top-4">
-              <div className="space-y-3">
-                <VendorProfilePhotoField variant="sidebar" {...profilePhotoProps} />
-                <VendorProfileSectionTabs
-                  orientation="vertical"
-                  activeSection={reviewsActive ? null : activeSection}
-                />
-              </div>
-            </aside>
-
-            <div className="min-w-0 space-y-4 lg:space-y-6">
+        <VendorProfileEditorView
+          data={data}
+          update={update}
+          listingVisible={listingVisible}
+          saving={saving}
+          onSave={() => void goNext()}
+          vendorUserId={user?.id ?? ""}
+          activeSectionSlug={sectionFromUrl?.slug ?? null}
+          sectionEditor={
+            sectionFromUrl ? (
               <div key={activeSection} className="animate-onboarding-panel">
                 <OnboardingStepContent {...stepContentProps} />
               </div>
-              <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white lg:sticky lg:bottom-4">
-                <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                  <p className="text-[13px] text-neutral-400">
-                    Updates apply to your public profile when you save.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => void goNext()}
-                    disabled={saving}
-                    className="min-h-11 w-full rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-95 active:opacity-90 disabled:opacity-60 sm:w-auto"
-                  >
-                    {saving ? "Saving…" : "Save changes"}
-                  </button>
-                </div>
-              </section>
-            </div>
-          </div>
-        </div>
-      ) : showApprovedWelcome ? (
-        <ApprovedWelcomeScreen
-          firstName={data.firstName}
-          businessName={data.businessName}
-          profileViews={0}
-          enquiryCount={0}
-          payoutsLinked={payoutsVerified}
+            ) : null
+          }
         />
       ) : (
         <div>

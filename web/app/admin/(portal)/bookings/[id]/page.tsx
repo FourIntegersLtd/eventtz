@@ -9,7 +9,7 @@ export default function AdminBookingDetailPage() {
   const id = typeof params?.id === "string" ? params.id : "";
 
   return (
-    <AdminConsolePage title="Booking detail">
+    <AdminConsolePage title="Booking" showPageHead={false}>
       {id ? (
         <AdminBookingDetailView bookingId={id} />
       ) : (

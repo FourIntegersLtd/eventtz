@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import AUTH_ERRORS, ROLE_ERRORS, CurrentClient, CurrentUser, CurrentVendor
 from app.core.db import SessionDep
 from app.core.errors import AppError, error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import (
     LanguageModelDependency,
     LanguageModelEmptyReply,
@@ -61,7 +62,9 @@ _CONTACT_ERRORS = (
 @router.get(
     "/blog/posts", tags=["blog"], response_model=BlogPostsListResponse, responses=error_responses(AppError)
 )
-async def list_blog_posts(session: SessionDep, limit: int = Query(50, ge=1, le=100)) -> BlogPostsListResponse:
+async def list_blog_posts(
+    session: SessionDep, limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=100)
+) -> BlogPostsListResponse:
     """The public blog index, newest first."""
     return BlogPostsListResponse(posts=await service_blog.list_published_posts(session, limit))
 

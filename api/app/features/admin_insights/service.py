@@ -13,6 +13,8 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+#: `marketplace_events.event_name` values the analytics overview counts.
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.features.admin_insights import domain, repository
 from app.features.admin_insights.errors import InvalidDateFilter
 from app.features.admin_insights.schemas import (
@@ -26,7 +28,6 @@ from app.features.admin_insights.schemas import (
 from app.features.pricing import service as pricing
 from app.features.referrals import service_client_codes as referral_codes
 
-#: `marketplace_events.event_name` values the analytics overview counts.
 _PROFILE_VIEW_EVENT = "vendor_profile_viewed"
 _VENDOR_REMINDER_EVENT = "enquiry_vendor_reminded"
 _CLIENT_NUDGE_EVENT = "enquiry_client_no_response_nudge"
@@ -137,7 +138,12 @@ async def dashboard_metrics(session: AsyncSession, *, requested_days: int) -> Ad
 
 
 async def marketplace_analytics(
-    session: AsyncSession, *, from_date_raw: str | None, to_date_raw: str | None
+    session: AsyncSession,
+    *,
+    from_date_raw: str | None,
+    to_date_raw: str | None,
+    category_offset: int = 0,
+    category_limit: int = DEFAULT_LIST_LIMIT,
 ) -> AdminMarketplaceAnalyticsResponse:
     """The marketplace funnel over client-initiated enquiries in the given date range.
 
@@ -181,6 +187,12 @@ async def marketplace_analytics(
         client_nudges=client_nudges,
         multi_batches=multi_batches,
     )
+    categories = list(built.get("by_category") or [])
+    built["by_category_chart"] = categories
+    built["by_category"] = categories[category_offset : category_offset + category_limit]
+    built["by_category_total"] = len(categories)
+    built["category_offset"] = category_offset
+    built["category_limit"] = category_limit
     return AdminMarketplaceAnalyticsResponse(**built)
 
 

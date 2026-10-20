@@ -21,8 +21,14 @@ export const LOTTIE_ASSETS = {
   loading: "/animations/loading-rings.json",
   /** Brain - AI planner generating. */
   aiThinking: "/animations/ai-thinking.json",
-  /** Shield + check (LottieFiles) - payment safety, payout setup. */
+  /** Shield + check (LottieFiles) - payment is protected. Empty payout lists use noTransactions. */
   paymentSecure: "/animations/payment-secure-shield.json",
+  /** Blank statement with a search mark — no payouts or revenue yet. Lottie Simple License (LottieFiles). */
+  noTransactions: "/animations/no-transactions.lottie",
+  /** Empty calendar. Lottie Simple License (LottieFiles). */
+  emptyCalendar: "/animations/empty-calendar.lottie",
+  /** Star review. Lottie Simple License (LottieFiles). */
+  reviews: "/animations/reviews.lottie",
   /** Soft waiting loop - under review, waiting on confirm, dispute open. */
   pendingReview: "/animations/pending-review.json",
   /** Friendly mascot - auth welcome / soft empty hero (not for destructive confirms). */

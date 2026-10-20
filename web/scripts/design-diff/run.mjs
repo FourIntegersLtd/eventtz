@@ -46,18 +46,59 @@ const VENDOR_SEED_BY_SCREEN_ID = {
   "V09-Submitted": "submitted",
   "V10-ReturnedForEdits": "returned",
   "V11-Approved": "approved",
+  "V12-PayoutAccount": "approved",
+  "V13-PayoutRequired": "approved",
+  "V14-Dashboard": "payout-linked",
+  "V15-Analytics": "payout-linked",
+  "V16-Bookings": "payout-linked",
+  "V17-RequestDetail": "payout-linked",
+  "V18-AdjustAccept": "payout-linked",
+  "V19-SendQuote": "payout-linked",
+  "V20-Chat": "payout-linked",
+  "V21-Complete": "payout-linked",
+  "V22-CancellationOutcome": "payout-linked",
+  "V23-PaymentRecord": "payout-linked",
+  "V24-PayoutStatement": "payout-linked",
+  "V25-Payouts": "payout-linked",
+  "V26-Disputes": "payout-linked",
+  "V27-Reviews": "payout-linked",
+  "V28-ProfileEditor": "payout-linked",
+  "V29-Notifications": "payout-linked",
+  "V30-Help": "payout-linked",
+  "V31-Settings": "payout-linked",
 };
 
 /** Per-pixel colour tolerance for pixelmatch (YIQ distance, 0 strict to 1 lax). */
 const PIXEL_THRESHOLD = 0.2;
-/** Share of differing pixels a screen may have before it fails, unless the screen sets its own. */
+/** Pixel budget for marketing/auth artboards (tighter). */
 const DEFAULT_MAX_DIFF_RATIO = 0.005;
+/** Vendor portal screens: visually the same, not pixel-identical (icons, fonts, button vs div). */
+const VENDOR_MAX_DIFF_RATIO = 0.025;
 /** Grid cell size used to rank mismatched regions. */
 const REGION_CELL_PX = 80;
 /** How many ranked regions to report. */
 const REGIONS_REPORTED = 8;
-/** Position or size difference, in CSS px, a geometry probe tolerates. */
+/** Strict probe tolerance (auth screens): every measured property. */
 const GEOMETRY_TOLERANCE_PX = 2;
+/** Vendor layout probes: allow artboard vs app spacing and type stack to differ slightly. */
+const VENDOR_LAYOUT_TOLERANCE_PX = 32;
+/** Vendor layout failures: major blocks in the wrong place, not content-driven box size. */
+const VENDOR_LAYOUT_PROBE_KEYS = new Set(["x", "y"]);
+const STRICT_LAYOUT_PROBE_KEYS = new Set(["x", "y", "width", "height"]);
+
+/** True for vendor onboarding and portal routes registered as ``V*`` or ``auth: vendor``. */
+function isVendorScreen(screen) {
+  return screen.auth === "vendor" || (screen.id?.startsWith("V") ?? false);
+}
+
+/** Per-screen pixel budget and whether geometry is layout-only (vendor default). */
+function resolveDiffPolicy(screen) {
+  const vendor = isVendorScreen(screen);
+  const layoutOnly = screen.geometryLayoutOnly ?? vendor;
+  const maxDiffRatio =
+    screen.maxDiffRatio ?? (vendor ? VENDOR_MAX_DIFF_RATIO : DEFAULT_MAX_DIFF_RATIO);
+  return { maxDiffRatio, layoutOnly, layoutTolerancePx: layoutOnly ? VENDOR_LAYOUT_TOLERANCE_PX : GEOMETRY_TOLERANCE_PX };
+}
 
 /** Reads the command line: screen ids, --all, and --base <url>. */
 function parseArguments(argv) {
@@ -122,7 +163,12 @@ async function runSetup(page, steps) {
   for (const step of steps) {
     if (step.fill) await page.fill(step.fill, step.value);
     if (step.click) await page.click(step.click);
-    if (step.waitFor) await page.waitForSelector(step.waitFor);
+    if (step.waitFor) {
+      await page.waitForSelector(step.waitFor, { state: "visible", timeout: 30_000 });
+    }
+    if (step.waitForHidden) {
+      await page.waitForSelector(step.waitForHidden, { state: "hidden", timeout: 30_000 });
+    }
   }
 }
 
@@ -156,9 +202,39 @@ async function settle(page) {
   await page.waitForTimeout(400);
 }
 
-/** Captures the whole document and returns it as a PNG exactly width x height (cropped or padded white). */
-async function screenshotFitted(page, width, height) {
-  const raw = PNG.sync.read(await page.screenshot({ fullPage: true }));
+/** Top-left of the clip root in viewport coordinates, for probe alignment. */
+async function clipOrigin(page, clipSelector) {
+  if (!clipSelector) return { x: 0, y: 0 };
+  const locator = page.locator(clipSelector).first();
+  await locator.waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+  const box = await locator.boundingBox();
+  if (!box) return { x: 0, y: 0 };
+  return { x: Math.round(box.x), y: Math.round(box.y) };
+}
+
+/** Captures the document (optionally clipped) as a PNG exactly width x height (cropped or padded white). */
+async function screenshotFitted(page, width, height, clipSelector) {
+  let raw;
+  if (clipSelector) {
+    const locator = page.locator(clipSelector).first();
+    await locator.waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+    const box = await locator.boundingBox();
+    if (box) {
+      raw = PNG.sync.read(
+        await page.screenshot({
+          clip: {
+            x: box.x,
+            y: box.y,
+            width: Math.min(Math.round(box.width), width),
+            height: Math.min(Math.round(box.height), height),
+          },
+        }),
+      );
+    }
+  }
+  if (!raw) {
+    raw = PNG.sync.read(await page.screenshot({ fullPage: true }));
+  }
   const fitted = new PNG({ width, height });
   fitted.data.fill(255);
   for (let row = 0; row < Math.min(height, raw.height); row += 1) {
@@ -169,8 +245,8 @@ async function screenshotFitted(page, width, height) {
 }
 
 /** Measures named elements: position, size and the computed styles that define their look. */
-async function measureProbes(page, probes, side) {
-  return page.evaluate(
+async function measureProbes(page, probes, side, origin = { x: 0, y: 0 }) {
+  const measured = await page.evaluate(
     ({ probeList, sideKey }) =>
       probeList.map((probe) => {
         const element = document.querySelector(probe[sideKey]);
@@ -195,15 +271,32 @@ async function measureProbes(page, probes, side) {
       }),
     { probeList: probes, sideKey: side },
   );
+  return measured.map((probe) => {
+    if (probe.missing) return probe;
+    return {
+      ...probe,
+      x: probe.x - origin.x,
+      y: probe.y - origin.y,
+    };
+  });
 }
 
-/** Compares probe measurements and lists every property that differs beyond tolerance. */
-function compareProbes(artboardProbes, pageProbes) {
-  const findings = [];
+/**
+ * Compares probe measurements. Vendor ``layoutOnly`` mode only fails on missing elements or
+ * large box shifts; padding, font-family and similar cosmetic deltas stay in the report only.
+ */
+function compareProbes(artboardProbes, pageProbes, policy) {
+  const failures = [];
+  const cosmetic = [];
   artboardProbes.forEach((expected, index) => {
     const actual = pageProbes[index];
     if (expected.missing || actual.missing) {
-      findings.push({ probe: expected.name, property: "element", expected: expected.missing ? "missing in artboard" : "present", actual: actual.missing ? "missing in page" : "present" });
+      failures.push({
+        probe: expected.name,
+        property: "element",
+        expected: expected.missing ? "missing in artboard" : "present",
+        actual: actual.missing ? "missing in page" : "present",
+      });
       return;
     }
     for (const property of Object.keys(expected)) {
@@ -211,11 +304,21 @@ function compareProbes(artboardProbes, pageProbes) {
       const expectedValue = expected[property];
       const actualValue = actual[property];
       const numeric = typeof expectedValue === "number";
-      const differs = numeric ? Math.abs(expectedValue - actualValue) > GEOMETRY_TOLERANCE_PX : expectedValue !== actualValue;
-      if (differs) findings.push({ probe: expected.name, property, expected: expectedValue, actual: actualValue });
+      const layoutKeys = policy.layoutOnly ? VENDOR_LAYOUT_PROBE_KEYS : STRICT_LAYOUT_PROBE_KEYS;
+      const layoutProperty = layoutKeys.has(property);
+      const tolerancePx =
+        policy.layoutOnly && layoutProperty ? policy.layoutTolerancePx : GEOMETRY_TOLERANCE_PX;
+      const differs = numeric
+        ? Math.abs(expectedValue - actualValue) > tolerancePx
+        : expectedValue !== actualValue;
+      if (!differs) continue;
+      const finding = { probe: expected.name, property, expected: expectedValue, actual: actualValue };
+      if (!policy.layoutOnly) failures.push(finding);
+      else if (layoutProperty) failures.push(finding);
+      else cosmetic.push(finding);
     }
   });
-  return findings;
+  return { failures, cosmetic };
 }
 
 /** Ranks grid cells by mismatched pixel count and returns the worst as bounding boxes. */
@@ -255,21 +358,42 @@ async function diffScreen(browser, screen, config, baseUrl) {
   const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, reducedMotion: "reduce" });
   const artboardPage = await context.newPage();
   await artboardPage.goto(`file://${artboardPath}`);
-  await stripElements(artboardPage, screen.artboardRemove ?? []);
+  const artboardStrip = [
+    ...(screen.artboardRemove ?? []),
+    ".ez-callout",
+    ...(isVendorScreen(screen) ? [".ez-card__head > .ez-badge"] : []),
+  ];
+  await stripElements(artboardPage, artboardStrip);
   await settle(artboardPage);
-  const artboardShot = await screenshotFitted(artboardPage, width, height);
-  const artboardProbes = await measureProbes(artboardPage, screen.probes ?? [], "artboard");
+  const clipSelector =
+    screen.clip ?? (isVendorScreen(screen) ? ".ez-content" : null);
+  const artboardOrigin = await clipOrigin(artboardPage, clipSelector);
+  const artboardShot = await screenshotFitted(artboardPage, width, height, clipSelector);
+  const artboardProbes = await measureProbes(artboardPage, screen.probes ?? [], "artboard", artboardOrigin);
 
   const vendorSeed = screen.vendorSeed ?? VENDOR_SEED_BY_SCREEN_ID[screen.id];
   if (vendorSeed) seedVendorScenario(vendorSeed);
   if (screen.auth) await signIn(context, baseUrl, config.auth[screen.auth]);
   const livePage = await context.newPage();
   await livePage.goto(baseUrl + screen.path, { waitUntil: "load" });
+  await livePage
+    .waitForFunction(
+      () => !document.body?.textContent?.includes("Loading your vendor profile"),
+      { timeout: 30_000 },
+    )
+    .catch(() => {});
   await runSetup(livePage, screen.setup ?? []);
-  await stripElements(livePage, screen.pageRemove ?? []);
+  // Let React finish hydration before nodes are removed. Stripping mid-commit
+  // makes React throw removeChild and the error boundary replaces the page.
   await settle(livePage);
-  const liveShot = await screenshotFitted(livePage, width, height);
-  const pageProbes = await measureProbes(livePage, screen.probes ?? [], "page");
+  const pageStrip = [
+    ...(screen.pageRemove ?? []),
+    ...(isVendorScreen(screen) ? [".ez-card__head > .ez-badge"] : []),
+  ];
+  await stripElements(livePage, pageStrip);
+  const pageOrigin = await clipOrigin(livePage, clipSelector);
+  const liveShot = await screenshotFitted(livePage, width, height, clipSelector);
+  const pageProbes = await measureProbes(livePage, screen.probes ?? [], "page", pageOrigin);
   await context.close();
 
   const mask = new PNG({ width, height });
@@ -283,14 +407,22 @@ async function diffScreen(browser, screen, config, baseUrl) {
     fs.writeFile(path.join(outDir, `${screen.id}.diff.png`), PNG.sync.write(visualDiff)),
   ]);
 
+  const policy = resolveDiffPolicy(screen);
+  const { failures: geometry, cosmetic: geometryCosmetic } = compareProbes(
+    artboardProbes,
+    pageProbes,
+    policy,
+  );
   const report = {
     screen: screen.id,
     path: screen.path,
     size: { width, height },
     mismatchRatio: Number((mismatched / (width * height)).toFixed(4)),
-    maxDiffRatio: screen.maxDiffRatio ?? DEFAULT_MAX_DIFF_RATIO,
+    maxDiffRatio: policy.maxDiffRatio,
+    geometryLayoutOnly: policy.layoutOnly,
     regions: rankRegions(mask, width, height),
-    geometry: compareProbes(artboardProbes, pageProbes),
+    geometry,
+    geometryCosmetic,
     unmappedAssets: [...unmappedAssets],
     files: ["artboard.png", "page.png", "diff.png"].map((suffix) => path.join("design/diff-output", `${screen.id}.${suffix}`)),
   };

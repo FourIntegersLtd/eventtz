@@ -2,17 +2,21 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter
+from typing import cast
+
+from fastapi import APIRouter, Query
 
 from app.core.auth import ROLE_ERRORS, CurrentClient
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.features.notifications import service_feed
 from app.features.notifications.schemas import (
     BookingNotificationsUnreadResponse,
     NotificationFeedResponse,
     NotificationMarkReadResponse,
 )
+from app.features.notifications.service_feed import FeedTopic, ReadState
 
 router = APIRouter(prefix="/client", tags=["client"])
 
@@ -62,7 +66,21 @@ async def post_client_booking_notification_mark_read(
     responses=error_responses(*ROLE_ERRORS),
 )
 async def get_client_notifications_feed(
-    session: SessionDep, client: CurrentClient
+    session: SessionDep,
+    client: CurrentClient,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
+    read_state: str = Query("all", pattern="^(all|unread)$"),
+    topic: str = Query("all", pattern="^(all|bookings|payments|messages)$"),
 ) -> NotificationFeedResponse:
     """The client's dashboard feed, newest first."""
-    return NotificationFeedResponse(items=await service_feed.feed(session, client, portal="client"))
+    items, total = await service_feed.feed_page(
+        session,
+        client,
+        portal="client",
+        offset=offset,
+        limit=limit,
+        read_state=cast(ReadState, read_state),
+        topic=cast(FeedTopic, topic),
+    )
+    return NotificationFeedResponse(items=items, total=total, offset=offset, limit=limit)

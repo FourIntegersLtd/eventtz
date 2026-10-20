@@ -8,6 +8,7 @@ from fastapi.responses import HTMLResponse
 from app.core.auth import ROLE_ERRORS, CurrentClient
 from app.core.db import SessionDep
 from app.core.errors import Forbidden, error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.core.ports import (
     MailerDependency,
     PaymentGatewayDependency,
@@ -20,6 +21,7 @@ from app.features.bookings import (
     service_create,
     service_date_change,
     service_payments_checkout,
+    service_portal_dashboard,
     service_queries,
     service_receipts,
     service_status,
@@ -33,6 +35,7 @@ from app.features.bookings.schemas import (
     ClientBookingDetailResponse,
     ClientBookingsListResponse,
     ClientBookingStatusBody,
+    ClientDashboardResponse,
     ConfirmCompletionResponse,
     CreateBookingRequestBody,
     DateChangeRequestBody,
@@ -65,6 +68,16 @@ _RECEIPT_ERRORS = (
 
 
 @router.get(
+    "/dashboard",
+    response_model=ClientDashboardResponse,
+    responses=error_responses(*ROLE_ERRORS),
+)
+async def get_client_dashboard(session: SessionDep, client: CurrentClient) -> ClientDashboardResponse:
+    """Aggregated home-screen data for the client portal."""
+    return await service_portal_dashboard.client_dashboard(session, client)
+
+
+@router.get(
     "/booking-requests",
     response_model=ClientBookingsListResponse,
     responses=error_responses(*ROLE_ERRORS, errors.InvalidListGroup),
@@ -78,17 +91,28 @@ async def list_client_bookings(
     exclude_payment_status: str | None = Query(
         None, description="Exclude this payment_status (e.g. unpaid for payment history)"
     ),
+    search: str | None = Query(
+        None,
+        alias="q",
+        max_length=200,
+        description="Part of an event name or vendor business name.",
+    ),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
 ) -> ClientBookingsListResponse:
     """The client's bookings in one bucket, most recently active first."""
-    bookings = await service_queries.client_bookings(
+    bookings, total = await service_queries.client_bookings_page(
         session,
         client.id,
         group=group,
         status=status,
         payment_status=payment_status,
         exclude_payment_status=exclude_payment_status,
+        search=search,
+        offset=offset,
+        limit=limit,
     )
-    return ClientBookingsListResponse(bookings=bookings)
+    return ClientBookingsListResponse(bookings=bookings, total=total, offset=offset, limit=limit)
 
 
 @router.get(

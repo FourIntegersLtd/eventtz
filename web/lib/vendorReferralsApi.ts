@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type ReferralFeeTier = {
   min_spend_gbp: number;
   fee_discount_gbp: number;
@@ -47,16 +48,30 @@ export type VendorReferralBookingsResponse = {
   total_referral_bookings: number;
   total_fee_savings_gbp: number;
   bookings: VendorReferralBookingRow[];
+  total?: number;
+  offset?: number;
+  limit?: number;
 };
+
+export const VENDOR_REFERRAL_BOOKINGS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export async function fetchVendorClientReferral(): Promise<VendorClientReferralInfo> {
   const { data } = await api.get<VendorClientReferralInfo>("/api/v1/vendor/referral");
   return data;
 }
 
-export async function fetchVendorReferralBookings(): Promise<VendorReferralBookingsResponse> {
-  const { data } = await api.get<VendorReferralBookingsResponse>("/api/v1/vendor/referral/bookings");
+export async function fetchVendorReferralBookingsPage(
+  offset = 0,
+  limit = VENDOR_REFERRAL_BOOKINGS_PAGE_SIZE,
+): Promise<VendorReferralBookingsResponse> {
+  const { data } = await api.get<VendorReferralBookingsResponse>("/api/v1/vendor/referral/bookings", {
+    params: { offset, limit },
+  });
   return data;
+}
+
+export async function fetchVendorReferralBookings(): Promise<VendorReferralBookingsResponse> {
+  return fetchVendorReferralBookingsPage(0, 200);
 }
 
 export async function fetchVendorReferralPreview(

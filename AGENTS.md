@@ -113,6 +113,7 @@ Traps in this machine's shell:
   terms are snapshotted at checkout (ADR 0010).
 - **`web/lib/api-types.ts` is hand-written.** There is no `api:types` script; update it by hand
   after `make openapi`.
+- **List screens paginate on the server.** Tables send `offset` / `limit` / filters as query params; home dashboards use `GET /client/dashboard` and `GET /vendor/dashboard`, not `booking-requests?limit=200` plus client-side `.filter`.
 - **Docker hung?** DB tests skip silently. Run them against the compose Postgres directly:
   create a fresh database and set `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5434/<name>`.
 

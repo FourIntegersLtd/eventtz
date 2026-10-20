@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentVendor
 from app.core.db import SessionDep
 from app.core.errors import AppError, error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.features.referrals import service_client_codes, service_partners
 from app.features.referrals.errors import (
     CodeAllocationFailed,
@@ -79,10 +80,15 @@ async def choose_referral_code(
     responses=error_responses(*ROLE_ERRORS),
 )
 async def list_referral_bookings(
-    session: SessionDep, principal: CurrentVendor
+    session: SessionDep,
+    principal: CurrentVendor,
+    offset: int = Query(0, ge=0),
+    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
 ) -> VendorReferralBookingsResponse:
     """Bookings clients made with the vendor's codes, and what the codes saved them."""
-    return await service_client_codes.referral_bookings(session, principal.id)
+    return await service_client_codes.referral_bookings_page(
+        session, principal.id, offset=offset, limit=limit
+    )
 
 
 @router.get(

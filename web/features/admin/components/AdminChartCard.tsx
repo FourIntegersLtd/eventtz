@@ -2,7 +2,6 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ContentCard, PanelCard } from "@/components/ui/SectionBlock";
 import {
   AdminInfoHint,
   type AdminChartInfo,
@@ -31,21 +30,22 @@ export function AdminChartCard({
   className = "",
 }: AdminChartCardProps) {
   return (
-    <PanelCard
-      className={`flex flex-col ${className}`.trim()}
-      title={title}
-      description={subtitle}
-      trailing={info ? <AdminInfoHint label={title} info={info} /> : undefined}
-      bodyClassName="flex min-h-0 flex-1 flex-col pt-0"
-    >
-      <div className="min-h-[220px] flex-1">{children}</div>
+    <section className={`ez-card flex flex-col ${className}`.trim()}>
+      <div className="ez-card__head">
+        <div className="min-w-0">
+          <h2 className="ez-h3">{title}</h2>
+          {subtitle ? <p className="ez-small">{subtitle}</p> : null}
+        </div>
+        {info ? <AdminInfoHint label={title} info={info} /> : null}
+      </div>
+      <div className="ez-card__body min-h-[220px] flex-1">{children}</div>
       {footerHref && footerLabel ? (
-        <div className="mt-3 border-t border-neutral-100 pt-3">
-          <Link href={footerHref} className="text-xs font-medium text-primary hover:underline">
+        <div className="ez-card__foot" style={{ justifyContent: "flex-start" }}>
+          <Link href={footerHref} className="ez-link ez-small">
             {footerLabel}
           </Link>
         </div>
       ) : null}
-    </PanelCard>
+    </section>
   );
 }

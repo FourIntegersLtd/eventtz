@@ -4,7 +4,6 @@ import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AdminSectionTabs } from "@/features/admin/layout/AdminSectionTabs";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { AdminPageHeader } from "@/features/admin/components/AdminPageHeader";
 import { AdminMessagesComposeView } from "@/features/admin/messages/AdminMessagesComposeView";
 import { AdminMessagesInboxView } from "@/features/admin/messages/AdminMessagesInboxView";
 import { fetchAdminSupportConversations } from "@/lib/adminMessagesApi";
@@ -56,15 +55,14 @@ function MessagesTabs() {
   );
 
   return (
-    <>
-      <AdminPageHeader />
+    <div className="ez-stack ez-stack--lg">
       <AdminSectionTabs tabs={tabs} activeId={tab} basePath="/admin/messages" />
       {tab === "compose" ? (
         <AdminMessagesComposeView />
       ) : (
         <AdminMessagesInboxView onUnreadTotalChange={setInboxUnread} />
       )}
-    </>
+    </div>
   );
 }
 

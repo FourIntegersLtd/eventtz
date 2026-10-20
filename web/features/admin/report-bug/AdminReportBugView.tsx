@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { formControlClass } from "@/components/ui/tokens";
+import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { submitAdminContact } from "@/lib/contactApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { adminBugReportSchema, parseForm } from "@/lib/validation";
-
-const fieldClass = formControlClass();
 
 export function AdminReportBugView() {
   const { showToast } = useToast();
@@ -46,31 +43,48 @@ export function AdminReportBugView() {
   };
 
   return (
-    <div className="max-w-2xl">
-      <section className="rounded-2xl border border-neutral-100 bg-white">
-        <form onSubmit={onSubmit} className="divide-y divide-neutral-100">
-          <div className="space-y-1.5 px-5 py-4 sm:px-6">
-            <label htmlFor="admin-bug-message" className="block text-sm font-medium text-neutral-800">
-              What went wrong
+    <div className="ez-split">
+      <div className="ez-split__main">
+        <section className="ez-card overflow-hidden">
+          <div className="ez-card__head">
+            <h2 className="ez-h3">What went wrong</h2>
+          </div>
+          <form onSubmit={onSubmit} className="ez-card__body ez-stack ez-stack--lg">
+            {error ? <AdminErrorBanner message={error} /> : null}
+            <label htmlFor="admin-bug-message" className="ez-field">
+              <span className="ez-label">What did you tap, and what should have happened?</span>
+              <textarea
+                id="admin-bug-message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={8}
+                className="ez-input ez-input--area"
+                placeholder="Describe the steps and the outcome you expected."
+              />
             </label>
-            <textarea
-              id="admin-bug-message"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={8}
-              className={fieldClass}
-              placeholder="What did you tap, and what should have happened?"
-            />
-          </div>
+            <div className="flex flex-wrap justify-end gap-2">
+              <button type="submit" className="ez-btn ez-btn--primary" disabled={busy}>
+                {busy ? "Sending…" : "Send bug report"}
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
 
-          <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-            {error ? <p className="text-sm text-red-700">{error}</p> : <span />}
-            <Button type="submit" loading={busy} className="sm:shrink-0">
-              Send to engineering
-            </Button>
+      <div className="ez-split__aside">
+        <section className="ez-card overflow-hidden lg:sticky lg:top-4">
+          <div className="ez-card__head">
+            <h2 className="ez-h3">Before you send</h2>
           </div>
-        </form>
-      </section>
+          <div className="ez-card__body ez-lines ez-small">
+            <p>
+              Do not paste customer emails or card details. Use the booking reference instead, like
+              EZ-20418.
+            </p>
+            <p>Urgent problems with money: message the on-call engineer directly.</p>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

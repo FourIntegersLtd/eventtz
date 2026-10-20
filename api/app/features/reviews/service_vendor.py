@@ -4,21 +4,35 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+# Matches the baseline's `list_reviews_for_vendor_owner` cap.
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.features.identity import service as identity_service
 from app.features.reviews import repository
 from app.features.reviews.domain import reviewer_display_from_email
 from app.features.reviews.schemas import VendorOwnerReviewItem, VendorOwnerReviewsResponse
 
-# Matches the baseline's `list_reviews_for_vendor_owner` cap.
 _VENDOR_REVIEWS_LIMIT = 100
 
 
-async def list_own_reviews(session: AsyncSession, *, vendor_user_id: str) -> VendorOwnerReviewsResponse:
+async def list_own_reviews(
+    session: AsyncSession,
+    *,
+    vendor_user_id: str,
+    min_rating: int | None = None,
+    offset: int = 0,
+    limit: int = DEFAULT_LIST_LIMIT,
+) -> VendorOwnerReviewsResponse:
     """The vendor's visible reviews (hidden ones excluded, same as their public profile)."""
-    reviews = await repository.visible_reviews_for_vendor(
-        session, vendor_user_id, limit=_VENDOR_REVIEWS_LIMIT
+    page_limit = min(max(limit, 1), _VENDOR_REVIEWS_LIMIT)
+    reviews, total = await repository.visible_reviews_for_vendor_page(
+        session,
+        vendor_user_id,
+        min_rating=min_rating,
+        offset=offset,
+        limit=page_limit,
     )
     stats = await repository.visible_review_stats_for_vendor(session, vendor_user_id)
+    five_star_count = await repository.visible_five_star_count_for_vendor(session, vendor_user_id)
     event_context = await repository.event_context_by_booking_id(
         session, [review.booking_request_id for review in reviews]
     )
@@ -43,5 +57,11 @@ async def list_own_reviews(session: AsyncSession, *, vendor_user_id: str) -> Ven
             )
         )
     return VendorOwnerReviewsResponse(
-        average_rating=stats.average_rating, review_count=stats.review_count, reviews=items
+        average_rating=stats.average_rating,
+        review_count=stats.review_count,
+        five_star_count=five_star_count,
+        reviews=items,
+        total=total,
+        offset=offset,
+        limit=page_limit,
     )

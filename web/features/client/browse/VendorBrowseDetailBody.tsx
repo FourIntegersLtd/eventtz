@@ -150,7 +150,7 @@ export function VendorBrowseDetailBody({
   const buildLoginLink = () => appendAuthParams(loginHref);
 
   const bookingCard = (
-    <Card className="overflow-hidden">
+    <Card className="min-w-0 overflow-hidden">
       <p className="px-5 pt-4 text-xs font-medium text-ink-3">
         Prices shown are the vendor&apos;s own. {serviceFeeBadgeLabel()} is added at checkout.
       </p>
@@ -164,7 +164,7 @@ export function VendorBrowseDetailBody({
       <BrowsePricingPackagesSection
         nested
         options={pricingOptions}
-        listClassName="max-h-[min(60vh,500px)] overflow-y-auto overscroll-contain"
+        listClassName="max-h-[min(60vh,500px)] overflow-y-auto overscroll-contain [overflow-anchor:none]"
         getItemClassName={(opt) =>
           `px-4 py-4 transition ${
             selectedPackageIds.has(opt.id) ? "bg-white" : ""

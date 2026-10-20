@@ -14,6 +14,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.features.admin_insights import service
 from app.features.admin_insights.errors import InvalidDateFilter
 from app.features.admin_insights.schemas import (
@@ -57,9 +58,17 @@ async def get_marketplace_analytics(
     principal: CurrentStaff,
     from_date: str | None = None,
     to_date: str | None = None,
+    category_offset: Annotated[int, Query(ge=0)] = 0,
+    category_limit: Annotated[int, Query(ge=1, le=200)] = DEFAULT_LIST_LIMIT,
 ) -> AdminMarketplaceAnalyticsResponse:
     """The marketplace funnel over client-initiated enquiries in a date range (default: last 30 days)."""
-    return await service.marketplace_analytics(session, from_date_raw=from_date, to_date_raw=to_date)
+    return await service.marketplace_analytics(
+        session,
+        from_date_raw=from_date,
+        to_date_raw=to_date,
+        category_offset=category_offset,
+        category_limit=category_limit,
+    )
 
 
 @router.get(

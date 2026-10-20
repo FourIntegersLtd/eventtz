@@ -47,6 +47,11 @@ export const VENDOR_DETAILS_TAB_CONFIG: {
   { id: "actions", label: "Actions", icon: Shield },
 ];
 
+export function parseVendorDetailsTabId(raw: string | null | undefined): VendorDetailsTabId {
+  if (raw === "insights" || raw === "actions") return raw;
+  return "profile";
+}
+
 export function StatCard({
   icon: Icon,
   label,
@@ -318,26 +323,30 @@ export function ApprovalCard({
       type="button"
       disabled={disabled || (isCurrent && !selected)}
       onClick={onClick}
-      className={`flex h-full w-full flex-col items-center gap-3 rounded-xl border p-5 text-center transition disabled:cursor-default disabled:opacity-100 ${ringClass}`}
+      aria-pressed={isCurrent || selected}
+      className={`flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition disabled:cursor-default disabled:opacity-100 ${ringClass}`}
     >
-      <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${iconTone}`}>
-        <Icon className="h-5 w-5" aria-hidden />
+      <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconTone}`}>
+        <Icon className="h-4 w-4" aria-hidden />
       </span>
-      <span className="font-medium text-neutral-900">{title}</span>
-      {selected ? (
-        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary">
+      <span className="min-w-0 flex-1 text-sm font-medium text-neutral-900">{title}</span>
+      {loading ? (
+        <span className="shrink-0 text-[11px] text-neutral-500">…</span>
+      ) : selected ? (
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
           <CheckCircle2 className="h-3 w-3" aria-hidden />
           Selected
         </span>
       ) : isCurrent ? (
-        <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-neutral-600">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-600">
           <CheckCircle2 className="h-3 w-3" aria-hidden />
           Active
         </span>
-      ) : loading ? (
-        <span className="text-xs text-neutral-500">Updating…</span>
       ) : (
-        <span className="text-xs text-neutral-500">Select</span>
+        <span
+          className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white"
+          aria-hidden
+        />
       )}
     </button>
   );

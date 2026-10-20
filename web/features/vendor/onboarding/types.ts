@@ -103,6 +103,8 @@ export interface VendorOnboardingData {
   lastName: string;
   email: string;
   phone: string;
+  /** Whether to email the vendor when a client sends an enquiry (account step). */
+  emailOnEnquiry: boolean;
   password: string;
   // Step 2
   businessName: string;
@@ -189,6 +191,7 @@ export const initialVendorOnboardingData: VendorOnboardingData = {
   lastName: "",
   email: "",
   phone: "",
+  emailOnEnquiry: true,
   password: "",
   businessName: "",
   servicesOffered: [],

@@ -1,8 +1,8 @@
 "use client";
 
-import { BackLink } from "@/components/ui/BackLink";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
+import { ClientEzPageHead } from "@/features/client/ui/ClientEzPageHead";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { useClientBookingPay } from "@/features/client/payments/useClientBookingPay";
@@ -32,15 +32,15 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
 
   if (phase === "error") {
     return (
-      <div className="w-full max-w-3xl space-y-6">
-        <BackLink href={bookingHref} label="Back to booking" />
+      <div className="ez-stack ez-stack--lg w-full max-w-3xl">
+        <Link href={bookingHref} className="ez-back">Back to booking</Link>
         <LottieFailurePanel
           title="Payment couldn't be started"
           description={error ?? "Could not load this booking."}
           action={
-            <Button variant="secondary" onClick={() => router.push(bookingHref)}>
+            <button type="button" className="ez-btn ez-btn--secondary" onClick={() => router.push(bookingHref)}>
               Back to booking
-            </Button>
+            </button>
           }
         />
       </div>
@@ -49,8 +49,8 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
 
   if (phase === "loading") {
     return (
-      <div className="w-full max-w-3xl space-y-6">
-        <BackLink href={bookingHref} label="Back to booking" />
+      <div className="ez-stack ez-stack--lg w-full max-w-3xl">
+        <Link href={bookingHref} className="ez-back">Back to booking</Link>
         <LoadingState label="Preparing secure checkout…" variant="centered" className="py-16" branded />
       </div>
     );
@@ -58,14 +58,9 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
 
   if (phase === "venue") {
     return (
-      <div className="w-full max-w-3xl space-y-6">
-        <BackLink href={bookingHref} label="Back to booking" />
-        <header>
-          <h1 className="font-heading text-xl font-semibold text-neutral-900">
-            {CLIENT_PAY_PAGE_COPY.venueTitle}
-          </h1>
-          <p className="mt-2 text-sm text-neutral-600">{CLIENT_PAY_PAGE_COPY.venueIntro}</p>
-        </header>
+      <div className="ez-stack ez-stack--lg w-full max-w-3xl">
+        <Link href={bookingHref} className="ez-back">Back to booking</Link>
+        <ClientEzPageHead title={CLIENT_PAY_PAGE_COPY.venueTitle} description={CLIENT_PAY_PAGE_COPY.venueIntro} />
         {error ? (
           <LottieFailurePanel
             className="border-red-200 bg-red-50 py-6"
@@ -73,13 +68,8 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
             description={error}
           />
         ) : null}
-        <div>
-          <label
-            htmlFor="pay-venue-address"
-            className="block text-xs font-semibold uppercase tracking-wide text-neutral-500"
-          >
-            Venue address *
-          </label>
+        <label className="ez-field" htmlFor="pay-venue-address">
+          <span className="ez-label">Venue address *</span>
           <textarea
             id="pay-venue-address"
             rows={3}
@@ -87,28 +77,35 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
             disabled={busy}
             onChange={(e) => setVenueAddress(e.target.value)}
             placeholder="e.g. The Grand Hall, 12 Park Lane, London"
-            className="mt-1.5 w-full resize-y rounded-lg border border-neutral-200 px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-neutral-50 disabled:text-neutral-500 md:text-sm"
+            className="ez-input"
           />
-        </div>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="primary" loading={busy} onClick={() => void continueFromVenue()}>
-            Continue
-          </Button>
-          <Button
-            variant="secondary"
+        </label>
+        <div className="ez-hrow">
+          <button
+            type="button"
+            className="ez-btn ez-btn--primary"
+            disabled={busy}
+            onClick={() => void continueFromVenue()}
+          >
+            {busy ? "Saving…" : "Continue"}
+          </button>
+          <button
+            type="button"
+            className="ez-btn ez-btn--secondary"
             disabled={busy}
             onClick={() => router.push(bookingHref)}
           >
             Back to booking
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-3xl space-y-6">
-      <BackLink href={bookingHref} label="Back to booking" />
+    <div className="ez-stack ez-stack--lg w-full max-w-3xl">
+      <Link href={bookingHref} className="ez-back">Back to booking</Link>
+      <ClientEzPageHead title="Pay to confirm your booking" description={CLIENT_PAY_PAGE_COPY.safetyIntro} />
       {error && phase !== "redirecting" ? (
         <LottieFailurePanel
           className="border-red-200 bg-red-50 py-6"
@@ -124,7 +121,7 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
           branded
         />
       ) : (
-        <p className="text-sm text-neutral-600">{CLIENT_PAY_PAGE_COPY.safetyIntro}</p>
+        null
       )}
       <PaymentSafetyModal
         isOpen={!error && (phase === "safety" || phase === "redirecting")}

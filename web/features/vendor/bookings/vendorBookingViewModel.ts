@@ -8,6 +8,11 @@ import {
   toBookingListRowViewModel,
 } from "@/features/bookings/toBookingDetailViewModel";
 
+/** Detail page for one vendor booking. The list is only the table; this is the page a row opens. */
+export function vendorBookingDetailHref(bookingId: string): string {
+  return `/vendor/bookings/${encodeURIComponent(bookingId)}`;
+}
+
 export function toVendorBookingRowViewModel(row: VendorBookingListItem): BookingListRowViewModel {
   return toBookingListRowViewModel(row, {
     counterpartyLine: row.client_display_name ?? row.client_email ?? "Client",

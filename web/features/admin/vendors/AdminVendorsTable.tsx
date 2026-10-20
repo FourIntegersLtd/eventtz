@@ -3,9 +3,6 @@
 import Link from "next/link";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { VendorApprovalStatusBadge } from "@/components/badges/VendorApprovalStatusBadge";
-import { VendorPayoutStatusBadge } from "@/components/badges/VendorPayoutStatusBadge";
-import { VendorProfileStatusBadge } from "@/components/badges/VendorProfileStatusBadge";
 import {
   AdminTable,
   AdminTableBody,
@@ -15,24 +12,19 @@ import {
   AdminTableHeaderCell,
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
-import {
-  getVendorListingOverride,
-  VENDOR_LISTING_OVERRIDE_META,
-} from "@/lib/domain-types";
-import {
-  vendorIsBulkEmailSelectable,
-  vendorIsDraft,
-  vendorNeedsPayoutSetup,
-} from "@/features/admin/vendors/adminVendorBulkEmail";
+import { vendorIsBulkEmailSelectable } from "@/features/admin/vendors/adminVendorBulkEmail";
 import { payloadStr } from "./vendorFormatters";
+import {
+  vendorAreaLabel,
+  vendorCategoryLabel,
+  vendorQueueStatusBadge,
+  vendorSubmittedLabel,
+} from "./adminVendorQueueStatus";
 
 type AdminVendorsTableProps = {
   rows: AdminVendorRow[];
-  selectedUserIds: string[];
-  selectableUserIdsOnPage: string[];
-  onToggleSelected: (userId: string, selected: boolean) => void;
-  onSelectAllSelectable: () => void;
-  onClearSelectableOnPage: () => void;
+  selectedUserIds?: string[];
+  onToggleSelected?: (userId: string, selected: boolean) => void;
 };
 
 /** The vendor's own admin page. */
@@ -43,128 +35,75 @@ export function adminVendorHref(userId: string): string {
 export function AdminVendorsTable({
   rows,
   selectedUserIds,
-  selectableUserIdsOnPage,
   onToggleSelected,
-  onSelectAllSelectable,
-  onClearSelectableOnPage,
 }: AdminVendorsTableProps) {
+  const bulkEnabled = selectedUserIds != null && onToggleSelected != null;
+  const selectedSet = new Set(selectedUserIds ?? []);
+
   if (rows.length === 0) {
     return (
       <EmptyState title="No vendor profiles yet" lottie="searchNoResults" />
     );
   }
 
-  const allSelectableSelected =
-    selectableUserIdsOnPage.length > 0 &&
-    selectableUserIdsOnPage.every((id) => selectedUserIds.includes(id));
-
   return (
     <AdminTable>
-      <AdminTableElement className="min-w-[50rem]">
+      <AdminTableElement className="min-w-[44rem]">
         <AdminTableHead>
-          <AdminTableHeaderCell className="w-10">
-            <input
-              type="checkbox"
-              className="h-4 w-4 rounded border-neutral-300"
-              checked={allSelectableSelected}
-              disabled={selectableUserIdsOnPage.length === 0}
-              onChange={() =>
-                allSelectableSelected ? onClearSelectableOnPage() : onSelectAllSelectable()
-              }
-              aria-label="Select all vendors on this page who can receive reminder emails"
-              title="Select draft vendors and approved vendors needing payouts"
-            />
-          </AdminTableHeaderCell>
-          <AdminTableHeaderCell className="min-w-[10rem]">Business</AdminTableHeaderCell>
-          <AdminTableHeaderCell className="min-w-[11rem]">Email</AdminTableHeaderCell>
-          <AdminTableHeaderCell>Form</AdminTableHeaderCell>
-          <AdminTableHeaderCell>Approval</AdminTableHeaderCell>
-          <AdminTableHeaderCell>Payouts</AdminTableHeaderCell>
-          <AdminTableHeaderCell>Cancellations</AdminTableHeaderCell>
-          <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
-          <AdminTableHeaderCell className="text-right">Action</AdminTableHeaderCell>
+          {bulkEnabled ? (
+            <AdminTableHeaderCell className="w-10">
+              <span className="sr-only">Select</span>
+            </AdminTableHeaderCell>
+          ) : null}
+          <AdminTableHeaderCell>Vendor</AdminTableHeaderCell>
+          <AdminTableHeaderCell>Category</AdminTableHeaderCell>
+          <AdminTableHeaderCell>Area</AdminTableHeaderCell>
+          <AdminTableHeaderCell>Submitted</AdminTableHeaderCell>
+          <AdminTableHeaderCell className="ez-td-status">Status</AdminTableHeaderCell>
+          <AdminTableHeaderCell> </AdminTableHeaderCell>
         </AdminTableHead>
         <AdminTableBody>
-          {rows.map((r) => {
-            const p = r.profile_form_data ?? {};
-            const biz = payloadStr(p, "businessName") || "No business name";
-            const email = r.email ?? "-";
-            const updated = r.updated_at ? new Date(r.updated_at).toLocaleString() : "-";
-            const pending = r.approval_status === "pending";
-            const isSelectable = vendorIsBulkEmailSelectable(r);
-            const isDraft = vendorIsDraft(r);
-            const needsPayout = vendorNeedsPayoutSetup(r);
-            const approvedNotLive = r.approval_status === "approved" && !r.listing_visible;
-            const override = getVendorListingOverride(r.listing_override);
-            const selected = selectedUserIds.includes(r.user_id);
+          {rows.map((row) => {
+            const payload = row.profile_form_data ?? {};
+            const business = payloadStr(payload, "businessName") || "No business name";
+            const status = vendorQueueStatusBadge(row);
+            const selectable = bulkEnabled && vendorIsBulkEmailSelectable(row);
             return (
-              <AdminTableRow
-                key={r.user_id}
-                className={pending || approvedNotLive ? "bg-amber-50/40" : undefined}
-              >
-                <AdminTableCell className="w-10">
-                  {isSelectable ? (
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 rounded border-neutral-300"
-                      checked={selected}
-                      onChange={(e) => onToggleSelected(r.user_id, e.target.checked)}
-                      aria-label={`Select ${email}`}
-                      title={
-                        isDraft
-                          ? "Draft profile: complete profile email"
-                          : needsPayout
-                            ? "Approved: setup payouts email"
-                            : undefined
-                      }
-                    />
-                  ) : null}
-                </AdminTableCell>
-                <AdminTableCell className="min-w-[10rem] max-w-[14rem]">
+              <AdminTableRow key={row.user_id}>
+                {bulkEnabled ? (
+                  <AdminTableCell className="w-10">
+                    {selectable ? (
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-neutral-300 text-primary focus:ring-primary"
+                        checked={selectedSet.has(row.user_id)}
+                        aria-label={`Select ${business}`}
+                        onChange={(event) =>
+                          onToggleSelected(row.user_id, event.target.checked)
+                        }
+                      />
+                    ) : null}
+                  </AdminTableCell>
+                ) : null}
+                <AdminTableCell className="ez-td-strong min-w-[10rem] max-w-[14rem]">
                   <Link
-                    href={adminVendorHref(r.user_id)}
-                    className="block truncate font-medium text-primary hover:underline"
-                    title={biz}
+                    href={adminVendorHref(row.user_id)}
+                    className="block truncate hover:underline"
+                    title={business}
                   >
-                    {biz}
+                    {business}
                   </Link>
                 </AdminTableCell>
-                <AdminTableCell className="min-w-[11rem] max-w-[14rem]">
-                  <span className="block truncate" title={email}>
-                    {email}
-                  </span>
+                <AdminTableCell>{vendorCategoryLabel(row)}</AdminTableCell>
+                <AdminTableCell>{vendorAreaLabel(row)}</AdminTableCell>
+                <AdminTableCell className="whitespace-nowrap">{vendorSubmittedLabel(row)}</AdminTableCell>
+                <AdminTableCell className="ez-td-status whitespace-nowrap">
+                  <span className={`ez-badge ez-badge--${status.tone}`}>{status.label}</span>
                 </AdminTableCell>
                 <AdminTableCell className="whitespace-nowrap">
-                  <VendorProfileStatusBadge status={r.onboarding_status} />
-                </AdminTableCell>
-                <AdminTableCell className="whitespace-nowrap">
-                  <VendorApprovalStatusBadge status={r.approval_status} />
-                </AdminTableCell>
-                <AdminTableCell className="whitespace-nowrap">
-                  <VendorPayoutStatusBadge verified={r.payouts_verified} />
-                  {override !== "auto" ? (
-                    <span
-                      className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${VENDOR_LISTING_OVERRIDE_META[override].badgeClassName}`}
-                    >
-                      {VENDOR_LISTING_OVERRIDE_META[override].label}
-                    </span>
-                  ) : approvedNotLive ? (
-                    <span className="mt-1 block text-xs text-amber-800">Hidden from clients</span>
-                  ) : null}
-                </AdminTableCell>
-                <AdminTableCell className="whitespace-nowrap">
-                  {r.vendor_cancellation_count ?? 0}
-                  {r.cancellation_review_flag ? (
-                    <span className="ml-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
-                      Review
-                    </span>
-                  ) : null}
-                </AdminTableCell>
-                <AdminTableCell className="whitespace-nowrap text-neutral-500">{updated}</AdminTableCell>
-                <AdminTableCell className="whitespace-nowrap text-right">
                   <Link
-                    href={adminVendorHref(r.user_id)}
-                    className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50"
+                    href={adminVendorHref(row.user_id)}
+                    className="ez-btn ez-btn--secondary ez-btn--sm"
                   >
                     Review
                   </Link>

@@ -109,7 +109,7 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
         </div>
       }
     >
-      <div className="space-y-4 text-sm">
+      <div className="ez-stack text-sm">
         {error ? <LottieFailureInline message={error} /> : null}
         <div>
           <label className="text-sm font-medium text-neutral-700">Decision</label>

@@ -49,12 +49,12 @@ export function VendorStripeConnectSection({ vendor, busy, onRestoreStripe }: Pr
   };
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-      <div className="border-b border-neutral-100 px-4 py-3 sm:px-5">
+    <section className="ez-card overflow-hidden">
+      <div className="ez-card__head">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 className="text-sm font-semibold text-neutral-900">Stripe Connect</h3>
-            <p className="mt-0.5 text-xs text-neutral-500">
+            <h2 className="ez-h3">Stripe Connect</h2>
+            <p className="ez-small">
               Payout account (separate from Explore listing visibility)
             </p>
           </div>
@@ -103,6 +103,6 @@ export function VendorStripeConnectSection({ vendor, busy, onRestoreStripe }: Pr
           </Button>
         ) : null}
       </div>
-    </div>
+    </section>
   );
 }

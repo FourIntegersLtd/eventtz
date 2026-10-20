@@ -101,9 +101,11 @@ export function AdminBookingDetailView({ bookingId }: Props) {
   });
 
   return (
-    <div className="w-full space-y-5 text-left">
+    <div className="ez-stack ez-stack--lg w-full text-left">
       <AdminBookingDetailHeader
+        bookingId={bookingId}
         eventName={eventName}
+        createdAt={booking.created_at}
         status={String(booking.status ?? "")}
         paymentStatus={String(booking.payment_status ?? "unpaid")}
         holdActive={holdActive}
@@ -118,7 +120,8 @@ export function AdminBookingDetailView({ bookingId }: Props) {
         onResolved={reload}
       />
 
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="ez-split">
+        <div className="ez-split__main">
         <AdminBookingDetailMainContent
           booking={booking}
           lineItems={lineItems}
@@ -126,7 +129,9 @@ export function AdminBookingDetailView({ bookingId }: Props) {
           quoteTotalLabel={quoteTotalLabel}
           reviewVendor={reviewVendor}
         />
+        </div>
 
+        <div className="ez-split__aside">
         <AdminBookingSupportActionsPanel
           canRunBookingSupportActions={canRunBookingSupportActions}
           supportActions={supportActions}
@@ -144,6 +149,7 @@ export function AdminBookingDetailView({ bookingId }: Props) {
           feedback={feedback}
           onFeedbackClose={() => setFeedback(null)}
         />
+        </div>
       </div>
     </div>
   );

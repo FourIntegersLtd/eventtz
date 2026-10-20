@@ -24,12 +24,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { loginPathWithNext } from "@/features/auth/authRouting";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
-import { Button } from "@/components/ui/Button";
-import {
-  adminPageBg,
-  adminSidebarActive,
-  adminSidebarIdle,
-} from "@/components/admin-shell/adminTheme";
 import { resolveAdminRole, isSuperAdmin } from "@/lib/adminRole";
 import { fetchAdminSupportConversations } from "@/lib/adminMessagesApi";
 import { CHAT_UNREAD_CLEARED_EVENT } from "@/lib/chatApi";
@@ -44,19 +38,46 @@ type AdminNavItem = {
   superAdminOnly?: boolean;
 };
 
-const ADMIN_NAV: readonly AdminNavItem[] = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/commerce?tab=bookings", label: "Commerce", icon: Receipt },
-  { href: "/admin/directory?tab=vendors", label: "Directory", icon: Users },
-  { href: "/admin/referrals", label: "Referrals", icon: Link2 },
-  { href: "/admin/messages?tab=inbox", label: "Messages", icon: MessageSquare, id: "messages" },
-  { href: "/admin/report-bug", label: "Report a bug", icon: Bug },
-  { href: "/admin/blog", label: "Blog", icon: BookOpen },
-  { href: "/admin/trust?tab=disputes", label: "Trust & safety", icon: Shield },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
-  { href: "/admin/team", label: "Team", icon: UserCog },
-  { href: "/admin/audit", label: "Activity log", icon: ScrollText },
-  { href: "/admin/email", label: "Email health", icon: Mail, superAdminOnly: true },
+type AdminNavGroup = {
+  label?: string;
+  items: readonly AdminNavItem[];
+};
+
+/** Design order: Dashboard, Operate, Talk, then Blog and Referrals, then Run. */
+const ADMIN_NAV: readonly AdminNavGroup[] = [
+  {
+    items: [{ href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard }],
+  },
+  {
+    label: "Operate",
+    items: [
+      { href: "/admin/commerce?tab=bookings", label: "Commerce", icon: Receipt },
+      { href: "/admin/directory?tab=vendors", label: "Directory", icon: Users },
+      { href: "/admin/trust?tab=disputes", label: "Trust and safety", icon: Shield },
+    ],
+  },
+  {
+    label: "Talk",
+    items: [
+      { href: "/admin/messages?tab=inbox", label: "Messages", icon: MessageSquare, id: "messages" },
+    ],
+  },
+  {
+    items: [
+      { href: "/admin/blog", label: "Blog", icon: BookOpen },
+      { href: "/admin/referrals", label: "Referrals", icon: Link2 },
+    ],
+  },
+  {
+    label: "Run",
+    items: [
+      { href: "/admin/team", label: "Team", icon: UserCog },
+      { href: "/admin/audit", label: "Activity log", icon: ScrollText },
+      { href: "/admin/settings", label: "Settings", icon: Settings },
+      { href: "/admin/report-bug", label: "Report a bug", icon: Bug },
+      { href: "/admin/email", label: "Email health", icon: Mail, superAdminOnly: true },
+    ],
+  },
 ];
 
 function navItemActive(pathname: string, itemHref: string): boolean {
@@ -110,87 +131,96 @@ function userInitial(email: string | null | undefined): string {
 }
 
 type AdminShellProps = {
-  title: string;
   children: ReactNode;
 };
 
-function NavLinks({
+function NavGroups({
   pathname,
   onNavigate,
-  items,
+  groups,
   badges,
 }: {
   pathname: string;
   onNavigate?: () => void;
-  items: readonly AdminNavItem[];
+  groups: readonly AdminNavGroup[];
   badges?: Record<string, number>;
 }) {
   return (
     <>
-      {items.map((item) => {
-        const active = navItemActive(pathname, item.href);
-        const Icon = item.icon;
-        const badge = item.id && badges?.[item.id] ? badges[item.id]! : 0;
-        const hasUnread = badge > 0;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={onNavigate}
-            className={`flex items-center gap-2.5 rounded-r-lg px-3 py-2 text-sm transition ${
-              active
-                ? adminSidebarActive
-                : hasUnread
-                  ? "border-l-2 border-primary bg-primary/[0.06] font-medium text-neutral-900"
-                  : adminSidebarIdle
-            }`}
-          >
-            <Icon
-              className={`h-4 w-4 shrink-0 ${hasUnread && !active ? "text-primary opacity-100" : "opacity-80"}`}
-              aria-hidden
-            />
-            <span className="min-w-0 flex-1 truncate">{item.label}</span>
-            {hasUnread ? (
-              <span className="ml-auto shrink-0 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white tabular-nums">
-                {badge > 99 ? "99+" : badge}
-              </span>
-            ) : null}
-          </Link>
-        );
-      })}
+      {groups.map((group) => (
+        <div key={group.label ?? group.items[0]?.href}>
+          {group.label ? <div className="ez-side__group">{group.label}</div> : null}
+          {group.items.map((item) => {
+            const active = navItemActive(pathname, item.href);
+            const Icon = item.icon;
+            const badge = item.id && badges?.[item.id] ? badges[item.id]! : 0;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                aria-current={active ? "page" : undefined}
+                className={active ? "ez-nav-item ez-nav-item--active" : "ez-nav-item"}
+              >
+                <Icon size={19} strokeWidth={1.75} aria-hidden />
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                {badge > 0 ? (
+                  <span className="ez-nav-item__count" aria-label={`${badge} unread messages`}>
+                    {badge > 99 ? "99+" : badge}
+                  </span>
+                ) : null}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </>
   );
 }
 
 function AdminUserFooter({
   email,
+  roleLabel,
   onSignOut,
+  className,
 }: {
   email: string | null | undefined;
+  roleLabel: string;
   onSignOut: () => void;
+  className: string;
 }) {
   return (
-    <div className="shrink-0 border-t border-neutral-200/80 pt-4 pb-[env(safe-area-inset-bottom,0px)]">
-      <div className="flex items-center gap-2.5 px-1">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-xs font-semibold text-neutral-700">
+    <div className={`${className} shrink-0 pb-[env(safe-area-inset-bottom,0px)]`}>
+      <div className="ez-side__user">
+        <span className="ez-avatar ez-avatar--sm" aria-hidden>
           {userInitial(email)}
         </span>
-        <p className="min-w-0 flex-1 truncate text-xs text-neutral-600">{email ?? "-"}</p>
+        <div className="min-w-0 flex-1">
+          <div className="ez-strong truncate" style={{ fontSize: 14 }}>
+            {email ?? "Admin"}
+          </div>
+          <div className="ez-caption truncate">{roleLabel}</div>
+        </div>
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="ez-icon-btn shrink-0"
+          style={{ width: 36, height: 36 }}
+          aria-label="Sign out"
+          title="Sign out"
+        >
+          <LogOut size={18} aria-hidden />
+        </button>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mt-2 w-full justify-start gap-2 px-2"
-        icon={<LogOut className="h-4 w-4" aria-hidden />}
-        onClick={onSignOut}
-      >
-        Sign out
-      </Button>
     </div>
   );
 }
 
-export function AdminShell({ title, children }: AdminShellProps) {
+/**
+ * Signed-in admin shell, transcribed from the canvas admin artboards: `ez-shell--admin`
+ * with grouped nav, a user chip, and `ez-content` (page titles live in `AdminEzPageHead`).
+ */
+export function AdminShell({ children }: AdminShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, signOut } = useAuth();
@@ -200,7 +230,7 @@ export function AdminShell({ title, children }: AdminShellProps) {
   const refreshMessagesUnread = useCallback(async () => {
     try {
       const list = await fetchAdminSupportConversations();
-      setMessagesUnread(list.reduce((sum, c) => sum + (c.unread_count || 0), 0));
+      setMessagesUnread(list.reduce((sum, conversation) => sum + (conversation.unread_count || 0), 0));
     } catch {
       /* badge is best-effort */
     }
@@ -229,7 +259,11 @@ export function AdminShell({ title, children }: AdminShellProps) {
   }, [refreshMessagesUnread]);
 
   const navBadges = messagesUnread > 0 ? { messages: messagesUnread } : undefined;
-  const navItems = ADMIN_NAV.filter((item) => !item.superAdminOnly || isSuperAdmin(user));
+  const navGroups = ADMIN_NAV.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !item.superAdminOnly || isSuperAdmin(user)),
+  })).filter((group) => group.items.length > 0);
+  const roleLabel = user && resolveAdminRole(user) === "super_admin" ? "Super admin" : "Support admin";
 
   const closeMobile = () => setMobileNavOpen(false);
 
@@ -247,87 +281,76 @@ export function AdminShell({ title, children }: AdminShellProps) {
   };
 
   return (
-    <div className={`app-viewport-shell w-full min-w-0 overflow-x-hidden ${adminPageBg} text-neutral-900`}>
-      <header className="app-viewport-shell__mobile-nav z-30 flex items-center justify-between gap-3 border-b border-neutral-200/80 bg-neutral-50/95 px-3 backdrop-blur-md md:hidden">
-        <EventtzLogo variant="sidebar" priority href="/admin/dashboard" className="min-w-0 shrink" />
-        <button
-          type="button"
-          aria-expanded={mobileNavOpen}
-          aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
-          onClick={() => setMobileNavOpen((o) => !o)}
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-neutral-200 bg-white text-neutral-800 shadow-sm"
-        >
-          {mobileNavOpen ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
-        </button>
-      </header>
+    <div className="app-viewport-shell ez-shell ez-shell--admin ez-page w-full min-w-0 overflow-x-hidden">
+      <div className="z-30 shrink-0 md:hidden">
+        <header className="app-viewport-shell__mobile-nav ez-topbar">
+          <EventtzLogo priority href="/admin/dashboard" imageClassName="ez-logo ez-logo--sm" className="min-w-0 shrink" />
+          <div className="ez-topbar__actions shrink-0">
+            <button
+              type="button"
+              aria-expanded={mobileNavOpen}
+              aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
+              onClick={() => setMobileNavOpen((open) => !open)}
+              className="ez-icon-btn ez-icon-btn--outline"
+            >
+              {mobileNavOpen ? <X size={20} aria-hidden /> : <Menu size={20} aria-hidden />}
+            </button>
+          </div>
+        </header>
+      </div>
 
       {mobileNavOpen ? (
-        <div className="fixed inset-0 z-40 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/40"
-            aria-label="Close menu"
-            onClick={closeMobile}
-          />
-          <aside
-            className={`absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2rem))] max-w-full flex-col border-l border-neutral-200 bg-white p-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl ${adminPageBg}`}
-          >
-            <div className="flex shrink-0 items-start justify-between gap-2">
-              <p className="text-sm font-semibold text-neutral-800">Admin</p>
-              <button
-                type="button"
-                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-neutral-600 hover:bg-neutral-100"
-                aria-label="Close menu"
-                onClick={closeMobile}
-              >
-                <X className="h-5 w-5" />
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menu">
+          <button type="button" className="absolute inset-0 bg-scrim" aria-label="Close menu" onClick={closeMobile} />
+          {/* Plain layout here: eventtz.css turns `.ez-side` into a row and hides groups below 720px. */}
+          <aside className="absolute right-0 top-0 flex h-dvh max-h-dvh w-[min(20rem,calc(100vw-2.5rem))] max-w-full flex-col gap-1 bg-white px-[14px] pt-[max(1.25rem,env(safe-area-inset-top))] pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-overlay">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="ez-role ez-role--admin">Admin</span>
+              <button type="button" className="ez-icon-btn" aria-label="Close menu" onClick={closeMobile}>
+                <X size={20} aria-hidden />
               </button>
             </div>
-            <nav className="mt-4 flex min-h-0 flex-1 flex-col space-y-0.5 overflow-y-auto">
-              <NavLinks
-                pathname={pathname}
-                onNavigate={closeMobile}
-                items={navItems}
-                badges={navBadges}
-              />
+            <nav className="scroll-pane flex min-h-0 flex-1 flex-col gap-1" aria-label="Admin navigation">
+              <NavGroups pathname={pathname} onNavigate={closeMobile} groups={navGroups} badges={navBadges} />
             </nav>
             <AdminUserFooter
               email={user?.email}
+              roleLabel={roleLabel}
               onSignOut={() => {
                 closeMobile();
                 void signOutAdmin();
               }}
+              className="mt-auto border-t border-line pt-3"
             />
           </aside>
         </div>
       ) : null}
 
       <div className="app-viewport-shell__body w-full min-w-0 md:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className={`app-viewport-shell__sidebar border-r border-neutral-200/80 bg-white p-5 ${adminPageBg}`}>
-          <div className="shrink-0">
-            <EventtzLogo variant="sidebar" priority href="/admin/dashboard" />
-            <p className="mt-1 text-xs font-medium text-neutral-500">Admin console</p>
-            {user ? (
-              <p className="mt-0.5 text-[11px] text-neutral-400">
-                {resolveAdminRole(user) === "super_admin" ? "Super admin" : "Support admin"}
-              </p>
-            ) : null}
+        <nav className="app-viewport-shell__sidebar ez-side" aria-label="Admin navigation">
+          <div className="ez-side__brand shrink-0">
+            <EventtzLogo priority href="/admin/dashboard" imageClassName="ez-logo ez-logo--sm" />
+            <span className="ez-role ez-role--admin">Admin</span>
           </div>
-          <nav className="scroll-pane mt-6 flex min-h-0 flex-1 flex-col space-y-0.5">
-            <NavLinks pathname={pathname} items={navItems} badges={navBadges} />
-          </nav>
-          <AdminUserFooter email={user?.email} onSignOut={() => void signOutAdmin()} />
-        </aside>
+          <div className="scroll-pane flex min-h-0 flex-1 flex-col">
+            <NavGroups pathname={pathname} groups={navGroups} badges={navBadges} />
+          </div>
+          <AdminUserFooter
+            email={user?.email}
+            roleLabel={roleLabel}
+            onSignOut={() => void signOutAdmin()}
+            className="ez-side__foot"
+          />
+        </nav>
 
-        <main className="app-viewport-shell__main overflow-x-hidden px-3 py-4 sm:px-6 sm:py-6">
-          <h1 className="shrink-0 break-words font-heading text-xl font-semibold text-neutral-900 sm:text-2xl">
-            {title}
-          </h1>
-          <div className="app-viewport-shell__main-scroll scroll-pane mt-4 min-w-0 sm:mt-5">{children}</div>
+        <main className="app-viewport-shell__main ez-main overflow-x-hidden">
+          <div className="portal-content app-viewport-shell__main-scroll ez-content ez-content--wide min-w-0">
+            {children}
+          </div>
         </main>
       </div>
 
-      <HelpWidget audience="admin" />
+      <HelpWidget audience="admin" hidden={mobileNavOpen} />
     </div>
   );
 }

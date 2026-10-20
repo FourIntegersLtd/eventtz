@@ -16,11 +16,41 @@ export const CANCELLATION_POLICY_LABELS: Record<CancellationPolicyKey, string> =
   strict: "Strict",
 };
 
-/** One-line summaries shown beside each preset in the vendor form radios. */
+/** One-line summaries for review copy and settings (not the onboarding cards). */
 export const CANCELLATION_POLICY_SUMMARIES: Record<CancellationPolicyKey, string> = {
   flexible: "Full refund up to 7 days before",
   moderate: "Full refund up to 30 days before",
   strict: "Full refund up to 90 days before, then 75% / 50% / none",
+};
+
+/** Short taglines under each preset title on the onboarding picker (matches V04b artboard). */
+export const CANCELLATION_POLICY_TAGLINES: Record<CancellationPolicyKey, string> = {
+  flexible: "Friendly to clients, most bookings.",
+  moderate: "Balanced. Our suggestion for caterers.",
+  strict: "Protects you on large, planned events.",
+};
+
+/** Compact tier rows for the side-by-side onboarding cards (artboard table copy). */
+export const CANCELLATION_POLICY_ONBOARDING_TIERS: Record<
+  CancellationPolicyKey,
+  readonly { window: string; refund: string }[]
+> = {
+  flexible: [
+    { window: "7 or more days before", refund: "100% refund" },
+    { window: "2 to 6 days before", refund: "50% refund" },
+    { window: "Under 2 days", refund: "No refund" },
+  ],
+  moderate: [
+    { window: "30 or more days before", refund: "100% refund" },
+    { window: "7 to 29 days before", refund: "50% refund" },
+    { window: "Under 7 days", refund: "No refund" },
+  ],
+  strict: [
+    { window: "90 or more days before", refund: "100% refund" },
+    { window: "60 to 89 days", refund: "75% refund" },
+    { window: "30 to 59 days", refund: "50% refund" },
+    { window: "Under 30 days", refund: "No refund" },
+  ],
 };
 
 /** One refund tier: how long before the event the client cancels, and what comes back. */
@@ -98,4 +128,19 @@ export function vendorCancellationPolicyLabel(preset: string): string {
   return (CANCELLATION_POLICY_KEYS as readonly string[]).includes(preset)
     ? cancellationPolicyLabel(preset)
     : CANCELLATION_POLICY_NOT_CHOSEN;
+}
+
+/** One-line preset summary on the wizard review step (design V08). */
+export const CANCELLATION_POLICY_REVIEW_LINES: Record<CancellationPolicyKey, string> = {
+  flexible: "Flexible: full refund 7+ days, 50% 2 to 6 days, none under 2",
+  moderate: "Moderate: full refund 30+ days, 50% 7 to 29 days, none under 7",
+  strict: "Strict: full refund 90+ days, 75% 60 to 89 days, 50% 30 to 59 days, none under 30",
+};
+
+/** Review-step cancellation row; unknown preset matches the artboard empty copy. */
+export function cancellationPolicyReviewLine(preset: string): string {
+  if (!(CANCELLATION_POLICY_KEYS as readonly string[]).includes(preset)) {
+    return "Not chosen yet";
+  }
+  return CANCELLATION_POLICY_REVIEW_LINES[preset as CancellationPolicyKey];
 }

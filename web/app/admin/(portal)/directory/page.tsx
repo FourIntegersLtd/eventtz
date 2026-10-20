@@ -13,27 +13,38 @@ const TABS = [
   { id: "clients", label: "Clients" },
 ] as const;
 
-function DirectoryTabs() {
+function DirectoryScreen() {
   const searchParams = useSearchParams();
   const tab = useMemo((): "vendors" | "clients" => {
-    const t = searchParams.get("tab");
-    return t === "clients" ? "clients" : "vendors";
+    return searchParams.get("tab") === "clients" ? "clients" : "vendors";
   }, [searchParams]);
 
   return (
-    <>
+    <AdminConsolePage
+
+      title={tab === "clients" ? "Clients" : "Vendors"}
+      description={
+        tab === "clients"
+          ? "Client accounts."
+          : "Review queue, returned and draft applications, approved vendors, and suspensions."
+      }
+    >
       <AdminSectionTabs tabs={TABS} activeId={tab} basePath="/admin/directory" />
       {tab === "clients" ? <AdminClientsView /> : <AdminVendorsView />}
-    </>
+    </AdminConsolePage>
   );
 }
 
 export default function AdminDirectoryPage() {
   return (
-    <AdminConsolePage title="Directory">
-      <Suspense fallback={<AdminLoadingState />}>
-        <DirectoryTabs />
-      </Suspense>
-    </AdminConsolePage>
+    <Suspense
+      fallback={
+        <AdminConsolePage title="Vendors">
+          <AdminLoadingState />
+        </AdminConsolePage>
+      }
+    >
+      <DirectoryScreen />
+    </Suspense>
   );
 }

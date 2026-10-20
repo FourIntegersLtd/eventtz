@@ -64,12 +64,21 @@ def _team_row(mapping: dict[str, Any]) -> AdminTeamMemberRow:
     )
 
 
-async def list_admin_team(session: AsyncSession) -> list[AdminTeamMemberRow]:
-    """Every admin account, oldest first (the baseline's order)."""
+async def list_admin_team(
+    session: AsyncSession, *, offset: int, limit: int
+) -> tuple[list[AdminTeamMemberRow], int]:
+    """One page of admin accounts, oldest first, and how many match in total."""
+    conditions = [_users.c.user_type == "admin"]
+    total = int(await session.scalar(select(func.count()).select_from(_users).where(*conditions)) or 0)
     result = await session.execute(
-        select(*_TEAM_COLUMNS).where(_users.c.user_type == "admin").order_by(_users.c.created_at.asc())
+        select(*_TEAM_COLUMNS)
+        .where(*conditions)
+        .order_by(_users.c.created_at.asc())
+        .offset(offset)
+        .limit(limit)
     )
-    return [_team_row(plain_row(found)) for found in result]
+    members = [_team_row(plain_row(found)) for found in result]
+    return members, total
 
 
 async def find_admin_by_id(session: AsyncSession, user_id: str) -> AdminTeamMemberRow | None:

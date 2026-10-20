@@ -127,6 +127,14 @@ async def vendor_ids_with_business_name_like(session: AsyncSession, pattern: str
     return [str(user_id) for user_id in result]
 
 
+def _returned_for_edits_filter(returned_for_edits: bool) -> ColumnElement[bool]:
+    """Whether `payload.returnedForEditsAt` is set (staff sent the profile back for edits)."""
+    returned_at = Vendor.payload["returnedForEditsAt"].astext
+    if returned_for_edits:
+        return and_(returned_at.isnot(None), returned_at != "")
+    return or_(returned_at.is_(None), returned_at == "")
+
+
 async def list_vendors(
     session: AsyncSession,
     *,
@@ -135,6 +143,7 @@ async def list_vendors(
     user_ids: list[str] | None,
     approval_status: str | None,
     status: str | None,
+    returned_for_edits: bool | None = None,
 ) -> tuple[list[VendorRow], int]:
     """One page of vendors, most recently updated first, and how many match in total."""
     filters: list[ColumnElement[bool]] = []
@@ -145,6 +154,8 @@ async def list_vendors(
         filters.append(Vendor.approval_status == approval_status)
     if status:
         filters.append(Vendor.status == status)
+    if returned_for_edits is not None:
+        filters.append(_returned_for_edits_filter(returned_for_edits))
     total = await session.scalar(select(func.count()).select_from(Vendor).where(*filters))
     result = await session.execute(
         select(*_VENDOR_COLUMNS)

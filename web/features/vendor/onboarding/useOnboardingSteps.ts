@@ -9,6 +9,7 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import type { useToast } from "@/components/ui/Toast";
 import { buildDraftBio, validateStep } from "./onboardingLogic";
+import { defaultProfileSectionForStep, profileSectionHref } from "./constants";
 import { ONBOARDING_STEP } from "./onboardingProgress";
 import { vendorDataToPayload } from "./serializeVendorPayload";
 import type { VendorOnboardingData } from "./types";
@@ -217,15 +218,20 @@ export function useOnboardingSteps({
       if (isLive && !isWalkthrough) {
         track(MixpanelEvents.vendor_profile_saved, { step });
         showToast({ title: "Changes saved", tone: "success" });
-      } else {
-        if (step === ONBOARDING_STEP.review && !walkthroughFinish) {
-          track(MixpanelEvents.vendor_onboarding_submitted);
-          showToast({ title: "Submitted for review", tone: "success" });
-        }
-        setStep(nextStep);
-        if (nextStep === ONBOARDING_STEP.review) {
-          setReturnToReview(false);
-        }
+        const nextHref =
+          step >= ONBOARDING_STEP.review
+            ? "/vendor/profile"
+            : profileSectionHref(defaultProfileSectionForStep(step + 1));
+        router.push(nextHref);
+        return;
+      }
+      if (step === ONBOARDING_STEP.review && !walkthroughFinish) {
+        track(MixpanelEvents.vendor_onboarding_submitted);
+        showToast({ title: "Submitted for review", tone: "success" });
+      }
+      setStep(nextStep);
+      if (nextStep === ONBOARDING_STEP.review) {
+        setReturnToReview(false);
       }
     } catch (e) {
       const detail =

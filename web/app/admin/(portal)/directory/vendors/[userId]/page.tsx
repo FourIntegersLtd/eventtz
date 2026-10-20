@@ -9,7 +9,12 @@ export default function AdminVendorDetailPage() {
   const userId = typeof params?.userId === "string" ? params.userId : "";
 
   return (
-    <AdminConsolePage title="Vendor">
+    <AdminConsolePage
+
+      title="Vendor review"
+      description="Approve, return for edits, or update listing, insurance, and payout status."
+      showPageHead={false}
+    >
       {userId ? (
         <AdminVendorDetailView userId={userId} />
       ) : (

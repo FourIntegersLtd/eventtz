@@ -1,76 +1,43 @@
 "use client";
 
-import { KeyRound, Mail, Shield } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Button } from "@/components/ui/Button";
 import { loginPathWithNext } from "@/features/auth/authRouting";
 import { ChangePasswordModal } from "@/features/settings/ChangePasswordModal";
 import { AdminTestAccountsPanel } from "@/features/admin/settings/AdminTestAccountsPanel";
-import { resolveAdminRole } from "@/lib/adminRole";
 
+/** Admin settings: account password and QA test accounts (A22; no platform-fee API on this page). */
 export function AdminSettingsView() {
   const { user } = useAuth();
   const [passwordOpen, setPasswordOpen] = useState(false);
-  const role = resolveAdminRole(user);
 
   return (
     <>
-      <div className="max-w-2xl space-y-6">
-        <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
-          <div className="px-5 py-4 sm:px-6 sm:py-5">
-            <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">Account</h2>
-            <p className="mt-0.5 text-[13px] text-neutral-400">
-              Your admin sign-in details and password.
-            </p>
+      <div className="max-w-2xl ez-stack ez-stack--lg">
+        <section className="ez-card overflow-hidden">
+          <div className="ez-card__head">
+            <h2 className="ez-h3">Your account</h2>
+            <p className="ez-small">Email and password for this admin sign-in.</p>
           </div>
-
-          <dl className="divide-y divide-neutral-100 border-t border-neutral-100">
-            <div className="flex items-center gap-3 px-5 py-4 sm:px-6">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Mail className="h-4 w-4" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <dt className="text-[13px] text-neutral-500">Email</dt>
-                <dd className="truncate text-sm font-medium text-neutral-900">
-                  {user?.email ?? "-"}
-                </dd>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 px-5 py-4 sm:px-6">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                <Shield className="h-4 w-4" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <dt className="text-[13px] text-neutral-500">Role</dt>
-                <dd className="text-sm font-medium text-neutral-900">
-                  {role === "super_admin" ? "Super admin" : "Admin"}
-                </dd>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 bg-primary/[0.04] px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-              <div className="flex min-w-0 items-start gap-3">
-                <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-primary/70" aria-hidden />
-                <div>
-                  <p className="text-sm font-medium text-neutral-900">Password</p>
-                  <p className="mt-0.5 text-[13px] text-neutral-600">
-                    Admin passwords require at least 6 characters with an uppercase letter, a number, and a symbol.
-                  </p>
-                </div>
-              </div>
-              <Button
+          <div className="ez-card__body ez-stack ez-stack--lg">
+            <label className="ez-field">
+              <span className="ez-label">Email</span>
+              <input className="ez-input" type="email" readOnly value={user?.email ?? ""} />
+            </label>
+            <div className="ez-field">
+              <span className="ez-label">Password</span>
+              <p className="ez-small">
+                At least 6 characters with an uppercase letter, a number, and a symbol.
+              </p>
+              <button
                 type="button"
-                variant="secondary"
-                size="sm"
-                className="shrink-0"
+                className="ez-btn ez-btn--secondary ez-btn--sm"
                 onClick={() => setPasswordOpen(true)}
               >
                 Change password
-              </Button>
+              </button>
             </div>
-          </dl>
+          </div>
         </section>
 
         <AdminTestAccountsPanel />

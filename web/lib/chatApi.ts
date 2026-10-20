@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type ChatConversation = {
   id: string;
   client_user_id: string;
@@ -42,11 +43,44 @@ export async function fetchChatUnreadCount(): Promise<number> {
   return data.unread_count ?? 0;
 }
 
+export const CHAT_CONVERSATIONS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
+
+export type ChatConversationsPage = {
+  conversations: ChatConversation[];
+  total: number;
+  offset: number;
+  limit: number;
+};
+
+export async function fetchConversationsPage(
+  offset = 0,
+  limit = CHAT_CONVERSATIONS_PAGE_SIZE,
+  kind?: "dm" | "support",
+): Promise<ChatConversationsPage> {
+  const { data } = await api.get<{
+    conversations: ChatConversation[];
+    total?: number;
+    offset?: number;
+    limit?: number;
+  }>(`${chatPrefix()}/conversations`, {
+    params: {
+      offset,
+      limit,
+      ...(kind ? { kind } : {}),
+    },
+  });
+  return {
+    conversations: data.conversations ?? [],
+    total: data.total ?? data.conversations?.length ?? 0,
+    offset: data.offset ?? offset,
+    limit: data.limit ?? limit,
+  };
+}
+
+/** Loads the first page of every conversation (prefer `fetchConversationsPage` for large inboxes). */
 export async function fetchConversations(): Promise<ChatConversation[]> {
-  const { data } = await api.get<{ conversations: ChatConversation[] }>(
-    `${chatPrefix()}/conversations`,
-  );
-  return data.conversations ?? [];
+  const page = await fetchConversationsPage(0, 200);
+  return page.conversations;
 }
 
 export async function postConversation(peerUserId: string): Promise<ChatConversation> {

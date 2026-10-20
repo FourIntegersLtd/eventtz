@@ -36,6 +36,7 @@ from app.features.bookings.service_common import link_notes_thread, require_book
 from app.features.identity import service as identity
 from app.features.identity import service_settings as identity_settings
 from app.features.marketplace import service_explore
+from app.features.notifications import service_booking as notices
 from app.features.planner import service_bookings as planner
 from app.features.pricing import service as pricing
 from app.features.vendors import service_listing, service_profile
@@ -184,26 +185,10 @@ async def _backfilled_thread(session: AsyncSession, booking: BookingRow) -> str 
 # --- vendor ------------------------------------------------------------------------------------------
 
 
-async def vendor_bookings(
-    session: AsyncSession,
-    vendor_user_id: str,
-    *,
-    group: str,
-    status: str | None,
-    payment_status: str | None,
-    exclude_payment_status: str | None,
+async def _vendor_booking_list_items(
+    session: AsyncSession, vendor_user_id: str, bookings: list[BookingRow]
 ) -> list[VendorBookingListItem]:
-    """The vendor's bookings in the group, latest activity first; client emails hidden until paid."""
-    bookings = domain.recent_first(
-        await repository.list_bookings(
-            session,
-            vendor_user_id=vendor_user_id,
-            statuses=_group_statuses(group),
-            status=_list_filter(status),
-            payment_status=_list_filter(payment_status),
-            exclude_payment_status=_list_filter(exclude_payment_status),
-        )
-    )
+    """Map booking rows to vendor list items (shared by full and paginated lists)."""
     client_ids = list({booking.client_user_id for booking in bookings})
     emails = await identity.contact_emails(session, client_ids)
     names = await identity.client_display_names(session, client_ids)
@@ -242,6 +227,57 @@ async def vendor_bookings(
     ]
 
 
+async def vendor_bookings(
+    session: AsyncSession,
+    vendor_user_id: str,
+    *,
+    group: str,
+    status: str | None,
+    payment_status: str | None,
+    exclude_payment_status: str | None,
+) -> list[VendorBookingListItem]:
+    """The vendor's bookings in the group, latest activity first; client emails hidden until paid."""
+    bookings = await repository.list_bookings(
+        session,
+        vendor_user_id=vendor_user_id,
+        statuses=_group_statuses(group),
+        status=_list_filter(status),
+        payment_status=_list_filter(payment_status),
+        exclude_payment_status=_list_filter(exclude_payment_status),
+    )
+    return await _vendor_booking_list_items(session, vendor_user_id, bookings)
+
+
+async def vendor_bookings_page(
+    session: AsyncSession,
+    vendor_user_id: str,
+    *,
+    group: str,
+    status: str | None,
+    payment_status: str | None,
+    exclude_payment_status: str | None,
+    search: str | None,
+    conversation_id: str | None = None,
+    offset: int,
+    limit: int,
+) -> tuple[list[VendorBookingListItem], int]:
+    """One page of the vendor's bookings plus total count."""
+    bookings, total = await repository.list_bookings_page(
+        session,
+        vendor_user_id=vendor_user_id,
+        statuses=_group_statuses(group),
+        status=_list_filter(status),
+        payment_status=_list_filter(payment_status),
+        exclude_payment_status=_list_filter(exclude_payment_status),
+        search=(search or "").strip() or None,
+        conversation_id=(conversation_id or "").strip() or None,
+        offset=offset,
+        limit=limit,
+    )
+    items = await _vendor_booking_list_items(session, vendor_user_id, bookings)
+    return items, total
+
+
 async def vendor_booking_detail(
     session: AsyncSession, vendor_user_id: str, booking_id: str
 ) -> VendorBookingDetail:
@@ -275,32 +311,24 @@ async def vendor_booking_detail(
         detail["counterparty_phone"] = (
             shared.contact_phone if shared.share_phone and shared.contact_phone else None
         )
+    detail["price_update_declined"] = (
+        booking.status == "pending"
+        and not domain.price_confirmation_required(booking)
+        and await notices.has_booking_notice(session, booking.id, "client_declined_updated_price")
+    )
+    detail["date_change_declined"] = await notices.date_change_was_declined(
+        session, booking.id, vendor_user_id
+    )
     return VendorBookingDetail.model_validate(detail)
 
 
 # --- client ------------------------------------------------------------------------------------------
 
 
-async def client_bookings(
-    session: AsyncSession,
-    client_user_id: str,
-    *,
-    group: str,
-    status: str | None,
-    payment_status: str | None,
-    exclude_payment_status: str | None,
+async def _client_booking_list_items(
+    session: AsyncSession, client_user_id: str, bookings: list[BookingRow]
 ) -> list[ClientBookingListItem]:
-    """The client's bookings in the group, latest activity first."""
-    bookings = domain.recent_first(
-        await repository.list_bookings(
-            session,
-            client_user_id=client_user_id,
-            statuses=_group_statuses(group),
-            status=_list_filter(status),
-            payment_status=_list_filter(payment_status),
-            exclude_payment_status=_list_filter(exclude_payment_status),
-        )
-    )
+    """Map booking rows to client list items (shared by full and paginated lists)."""
     names = await service_listing.display_names(
         session, list({booking.vendor_user_id for booking in bookings})
     )
@@ -339,6 +367,55 @@ async def client_bookings(
     ]
 
 
+async def client_bookings(
+    session: AsyncSession,
+    client_user_id: str,
+    *,
+    group: str,
+    status: str | None,
+    payment_status: str | None,
+    exclude_payment_status: str | None,
+) -> list[ClientBookingListItem]:
+    """The client's bookings in the group, latest activity first."""
+    bookings = await repository.list_bookings(
+        session,
+        client_user_id=client_user_id,
+        statuses=_group_statuses(group),
+        status=_list_filter(status),
+        payment_status=_list_filter(payment_status),
+        exclude_payment_status=_list_filter(exclude_payment_status),
+    )
+    return await _client_booking_list_items(session, client_user_id, bookings)
+
+
+async def client_bookings_page(
+    session: AsyncSession,
+    client_user_id: str,
+    *,
+    group: str,
+    status: str | None,
+    payment_status: str | None,
+    exclude_payment_status: str | None,
+    search: str | None,
+    offset: int,
+    limit: int,
+) -> tuple[list[ClientBookingListItem], int]:
+    """One page of the client's bookings plus total count."""
+    bookings, total = await repository.list_bookings_page(
+        session,
+        client_user_id=client_user_id,
+        statuses=_group_statuses(group),
+        status=_list_filter(status),
+        payment_status=_list_filter(payment_status),
+        exclude_payment_status=_list_filter(exclude_payment_status),
+        search=(search or "").strip() or None,
+        offset=offset,
+        limit=limit,
+    )
+    items = await _client_booking_list_items(session, client_user_id, bookings)
+    return items, total
+
+
 async def client_booking_detail(
     session: AsyncSession, client_user_id: str, booking_id: str
 ) -> ClientBookingDetail:
@@ -373,6 +450,9 @@ async def client_booking_detail(
         shared = await identity_settings.contact_settings(session, vendor_id)
         phone = await service_profile.listed_phone(session, vendor_id)
         detail["counterparty_phone"] = phone if shared.share_phone and phone else None
+    detail["date_change_declined"] = await notices.date_change_was_declined(
+        session, booking.id, client_user_id
+    )
     return ClientBookingDetail.model_validate(detail)
 
 

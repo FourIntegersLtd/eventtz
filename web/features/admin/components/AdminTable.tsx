@@ -1,19 +1,20 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { adminCard } from "@/components/admin-shell/adminTheme";
+import type { HTMLAttributes, ReactNode } from "react";
 
 type AdminTableProps = {
   children: ReactNode;
   className?: string;
+  /** Drop the outer rounded border when the table sits inside an `ez-card`. */
+  embedded?: boolean;
 };
 
-export function AdminTable({ children, className = "" }: AdminTableProps) {
+export function AdminTable({ children, className = "", embedded = false }: AdminTableProps) {
   return (
-    <div className={`${adminCard} w-full min-w-0 max-w-full overflow-hidden ${className}`.trim()}>
-      <div className="w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-        {children}
-      </div>
+    <div
+      className={`ez-table-wrap w-full min-w-0 max-w-full ${embedded ? "ez-table-wrap--embedded" : ""} ${className}`.trim()}
+    >
+      {children}
     </div>
   );
 }
@@ -25,16 +26,12 @@ export function AdminTableElement({
   children: ReactNode;
   className?: string;
 }) {
-  return (
-    <table className={`min-w-full divide-y divide-neutral-200 text-sm ${className}`.trim()}>
-      {children}
-    </table>
-  );
+  return <table className={`ez-table ${className}`.trim()}>{children}</table>;
 }
 
 export function AdminTableHead({ children }: { children: ReactNode }) {
   return (
-    <thead className="bg-neutral-50">
+    <thead>
       <tr>{children}</tr>
     </thead>
   );
@@ -48,28 +45,28 @@ export function AdminTableHeaderCell({
   className?: string;
 }) {
   return (
-    <th
-      scope="col"
-      className={`px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-neutral-500 ${className}`.trim()}
-    >
+    <th scope="col" className={className}>
       {children}
     </th>
   );
 }
 
 export function AdminTableBody({ children }: { children: ReactNode }) {
-  return <tbody className="divide-y divide-neutral-100 bg-white">{children}</tbody>;
+  return <tbody>{children}</tbody>;
 }
 
 export function AdminTableRow({
   children,
   className = "",
+  ...rest
 }: {
   children: ReactNode;
   className?: string;
-}) {
+} & HTMLAttributes<HTMLTableRowElement>) {
   return (
-    <tr className={`transition hover:bg-neutral-50/80 ${className}`.trim()}>{children}</tr>
+    <tr className={className} {...rest}>
+      {children}
+    </tr>
   );
 }
 
@@ -80,5 +77,5 @@ export function AdminTableCell({
   children: ReactNode;
   className?: string;
 }) {
-  return <td className={`px-4 py-3 text-neutral-800 ${className}`.trim()}>{children}</td>;
+  return <td className={className}>{children}</td>;
 }

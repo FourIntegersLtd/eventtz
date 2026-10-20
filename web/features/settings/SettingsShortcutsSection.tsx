@@ -30,7 +30,7 @@ function shortcutsForRole(role: PortalRole): Shortcut[] {
   if (role === "vendor") {
     return [
       {
-        href: "/vendor/profile/reviews",
+        href: "/vendor/profile?tab=reviews",
         label: "Client reviews",
         description: "From clients",
         icon: Star,

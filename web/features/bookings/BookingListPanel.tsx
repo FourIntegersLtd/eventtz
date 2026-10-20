@@ -9,7 +9,9 @@ import { CopyToClipboardButton } from "@/components/ui/CopyToClipboardButton";
 import { useToast } from "@/components/ui/Toast";
 import type { BookingListRowViewModel } from "@/features/bookings/bookingViewModel";
 import type { BookingEventGroup } from "@/features/bookings/groupBookingsByEvent";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { shortId } from "@/lib/shortId";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 
 /** `closed` covers every booking that's no longer active - completed, declined, and
  * cancelled - with per-row status badges distinguishing the outcome. */
@@ -31,6 +33,12 @@ type BookingListPanelProps = {
   emptyTitle: string;
   /** When set, rows render under event section headers (client bookings). */
   eventGroups?: BookingEventGroup[] | null;
+  listOffset?: number;
+  listPageSize?: number;
+  listTotal?: number;
+  listLoadingMore?: boolean;
+  onListPrevious?: () => void;
+  onListNext?: () => void;
 };
 
 /**
@@ -47,6 +55,12 @@ export function BookingListPanel({
   onSelect,
   emptyTitle,
   eventGroups,
+  listOffset = 0,
+  listPageSize = DEFAULT_LIST_PAGE_SIZE,
+  listTotal = 0,
+  listLoadingMore = false,
+  onListPrevious,
+  onListNext,
 }: BookingListPanelProps) {
   const { showToast } = useToast();
 
@@ -175,6 +189,18 @@ export function BookingListPanel({
           <ul className="divide-y divide-neutral-100">{rows.map((row) => renderRow(row))}</ul>
         )}
       </div>
+      {onListPrevious && onListNext && listTotal > 0 ? (
+        <TablePagination
+          className="mt-3 shrink-0"
+          offset={listOffset}
+          limit={listPageSize}
+          total={listTotal}
+          pageRowCount={rows.length}
+          loading={listLoadingMore}
+          onPrevious={onListPrevious}
+          onNext={onListNext}
+        />
+      ) : null}
     </div>
   );
 }

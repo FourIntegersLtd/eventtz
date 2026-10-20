@@ -80,7 +80,7 @@ export function VendorProfileSectionTabs({
         <div className="my-1.5 border-t border-neutral-100" aria-hidden />
       ) : null}
       <Link
-        href="/vendor/profile/reviews"
+        href="/vendor/profile?tab=reviews"
         role="tab"
         aria-selected={reviewsActive}
         data-active={reviewsActive ? "true" : undefined}

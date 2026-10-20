@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { adminCard } from "@/components/admin-shell/adminTheme";
 import {
   emptySupportDraft,
   isSupportDraftValid,
@@ -18,8 +17,10 @@ import type { SupportRichTextChange } from "@/features/admin/messages/SupportRic
 import { isHtmlMessage, MessageBody } from "@/lib/renderMessageBody";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { TablePagination } from "@/components/ui/TablePagination";
 import {
-  fetchAdminSupportConversations,
+  ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE,
+  fetchAdminSupportConversationsPage,
   fetchAdminSupportMessages,
   patchAdminSupportMessage,
   postAdminSupportConversationRead,
@@ -28,12 +29,18 @@ import {
   type AdminSupportMessage,
 } from "@/lib/adminMessagesApi";
 import { CHAT_UNREAD_CLEARED_EVENT } from "@/lib/chatApi";
+import { CHAT_BUBBLE_MINE, chatBubbleClass } from "@/lib/chatBubbleClasses";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
-const STAFF_BUBBLE =
-  "rounded-2xl rounded-br-md bg-primary-muted text-neutral-900 ring-1 ring-primary/10";
-const STAFF_EDIT_PANEL =
-  "w-full rounded-2xl bg-primary-muted px-4 py-3 text-sm text-neutral-900 ring-1 ring-primary/15";
+const STAFF_EDIT_PANEL = `${CHAT_BUBBLE_MINE} w-full max-w-[85%]`;
+
+function peerInitials(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
+  }
+  return displayName.slice(0, 2).toUpperCase();
+}
 
 type AdminMessagesInboxViewProps = {
   /** Fired when conversation list unread totals change (for tab badge). */
@@ -60,6 +67,8 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
   const [threadDraft, setThreadDraft] = useState<SupportRichTextChange>(emptySupportDraft());
   const [threadComposerKey, setThreadComposerKey] = useState(0);
   const [threadSending, setThreadSending] = useState(false);
+  const [convOffset, setConvOffset] = useState(0);
+  const [convTotal, setConvTotal] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<SupportRichTextChange>(emptySupportDraft());
   const [editComposerKey, setEditComposerKey] = useState(0);
@@ -81,14 +90,18 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
     if (!opts?.silent) setLoading(true);
     setError(null);
     try {
-      const list = await fetchAdminSupportConversations();
-      setConversations(list);
+      const page = await fetchAdminSupportConversationsPage(
+        convOffset,
+        ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE,
+      );
+      setConversations(page.conversations);
+      setConvTotal(page.total);
     } catch (e: unknown) {
       setError(getApiErrorDetail(e) ?? "Could not load support threads.");
     } finally {
       if (!opts?.silent) setLoading(false);
     }
-  }, []);
+  }, [convOffset]);
 
   const refreshActiveMessages = useCallback(async () => {
     if (!activeId) return;
@@ -182,11 +195,11 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
   const activeConv = conversations.find((c) => c.id === activeId) ?? null;
 
   return (
-    <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)] lg:min-h-[calc(100dvh-10rem)]">
-      <div className={`${adminCard} flex max-h-[38dvh] flex-col overflow-hidden lg:max-h-none lg:min-h-0`}>
-        <div className="border-b border-neutral-100 px-4 py-3 text-sm font-medium text-neutral-800">
-          Support threads
-        </div>
+    <div className="ez-split min-h-[min(100dvh-14rem,100%)]">
+      <div
+        className="ez-split__aside flex max-h-[42dvh] min-h-0 flex-col overflow-hidden lg:max-h-none"
+        style={{ flex: "1 1 340px", maxWidth: 420 }}
+      >
         {loading ? (
           <div className="p-4">
             <AdminLoadingState label="Loading…" />
@@ -199,52 +212,78 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
             className="m-4"
           />
         ) : (
-          <ul className="min-h-0 flex-1 overflow-y-auto divide-y divide-neutral-100">
-            {conversations.map((c) => (
-              <li key={c.id}>
+          <>
+          <div className="ez-list min-h-0 flex-1 overflow-y-auto">
+            {conversations.map((c) => {
+              const unread = (c.unread_count || 0) > 0;
+              const active = activeId === c.id;
+              return (
                 <button
+                  key={c.id}
                   type="button"
                   onClick={() => void openThread(c.id)}
-                  className={`flex w-full flex-col gap-0.5 px-4 py-3 text-left text-sm transition hover:bg-neutral-50 ${
-                    activeId === c.id ? "bg-primary/[0.06]" : ""
-                  }`}
+                  className={`ez-list-row w-full text-left ${active ? "ez-list-row--active" : ""} ${unread && !active ? "ez-list-row--unread" : ""}`}
+                  style={{ flexWrap: "nowrap" }}
                 >
-                  <span className="flex items-center justify-between gap-2">
-                    <span className="truncate font-medium text-neutral-900">
-                      {c.peer_display_name}
+                  <span className="ez-avatar ez-avatar--sm">{peerInitials(c.peer_display_name)}</span>
+                  <div className="ez-list-row__main">
+                    <span className="ez-strong truncate">{c.peer_display_name}</span>
+                    <span className="ez-small">
+                      {c.last_message_at ? "Support thread" : "No messages yet"}
                     </span>
-                    {c.unread_count > 0 ? (
-                      <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                        {c.unread_count}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="text-xs text-neutral-500">
-                    {c.last_message_at ? formatDateTime(c.last_message_at) : "No messages"}
-                  </span>
+                  </div>
+                  {unread ? (
+                    <span className="ez-caption ez-strong tabular-nums shrink-0">{c.unread_count}</span>
+                  ) : c.last_message_at ? (
+                    <span className="ez-caption shrink-0 whitespace-nowrap tabular-nums">
+                      {formatDateTime(c.last_message_at)}
+                    </span>
+                  ) : null}
                 </button>
-              </li>
-            ))}
-          </ul>
+              );
+            })}
+          </div>
+          <TablePagination
+            offset={convOffset}
+            limit={ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE}
+            total={convTotal}
+            loading={loading}
+            onPrevious={() =>
+              setConvOffset((current) =>
+                Math.max(0, current - ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE),
+              )
+            }
+            onNext={() => setConvOffset((current) => current + ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE)}
+          />
+          </>
         )}
       </div>
 
-      <div className={`${adminCard} flex min-h-[min(100dvh-14rem,100%)] flex-1 flex-col overflow-hidden lg:min-h-0`}>
+      <div className="ez-split__main flex min-h-0 min-w-0 flex-1 flex-col">
         {error ? (
-          <div className="p-4">
+          <div className="mb-3">
             <AdminErrorBanner message={error} />
           </div>
         ) : null}
         {!activeConv ? (
-          <div className="flex flex-1 items-center justify-center p-6 text-sm text-neutral-500">
+          <div className="ez-card flex flex-1 items-center justify-center p-6 text-sm text-neutral-500">
             Select a thread to read and reply.
           </div>
         ) : (
-          <>
-            <div className="border-b border-neutral-100 px-4 py-3">
-              <p className="font-medium text-neutral-900">{activeConv.peer_display_name}</p>
+          <section className="ez-card flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="ez-card__head">
+              <h2 className="ez-h3">{activeConv.peer_display_name}</h2>
+              {activeConv.unread_count > 0 ? (
+                <span className="ez-badge ez-badge--brand">Open</span>
+              ) : null}
             </div>
-            <ul className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+
+            <div className="ez-stack min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+              {activeConv.created_at ? (
+                <span className="ez-system-msg">
+                  Thread opened {formatDateTime(activeConv.created_at)} · {activeConv.peer_display_name}
+                </span>
+              ) : null}
               {messages.map((m) => {
                 const staff =
                   m.sender_user_id === adminId ||
@@ -253,79 +292,83 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
                 const isEditing = editingId === m.id;
                 const editedAt = messageEditedAt(m);
 
-                return (
-                  <li
-                    key={m.id}
-                    className={`flex w-full ${isEditing ? "" : staff ? "justify-end" : "justify-start"}`}
-                  >
-                    {isEditing ? (
-                      <div className={STAFF_EDIT_PANEL}>
-                        <SupportMessageComposer
-                          key={editComposerKey}
-                          html={editDraft.html}
-                          textLength={editDraft.textLength}
-                          initialHtml={m.body}
-                          onChange={setEditDraft}
-                          onSend={() => void saveEdit()}
+                if (isEditing) {
+                  return (
+                    <div key={m.id} className={STAFF_EDIT_PANEL}>
+                      <SupportMessageComposer
+                        key={editComposerKey}
+                        html={editDraft.html}
+                        textLength={editDraft.textLength}
+                        initialHtml={m.body}
+                        onChange={setEditDraft}
+                        onSend={() => void saveEdit()}
+                        loading={editSaving}
+                        showSendButton={false}
+                        minHeightClass="min-h-[8rem]"
+                      />
+                      <div className="mt-3 flex justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={cancelEdit} disabled={editSaving}>
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="primary"
+                          size="sm"
                           loading={editSaving}
-                          showSendButton={false}
-                          minHeightClass="min-h-[8rem]"
-                        />
-                        <div className="mt-3 flex justify-end gap-2">
-                          <Button variant="ghost" size="sm" onClick={cancelEdit} disabled={editSaving}>
-                            Cancel
-                          </Button>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            loading={editSaving}
-                            disabled={!isSupportDraftValid(editDraft.textLength)}
-                            onClick={() => void saveEdit()}
-                          >
-                            Save changes
-                          </Button>
-                        </div>
+                          disabled={!isSupportDraftValid(editDraft.textLength)}
+                          onClick={() => void saveEdit()}
+                        >
+                          Save changes
+                        </Button>
                       </div>
-                    ) : (
-                      <div
-                        className={`group relative max-w-[85%] px-3 py-2 text-sm ${
-                          staff ? STAFF_BUBBLE : "rounded-2xl bg-neutral-100 text-neutral-900"
+                    </div>
+                  );
+                }
+
+                return (
+                  <div key={m.id} className="ez-stack ez-stack--sm">
+                    <div
+                      className={`group relative ${chatBubbleClass(Boolean(staff))}`}
+                    >
+                      {ownMessage ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingId(m.id);
+                            setEditDraft({ html: m.body, textLength: 0 });
+                            setEditComposerKey((k) => k + 1);
+                          }}
+                          className="absolute right-2 top-2 rounded p-1 text-neutral-400 opacity-0 transition hover:bg-neutral-900/5 group-hover:opacity-100"
+                          aria-label="Edit message"
+                        >
+                          <Pencil className="h-3.5 w-3.5" aria-hidden />
+                        </button>
+                      ) : null}
+                      <MessageBody
+                        body={m.body}
+                        metadata={m.metadata}
+                        className={`break-words ${ownMessage ? "pr-6" : ""} ${
+                          isHtmlMessage(m.metadata) ? "" : "whitespace-pre-wrap"
                         }`}
-                      >
-                        {ownMessage ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingId(m.id);
-                              setEditDraft({ html: m.body, textLength: 0 });
-                              setEditComposerKey((k) => k + 1);
-                            }}
-                            className="absolute right-2 top-2 rounded p-1 text-neutral-400 opacity-0 transition hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
-                            aria-label="Edit message"
-                          >
-                            <Pencil className="h-3.5 w-3.5" aria-hidden />
-                          </button>
-                        ) : null}
-                        <MessageBody
-                          body={m.body}
-                          metadata={m.metadata}
-                          className={`break-words ${ownMessage ? "pr-6" : ""} ${
-                            isHtmlMessage(m.metadata) ? "" : "whitespace-pre-wrap"
-                          }`}
-                        />
-                        <p className="mt-1 text-[10px] tabular-nums text-neutral-500">
-                          {m.created_at ? formatDateTime(m.created_at) : ""}
-                          {editedAt ? " · Edited" : ""}
-                        </p>
-                      </div>
-                    )}
-                  </li>
+                      />
+                    </div>
+                    <span
+                      className={`ez-bubble-meta ${staff ? "self-end" : ""}`}
+                    >
+                      {staff ? "You" : activeConv.peer_display_name}
+                      {m.created_at ? ` · ${formatDateTime(m.created_at)}` : ""}
+                      {editedAt ? " · Edited" : ""}
+                    </span>
+                  </div>
                 );
               })}
-            </ul>
-            <div className="border-t border-neutral-100 px-4 py-3">
+            </div>
+
+            <div
+              className="ez-card__foot"
+              style={{ justifyContent: "stretch", flexWrap: "nowrap" }}
+            >
               {editingId ? (
-                <div className="flex items-center justify-between gap-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-600">
+                <div className="flex w-full items-center justify-between gap-2 text-sm text-neutral-600">
                   <span>Editing a message. Save or cancel above.</span>
                   <button
                     type="button"
@@ -337,19 +380,22 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
                   </button>
                 </div>
               ) : (
-                <SupportMessageComposer
-                  key={threadComposerKey}
-                  html={threadDraft.html}
-                  textLength={threadDraft.textLength}
-                  onChange={setThreadDraft}
-                  onSend={() => void reply()}
-                  loading={threadSending}
-                  placeholder="Reply as Eventtz Support…"
-                  minHeightClass="min-h-[4.5rem]"
-                />
+                <div className="ez-field min-w-0 flex-1">
+                  <SupportMessageComposer
+                    key={threadComposerKey}
+                    html={threadDraft.html}
+                    textLength={threadDraft.textLength}
+                    onChange={setThreadDraft}
+                    onSend={() => void reply()}
+                    loading={threadSending}
+                    placeholder="Write a reply"
+                    minHeightClass="min-h-[4rem]"
+                    className="w-full"
+                  />
+                </div>
               )}
             </div>
-          </>
+          </section>
         )}
       </div>
     </div>

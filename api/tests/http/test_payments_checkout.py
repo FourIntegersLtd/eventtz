@@ -163,6 +163,7 @@ async def test_checkout_reprices_from_the_vendor_list_and_opens_a_session(
     assert response.status_code == 200, response.text
     assert response.json() == {"success": True, "checkout_url": "https://checkout.example/cs_test_1"}
     assert [call.name for call in payment_gateway.calls] == ["create_checkout_session"]
+    frontend_base = get_settings().frontend_url.rstrip("/")
     assert payment_gateway.calls[0].arguments == {
         "amount_pence": 15750,
         "description": "Checkout test party",
@@ -177,9 +178,9 @@ async def test_checkout_reprices_from_the_vendor_list_and_opens_a_session(
         },
         "customer_email": "checkout-payer@example.com",
         "success_url": (
-            f"http://localhost:3000/client/bookings/{booking_id}?payment=success&session_id={{CHECKOUT_SESSION_ID}}"
+            f"{frontend_base}/client/bookings/{booking_id}?payment=success&session_id={{CHECKOUT_SESSION_ID}}"
         ),
-        "cancel_url": f"http://localhost:3000/client/bookings/{booking_id}?payment=cancelled",
+        "cancel_url": f"{frontend_base}/client/bookings/{booking_id}?payment=cancelled",
     }
     booking = await _booking(db_session, booking_id)
     assert (booking.payment_status, booking.stripe_checkout_session_id) == ("pending", "cs_test_1")

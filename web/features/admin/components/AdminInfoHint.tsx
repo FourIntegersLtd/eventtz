@@ -50,7 +50,7 @@ export function AdminInfoHint({ label, info }: AdminInfoHintProps) {
           </div>
         }
       >
-        <div className="space-y-4 text-sm leading-relaxed text-neutral-700">
+        <div className="ez-stack text-sm leading-relaxed text-neutral-700">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
               What this shows

@@ -4,10 +4,11 @@ import { portalCard } from "@/components/portal-shell/portalTheme";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
-  fetchClientDisputes,
-  fetchVendorDisputes,
+  fetchParticipantDisputesPage,
+  PARTICIPANT_DISPUTES_PAGE_SIZE,
   type ParticipantDispute,
 } from "@/lib/bookingDisputesApi";
+import { TablePagination } from "@/components/ui/TablePagination";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
@@ -46,11 +47,19 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
   const [rows, setRows] = useState<ParticipantDispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [offset, setOffset] = useState(0);
+  const [total, setTotal] = useState(0);
 
   const load = useCallback(async () => {
     setError(null);
     try {
-      let list = role === "client" ? await fetchClientDisputes() : await fetchVendorDisputes();
+      const page = await fetchParticipantDisputesPage(
+        role,
+        offset,
+        PARTICIPANT_DISPUTES_PAGE_SIZE,
+      );
+      let list = page.disputes;
+      setTotal(page.total);
       if (user?.id && list.some(participantDisputeNeedsHydration)) {
         try {
           const bookings = await loadParticipantBookingLookup(role);
@@ -70,7 +79,7 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
     } finally {
       setLoading(false);
     }
-  }, [role, user?.email, user?.id]);
+  }, [role, user?.email, user?.id, offset]);
 
   useEffect(() => {
     void load();
@@ -114,7 +123,9 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
                       <p className="min-w-0 text-[15px] font-semibold leading-snug tracking-tight text-neutral-900 line-clamp-2">
                         {participantDisputeBookingLabel(d)}
                       </p>
-                      <ParticipantDisputeStatusBadge status={d.status} />
+                      <span className="ez-list-row__status shrink-0">
+                        <ParticipantDisputeStatusBadge status={d.status} />
+                      </span>
                     </div>
 
                     <div className="mt-4 space-y-1.5">
@@ -129,6 +140,17 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
           </ul>
         )}
       </div>
+
+      <TablePagination
+        offset={offset}
+        limit={PARTICIPANT_DISPUTES_PAGE_SIZE}
+        total={total}
+        loading={loading}
+        onPrevious={() =>
+          setOffset((current) => Math.max(0, current - PARTICIPANT_DISPUTES_PAGE_SIZE))
+        }
+        onNext={() => setOffset((current) => current + PARTICIPANT_DISPUTES_PAGE_SIZE)}
+      />
     </div>
   );
 }
