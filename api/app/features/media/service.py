@@ -22,7 +22,12 @@ from app.features.media.domain import (
     stored_image_type,
 )
 from app.features.media.errors import FileEmpty, FileTooLarge, FileTypeUnsupported, ImageOnly, UploadFailed
-from app.features.media.schemas import ImageUploadResponse
+from app.features.media.schemas import (
+    CreateUploadUrlBody,
+    ImageUploadResponse,
+    MediaUploadUrlKind,
+    PresignedUploadResponse,
+)
 
 log = get_logger(__name__)
 
@@ -39,6 +44,52 @@ async def upload_image(principal: Principal, upload: IncomingFile, storage: Stor
         folder=IMAGES_FOLDER,
         content_type=stored_image_type(content_type, upload.filename),
         max_bytes=None,
+    )
+
+
+async def create_upload_url(
+    principal: Principal, body: CreateUploadUrlBody, storage: Storage
+) -> PresignedUploadResponse:
+    """Validate upload metadata, then mint a presigned POST so the browser sends bytes straight to S3."""
+    if not storage.is_configured():
+        raise UploadFailed()
+    if body.content_length < 1:
+        raise FileEmpty()
+    content_type = normalise_content_type(body.content_type)
+    settings = get_settings()
+    if body.kind == MediaUploadUrlKind.image:
+        if not image_allowed(content_type, body.filename):
+            raise ImageOnly()
+        folder = IMAGES_FOLDER
+        stored_type = stored_image_type(content_type, body.filename)
+        max_bytes = settings.media_max_image_upload_bytes
+    else:
+        if not general_file_allowed(content_type):
+            raise FileTypeUnsupported()
+        folder = FILES_FOLDER
+        stored_type = content_type
+        max_bytes = settings.media_max_file_upload_bytes
+    if body.content_length > max_bytes:
+        raise FileTooLarge.over_limit(size_limit_in_megabytes(max_bytes))
+    key = object_key(user_id=principal.id, folder=folder, unique_token=uuid4().hex, filename=body.filename)
+    try:
+        presigned = await asyncio.to_thread(
+            storage.presigned_post,
+            key=key,
+            content_type=stored_type,
+            max_bytes=max_bytes,
+        )
+    except AppError:
+        raise
+    except Exception as error:
+        log.exception("presign failed key=%s content_type=%s", key, stored_type)
+        raise UploadFailed() from error
+    return PresignedUploadResponse(
+        bucket=presigned.bucket,
+        path=presigned.key,
+        public_url=presigned.public_url,
+        upload_url=presigned.upload_url,
+        fields=presigned.fields,
     )
 
 

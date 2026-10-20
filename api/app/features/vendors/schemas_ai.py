@@ -32,6 +32,12 @@ class AnalyzePortfolioImageResponse(BaseModel):
     summary: str
 
 
+class AnalyzePortfolioImageUrlBody(BaseModel):
+    """Public URL of a photo already uploaded to our S3 bucket (presigned flow)."""
+
+    image_url: str = Field(min_length=1)
+
+
 class PackageCoachTip(BaseModel):
     """One suggestion or warning about a package, in the legacy flat shape some screens still read."""
 

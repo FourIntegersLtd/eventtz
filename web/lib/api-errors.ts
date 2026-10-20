@@ -39,6 +39,10 @@ export function mediaUploadErrorMessage(
     return "Couldn't reach our servers. Check your internet connection and try again.";
   }
 
+  if (error instanceof Error && error.message.trim() && !axios.isAxiosError(error)) {
+    return error.message.trim();
+  }
+
   const label = kind === "video" ? "video" : kind === "document" ? "document" : "photo";
   return `Couldn't upload your ${label}. Please try again.`;
 }

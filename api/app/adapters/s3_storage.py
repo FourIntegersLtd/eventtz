@@ -14,7 +14,7 @@ from urllib.parse import quote, unquote, urlparse
 
 import boto3
 
-from app.core.ports import StoredFile
+from app.core.ports import PresignedPost, StoredFile
 from app.core.settings import get_settings
 
 if TYPE_CHECKING:
@@ -25,6 +25,7 @@ DELETE_BATCH_SIZE = 1000
 
 # Browsers and the CDN may cache an uploaded file for an hour; keys are never reused.
 CACHE_CONTROL = "public, max-age=3600"
+PRESIGNED_POST_TTL_SECONDS = 900
 
 
 def bucket_name() -> str:
@@ -85,6 +86,30 @@ class S3Storage:
             extra_arguments["ContentType"] = content_type.strip()
         self._client().upload_fileobj(BytesIO(body), bucket_name(), key, ExtraArgs=extra_arguments)
         return StoredFile(bucket=bucket_name(), key=key, public_url=public_object_url(key))
+
+    def presigned_post(self, *, key: str, content_type: str, max_bytes: int) -> PresignedPost:
+        """Return a POST form target and hidden fields the browser sends with the file bytes."""
+        stored_type = content_type.strip()
+        fields = {"Content-Type": stored_type, "Cache-Control": CACHE_CONTROL}
+        conditions: list[object] = [
+            ["content-length-range", 1, max_bytes],
+            {"Content-Type": stored_type},
+            {"Cache-Control": CACHE_CONTROL},
+        ]
+        post = self._client().generate_presigned_post(
+            Bucket=bucket_name(),
+            Key=key,
+            Fields=fields,
+            Conditions=conditions,
+            ExpiresIn=PRESIGNED_POST_TTL_SECONDS,
+        )
+        return PresignedPost(
+            upload_url=post["url"],
+            fields={str(field_key): str(field_value) for field_key, field_value in post["fields"].items()},
+            bucket=bucket_name(),
+            key=key,
+            public_url=public_object_url(key),
+        )
 
     def delete_object(self, key: str) -> None:
         """Delete one object; S3 answers success for a key that does not exist."""

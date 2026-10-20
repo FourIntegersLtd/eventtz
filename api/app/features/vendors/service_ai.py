@@ -16,12 +16,15 @@ from __future__ import annotations
 import asyncio
 import base64
 
+import httpx
 from pydantic import BaseModel, Field
 
+from app.adapters.s3_storage import is_our_url
 from app.core.errors import InvalidInput
 from app.core.ports import ChatMessage, LanguageModel
 from app.features.vendors.schemas_ai import (
     AnalyzePortfolioImageResponse,
+    AnalyzePortfolioImageUrlBody,
     GenerateVendorBioBody,
     GenerateVendorBioResponse,
     PackageCoachPackageFeedback,
@@ -41,8 +44,11 @@ __all__ = [
     "ReviewVendorPackagesResponse",
     "ImageRequired",
     "ImageContentTypeInvalid",
+    "ImageUrlInvalid",
+    "AnalyzePortfolioImageUrlBody",
     "generate_vendor_public_bio",
     "analyze_portfolio_image",
+    "analyze_portfolio_image_from_url",
     "review_vendor_packages",
 ]
 
@@ -76,6 +82,13 @@ class ImageContentTypeInvalid(InvalidInput):
 
     code = "vendor_onboarding_ai_image_content_type_invalid"
     default_message = "Only image uploads are supported."
+
+
+class ImageUrlInvalid(InvalidInput):
+    """The image URL is missing or not hosted on our upload bucket."""
+
+    code = "vendor_onboarding_ai_image_url_invalid"
+    default_message = "Please upload the photo through Eventtz first."
 
 
 class _BioReply(BaseModel):
@@ -133,6 +146,26 @@ async def generate_vendor_public_bio(
         purpose="vendor_onboarding_bio",
     )
     return GenerateVendorBioResponse(bio=reply.bio.strip())
+
+
+async def analyze_portfolio_image_from_url(
+    *, body: AnalyzePortfolioImageUrlBody, language_model: LanguageModel
+) -> AnalyzePortfolioImageResponse:
+    """Fetch a presigned-uploaded portfolio photo from our bucket, then run vision QA."""
+    image_url = body.image_url.strip()
+    if not image_url or not is_our_url(image_url):
+        raise ImageUrlInvalid()
+    try:
+        async with httpx.AsyncClient() as http_client:
+            response = await http_client.get(image_url, timeout=30.0, follow_redirects=True)
+            response.raise_for_status()
+    except httpx.HTTPError:
+        raise ImageRequired() from None
+    raw_type = response.headers.get("content-type") or "application/octet-stream"
+    content_type = raw_type.split(";")[0].strip().lower()
+    return await analyze_portfolio_image(
+        image_bytes=response.content, content_type=content_type, language_model=language_model
+    )
 
 
 async def analyze_portfolio_image(

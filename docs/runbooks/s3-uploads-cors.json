@@ -1,0 +1,15 @@
+{
+  "CORSRules": [
+    {
+      "AllowedHeaders": ["*"],
+      "AllowedMethods": ["POST"],
+      "AllowedOrigins": [
+        "https://www.eventtz.com",
+        "https://eventtz.com",
+        "http://localhost:3001"
+      ],
+      "ExposeHeaders": ["ETag"],
+      "MaxAgeSeconds": 3000
+    }
+  ]
+}

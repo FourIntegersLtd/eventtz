@@ -164,8 +164,10 @@ class Settings(BaseSettings):
     aws_secret_access_key: str = ""
     aws_s3_bucket_name: str = "eventtz"
     aws_region: str = "eu-west-2"
-    # Largest general upload (`POST /media/files`) in bytes. Images have no app-level cap.
+    # Largest general upload (`POST /media/files` and presigned `kind=file`) in bytes.
     media_max_file_upload_bytes: int = 50_000_000
+    # Presigned direct image uploads (`POST /media/upload-urls` with `kind=image`).
+    media_max_image_upload_bytes: int = 50_000_000
 
     @property
     def is_deployed(self) -> bool:

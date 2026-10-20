@@ -4275,6 +4275,21 @@
         "title": "AnalyzePortfolioImageResponse",
         "type": "object"
       },
+      "AnalyzePortfolioImageUrlBody": {
+        "description": "Public URL of a photo already uploaded to our S3 bucket (presigned flow).",
+        "properties": {
+          "image_url": {
+            "minLength": 1,
+            "title": "Image Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "image_url"
+        ],
+        "title": "AnalyzePortfolioImageUrlBody",
+        "type": "object"
+      },
       "ArchivePlanResponse": {
         "description": "`POST /client/planner/plans/{plan_id}/archive`.",
         "properties": {
@@ -8124,6 +8139,37 @@
         "title": "CreateReferralPartnerRequest",
         "type": "object"
       },
+      "CreateUploadUrlBody": {
+        "description": "Metadata for minting a presigned POST before the client uploads bytes directly to S3.",
+        "properties": {
+          "content_length": {
+            "minimum": 1.0,
+            "title": "Content Length",
+            "type": "integer"
+          },
+          "content_type": {
+            "minLength": 1,
+            "title": "Content Type",
+            "type": "string"
+          },
+          "filename": {
+            "minLength": 1,
+            "title": "Filename",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MediaUploadUrlKind"
+          }
+        },
+        "required": [
+          "kind",
+          "filename",
+          "content_type",
+          "content_length"
+        ],
+        "title": "CreateUploadUrlBody",
+        "type": "object"
+      },
       "CreateVendorQuoteBody": {
         "description": "A vendor's priced quote sent to a client.",
         "properties": {
@@ -9703,6 +9749,15 @@
         "title": "MeResponse",
         "type": "object"
       },
+      "MediaUploadUrlKind": {
+        "description": "Whether the browser will POST an image or a general file to S3.",
+        "enum": [
+          "image",
+          "file"
+        ],
+        "title": "MediaUploadUrlKind",
+        "type": "string"
+      },
       "MessageCreateBody": {
         "description": "A typed message.",
         "properties": {
@@ -10630,6 +10685,43 @@
           "review"
         ],
         "title": "PostBookingReviewResponse",
+        "type": "object"
+      },
+      "PresignedUploadResponse": {
+        "description": "Stored-object location plus the short-lived POST target for the browser.",
+        "properties": {
+          "bucket": {
+            "title": "Bucket",
+            "type": "string"
+          },
+          "fields": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "object"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "public_url": {
+            "title": "Public Url",
+            "type": "string"
+          },
+          "upload_url": {
+            "title": "Upload Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bucket",
+          "path",
+          "public_url",
+          "upload_url",
+          "fields"
+        ],
+        "title": "PresignedUploadResponse",
         "type": "object"
       },
       "PublicReviewItem": {
@@ -26872,6 +26964,107 @@
         ]
       }
     },
+    "/api/v1/media/upload-urls": {
+      "post": {
+        "description": "Mint a presigned S3 POST so the browser uploads file bytes without proxying through the web app.",
+        "operationId": "create_upload_url_api_v1_media_upload_urls_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUploadUrlBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresignedUploadResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "media_image_only, media_file_type_unsupported, media_file_empty",
+            "x-codes": [
+              "media_image_only",
+              "media_file_type_unsupported",
+              "media_file_empty"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "media_file_too_large",
+            "x-codes": [
+              "media_file_too_large"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "media_upload_failed",
+            "x-codes": [
+              "media_upload_failed"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Create Upload Url",
+        "tags": [
+          "media"
+        ]
+      }
+    },
     "/api/v1/realtime/stream": {
       "get": {
         "description": "Server-sent events for the user `ticket` names: `connected`, then business events.\n\nAuthenticates through the `ticket` query parameter rather than a Bearer\nheader, because `EventSource` cannot set one (ADR 0005). No response model:\na stream has no single JSON body, only the frames `core.sse.event_stream` yields.",
@@ -30402,6 +30595,110 @@
           }
         ],
         "summary": "Analyze Portfolio Image",
+        "tags": [
+          "vendor-onboarding-ai"
+        ]
+      }
+    },
+    "/api/v1/vendor/onboarding/ai/analyze-portfolio-image-url": {
+      "post": {
+        "description": "QA a portfolio photo that was uploaded via presigned S3 (JSON body, no multipart).",
+        "operationId": "analyze_portfolio_image_url_api_v1_vendor_onboarding_ai_analyze_portfolio_image_url_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyzePortfolioImageUrlBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyzePortfolioImageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_onboarding_ai_image_required, vendor_onboarding_ai_image_content_type_invalid, vendor_onboarding_ai_image_url_invalid, ai_refused",
+            "x-codes": [
+              "vendor_onboarding_ai_image_required",
+              "vendor_onboarding_ai_image_content_type_invalid",
+              "vendor_onboarding_ai_image_url_invalid",
+              "ai_refused"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "ai_unavailable, ai_failed, ai_empty_reply",
+            "x-codes": [
+              "ai_unavailable",
+              "ai_failed",
+              "ai_empty_reply"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Analyze Portfolio Image Url",
         "tags": [
           "vendor-onboarding-ai"
         ]

@@ -18,6 +18,7 @@ from app.core.ports import (
     OutgoingEmail,
     PaymentGatewayError,
     PaymentsUnavailable,
+    PresignedPost,
     ReplyModel,
     StoredFile,
     WebhookCall,
@@ -115,6 +116,7 @@ class FakeStorage:
     saved: list[SavedObject] = field(default_factory=list)
     deleted_keys: list[str] = field(default_factory=list)
     deleted_prefixes: list[str] = field(default_factory=list)
+    presigned: list[dict[str, object]] = field(default_factory=list)
     # Makes every delete fail, so best-effort cleanup can be shown not to stop its caller.
     delete_error: Exception | None = None
 
@@ -144,6 +146,21 @@ class FakeStorage:
         if self.delete_error is not None:
             raise self.delete_error
         self.deleted_prefixes.append(prefix)
+
+    def presigned_post(self, *, key: str, content_type: str, max_bytes: int) -> PresignedPost:
+        """Record the request and return a predictable fake POST target."""
+        if self.error is not None:
+            raise self.error
+        self.presigned.append(
+            {"key": key, "content_type": content_type, "max_bytes": max_bytes},
+        )
+        return PresignedPost(
+            upload_url=f"https://{FAKE_STORAGE_HOST}/upload",
+            fields={"key": key, "Content-Type": content_type},
+            bucket="fake-bucket",
+            key=key,
+            public_url=f"https://{FAKE_STORAGE_HOST}/{key}",
+        )
 
 
 @dataclass

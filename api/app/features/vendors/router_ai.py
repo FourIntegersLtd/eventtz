@@ -71,6 +71,27 @@ async def analyze_portfolio_image(
 
 
 @router.post(
+    "/analyze-portfolio-image-url",
+    response_model=service_ai.AnalyzePortfolioImageResponse,
+    responses=error_responses(
+        *ROLE_ERRORS,
+        service_ai.ImageRequired,
+        service_ai.ImageContentTypeInvalid,
+        service_ai.ImageUrlInvalid,
+        *_AI_ERRORS,
+    ),
+)
+async def analyze_portfolio_image_url(
+    principal: CurrentVendor,
+    body: service_ai.AnalyzePortfolioImageUrlBody,
+    language_model: LanguageModelDependency,
+) -> service_ai.AnalyzePortfolioImageResponse:
+    """QA a portfolio photo that was uploaded via presigned S3 (JSON body, no multipart)."""
+    del principal
+    return await service_ai.analyze_portfolio_image_from_url(body=body, language_model=language_model)
+
+
+@router.post(
     "/review-packages",
     response_model=service_ai.ReviewVendorPackagesResponse,
     responses=error_responses(*_AI_ERRORS),

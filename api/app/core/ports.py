@@ -144,6 +144,17 @@ class StoredFile:
     public_url: str
 
 
+@dataclass(frozen=True)
+class PresignedPost:
+    """A browser POST straight to object storage, minted by the API after auth checks."""
+
+    upload_url: str
+    fields: dict[str, str]
+    bucket: str
+    key: str
+    public_url: str
+
+
 class Storage(Protocol):
     """Public file storage for user uploads (an S3 bucket in production)."""
 
@@ -165,6 +176,16 @@ class Storage(Protocol):
 
     def delete_prefix(self, prefix: str) -> None:
         """Remove every object whose key starts with `prefix`. Raises on storage failure."""
+        ...
+
+    def presigned_post(
+        self,
+        *,
+        key: str,
+        content_type: str,
+        max_bytes: int,
+    ) -> PresignedPost:
+        """Mint a short-lived POST policy for a direct browser upload to object storage."""
         ...
 
 

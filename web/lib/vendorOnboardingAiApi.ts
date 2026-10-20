@@ -1,5 +1,5 @@
 import api from "./axios";
-import { multipartUploadConfig } from "./mediaApi";
+import { uploadImage } from "./mediaApi";
 import { getApiErrorDetail } from "./api-errors";
 
 /** When true, onboarding skips POST /analyze-portfolio-image (no OpenAI vision call). */
@@ -61,12 +61,10 @@ export async function postReviewVendorPackages(
 export async function postAnalyzePortfolioImage(
   file: File,
 ): Promise<AnalyzePortfolioImageResult> {
-  const fd = new FormData();
-  fd.append("file", file, file.name);
+  const uploaded = await uploadImage(file);
   const res = await api.post<AnalyzePortfolioImageResult>(
-    "/api/v1/vendor/onboarding/ai/analyze-portfolio-image",
-    fd,
-    multipartUploadConfig(60_000),
+    "/api/v1/vendor/onboarding/ai/analyze-portfolio-image-url",
+    { image_url: uploaded.public_url },
   );
   return res.data;
 }

@@ -9,9 +9,28 @@ from app.core.errors import error_responses
 from app.core.ports import StorageDependency
 from app.features.media import service
 from app.features.media.errors import FileEmpty, FileTooLarge, FileTypeUnsupported, ImageOnly, UploadFailed
-from app.features.media.schemas import ImageUploadResponse
+from app.features.media.schemas import CreateUploadUrlBody, ImageUploadResponse, PresignedUploadResponse
 
 router = APIRouter(prefix="/media", tags=["media"])
+
+
+@router.post(
+    "/upload-urls",
+    response_model=PresignedUploadResponse,
+    responses=error_responses(
+        *AUTH_ERRORS,
+        ImageOnly,
+        FileTypeUnsupported,
+        FileEmpty,
+        FileTooLarge,
+        UploadFailed,
+    ),
+)
+async def create_upload_url(
+    principal: CurrentUser, body: CreateUploadUrlBody, storage: StorageDependency
+) -> PresignedUploadResponse:
+    """Mint a presigned S3 POST so the browser uploads file bytes without proxying through the web app."""
+    return await service.create_upload_url(principal, body, storage)
 
 
 @router.post(

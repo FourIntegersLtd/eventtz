@@ -10,6 +10,7 @@ from app.core.auth import Principal
 from app.features.media import service
 from app.features.media.domain import file_extension, object_key, size_limit_in_megabytes
 from app.features.media.errors import FileEmpty, FileTooLarge, FileTypeUnsupported, ImageOnly, UploadFailed
+from app.features.media.schemas import CreateUploadUrlBody, MediaUploadUrlKind
 from tests.support.fakes import FakeStorage
 
 UPLOADER = Principal(id="user-123", email="vendor@example.com", user_type="vendor")
@@ -26,6 +27,53 @@ class UploadedFile:
     async def read(self) -> bytes:
         """The whole body."""
         return self.body
+
+
+async def test_presigned_image_uses_images_folder_and_cap() -> None:
+    """Presign checks type rules and passes the image byte cap into storage."""
+    storage = FakeStorage()
+    body = CreateUploadUrlBody(
+        kind=MediaUploadUrlKind.image,
+        filename="Photo.PNG",
+        content_type="Image/PNG",
+        content_length=1024,
+    )
+    presigned = await service.create_upload_url(UPLOADER, body, storage)
+    [recorded] = storage.presigned
+    assert recorded["content_type"] == "image/png"
+    assert recorded["max_bytes"] == 50_000_000
+    assert presigned.path.startswith("users/user-123/images/")
+    assert presigned.path.endswith(".png")
+    assert presigned.upload_url.startswith("https://")
+    assert presigned.fields["Content-Type"] == "image/png"
+
+
+async def test_presigned_file_over_limit_is_refused_before_storage(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Declared size is checked before minting a POST policy."""
+    from app.core.settings import get_settings
+
+    monkeypatch.setattr(get_settings(), "media_max_file_upload_bytes", 5)
+    body = CreateUploadUrlBody(
+        kind=MediaUploadUrlKind.file,
+        filename="clip.mp4",
+        content_type="video/mp4",
+        content_length=6,
+    )
+    with pytest.raises(FileTooLarge):
+        await service.create_upload_url(UPLOADER, body, FakeStorage())
+    assert FakeStorage().presigned == []
+
+
+async def test_presigned_upload_fails_when_storage_is_off() -> None:
+    """Same as multipart: storage must be configured."""
+    body = CreateUploadUrlBody(
+        kind=MediaUploadUrlKind.image,
+        filename="photo.png",
+        content_type="image/png",
+        content_length=1,
+    )
+    with pytest.raises(UploadFailed):
+        await service.create_upload_url(UPLOADER, body, FakeStorage(configured=False))
 
 
 async def test_image_is_stored_under_the_users_images_folder() -> None:
