@@ -15,6 +15,7 @@ from app.features.bookings.schemas import (
     VendorBookingListItem,
     VendorDashboardResponse,
 )
+from app.features.bookings.service_payout_ledger import vendor_held_payout_count
 from app.features.bookings.service_queries import client_bookings, vendor_bookings
 from app.features.notifications import service_feed
 
@@ -81,6 +82,7 @@ async def vendor_dashboard(session: AsyncSession, vendor: Principal) -> VendorDa
     return VendorDashboardResponse(
         active_bookings_count=len(active),
         pending_bookings_count=len(pending),
+        held_payouts_count=await vendor_held_payout_count(session, vendor.id),
         active_bookings=active,
         needs_response=pending[:3],
         upcoming_agenda=dashboard_domain.upcoming_agenda(upcoming_accepted, limit=5),

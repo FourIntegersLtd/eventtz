@@ -13,7 +13,7 @@ import { eventDayOver } from "@/features/bookings/eventDay";
 import { useVendorDashboard } from "./useVendorDashboard";
 import { VendorCancellationPolicyModal } from "./VendorCancellationPolicyModal";
 import { publicSiteUrl } from "@/lib/siteUrl";
-import { VendorDashboardDesignStatic } from "./VendorDashboardDesignStatic";
+import { VendorDashboardEzView } from "./VendorDashboardEzView";
 
 function daysUntil(iso: string): number {
   const start = new Date(`${iso.slice(0, 10)}T00:00:00`);
@@ -185,7 +185,7 @@ export function VendorDashboardView() {
         policyChosen={cancellationPolicyChosen}
         loading={loadStatus === "loading"}
       />
-      <VendorDashboardDesignStatic
+      <VendorDashboardEzView
         greetingName={greetingName}
         pendingEnquiries={pendingBookingsCount}
         confirmedBookings={acceptedUpcoming.length}

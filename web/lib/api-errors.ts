@@ -12,6 +12,17 @@ export function isAxiosNetworkError(error: unknown): boolean {
   return axios.isAxiosError(error) && !error.response;
 }
 
+/** User-facing copy when an upload is attempted without a signed-in user. */
+export const UPLOAD_SESSION_EXPIRED_MESSAGE = "Please sign in again, then retry your upload.";
+
+/** Thrown when an upload cannot start because there is no signed-in user; branch on it with `instanceof`. */
+export class UploadSessionExpiredError extends Error {
+  constructor() {
+    super(UPLOAD_SESSION_EXPIRED_MESSAGE);
+    this.name = "UploadSessionExpiredError";
+  }
+}
+
 export type MediaUploadKind = "photo" | "video" | "document";
 
 const MEDIA_UPLOAD_TIMEOUT_COPY: Record<MediaUploadKind, string> = {
@@ -66,6 +77,14 @@ export function getApiErrorCode(error: unknown): string | null {
     if (typeof code === "string" && code.trim()) return code.trim();
   }
   return null;
+}
+
+/** AppError code the API returns when a vendor accepts a booking before payouts are ready. */
+export const PAYOUT_SETUP_REQUIRED_CODE = "payout_setup_required";
+
+/** True when the API rejected an accept because the vendor has not finished payout setup. */
+export function isPayoutSetupRequiredError(error: unknown): boolean {
+  return getApiErrorCode(error) === PAYOUT_SETUP_REQUIRED_CODE;
 }
 
 /** Friendly copy for booking-rule error codes, keyed by the API's stable `code`. */

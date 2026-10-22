@@ -93,20 +93,23 @@ async def get_vendor_dashboard(session: SessionDep, vendor: CurrentVendor) -> Ve
 @router.get(
     "/booking-requests",
     response_model=VendorBookingsListResponse,
-    responses=error_responses(*ROLE_ERRORS, errors.InvalidListGroup),
+    responses=error_responses(*ROLE_ERRORS, errors.InvalidListGroup, errors.InvalidPaymentStatusFilter),
 )
 async def list_vendor_bookings(
     session: SessionDep,
     vendor: CurrentVendor,
     group: str = _GROUP_QUERY,
     status: str | None = Query(None, description="Optional exact booking status, e.g. pending"),
-    payment_status: str | None = Query(None, description="Optional exact payment_status"),
+    payment_status: str | None = Query(
+        None,
+        description="Optional payment_status; several as a comma-separated list, e.g. paid,payout_released",
+    ),
     exclude_payment_status: str | None = Query(None, description="Exclude this payment_status"),
     search: str | None = Query(
         None,
         alias="q",
         max_length=200,
-        description="Part of an event name or client email.",
+        description="Part of an event name or client name.",
     ),
     conversation_id: str | None = Query(None, description="Exact conversation id linked to the booking."),
     offset: int = Query(0, ge=0),

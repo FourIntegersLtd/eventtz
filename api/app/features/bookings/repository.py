@@ -14,6 +14,7 @@ from sqlalchemy import (
     Integer,
     Text,
     Uuid,
+    case,
     cast,
     column,
     exists,
@@ -34,7 +35,13 @@ from app.features.bookings import domain
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.rows import BookingRow, ClientReviewRow, VendorReviewRow
 
-_users = table("users", column("id", Uuid), column("email", Text))
+_users = table(
+    "users",
+    column("id", Uuid),
+    column("email", Text),
+    column("preferred_name", Text),
+    column("deleted_at", DateTime(timezone=True)),
+)
 _vendors = table("vendors", column("user_id", Uuid), column("payload", JSONB))
 
 BOOKING_COLUMNS = (
@@ -190,13 +197,43 @@ async def get_booking_by_charge_id(session: AsyncSession, charge_id: str) -> Boo
     return BookingRow.model_validate(plain_row(found)) if found is not None else None
 
 
+def _friendly_name_sql(email: ColumnElement[str]) -> ColumnElement[str]:
+    """SQL twin of `identity.domain.friendly_name_from_email`, lower-case agnostic (we match with ILIKE).
+
+    Keeps only what the vendor's list shows of an email: the local part with `. _ -` as spaces and
+    number-only words dropped. The `@`, the domain and the digits are gone, so matching on this can
+    reveal nothing the displayed name does not. `tests/http/test_bookings_vendor_search.py` pins it
+    to the Python function.
+    """
+    local_part = func.regexp_replace(func.split_part(email, "@", 1), "[._-]", " ", "g")
+    without_numbers = func.regexp_replace(" " + local_part + " ", r"\s+\d+(?=\s)", "", "g")
+    return func.trim(func.regexp_replace(without_numbers, r"\s+", " ", "g"))
+
+
+def _client_name_vendors_see_sql() -> ColumnElement[str]:
+    """The client name the vendor list shows: the preferred name, else the email's friendly name."""
+    preferred = func.trim(func.coalesce(_users.c.preferred_name, ""))
+    friendly = case(
+        (_users.c.email.contains("@"), _friendly_name_sql(_users.c.email)),
+        else_="",
+    )
+    return case((preferred != "", preferred), else_=friendly)
+
+
 def _booking_party_search_clause(
     term: str,
     *,
     client_user_id: str | None,
     vendor_user_id: str | None,
 ) -> ColumnElement[bool] | None:
-    """Match event name and, for clients, vendor name; for vendors, client email."""
+    """Match event name and, for clients, vendor name; for vendors, the client name shown in their list.
+
+    Never the client's email for a vendor: contact details are hidden until the booking is paid
+    (`domain.contact_unlocked`), and a substring match would let a vendor recover them by probing.
+    Matching only on unlocked bookings would itself reveal which ones are unlocked. Vendors may
+    search exactly what the list shows before payment (the display name, which for a client with
+    no preferred name is derived from the email's local part: see `_friendly_name_sql`).
+    """
     pattern = f"%{term}%"
     parts: list[ColumnElement[bool]] = [BookingRequest.event_name.ilike(pattern)]
     if vendor_user_id is not None:
@@ -204,7 +241,8 @@ def _booking_party_search_clause(
             exists(
                 select(1).where(
                     _users.c.id == BookingRequest.client_user_id,
-                    _users.c.email.ilike(pattern),
+                    _users.c.deleted_at.is_(None),
+                    _client_name_vendors_see_sql().ilike(pattern),
                 )
             )
         )
@@ -227,7 +265,7 @@ def _booking_list_filters(
     vendor_user_id: str | None,
     statuses: tuple[str, ...] | None,
     status: str | None,
-    payment_status: str | None,
+    payment_statuses: tuple[str, ...] | None,
     exclude_payment_status: str | None,
     search: str | None = None,
     conversation_id: str | None = None,
@@ -240,8 +278,8 @@ def _booking_list_filters(
         clauses.append(BookingRequest.status.in_(statuses))
     if status:
         clauses.append(BookingRequest.status == status)
-    if payment_status:
-        clauses.append(BookingRequest.payment_status == payment_status)
+    if payment_statuses:
+        clauses.append(BookingRequest.payment_status.in_(payment_statuses))
     if exclude_payment_status:
         clauses.append(BookingRequest.payment_status != exclude_payment_status)
     term = (search or "").strip()
@@ -275,7 +313,7 @@ async def list_bookings(
     vendor_user_id: str | None = None,
     statuses: tuple[str, ...] | None,
     status: str | None,
-    payment_status: str | None,
+    payment_statuses: tuple[str, ...] | None,
     exclude_payment_status: str | None,
 ) -> list[BookingRow]:
     """The party's bookings in the given statuses, narrowed by the optional exact filters."""
@@ -285,7 +323,7 @@ async def list_bookings(
             vendor_user_id=vendor_user_id,
             statuses=statuses,
             status=status,
-            payment_status=payment_status,
+            payment_statuses=payment_statuses,
             exclude_payment_status=exclude_payment_status,
         )
     )
@@ -300,7 +338,7 @@ async def list_bookings_page(
     vendor_user_id: str | None = None,
     statuses: tuple[str, ...] | None,
     status: str | None,
-    payment_status: str | None,
+    payment_statuses: tuple[str, ...] | None,
     exclude_payment_status: str | None,
     search: str | None = None,
     conversation_id: str | None = None,
@@ -313,7 +351,7 @@ async def list_bookings_page(
         vendor_user_id=vendor_user_id,
         statuses=statuses,
         status=status,
-        payment_status=payment_status,
+        payment_statuses=payment_statuses,
         exclude_payment_status=exclude_payment_status,
         search=search,
         conversation_id=conversation_id,

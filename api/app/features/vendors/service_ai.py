@@ -7,8 +7,8 @@ raises `LanguageModelUnavailable` (503) before any prompt is built — matching 
 
 Ported from the baseline `backend/app/features/vendors/onboarding_ai.py`. The router-thin
 guard only lets `vendors/router_ai.py` reach a sibling module named exactly `schemas`/`errors`
-or one starting with `service`, so this module also holds the two small validation errors
-the photo-upload route raises, instead of a separate `errors_ai.py` the router could not import.
+or one starting with `service`, so the request/response schemas (from `schemas_ai`) are used
+here and the router reaches them as `service_ai.<Schema>`; the errors live in `errors.py`.
 """
 
 from __future__ import annotations
@@ -16,12 +16,21 @@ from __future__ import annotations
 import asyncio
 import base64
 
-import httpx
 from pydantic import BaseModel, Field
 
-from app.adapters.s3_storage import is_our_url
-from app.core.errors import InvalidInput
-from app.core.ports import ChatMessage, LanguageModel
+from app.core.auth import Principal
+from app.core.ports import ChatMessage, LanguageModel, Storage, StorageError, StoredObjectTooLarge
+from app.core.settings import get_settings
+from app.features.vendors.domain_profile_form import UploadOwnership, check_upload_url
+from app.features.vendors.errors import (
+    ImageContentTypeInvalid,
+    ImageFetchFailed,
+    ImageNotFound,
+    ImageNotOwned,
+    ImageRequired,
+    ImageTooLarge,
+    ImageUrlInvalid,
+)
 from app.features.vendors.schemas_ai import (
     AnalyzePortfolioImageResponse,
     AnalyzePortfolioImageUrlBody,
@@ -33,23 +42,16 @@ from app.features.vendors.schemas_ai import (
     ReviewVendorPackagesResponse,
 )
 
-# Re-exported so `router_ai.py` can import every schema it needs from this one module: the
-# router-thin guard only lets a router reach a sibling module named `schemas`/`errors` or
-# one starting with `service`, and `schemas_ai` matches neither.
+# Schemas only (errors are imported from `errors` by the router): re-exported so `router_ai.py`
+# can reach them as `service_ai.<Schema>`, since the router-thin guard allows a router only
+# `schemas`, `errors` and `service*` siblings and `schemas_ai` is none of those.
 __all__ = [
     "AnalyzePortfolioImageResponse",
+    "AnalyzePortfolioImageUrlBody",
     "GenerateVendorBioBody",
     "GenerateVendorBioResponse",
     "ReviewVendorPackagesBody",
     "ReviewVendorPackagesResponse",
-    "ImageRequired",
-    "ImageContentTypeInvalid",
-    "ImageUrlInvalid",
-    "AnalyzePortfolioImageUrlBody",
-    "generate_vendor_public_bio",
-    "analyze_portfolio_image",
-    "analyze_portfolio_image_from_url",
-    "review_vendor_packages",
 ]
 
 # Both the baseline's OPENAI_BIO_MODEL and OPENAI_VISION_MODEL are this same model.
@@ -68,27 +70,6 @@ _BIO_SAFE_KEYS = frozenset(
         "portfolioImageUrls",
     }
 )
-
-
-class ImageRequired(InvalidInput):
-    """The portfolio photo upload was empty."""
-
-    code = "vendor_onboarding_ai_image_required"
-    default_message = "Please choose an image to upload."
-
-
-class ImageContentTypeInvalid(InvalidInput):
-    """The upload's content type is not `image/*`."""
-
-    code = "vendor_onboarding_ai_image_content_type_invalid"
-    default_message = "Only image uploads are supported."
-
-
-class ImageUrlInvalid(InvalidInput):
-    """The image URL is missing or not hosted on our upload bucket."""
-
-    code = "vendor_onboarding_ai_image_url_invalid"
-    default_message = "Please upload the photo through Eventtz first."
 
 
 class _BioReply(BaseModel):
@@ -149,22 +130,37 @@ async def generate_vendor_public_bio(
 
 
 async def analyze_portfolio_image_from_url(
-    *, body: AnalyzePortfolioImageUrlBody, language_model: LanguageModel
+    *,
+    principal: Principal,
+    body: AnalyzePortfolioImageUrlBody,
+    storage: Storage,
+    language_model: LanguageModel,
 ) -> AnalyzePortfolioImageResponse:
-    """Fetch a presigned-uploaded portfolio photo from our bucket, then run vision QA."""
-    image_url = body.image_url.strip()
-    if not image_url or not is_our_url(image_url):
+    """Read the caller's own presigned-uploaded portfolio photo through storage, then run vision QA.
+
+    The URL must be one of our uploads under `users/<caller id>/` (the profile-save ownership
+    rule), so a vendor cannot have another user's object sent to the model. The bytes come
+    through the storage port, capped at the image upload limit, never via an HTTP fetch.
+    """
+    check = check_upload_url(body.image_url, principal.id, storage.public_host())
+    if check.ownership is UploadOwnership.FOREIGN_HOST:
         raise ImageUrlInvalid()
+    if check.key is None:
+        raise ImageNotOwned()
     try:
-        async with httpx.AsyncClient() as http_client:
-            response = await http_client.get(image_url, timeout=30.0, follow_redirects=True)
-            response.raise_for_status()
-    except httpx.HTTPError:
-        raise ImageRequired() from None
-    raw_type = response.headers.get("content-type") or "application/octet-stream"
+        stored = await asyncio.to_thread(
+            storage.read_object, check.key, max_bytes=get_settings().media_max_image_upload_bytes
+        )
+    except StoredObjectTooLarge:
+        raise ImageTooLarge() from None
+    except StorageError:
+        raise ImageFetchFailed() from None
+    if stored is None:
+        raise ImageNotFound()
+    image_bytes, raw_type = stored
     content_type = raw_type.split(";")[0].strip().lower()
     return await analyze_portfolio_image(
-        image_bytes=response.content, content_type=content_type, language_model=language_model
+        image_bytes=image_bytes, content_type=content_type, language_model=language_model
     )
 
 

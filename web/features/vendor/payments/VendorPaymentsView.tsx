@@ -14,6 +14,7 @@ import {
 } from "@/features/vendor/payments/useVendorPayoutsReady";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { fetchVendorDashboard } from "@/lib/portalDashboardApi";
 import { formatEventDate } from "@/lib/dateFormat";
 import { formatMoney } from "@/lib/markets";
 import { TablePagination } from "@/components/ui/TablePagination";
@@ -56,6 +57,8 @@ export function VendorPaymentsView() {
   const [history, setHistory] = useState<VendorPayoutHistory | null>(null);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [payoutOffset, setPayoutOffset] = useState(0);
+  // Whole-account count from the server; the payout rows on screen are only one page.
+  const [heldBookingCount, setHeldBookingCount] = useState<number | null>(null);
 
   const {
     status,
@@ -71,6 +74,12 @@ export function VendorPaymentsView() {
       .then(setHistory)
       .catch(() => setHistoryError("Could not load payout history."));
   }, [payoutOffset]);
+
+  useEffect(() => {
+    void fetchVendorDashboard()
+      .then((dashboard) => setHeldBookingCount(dashboard.held_payouts_count))
+      .catch(() => setHeldBookingCount(null));
+  }, []);
 
   useEffect(() => {
     const stripeParam = searchParams.get("stripe");
@@ -140,7 +149,7 @@ export function VendorPaymentsView() {
           </span>
           <span className="ez-kpi__value">{history?.total_awaiting_label ?? "-"}</span>
           <span className="ez-kpi__delta">
-            {rows.filter((row) => row.status === "awaiting_payout").length} bookings
+            {heldBookingCount === null ? "-" : `${heldBookingCount} bookings`}
           </span>
         </div>
         <div className="ez-kpi">

@@ -1084,7 +1084,7 @@
     {
       "id": "V13-PayoutRequired",
       "artboard": "V13-PayoutRequired.dc.html",
-      "path": "/vendor/bookings?designStatic=1&payoutPreview=1",
+      "path": "/vendor/bookings/00000000-0000-4000-8000-000000000001",
       "auth": "vendor",
       "width": 1440,
       "height": 1100,
@@ -1098,7 +1098,13 @@
       ],
       "setup": [
         {
-          "waitFor": ".ez-pagehead h1"
+          "waitFor": "button:has-text('Accept request')"
+        },
+        {
+          "click": "button:has-text('Accept request')"
+        },
+        {
+          "waitFor": ".ez-scrim"
         }
       ],
       "probes": [

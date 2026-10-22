@@ -14,12 +14,15 @@ import argparse
 import asyncio
 import json
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.core.db import dispose_engine, job_session
 from app.core.settings import get_settings
+from app.features.bookings import repository as bookings_repository
 from app.features.identity import repository as identity_repository
 from app.features.identity.domain_accounts import normalise_email
 from app.features.identity.tokens import hash_password
@@ -28,6 +31,10 @@ from app.features.vendors import repository as vendors_repository
 LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost"})
 EMAIL = "design-diff-vendor@example.com"
 PASSWORD = "Design-Diff-Passw0rd!"  # noqa: S105 — local design-diff account only
+
+CLIENT_EMAIL = "design-diff-client@example.com"
+# The pending booking the vendor booking-detail screens (V13, V17 ...) open; the id is fixed in screens.json.
+BOOKING_ID = "00000000-0000-4000-8000-000000000001"
 
 FIXTURE_PATH = Path(__file__).resolve().parents[2] / "web" / "scripts" / "design-diff" / "vendor-fixture.json"
 
@@ -103,6 +110,38 @@ def _scenario_columns(scenario: str, payload: dict[str, object]) -> dict[str, ob
     raise ValueError(f"Unknown scenario: {scenario}")
 
 
+async def _seed_pending_booking(session: AsyncSession, vendor_user_id: str) -> None:
+    """Make sure the fixture vendor has the pending booking at `BOOKING_ID` (a no-op if it exists)."""
+    if await bookings_repository.get_booking(session, BOOKING_ID) is not None:
+        return
+    client_email = normalise_email(CLIENT_EMAIL)
+    existing_client = await identity_repository.find_credentials_by_email(session, client_email)
+    if existing_client is None:
+        client_user_id = await identity_repository.create_account(
+            session,
+            email=client_email,
+            user_type="client",
+            admin_role=None,
+            email_verified_at=datetime.now(UTC),
+            account_suspended=False,
+        )
+        assert client_user_id is not None
+    else:
+        client_user_id = existing_client.id
+    await bookings_repository.insert_booking(
+        session,
+        {
+            "id": BOOKING_ID,
+            "client_user_id": client_user_id,
+            "vendor_user_id": vendor_user_id,
+            "event_name": "Design diff wedding",
+            "event_date": date(2099, 6, 1),
+            "total_label": "GBP 100.00",
+            "status": "pending",
+        },
+    )
+
+
 async def _seed(scenario: str) -> None:
     """Create or update the design-diff vendor for one scenario."""
     _assert_local_database()
@@ -138,7 +177,8 @@ async def _seed(scenario: str) -> None:
         if not saved:
             sys.stderr.write("Could not save vendor profile (business name clash).\n")
             raise SystemExit(1)
-        await session.commit()
+        await _seed_pending_booking(session, user_id)
+        # `job_session` commits when this block ends; committing here would bypass it.
         sys.stdout.write(f"Seeded {EMAIL} scenario={scenario} user_id={user_id}\n")
 
 

@@ -35,3 +35,4 @@ Owner: `money-owner`. Proof: `verify-money`. Every money change also gets the `r
 - `policyConstants.json` and `domain_policy.py` drifting, or a golden fixture edited to go green.
 - A webhook that acts before claiming its event id, swallows a failure as 200, or verifies with an empty secret.
 - Money rounded or summed in floats, or discount applied to the vendor's portion.
+- A money list screen that filters or totals the rows of one fetched server page client-side (chip `.filter(`, a KPI `rows.filter(...).length`): page 2, counts and `total` are wrong. Send the filter to the server (`payment_status` takes a comma-separated set on both booking lists, unknown values refused with `booking_invalid_payment_status`) and read counts from the server; `web/lib/noClientListPagination.test.ts` flags `.filter(` on page state. The vendor payout-history response is frozen by `acceptance/test_payments.py` (exact keys), so a new aggregate there needs that test updated first.

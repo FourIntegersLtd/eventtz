@@ -30,3 +30,14 @@ export function wrongAdminPortalMessage(actual: UserType | undefined): string {
   }
   return ADMIN_ACCOUNT_REQUIRED;
 }
+
+/** Thrown by sign-in when the credentials worked but the follow-up session check failed. */
+export class SessionVerifyError extends Error {
+  constructor() {
+    super(SESSION_VERIFY_FAILED);
+    this.name = "SessionVerifyError";
+  }
+}
+
+/** AppError code the API returns when a client or vendor signs in before verifying their email. */
+export const EMAIL_NOT_VERIFIED_CODE = "email_not_verified";

@@ -13,8 +13,9 @@ from typing import TYPE_CHECKING
 from urllib.parse import quote, unquote, urlparse
 
 import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 
-from app.core.ports import PresignedPost, StoredFile
+from app.core.ports import PresignedPost, StorageError, StoredFile, StoredObjectTooLarge
 from app.core.settings import get_settings
 
 if TYPE_CHECKING:
@@ -110,6 +111,33 @@ class S3Storage:
             key=key,
             public_url=public_object_url(key),
         )
+
+    def read_object(self, key: str, *, max_bytes: int) -> tuple[bytes, str] | None:
+        """Read one object through the S3 API (never an HTTP fetch, so nothing can redirect us).
+
+        The size is checked from the response header first and again on the bytes read, so a
+        wrong header cannot make us hold more than `max_bytes` + 1.
+        """
+        try:
+            response = self._client().get_object(Bucket=bucket_name(), Key=key)
+        except ClientError as error:
+            if error.response.get("Error", {}).get("Code") in {"NoSuchKey", "404"}:
+                return None
+            raise StorageError(key) from error
+        except BotoCoreError as error:
+            raise StorageError(key) from error
+        body = response["Body"]
+        try:
+            if int(response.get("ContentLength") or 0) > max_bytes:
+                raise StoredObjectTooLarge(key)
+            data = body.read(max_bytes + 1)
+        except BotoCoreError as error:
+            raise StorageError(key) from error
+        finally:
+            body.close()
+        if len(data) > max_bytes:
+            raise StoredObjectTooLarge(key)
+        return data, str(response.get("ContentType") or "application/octet-stream")
 
     def delete_object(self, key: str) -> None:
         """Delete one object; S3 answers success for a key that does not exist."""

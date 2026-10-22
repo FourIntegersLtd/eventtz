@@ -12923,6 +12923,11 @@
             "title": "Bookings By Date",
             "type": "object"
           },
+          "held_payouts_count": {
+            "default": 0,
+            "title": "Held Payouts Count",
+            "type": "integer"
+          },
           "needs_response": {
             "items": {
               "$ref": "#/components/schemas/VendorBookingListItem"
@@ -22304,7 +22309,7 @@
             }
           },
           {
-            "description": "Optional exact payment_status",
+            "description": "Optional payment_status; several as a comma-separated list, e.g. paid,payout_released",
             "in": "query",
             "name": "payment_status",
             "required": false,
@@ -22317,7 +22322,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Optional exact payment_status",
+              "description": "Optional payment_status; several as a comma-separated list, e.g. paid,payout_released",
               "title": "Payment Status"
             }
           },
@@ -22401,9 +22406,10 @@
                 }
               }
             },
-            "description": "booking_invalid_group",
+            "description": "booking_invalid_group, booking_invalid_payment_status",
             "x-codes": [
-              "booking_invalid_group"
+              "booking_invalid_group",
+              "booking_invalid_payment_status"
             ]
           },
           "401": {
@@ -27652,7 +27658,7 @@
             }
           },
           {
-            "description": "Optional exact payment_status",
+            "description": "Optional payment_status; several as a comma-separated list, e.g. paid,payout_released",
             "in": "query",
             "name": "payment_status",
             "required": false,
@@ -27665,7 +27671,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Optional exact payment_status",
+              "description": "Optional payment_status; several as a comma-separated list, e.g. paid,payout_released",
               "title": "Payment Status"
             }
           },
@@ -27688,7 +27694,7 @@
             }
           },
           {
-            "description": "Part of an event name or client email.",
+            "description": "Part of an event name or client name.",
             "in": "query",
             "name": "q",
             "required": false,
@@ -27702,7 +27708,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Part of an event name or client email.",
+              "description": "Part of an event name or client name.",
               "title": "Q"
             }
           },
@@ -27767,9 +27773,10 @@
                 }
               }
             },
-            "description": "booking_invalid_group",
+            "description": "booking_invalid_group, booking_invalid_payment_status",
             "x-codes": [
-              "booking_invalid_group"
+              "booking_invalid_group",
+              "booking_invalid_payment_status"
             ]
           },
           "401": {
@@ -30602,7 +30609,7 @@
     },
     "/api/v1/vendor/onboarding/ai/analyze-portfolio-image-url": {
       "post": {
-        "description": "QA a portfolio photo that was uploaded via presigned S3 (JSON body, no multipart).",
+        "description": "QA a portfolio photo the caller uploaded via presigned S3 (JSON body, no multipart).",
         "operationId": "analyze_portfolio_image_url_api_v1_vendor_onboarding_ai_analyze_portfolio_image_url_post",
         "requestBody": {
           "content": {
@@ -30662,9 +30669,36 @@
                 }
               }
             },
-            "description": "forbidden",
+            "description": "forbidden, vendor_onboarding_ai_image_not_owned",
             "x-codes": [
-              "forbidden"
+              "forbidden",
+              "vendor_onboarding_ai_image_not_owned"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_onboarding_ai_image_not_found",
+            "x-codes": [
+              "vendor_onboarding_ai_image_not_found"
+            ]
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_onboarding_ai_image_too_large",
+            "x-codes": [
+              "vendor_onboarding_ai_image_too_large"
             ]
           },
           "422": {
@@ -30676,6 +30710,19 @@
               }
             },
             "description": "Validation Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "vendor_onboarding_ai_image_fetch_failed",
+            "x-codes": [
+              "vendor_onboarding_ai_image_fetch_failed"
+            ]
           },
           "503": {
             "content": {

@@ -1,10 +1,13 @@
 """Every api/ route already exists in the baseline: the rebuild never invents or renames a URL.
 
-`openapi.baseline.json` was exported from the running baseline backend. Paths
+`openapi.baseline.json` is the frozen export of the OLD backend and is never re-exported from
+api/ (that would make this guard pass by construction); `test_the_baseline_file_is_the_frozen_export`
+pins its hash. Paths
 are compared with their parameter names blanked (`{post_id}` and `{id}` are the
 same URL). Run `make parity` to list the baseline routes api/ does not serve yet.
 
-One family of routes is allowed to be additive: `/api/v1/realtime/` (workstream
+Additive routes are allow-listed explicitly: whole prefixes in `ADDITIVE_PATH_PREFIXES` and
+single operations in `ADDITIVE_OPERATIONS`. The first was `/api/v1/realtime/` (workstream
 9, ADR 0005). `EventSource` cannot send an Authorization header, so the SSE
 stream authenticates with a short-lived ticket minted by `POST
 /api/v1/realtime/stream-ticket`, which has no baseline equivalent (the baseline
@@ -15,6 +18,7 @@ from the (unmodified) baseline is not required for it.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -24,6 +28,9 @@ from app.main import create_app
 from tests.guards._scan import PROJECT_ROOT
 
 BASELINE_DOCUMENT = PROJECT_ROOT / "openapi.baseline.json"
+# sha256 of the old backend's export (178 operations). Changing it is a deliberate act, see
+# `test_the_baseline_file_is_the_frozen_export`.
+BASELINE_SHA256 = "62548d29ed1ce167029e7654d58120352e15c5159b0ef77264996f3c97e876f6"
 # OpenAPI keys under a path that are HTTP methods (the rest are shared parameters etc).
 HTTP_METHODS = frozenset({"get", "put", "post", "delete", "patch", "head", "options"})
 _PATH_PARAMETER = re.compile(r"\{[^}]+\}")
@@ -56,6 +63,10 @@ ADDITIVE_OPERATIONS = frozenset(
         ("GET", "/api/v1/client/dashboard"),
         ("GET", "/api/v1/vendor/dashboard"),
         ("GET", "/api/v1/admin/financials/daily"),
+        # Presigned S3 upload URLs so large files bypass the Vercel proxy (docs/runbooks/s3-uploads.md).
+        ("POST", "/api/v1/media/upload-urls"),
+        # Portfolio AI analysis from an already-uploaded image URL (companion to the presigned upload).
+        ("POST", "/api/v1/vendor/onboarding/ai/analyze-portfolio-image-url"),
     }
 )
 
@@ -100,8 +111,8 @@ def test_the_guard_would_catch_an_invented_route(tmp_path: Path) -> None:
     assert operations(rebuilt) - baseline_operations(baseline_file) == {("GET", "/api/v1/blog/feed")}
 
 
-def test_the_guard_only_exempts_the_realtime_prefix(tmp_path: Path) -> None:
-    """An invented route outside `/api/v1/realtime/` still fails, even alongside an exempt one."""
+def test_the_guard_still_flags_routes_outside_the_additive_prefixes(tmp_path: Path) -> None:
+    """An invented route outside `ADDITIVE_PATH_PREFIXES` still fails, even alongside an exempt one."""
     baseline_file = tmp_path / "baseline.json"
     baseline_file.write_text(json.dumps({"paths": {}}), encoding="utf-8")
     rebuilt: dict[str, Any] = {
@@ -115,6 +126,33 @@ def test_the_guard_only_exempts_the_realtime_prefix(tmp_path: Path) -> None:
         operation for operation in invented if not operation[1].startswith(ADDITIVE_PATH_PREFIXES)
     )
     assert still_flagged == [("GET", "/api/v1/blog/feed")]
+
+
+def baseline_digest(path: Path) -> str:
+    """The sha256 hex digest of a baseline file's bytes."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_the_baseline_file_is_the_frozen_export() -> None:
+    """`openapi.baseline.json` is the old backend's export and is never re-exported from api/.
+
+    Regenerating it from the new app (as `make openapi` does for `openapi.json`) makes every
+    route "exist in the baseline", so the guard above can never fail. A deliberate change, such as
+    a fresh export from the old backend, means updating `BASELINE_SHA256` in the same reviewed
+    change. A new api/ route goes in `ADDITIVE_OPERATIONS` or `ADDITIVE_PATH_PREFIXES` instead.
+    """
+    assert baseline_digest(BASELINE_DOCUMENT) == BASELINE_SHA256
+
+
+def test_the_hash_guard_fails_on_a_modified_baseline(tmp_path: Path) -> None:
+    """The pinned hash matches the original bytes and rejects a copy changed by a single byte."""
+    original = BASELINE_DOCUMENT.read_bytes()
+    unmodified = tmp_path / "unmodified.json"
+    unmodified.write_bytes(original)
+    modified = tmp_path / "modified.json"
+    modified.write_bytes(original + b" ")
+    assert baseline_digest(unmodified) == BASELINE_SHA256
+    assert baseline_digest(modified) != BASELINE_SHA256
 
 
 if __name__ == "__main__":

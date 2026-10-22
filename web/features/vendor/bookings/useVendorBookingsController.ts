@@ -20,7 +20,6 @@ import {
 import { useVendorBookingActions } from "@/features/vendor/bookings/useVendorBookingActions";
 import { useVendorPayoutAcceptResume } from "@/features/vendor/bookings/useVendorPayoutAcceptResume";
 import { bookingEventGroupsForList } from "@/features/bookings/groupBookingsByEvent";
-import { useDesignDiffPayoutPreview } from "@/features/vendor/design/useDesignDiffStatic";
 
 type UseVendorBookingsControllerArgs = {
   selectedBookingId?: string;
@@ -85,7 +84,6 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   const [confirmAction, setConfirmAction] = useState<null | "withdraw" | "vendor_cancel" | "complete">(
     null,
   );
-  const payoutPreview = useDesignDiffPayoutPreview();
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
 
   useEffect(() => {
@@ -97,12 +95,6 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   useEffect(() => {
     setListOffset(0);
   }, [listSearch, setListOffset]);
-
-  useEffect(() => {
-    if (payoutPreview) {
-      setPayoutModalOpen(true);
-    }
-  }, [payoutPreview]);
 
   const {
     payoutsReady,

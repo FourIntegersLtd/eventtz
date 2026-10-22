@@ -690,6 +690,8 @@ class VendorDashboardResponse(BaseModel):
     success: bool = True
     active_bookings_count: int = 0
     pending_bookings_count: int = 0
+    # Bookings behind the payments screen's "Held" money: the payout ledger's awaiting rows.
+    held_payouts_count: int = 0
     active_bookings: list[VendorBookingListItem] = Field(default_factory=list)
     needs_response: list[VendorBookingListItem] = Field(default_factory=list)
     upcoming_agenda: list[VendorBookingListItem] = Field(default_factory=list)

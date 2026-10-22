@@ -720,3 +720,45 @@ async def test_vendor_payout_history_lists_a_cancellation_share(
         (booking_id, 75.0, "paid_out", "cancellation_share")
     ]
     assert response.json()["total_paid_out_gbp"] == 75.0
+
+
+async def test_vendor_dashboard_counts_held_payouts_like_the_ledger(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """`held_payouts_count` counts paid bookings and unreleased cancellation shares, not released ones."""
+    client_id, _client_token = await _make_account(db_session, "held-client@example.com", "client")
+    vendor_id, vendor_token = await _make_vendor(db_session, "held-vendor@example.com", stripe_ready=True)
+    headers = {"Authorization": f"Bearer {vendor_token}"}
+
+    empty = await client.get("/api/v1/vendor/dashboard", headers=headers)
+    assert empty.json()["held_payouts_count"] == 0
+
+    await _make_booking(
+        db_session, client_id=client_id, vendor_id=vendor_id, payment_status="paid", event_date="2026-03-01"
+    )
+    await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        status="cancelled",
+        payment_status="partially_refunded",
+        cancellation_policy="strict",
+        cancellation_refund_percent=50,
+        cancellation_refund_gbp=82.5,
+        cancellation_vendor_share_gbp=75.0,
+        cancellation_payout_at=None,
+        event_date="2026-03-02",
+    )
+    await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        payment_status="payout_released",
+        payout_released_at=datetime(2026, 3, 5, tzinfo=UTC),
+        event_date="2026-03-03",
+    )
+
+    held = await client.get("/api/v1/vendor/dashboard", headers=headers)
+    history = await client.get("/api/v1/vendor/payments/history", headers=headers)
+    assert held.json()["held_payouts_count"] == 2
+    assert [row["status"] for row in history.json()["payouts"]].count("awaiting_payout") == 2

@@ -28,6 +28,24 @@ class DisputeNoticeRow(BaseModel):
     updated_at: str | None = None
 
 
+class FeedLineRow(BaseModel):
+    """One merged feed line: a stored notice or a dispute, told apart by `source`.
+
+    Notice-only fields are None on a dispute and dispute-only fields on a notice.
+    """
+
+    source: str
+    id: str
+    booking_id: str | None = None
+    kind: str | None = None
+    body: str | None = None
+    read_at: str | None = None
+    status: str | None = None
+    summary: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
 class BookingPartiesRow(BaseModel):
     """Who is on a booking, and its event name, for addressing a booking notice."""
 

@@ -21,7 +21,7 @@ from app.features.bookings import (
     repository,
     service_pricing,
 )
-from app.features.bookings.errors import BookingNotFound, InvalidListGroup
+from app.features.bookings.errors import BookingNotFound, InvalidListGroup, InvalidPaymentStatusFilter
 from app.features.bookings.rows import BookingRow, ClientReviewRow, VendorReviewRow
 from app.features.bookings.schemas import (
     CancellationPreview,
@@ -48,6 +48,20 @@ _UNKNOWN_VENDOR_NAME = "Vendor"
 def _list_filter(raw_value: str | None) -> str | None:
     """A list query filter as stored (trimmed, lower case); blank means no filter."""
     return (raw_value or "").strip().lower() or None
+
+
+def _payment_status_filter(raw_value: str | None) -> tuple[str, ...] | None:
+    """The payment statuses a list shows: one value or a comma-separated set; blank means all.
+
+    A single value is the original exact filter. A value outside the payment lifecycle is
+    refused rather than returning an empty page that looks like "no payments".
+    """
+    statuses = tuple(
+        dict.fromkeys(part for part in (_list_filter(part) for part in (raw_value or "").split(",")) if part)
+    )
+    if any(status not in domain_payments.ALL_PAYMENT_STATUSES for status in statuses):
+        raise InvalidPaymentStatusFilter()
+    return statuses or None
 
 
 def _group_statuses(group: str) -> tuple[str, ...] | None:
@@ -242,7 +256,7 @@ async def vendor_bookings(
         vendor_user_id=vendor_user_id,
         statuses=_group_statuses(group),
         status=_list_filter(status),
-        payment_status=_list_filter(payment_status),
+        payment_statuses=_payment_status_filter(payment_status),
         exclude_payment_status=_list_filter(exclude_payment_status),
     )
     return await _vendor_booking_list_items(session, vendor_user_id, bookings)
@@ -267,7 +281,7 @@ async def vendor_bookings_page(
         vendor_user_id=vendor_user_id,
         statuses=_group_statuses(group),
         status=_list_filter(status),
-        payment_status=_list_filter(payment_status),
+        payment_statuses=_payment_status_filter(payment_status),
         exclude_payment_status=_list_filter(exclude_payment_status),
         search=(search or "").strip() or None,
         conversation_id=(conversation_id or "").strip() or None,
@@ -382,7 +396,7 @@ async def client_bookings(
         client_user_id=client_user_id,
         statuses=_group_statuses(group),
         status=_list_filter(status),
-        payment_status=_list_filter(payment_status),
+        payment_statuses=_payment_status_filter(payment_status),
         exclude_payment_status=_list_filter(exclude_payment_status),
     )
     return await _client_booking_list_items(session, client_user_id, bookings)
@@ -406,7 +420,7 @@ async def client_bookings_page(
         client_user_id=client_user_id,
         statuses=_group_statuses(group),
         status=_list_filter(status),
-        payment_status=_list_filter(payment_status),
+        payment_statuses=_payment_status_filter(payment_status),
         exclude_payment_status=_list_filter(exclude_payment_status),
         search=(search or "").strip() or None,
         offset=offset,
