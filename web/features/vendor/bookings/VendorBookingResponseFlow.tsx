@@ -106,7 +106,7 @@ export function VendorBookingResponseFlow({
         </p>
         <Button
           type="button"
-          variant="secondary" className="ez-btn--block"
+          variant="secondary" block
           onClick={() => openAdjust(draftsFromDetail(detail))}
         >
           Edit price
@@ -165,7 +165,7 @@ export function VendorBookingResponseFlow({
         ) : null}
         <Button
           type="button"
-          className="ez-btn--block"
+          block
           disabled={actionBusy || adjustmentSaving || !!checkingDecision || payoutsLoading}
           onClick={() => void requestAcceptDecision()}
         >
@@ -173,7 +173,7 @@ export function VendorBookingResponseFlow({
         </Button>
         <Button
           type="button"
-          variant="secondary" className="ez-btn--block"
+          variant="secondary" block
           disabled={actionBusy || adjustmentSaving || !!checkingDecision}
           onClick={() => openAdjust([])}
         >
@@ -181,7 +181,7 @@ export function VendorBookingResponseFlow({
         </Button>
         <Button
           type="button"
-          variant="secondary" className="ez-btn--block"
+          variant="secondary" block
           disabled={actionBusy || adjustmentSaving || !!checkingDecision}
           onClick={onOpenChat}
         >
@@ -189,7 +189,7 @@ export function VendorBookingResponseFlow({
         </Button>
         <Button
           type="button"
-          variant="destructive" className="ez-btn--block"
+          variant="destructive" block
           disabled={actionBusy || adjustmentSaving || !!checkingDecision}
           onClick={() => void requestDecision("decline")}
         >

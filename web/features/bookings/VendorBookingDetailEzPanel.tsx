@@ -64,7 +64,7 @@ function EzActionButton({ action }: { action: BookingDetailAction }) {
     <Button
       type="button"
       variant={variant}
-      className="ez-btn--block"
+      block
       disabled={action.disabled}
       onClick={action.onClick}
     >
@@ -197,7 +197,7 @@ export function VendorBookingDetailEzPanel({
               <h3 className="text-[15px] font-semibold tracking-tight text-ink">
                 Event &amp; contact
               </h3>
-              <dl className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
+              <dl className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
                 <div className="grid gap-0 sm:grid-cols-2">
                   <div className="flex gap-3 px-5 py-4 sm:border-r sm:border-line">
                     <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-ink-3" aria-hidden />
