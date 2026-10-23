@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 
 type AdminSuccessBannerProps = {
@@ -8,11 +9,8 @@ type AdminSuccessBannerProps = {
 
 export function AdminSuccessBanner({ message }: AdminSuccessBannerProps) {
   return (
-    <div role="status" className="ez-banner ez-banner--success">
-      <LottieIllustration asset="successCheck" size="inline" ariaLabel="" />
-      <div className="ez-banner__body">
-        <p className="whitespace-pre-wrap">{message}</p>
-      </div>
-    </div>
+    <Banner tone="success" icon={<LottieIllustration asset="successCheck" size="inline" ariaLabel="" />}>
+      <p className="whitespace-pre-wrap">{message}</p>
+    </Banner>
   );
 }

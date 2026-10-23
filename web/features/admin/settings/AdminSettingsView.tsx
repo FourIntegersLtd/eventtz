@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { loginPathWithNext } from "@/features/auth/authRouting";
 import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
@@ -14,12 +16,12 @@ export function AdminSettingsView() {
   return (
     <>
       <div className="max-w-2xl ez-stack ez-stack--lg">
-        <section className="ez-card overflow-hidden">
-          <div className="ez-card__head">
+        <Card as="section" className="overflow-hidden">
+          <Card.Header>
             <h2 className="ez-h3">Your account</h2>
             <p className="ez-small">Email and password for this admin sign-in.</p>
-          </div>
-          <div className="ez-card__body ez-stack ez-stack--lg">
+          </Card.Header>
+          <Card.Body className="ez-stack ez-stack--lg">
             <label className="ez-field">
               <span className="ez-label">Email</span>
               <input className="ez-input" type="email" readOnly value={user?.email ?? ""} />
@@ -29,16 +31,12 @@ export function AdminSettingsView() {
               <p className="ez-small">
                 At least 6 characters with an uppercase letter, a number, and a symbol.
               </p>
-              <button
-                type="button"
-                className="ez-btn ez-btn--secondary ez-btn--sm"
-                onClick={() => setPasswordOpen(true)}
-              >
+              <Button variant="secondary" size="sm" onClick={() => setPasswordOpen(true)}>
                 Change password
-              </button>
+              </Button>
             </div>
-          </div>
-        </section>
+          </Card.Body>
+        </Card>
 
         <AdminTestAccountsPanel />
       </div>

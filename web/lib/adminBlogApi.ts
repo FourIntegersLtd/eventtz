@@ -42,11 +42,6 @@ export async function fetchAdminBlogPostsPage(
   };
 }
 
-export async function fetchAdminBlogPosts(): Promise<BlogPostListItem[]> {
-  const page = await fetchAdminBlogPostsPage(0, 200);
-  return page.posts;
-}
-
 export async function fetchAdminBlogPost(postId: string): Promise<BlogPostAdminDetail> {
   const { data } = await api.get<BlogPostAdminDetailResponse>(
     `${prefix()}/posts/${encodeURIComponent(postId)}`,

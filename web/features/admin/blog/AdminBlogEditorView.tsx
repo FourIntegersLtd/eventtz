@@ -4,6 +4,10 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Card } from "@/components/ui/Card";
 import { useToast } from "@/components/ui/Toast";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
@@ -167,12 +171,10 @@ export function AdminBlogEditorView({ postId, onRegisterPageHead }: AdminBlogEdi
   useEffect(() => {
     if (!onRegisterPageHead || !post) return;
     onRegisterPageHead({
-      title: post.title?.trim() && post.title !== "Untitled" ? "Edit post" : "Edit post",
+      title: "Edit post",
       description: savedHint ?? undefined,
       actions: (
-        <span className={isPublished ? "ez-badge ez-badge--success" : "ez-badge ez-badge--neutral"}>
-          {isPublished ? "Published" : "Draft"}
-        </span>
+        <Badge tone={isPublished ? "success" : "neutral"}>{isPublished ? "Published" : "Draft"}</Badge>
       ),
     });
     return () => onRegisterPageHead({});
@@ -208,8 +210,7 @@ export function AdminBlogEditorView({ postId, onRegisterPageHead }: AdminBlogEdi
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Post title"
-              className="ez-input"
-              style={{ fontSize: "1.35rem", fontWeight: 600 }}
+              className="ez-input text-[1.35rem] font-semibold"
             />
           </label>
 
@@ -226,57 +227,57 @@ export function AdminBlogEditorView({ postId, onRegisterPageHead }: AdminBlogEdi
         </div>
 
         <div className="ez-split__aside ez-stack ez-stack--lg lg:sticky lg:top-4">
-          <section className="ez-card overflow-hidden">
-            <div className="ez-card__head">
+          <Card as="section" className="overflow-hidden">
+            <Card.Header>
               <h2 className="ez-h3">Publish</h2>
-            </div>
-            <div className="ez-card__body ez-stack ez-stack--sm">
+            </Card.Header>
+            <Card.Body className="ez-stack ez-stack--sm">
               {savedHint ? <p className="ez-caption">{savedHint}</p> : null}
-              <button
-                type="button"
-                className="ez-btn ez-btn--secondary ez-btn--block"
+              <Button
+                variant="secondary"
+                className="ez-btn--block"
                 disabled={saving}
                 onClick={() => void save()}
               >
                 {saving ? "Saving…" : isPublished ? "Update" : "Save draft"}
-              </button>
-              <button
-                type="button"
-                className="ez-btn ez-btn--primary ez-btn--block"
+              </Button>
+              <Button
+                className="ez-btn--block"
                 disabled={publishing}
                 onClick={() => void togglePublish()}
               >
                 {publishing ? "Working…" : isPublished ? "Unpublish" : "Publish"}
-              </button>
+              </Button>
               {isPublished ? (
-                <Link
+                <ButtonLink
                   href={`/blog/${post.slug}`}
-                  className="ez-btn ez-btn--secondary ez-btn--block"
+                  variant="secondary"
+                  className="ez-btn--block"
                   target="_blank"
                 >
                   Preview
-                </Link>
+                </ButtonLink>
               ) : (
-                <button type="button" className="ez-btn ez-btn--secondary ez-btn--block" disabled>
+                <Button variant="secondary" className="ez-btn--block" disabled>
                   Preview
-                </button>
+                </Button>
               )}
-              <button
-                type="button"
-                className="ez-btn ez-btn--secondary ez-btn--block"
+              <Button
+                variant="secondary"
+                className="ez-btn--block"
+                icon={<Trash2 className="h-4 w-4" aria-hidden />}
                 onClick={() => void remove()}
               >
-                <Trash2 className="h-4 w-4" aria-hidden />
                 Delete
-              </button>
-            </div>
-          </section>
+              </Button>
+            </Card.Body>
+          </Card>
 
-          <section className="ez-card overflow-hidden">
-            <div className="ez-card__head">
+          <Card as="section" className="overflow-hidden">
+            <Card.Header>
               <h2 className="ez-h3">Details</h2>
-            </div>
-            <div className="ez-card__body ez-stack ez-stack--sm">
+            </Card.Header>
+            <Card.Body className="ez-stack ez-stack--sm">
               <label className="ez-field">
                 <span className="ez-label">Author</span>
                 <input
@@ -300,15 +301,15 @@ export function AdminBlogEditorView({ postId, onRegisterPageHead }: AdminBlogEdi
                   placeholder="Short summary for listings"
                 />
               </label>
-            </div>
-          </section>
+            </Card.Body>
+          </Card>
 
-          <section className="ez-card overflow-hidden">
-            <div className="ez-card__head">
+          <Card as="section" className="overflow-hidden">
+            <Card.Header>
               <h2 className="ez-h3">Cover image</h2>
               <p className="ez-small">JPG or PNG, at least 1600px wide</p>
-            </div>
-            <div className="ez-card__body ez-stack ez-stack--sm">
+            </Card.Header>
+            <Card.Body className="ez-stack ez-stack--sm">
               {coverUrl ? (
                 <div className="overflow-hidden rounded-lg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -319,13 +320,9 @@ export function AdminBlogEditorView({ postId, onRegisterPageHead }: AdminBlogEdi
                   <p className="ez-small">Drop an image or choose a file</p>
                 </div>
               )}
-              <button
-                type="button"
-                className="ez-btn ez-btn--secondary ez-btn--sm"
-                onClick={() => coverRef.current?.click()}
-              >
+              <Button variant="secondary" size="sm" onClick={() => coverRef.current?.click()}>
                 {coverUrl ? "Replace cover" : "Choose file"}
-              </button>
+              </Button>
               {coverError ? <p className="text-sm text-red-700">{coverError}</p> : null}
               <input
                 ref={coverRef}
@@ -338,8 +335,8 @@ export function AdminBlogEditorView({ postId, onRegisterPageHead }: AdminBlogEdi
                   if (file) void onCover(file);
                 }}
               />
-            </div>
-          </section>
+            </Card.Body>
+          </Card>
         </div>
       </div>
     </div>

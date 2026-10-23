@@ -1,5 +1,6 @@
 "use client";
 
+import { Card } from "@/components/ui/Card";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import {
@@ -30,22 +31,22 @@ export function AdminChartCard({
   className = "",
 }: AdminChartCardProps) {
   return (
-    <section className={`ez-card flex flex-col ${className}`.trim()}>
-      <div className="ez-card__head">
+    <Card as="section" className={`flex flex-col ${className}`.trim()}>
+      <Card.Header>
         <div className="min-w-0">
           <h2 className="ez-h3">{title}</h2>
           {subtitle ? <p className="ez-small">{subtitle}</p> : null}
         </div>
         {info ? <AdminInfoHint label={title} info={info} /> : null}
-      </div>
-      <div className="ez-card__body min-h-[220px] flex-1">{children}</div>
+      </Card.Header>
+      <Card.Body className="min-h-[220px] flex-1">{children}</Card.Body>
       {footerHref && footerLabel ? (
-        <div className="ez-card__foot" style={{ justifyContent: "flex-start" }}>
+        <Card.Footer className="justify-start">
           <Link href={footerHref} className="ez-link ez-small">
             {footerLabel}
           </Link>
-        </div>
+        </Card.Footer>
       ) : null}
-    </section>
+    </Card>
   );
 }
