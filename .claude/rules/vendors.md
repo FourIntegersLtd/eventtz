@@ -41,6 +41,7 @@ visibility, the listing override or pause, deletion, or anything staff-facing th
   `OPENAI_UNAVAILABLE` (the daily brief falls back to fixed text). The model sees only a safe subset of the profile (no phone or email). Copilot reads other slices only through their `service*` functions.
 - Every staff action is audit-logged. Closed accounts are tombstones: never restore one on upsert.
 - **Web:** `web/` is the copied old frontend: change a screen only to fix it (`web/UI-CONVENTIONS.md`).
+- **Web blocks:** use `Card`/`Banner`/`PageHeader`/`StatTile`/`Badge`/`Button`, never raw `ez-*` or `neutral-*`, `amber/red/emerald/sky-*` (use `text-warning`, `bg-danger-soft`, `border-success-line`). `StatTile` `hint` renders `ez-small`, not `ez-caption`, so a tile with a caption keeps its `ez-kpi` markup. `Card` forwards `data-*`/`id` (the design-diff probes need them). The admin vendors list is `useAdminVendors` over `useServerList`; the bulk selection is keyed to the page and filters and clears when either changes.
 
 ## What a failure looks like here
 - A public query that lists vendors by `approval_status` (or reimplements the payout gate) instead of the visibility helpers.

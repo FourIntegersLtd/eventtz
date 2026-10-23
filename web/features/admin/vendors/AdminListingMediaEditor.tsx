@@ -63,8 +63,8 @@ function SortableMediaTile({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group relative h-14 w-full overflow-hidden rounded-md border bg-neutral-50 transition ${
-        item.hidden ? "border-neutral-200 opacity-55" : "border-neutral-200"
+      className={`group relative h-14 w-full overflow-hidden rounded-md border bg-surface-3 transition ${
+        item.hidden ? "border-line opacity-55" : "border-line"
       } ${isDragging ? "z-20 shadow-md ring-2 ring-primary/25" : ""}`}
     >
       <button
@@ -84,7 +84,7 @@ function SortableMediaTile({
       </button>
       <button
         type="button"
-        className={`absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-br-md bg-white/90 text-neutral-500 shadow-sm ${
+        className={`absolute left-0 top-0 flex h-6 w-6 items-center justify-center rounded-br-md bg-white/90 text-ink-3 shadow-sm ${
           disabled || saving ? "cursor-not-allowed opacity-50" : "cursor-grab active:cursor-grabbing"
         }`}
         aria-label={`Drag ${item.label}`}
@@ -98,7 +98,7 @@ function SortableMediaTile({
         type="button"
         disabled={disabled || saving}
         onClick={() => onToggleHidden(item.url)}
-        className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-tl-md bg-white/90 text-neutral-700 shadow-sm hover:bg-white disabled:opacity-50"
+        className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-tl-md bg-white/90 text-ink-2 shadow-sm hover:bg-white disabled:opacity-50"
         aria-label={item.hidden ? `Show ${item.label}` : `Hide ${item.label}`}
       >
         {item.hidden ? (
@@ -206,7 +206,7 @@ export function AdminListingMediaEditor({
 
   if (items.length === 0) {
     return (
-      <p className="text-sm text-neutral-500">No images available to manage for this listing.</p>
+      <p className="text-sm text-ink-3">No images available to manage for this listing.</p>
     );
   }
 
@@ -218,7 +218,7 @@ export function AdminListingMediaEditor({
 
   return (
     <div className="space-y-2">
-      <p className="text-[11px] leading-snug text-neutral-500">
+      <p className="text-[11px] leading-snug text-ink-3">
         Drag to reorder · click to enlarge · first visible photo is the main image
       </p>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => void handleDragEnd(e)}>

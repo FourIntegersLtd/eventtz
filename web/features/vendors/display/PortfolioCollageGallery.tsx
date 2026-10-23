@@ -35,7 +35,7 @@ function CollageImage({
     <button
       type="button"
       onClick={() => onOpen(index)}
-      className={`group relative flex min-h-0 cursor-zoom-in items-center justify-center overflow-hidden bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${className}`.trim()}
+      className={`group relative flex min-h-0 cursor-zoom-in items-center justify-center overflow-hidden bg-surface-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 ${className}`.trim()}
       aria-label={showGalleryButton ? `View ${alt} gallery` : `Open ${alt} photo ${index + 1} fullscreen`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -128,9 +128,9 @@ export function PortfolioCollageGallery({
   if (photos.length === 0) {
     return (
       <div
-        className={`flex aspect-[16/10] items-center justify-center rounded-2xl bg-gradient-to-br from-neutral-100 via-white to-neutral-50 ${className}`.trim()}
+        className={`flex aspect-[16/10] items-center justify-center rounded-2xl bg-gradient-to-br from-surface-3 via-white to-surface-3 ${className}`.trim()}
       >
-        <span className="font-heading text-4xl font-semibold tracking-tight text-neutral-300 sm:text-5xl">
+        <span className="font-heading text-4xl font-semibold tracking-tight text-ink-3 sm:text-5xl">
           {emptyFallback?.slice(0, 1).toUpperCase() ?? "?"}
         </span>
       </div>
@@ -143,7 +143,7 @@ export function PortfolioCollageGallery({
 
   const mobileCarousel = (
     <div
-      className={`portfolio-mobile-carousel relative overflow-hidden bg-neutral-950 max-md:-mx-4 max-md:w-[calc(100%+2rem)] md:hidden ${className}`.trim()}
+      className={`portfolio-mobile-carousel relative overflow-hidden bg-ink max-md:-mx-4 max-md:w-[calc(100%+2rem)] md:hidden ${className}`.trim()}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={() => {

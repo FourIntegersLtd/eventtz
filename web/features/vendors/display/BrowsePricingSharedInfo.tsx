@@ -35,24 +35,24 @@ export function BrowsePricingSharedInfo({
       className={
         embedded
           ? `space-y-4 px-5 py-5 ${className}`.trim()
-          : `space-y-4 border-t border-neutral-100 px-5 py-5 ${className}`.trim()
+          : `space-y-4 border-t border-line px-5 py-5 ${className}`.trim()
       }
     >
       {showTravel ? (
         <div>
-          <p className="text-[13px] text-neutral-500">Travel &amp; delivery</p>
-          <p className="mt-1.5 text-sm leading-relaxed text-neutral-800">{travelLine}</p>
+          <p className="text-[13px] text-ink-3">Travel &amp; delivery</p>
+          <p className="mt-1.5 text-sm leading-relaxed text-ink">{travelLine}</p>
         </div>
       ) : null}
 
       {showServices ? (
         <div>
-          <p className="text-[13px] text-neutral-500">Services covered</p>
+          <p className="text-[13px] text-ink-3">Services covered</p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {serviceLines.map((line) => (
               <li
                 key={line}
-                className="inline-flex rounded-full border border-neutral-100 bg-neutral-50 px-3 py-1 text-xs font-medium text-neutral-800"
+                className="inline-flex rounded-full border border-line bg-surface-3 px-3 py-1 text-xs font-medium text-ink"
               >
                 {line}
               </li>
@@ -63,10 +63,10 @@ export function BrowsePricingSharedInfo({
 
       {showPromos ? (
         <div>
-          <p className="text-[13px] text-neutral-500">Extra savings</p>
+          <p className="text-[13px] text-ink-3">Extra savings</p>
           <ul className="mt-1.5 space-y-1">
             {promoLines.map((line) => (
-              <li key={line} className="text-sm leading-relaxed text-neutral-700">
+              <li key={line} className="text-sm leading-relaxed text-ink-2">
                 {line}
               </li>
             ))}

@@ -28,7 +28,7 @@ export function VendorPortfolioCover({
 
   return (
     <div
-      className={`relative overflow-hidden bg-neutral-100 ${heightClass} ${className}`}
+      className={`relative overflow-hidden bg-surface-3 ${heightClass} ${className}`}
     >
       {coverUrl ? (
         <>
@@ -48,7 +48,7 @@ export function VendorPortfolioCover({
         </>
       ) : (
         <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary-soft via-white to-primary-muted">
-          <span className="font-heading text-2xl font-semibold text-neutral-300/90">
+          <span className="font-heading text-2xl font-semibold text-ink-3/90">
             {businessName.slice(0, 1).toUpperCase()}
           </span>
         </div>

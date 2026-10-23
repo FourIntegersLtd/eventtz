@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
@@ -10,10 +10,6 @@ import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState
 import { AdminVendorsTable } from "@/features/admin/vendors/AdminVendorsTable";
 import { useAdminVendors } from "@/features/admin/vendors/useAdminVendors";
 import type { AdminVendorProfileNudgeResult } from "@/lib/adminVendorsApi";
-import {
-  vendorQueueFilters,
-  type VendorQueueTab,
-} from "@/features/admin/vendors/adminVendorQueueStatus";
 import {
   AdminVendorQueueFilterModal,
   vendorQueueTabLabel,
@@ -34,7 +30,6 @@ function nudgeToastSummary(result: AdminVendorProfileNudgeResult): string {
 }
 
 export function AdminVendorsView() {
-  const [queueTab, setQueueTab] = useState<VendorQueueTab>("pending");
   const [filterOpen, setFilterOpen] = useState(false);
   const { showToast } = useToast();
   const {
@@ -42,14 +37,14 @@ export function AdminVendorsView() {
     total,
     offset,
     limit,
-    setOffset,
+    goPrevious,
+    goNext,
     loading,
     error,
     search,
     setSearch,
-    setApprovalStatus,
-    setProfileStatus,
-    setReturnedForEdits,
+    queueTab,
+    setQueueTab,
     selectedUserIds,
     selectedDraftCount,
     selectedPayoutCount,
@@ -60,14 +55,6 @@ export function AdminVendorsView() {
     nudgePayoutVendors,
     nudgeBusy,
   } = useAdminVendors();
-
-  useEffect(() => {
-    const filters = vendorQueueFilters(queueTab);
-    setOffset(0);
-    setApprovalStatus(filters.approvalStatus);
-    setProfileStatus(filters.profileStatus);
-    setReturnedForEdits(filters.returnedForEdits);
-  }, [queueTab, setApprovalStatus, setOffset, setProfileStatus, setReturnedForEdits]);
 
   const runProfileNudge = useCallback(async () => {
     const outcome = await nudgeDraftVendors();
@@ -98,10 +85,7 @@ export function AdminVendorsView() {
 
       <EzListFilterToolbar
         searchValue={search}
-        onSearchChange={(value) => {
-          setOffset(0);
-          setSearch(value);
-        }}
+        onSearchChange={setSearch}
         searchPlaceholder="Search email or business"
         searchAriaLabel="Search email or business"
         onOpenFilter={() => setFilterOpen(true)}
@@ -150,8 +134,8 @@ export function AdminVendorsView() {
             limit={limit}
             total={total}
             pageRowCount={rows.length}
-            onPrevious={() => setOffset(Math.max(0, offset - limit))}
-            onNext={() => setOffset(offset + limit)}
+            onPrevious={goPrevious}
+            onNext={goNext}
           />
         </>
       )}

@@ -92,6 +92,13 @@ describe("ui building blocks emit canvas markup", () => {
     expect(renderToStaticMarkup(<StatTile label="A" value="1" href="/x" />)).toContain('<a class="ez-kpi ez-kpi--link" href="/x">');
   });
 
+  it("Card passes data attributes and ids through to its elements", () => {
+    expect(renderToStaticMarkup(<Card data-design-region="hero" id="a">x</Card>)).toBe(
+      '<div data-design-region="hero" id="a" class="ez-card shadow-xs">x</div>',
+    );
+    expect(renderToStaticMarkup(<Card.Body data-slot="b">y</Card.Body>)).toContain('data-slot="b"');
+  });
+
   it("Checkbox is an ez-check row and OptionCard marks the chosen option", () => {
     expect(renderToStaticMarkup(<Checkbox checked onChange={() => {}}>Remember me</Checkbox>)).toContain(
       '<span>Remember me</span>',

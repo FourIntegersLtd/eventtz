@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { useMemo } from "react";
 import type { AdminListingMediaSavePayload, AdminVendorRow } from "@/lib/adminVendorsApi";
 import type { VendorApprovalStatus, VendorListingOverride } from "@/lib/domain-types";
@@ -49,14 +50,11 @@ export function VendorDetailsOverviewSection({
 
   if (!model) {
     return (
-      <div className="ez-banner ez-banner--warning">
-        <div className="ez-banner__body">
-          <p className="text-sm text-amber-900">
-        Could not load this vendor&apos;s submission. Try closing and reopening the
-        profile.
-          </p>
-        </div>
-      </div>
+      <Banner tone="warning">
+        <p className="text-sm">
+          Could not load this vendor&apos;s submission. Try closing and reopening the profile.
+        </p>
+      </Banner>
     );
   }
 

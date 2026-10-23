@@ -13,6 +13,7 @@ import {
 } from "@/lib/adminVendorsApi";
 import { formatDate } from "@/lib/dateFormat";
 import { formatGbp } from "@/lib/money";
+import { Card } from "@/components/ui/Card";
 
 type Props = { vendor: AdminVendorRow };
 
@@ -20,11 +21,11 @@ type Props = { vendor: AdminVendorRow };
 const MIN_COVER_GBP = 1_000_000;
 
 const STATUS_LABELS: Record<string, { label: string; tone: string }> = {
-  missing: { label: "No certificate", tone: "bg-neutral-100 text-neutral-800" },
-  awaiting_check: { label: "Awaiting check", tone: "bg-amber-100 text-amber-900" },
-  verified: { label: "Checked", tone: "bg-emerald-100 text-emerald-900" },
-  expiring: { label: "Ends within 30 days", tone: "bg-amber-100 text-amber-900" },
-  expired: { label: "Ended", tone: "bg-red-100 text-red-900" },
+  missing: { label: "No certificate", tone: "bg-surface-3 text-ink" },
+  awaiting_check: { label: "Awaiting check", tone: "bg-warning-soft text-warning" },
+  verified: { label: "Checked", tone: "bg-success-soft text-success" },
+  expiring: { label: "Ends within 30 days", tone: "bg-warning-soft text-warning" },
+  expired: { label: "Ended", tone: "bg-danger-soft text-danger" },
 };
 
 /** Format an ISO date (`2027-03-01`) for staff, without shifting it across time zones. */
@@ -71,19 +72,19 @@ export function VendorInsuranceSection({ vendor }: Props) {
   const canVerify = Boolean(insurance.certificate_url) && Boolean(expiresOn) && coverGbp >= MIN_COVER_GBP;
 
   return (
-    <section className="ez-card overflow-hidden">
-      <div className="ez-card__head">
+    <Card as="section" className="overflow-hidden">
+      <Card.Header>
         <h2 className="ez-h3">Public liability insurance</h2>
-      </div>
-      <div className="ez-card__body ez-stack">
-      <p className="text-sm text-neutral-700">
+      </Card.Header>
+      <Card.Body className="ez-stack">
+      <p className="text-sm text-ink-2">
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.tone}`}>
           {status.label}
         </span>
         <span className="ml-2">Optional. A checked, in-date certificate earns the badge.</span>
       </p>
 
-      <ul className="space-y-1 text-sm text-neutral-700">
+      <ul className="space-y-1 text-sm text-ink-2">
         <li>
           Uploaded:{" "}
           {insurance.certificate_url ? (
@@ -91,7 +92,7 @@ export function VendorInsuranceSection({ vendor }: Props) {
               href={insurance.certificate_url}
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-neutral-900 underline"
+              className="font-medium text-ink underline"
             >
               Open certificate
             </a>
@@ -110,7 +111,7 @@ export function VendorInsuranceSection({ vendor }: Props) {
 
       <div className="flex flex-wrap gap-2">
         <label className="text-sm">
-          <span className="text-neutral-600">Cover ends on</span>
+          <span className="text-ink-2">Cover ends on</span>
           <input
             type="date"
             value={expiresOn}
@@ -119,7 +120,7 @@ export function VendorInsuranceSection({ vendor }: Props) {
           />
         </label>
         <label className="text-sm">
-          <span className="text-neutral-600">Cover (£)</span>
+          <span className="text-ink-2">Cover (£)</span>
           <input
             type="number"
             min={MIN_COVER_GBP}
@@ -148,7 +149,7 @@ export function VendorInsuranceSection({ vendor }: Props) {
           </Button>
         ) : null}
       </div>
-      </div>
-    </section>
+      </Card.Body>
+    </Card>
   );
 }

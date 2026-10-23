@@ -37,8 +37,8 @@ function SectionHeading({
     <h4
       className={
         compact
-          ? "mb-1 text-[11px] font-medium uppercase tracking-wide text-neutral-500"
-          : "mb-3 text-[13px] font-medium uppercase tracking-wide text-neutral-500"
+          ? "mb-1 text-[11px] font-medium uppercase tracking-wide text-ink-3"
+          : "mb-3 text-[13px] font-medium uppercase tracking-wide text-ink-3"
       }
     >
       {children}
@@ -51,7 +51,7 @@ function DocumentRow({ file, compact }: { file: SubmittedMediaFile; compact?: bo
     return (
       <div className="flex items-center gap-2 py-0.5 text-xs">
         <FileText className="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
-        <span className="min-w-0 truncate text-neutral-600">{file.label}</span>
+        <span className="min-w-0 truncate text-ink-2">{file.label}</span>
         <Link
           href={file.url}
           target="_blank"
@@ -66,11 +66,11 @@ function DocumentRow({ file, compact }: { file: SubmittedMediaFile; compact?: bo
   }
 
   return (
-    <div className="flex items-start gap-3 rounded-xl border border-neutral-100 bg-neutral-50/50 px-4 py-3">
+    <div className="flex items-start gap-3 rounded-xl border border-line bg-surface-3/50 px-4 py-3">
       <FileText className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-neutral-500">{file.category}</p>
-        <p className="mt-0.5 text-sm font-medium text-neutral-900">{file.label}</p>
+        <p className="text-xs font-medium text-ink-3">{file.category}</p>
+        <p className="mt-0.5 text-sm font-medium text-ink">{file.label}</p>
         <Link
           href={file.url}
           target="_blank"
@@ -108,7 +108,7 @@ export function SubmittedMediaViewer({
 
   if (!hasProfile && !hasPortfolio && !hasVideos && !hasDocs) {
     return (
-      <p className="text-sm text-neutral-500">No photos, videos, or documents submitted.</p>
+      <p className="text-sm text-ink-3">No photos, videos, or documents submitted.</p>
     );
   }
 
@@ -170,8 +170,8 @@ export function SubmittedMediaViewer({
           {!compact ? (
             <ul className="mt-3 space-y-2">
               {imageDocuments.map((file) => (
-                <li key={file.url} className="text-xs text-neutral-600">
-                  <span className="font-medium text-neutral-800">{file.category}:</span>{" "}
+                <li key={file.url} className="text-xs text-ink-2">
+                  <span className="font-medium text-ink">{file.category}:</span>{" "}
                   {file.label}
                 </li>
               ))}

@@ -1,10 +1,14 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 import { STEP_LABELS } from "../../../../lib/vendorOnboarding/constants";
 import { WIZARD_HEAD } from "../onboardingCopy";
 import { ONBOARDING_FORM_STEP_COUNT } from "../../../../lib/vendorOnboarding/onboardingProgress";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 /** Footer controls of the wizard card; the parent owns every handler and flag. */
 export type WizardFooterProps = {
@@ -34,7 +38,7 @@ type WizardFrameProps = {
 /** The 9-step stepper: finished steps show a tick, the current one is highlighted. */
 function WizardStepper({ step }: { step: number }) {
   return (
-    <div className="ez-card" style={{ padding: "20px 24px 12px" }}>
+    <Card className="px-6 pb-3 pt-5">
       <div className="ez-stepper" role="list" aria-label="Onboarding steps">
         {STEP_LABELS.slice(0, ONBOARDING_FORM_STEP_COUNT).map(
           (label, index) => {
@@ -64,7 +68,7 @@ function WizardStepper({ step }: { step: number }) {
           },
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -83,22 +87,14 @@ export function WizardFrame({
   return (
     <>
       <div className="ez-stack ez-stack--lg">
-        <div className="ez-pagehead">
-          <div className="ez-pagehead__text">
-            <span className="ez-eyebrow">Vendor profile</span>
-            <h1 className="ez-h1">{head.pageTitle}</h1>
-            <p className="ez-body">
-              Your answers save as you go. You can leave and come back.
-            </p>
-          </div>
-        </div>
+        <PageHeader descriptionSize="body" eyebrow="Vendor profile" title={head.pageTitle} description="Your answers save as you go. You can leave and come back." />
         <WizardStepper step={step} />
       </div>
       {/* The design places the split beside the stepper's stack, so no stack gap sits between them. */}
       <div className="ez-split">
         <div className="ez-split__main ez-stack ez-stack--lg">
-          <div className="ez-card">
-            <div className="ez-card__head">
+          <Card>
+            <Card.Header>
               <div className="ez-stack ez-stack--sm">
                 <span className="ez-eyebrow">
                   Step {step} of {ONBOARDING_FORM_STEP_COUNT}
@@ -107,48 +103,44 @@ export function WizardFrame({
                 <p className="ez-small">{head.cardSubtext}</p>
               </div>
               {draftSavedLabel ? (
-                <span className="ez-badge ez-badge--success">
+                <Badge tone="success">
                   Draft saved {draftSavedLabel}
-                </span>
+                </Badge>
               ) : null}
-            </div>
-            <div className="ez-card__body vendor-setup">{children}</div>
-            <div className="ez-card__foot">
+            </Card.Header>
+            <Card.Body className="vendor-setup">{children}</Card.Body>
+            <Card.Footer>
               {footer.note ? (
-                <p className="ez-small" style={{ marginRight: "auto" }}>
+                <p className="ez-small mr-auto">
                   {footer.note}
                 </p>
               ) : null}
               {footer.showBackToReview ? (
-                <button
-                  className="ez-btn ez-btn--secondary"
+                <Button
+                  variant="secondary"
                   type="button"
-                  onClick={footer.onBackToReview}
-                >
+                  onClick={footer.onBackToReview}>
                   Back to review
-                </button>
+                </Button>
               ) : null}
               {footer.showBack ? (
-                <button
-                  className="ez-btn ez-btn--ghost"
+                <Button
+                  variant="ghost"
                   type="button"
-                  onClick={footer.onBack}
-                >
+                  onClick={footer.onBack}>
                   {footer.backLabel}
-                </button>
+                </Button>
               ) : null}
               {footer.hidePrimary ? null : (
-                <button
-                  className="ez-btn ez-btn--primary"
+                <Button
                   type="button"
                   onClick={footer.onPrimary}
-                  disabled={footer.saving}
-                >
+                  disabled={footer.saving}>
                   {footer.saving ? "Saving…" : footer.primaryLabel}
-                </button>
+                </Button>
               )}
-            </div>
-          </div>
+            </Card.Footer>
+          </Card>
         </div>
         <div className="ez-split__aside ez-stack ez-stack--lg">{aside}</div>
       </div>
