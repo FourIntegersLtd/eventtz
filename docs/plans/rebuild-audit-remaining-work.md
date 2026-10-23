@@ -121,6 +121,7 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   touched admin, auth and settings files moved to ui blocks and tokens; register terms box is the `Checkbox`
   block (new `required` prop); `Tabs` takes an optional per-tab `href` (settings tabs stay links). Deviation: the
   empty referral list shows a sentence instead of an empty table. The referrals "Accepted" tile uses the server `accepted_total` (money-owner follow-up).
+  Follow-up closed (access-owner, web only): `AdminTeamView` left `ALLOW_LISTED_FILES` (its `ez-pagehead__actions` wrapper had no CSS, so it was dropped); `neutral-*` in the audit detail page and audit category badge became `ink-2`/`surface-3`. `components/auth` and `TermsUpdateBanner` are platform-owner's. No design-diff screen renders team or audit.
 - **Bookings screens (PR "Rebuild audit: bookings screens on the design system and server lists").** Booking
   detail, quotes, date changes, disputes, reviews and the admin bookings/disputes/reviews screens use Card, Banner,
   Button, PageHeader (new optional `meta`) and tokens; no inline styles or `neutral-*` remain. Participant, vendor

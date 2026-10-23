@@ -85,14 +85,12 @@ export function AdminTeamView() {
 
       {canManage ? (
         <div className="flex justify-end">
-          <div className="ez-pagehead__actions">
-            <Button
-              icon={<UserPlus className="h-4 w-4" aria-hidden />}
-              onClick={() => setCreateOpen(true)}
-            >
-              Create admin account
-            </Button>
-          </div>
+          <Button
+            icon={<UserPlus className="h-4 w-4" aria-hidden />}
+            onClick={() => setCreateOpen(true)}
+          >
+            Create admin account
+          </Button>
         </div>
       ) : null}
 
