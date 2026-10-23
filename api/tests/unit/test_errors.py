@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+import structlog
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -11,7 +12,6 @@ from app.features.bookings.errors import UnknownReminderColumn
 from app.features.bookings.repository_maintenance import stamp_enquiry_reminders
 from app.features.notifications.errors import UnsupportedWelcomeUserType
 from app.features.notifications.service import render_welcome
-from app.features.vendors.errors import ProfileSaveFailed
 
 
 class ThingMissing(NotFound):
@@ -66,5 +66,27 @@ async def test_stamping_an_unknown_reminder_column_is_coded() -> None:
     assert (raised.value.status, raised.value.code) == (500, "unknown_reminder_column")
 
 
-def test_a_profile_save_that_reads_back_nothing_is_a_coded_500() -> None:
-    assert (ProfileSaveFailed.status, ProfileSaveFailed.code) == (500, "vendor_profile_save_failed")
+def test_a_server_error_is_logged_with_its_stack_trace() -> None:
+    """A coded 5xx keeps the stack trace (and so the Sentry event) the old bare RuntimeError had."""
+
+    class Broken(AppError):
+        """A sample 500 with its own code."""
+
+        code = "broken_thing"
+
+    app = FastAPI()
+    register_error_handlers(app)
+
+    @app.get("/broken")
+    def broken() -> None:
+        """Raise the sample 500."""
+        raise Broken
+
+    with structlog.testing.capture_logs() as logged:
+        response = TestClient(app).get("/broken")
+        TestClient(app).get("/missing-route")  # a 404 is not logged as an error
+    assert response.json() == {"detail": "Something went wrong", "code": "broken_thing"}
+    errors = [entry for entry in logged if entry["log_level"] == "error"]
+    assert len(errors) == 1
+    assert errors[0]["event"] == "server error code=broken_thing"
+    assert isinstance(errors[0]["exc_info"], Broken)

@@ -101,6 +101,7 @@ compared with `main`.
 4. **Errors.**
    - Remove the duplicate codes: `invalid_booking_id`, `no_fields_to_update`, `account_deleted`,
      `session_expired`.
+   - `test_visibility_helpers_only` misses `.notin_`/`.is_`/`filter_by(approval_status=)`/dict-row access; widen it.
 5. **Web lists.**
    - Add one `useServerList` hook and build the bookings scaffold on it.
    - Migrate the ~23 hand-rolled list views and put `EzListFilterToolbar` on every list screen.

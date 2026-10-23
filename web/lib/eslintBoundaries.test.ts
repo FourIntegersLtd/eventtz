@@ -10,7 +10,7 @@ const eslint = new ESLint({ cwd: path.resolve(__dirname, "..") });
 
 async function boundaryMessages(filePath: string, code: string): Promise<string[]> {
   const [result] = await eslint.lintText(code, { filePath: path.resolve(__dirname, "..", filePath) });
-  return result.messages.filter((message) => message.ruleId === "no-restricted-imports").map((message) => message.message);
+  return result.messages.filter((message) => message.ruleId === "eventtz/import-boundary").map((message) => message.message);
 }
 
 describe("web import boundaries", () => {
@@ -37,6 +37,28 @@ describe("web import boundaries", () => {
     expect(await boundaryMessages("features/client/virtual.ts", sharedSubPath)).toHaveLength(0);
     expect(await boundaryMessages("features/client/virtual.ts", sharedFile)).toHaveLength(0);
     expect(await boundaryMessages("features/client/virtual.ts", unsharedSubPath)).toHaveLength(1);
+  }, 60_000);
+
+  it("rejects relative imports that cross a boundary, and allows ones that stay inside", async () => {
+    const importing = (target: string) => `import x from "${target}"; export { x };`;
+    expect(await boundaryMessages("lib/virtual.ts", importing("../features/chat/ChatDrawer"))).toHaveLength(1);
+    expect(await boundaryMessages("lib/virtual.ts", importing("./format"))).toHaveLength(0);
+    expect(await boundaryMessages("components/ui/Virtual.tsx", importing("../../features/help/HelpWidget"))).toHaveLength(1);
+    expect(await boundaryMessages("components/ui/Virtual.tsx", importing("../../lib/format"))).toHaveLength(0);
+    expect(await boundaryMessages("features/client/virtual.ts", importing("../admin/components/AdminTable"))).toHaveLength(1);
+    expect(await boundaryMessages("features/client/virtual.ts", importing("../bookings/bookingTerms"))).toHaveLength(0);
+    // A folder named like a top-level one but inside the feature's own area is not a boundary crossing.
+    expect(await boundaryMessages("features/admin/virtual.ts", importing("./components/AdminTable"))).toHaveLength(0);
+  }, 60_000);
+
+  it("rejects dynamic import() and re-exports across a boundary", async () => {
+    const dynamic = `export const load = () => import("@/features/chat/ChatDrawer");`;
+    const dynamicRelative = `export const load = () => import("../features/chat/ChatDrawer");`;
+    const reExport = `export { ChatDrawer } from "../features/chat/ChatDrawer";`;
+    expect(await boundaryMessages("lib/virtual.ts", dynamic)).toHaveLength(1);
+    expect(await boundaryMessages("lib/virtual.ts", dynamicRelative)).toHaveLength(1);
+    expect(await boundaryMessages("lib/virtual.ts", reExport)).toHaveLength(1);
+    expect(await boundaryMessages("lib/virtual.ts", `export const load = () => import("./format");`)).toHaveLength(0);
   }, 60_000);
 
   it("rejects motion/react outside components/ui", async () => {

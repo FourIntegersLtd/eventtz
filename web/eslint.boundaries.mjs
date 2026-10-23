@@ -7,10 +7,12 @@
  *   app/        may import anything
  *
  * "Area" is the first path segment under features/ (admin, client, vendor, bookings, ...).
- * Enforced by `no-restricted-imports`; web/lib/eslintBoundaries.test.ts proves the rules still fire.
+ * Enforced by the local `eventtz/import-boundary` rule, which also catches relative imports
+ * (`../features/x`, resolved against the importing file) and dynamic `import()`;
+ * web/lib/eslintBoundaries.test.ts proves the rules still fire.
  */
 import { readdirSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const webRoot = dirname(fileURLToPath(import.meta.url));
@@ -56,6 +58,55 @@ const featureAreas = readdirSync(join(webRoot, "features"), { withFileTypes: tru
   .filter((entry) => entry.isDirectory())
   .map((entry) => entry.name);
 
+/** Does `specifier` match a boundary pattern? Supports `base`, `base/**` and `base/*` only. */
+function matchesPattern(pattern, specifier) {
+  if (pattern.endsWith("/**")) {
+    const base = pattern.slice(0, -3);
+    return specifier === base || specifier.startsWith(`${base}/`);
+  }
+  if (pattern.endsWith("/*")) {
+    const base = pattern.slice(0, -2);
+    return specifier.startsWith(`${base}/`) && !specifier.slice(base.length + 1).includes("/");
+  }
+  return specifier === pattern;
+}
+
+/** A relative specifier rewritten to its `@/` alias form (so one pattern list covers both); others unchanged. */
+function toAliasSpecifier(specifier, importingFile) {
+  if (!specifier.startsWith(".")) return specifier;
+  const fromRoot = relative(webRoot, resolve(dirname(importingFile), specifier));
+  if (fromRoot.startsWith("..")) return specifier;
+  return `@/${fromRoot.split(sep).join("/")}`;
+}
+
+/**
+ * Like `no-restricted-imports` with `patterns: [{ group, message }]`, but a relative import is
+ * resolved against the importing file first, and `import()` and `export ... from` count too.
+ */
+const importBoundaryRule = {
+  meta: { type: "problem", schema: [{ type: "object" }] },
+  create(context) {
+    const { patterns } = context.options[0];
+    const check = (node) => {
+      const source = node.source;
+      if (!source || source.type !== "Literal" || typeof source.value !== "string") return;
+      const specifier = toAliasSpecifier(source.value, context.filename);
+      for (const { group, message } of patterns) {
+        if (group.some((pattern) => matchesPattern(pattern, specifier))) {
+          context.report({ node: source, message });
+          return;
+        }
+      }
+    };
+    return {
+      ImportDeclaration: check,
+      ExportNamedDeclaration: check,
+      ExportAllDeclaration: check,
+      ImportExpression: check,
+    };
+  },
+};
+
 /** Animation libraries stay inside components/ui (UI-CONVENTIONS.md): features use its primitives. */
 const MOTION_IMPORT_RULE = {
   group: ["motion", "motion/*", "framer-motion"],
@@ -63,7 +114,7 @@ const MOTION_IMPORT_RULE = {
 };
 
 const restrict = (group, message) => ({
-  "no-restricted-imports": ["error", { patterns: [{ group, message }, MOTION_IMPORT_RULE] }],
+  "eventtz/import-boundary": ["error", { patterns: [{ group, message }, MOTION_IMPORT_RULE] }],
 });
 
 /**
@@ -98,6 +149,7 @@ export function featurePatterns(area) {
 }
 
 export const boundaryConfigs = [
+  { plugins: { eventtz: { rules: { "import-boundary": importBoundaryRule } } } },
   {
     files: ["lib/**/*.{ts,tsx}"],
     rules: restrict(
@@ -117,7 +169,7 @@ export const boundaryConfigs = [
     // components/ui is where motion/react lives: same boundary, minus the motion rule.
     files: ["components/ui/**/*.{ts,tsx}"],
     rules: {
-      "no-restricted-imports": [
+      "eventtz/import-boundary": [
         "error",
         {
           patterns: [
@@ -132,7 +184,7 @@ export const boundaryConfigs = [
   },
   {
     files: ["app/**/*.{ts,tsx}"],
-    rules: { "no-restricted-imports": ["error", { patterns: [MOTION_IMPORT_RULE] }] },
+    rules: { "eventtz/import-boundary": ["error", { patterns: [MOTION_IMPORT_RULE] }] },
   },
   {
     files: COMPONENT_FEATURE_ALLOW_LIST,

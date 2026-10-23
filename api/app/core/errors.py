@@ -16,6 +16,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from app.core.logging import get_logger
+
 
 class ErrorResponse(BaseModel):
     """The JSON body of every error response, and its OpenAPI schema."""
@@ -148,7 +150,13 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(AppError)
     async def render_app_error(_request: Request, exc: AppError) -> JSONResponse:
-        """Turn a raised `AppError` into its JSON response."""
+        """Turn a raised `AppError` into its JSON response.
+
+        A 5xx is a bug or an outage, not a business rule: log it with its stack trace at error
+        level, which the Sentry logging integration reports (a 4xx is the caller's doing, so quiet).
+        """
+        if exc.status >= 500:
+            get_logger(__name__).error("server error code=%s", exc.code, exc_info=exc)
         body = ErrorResponse(detail=exc.message, code=exc.code)
         return JSONResponse(status_code=exc.status, content=body.model_dump())
 
