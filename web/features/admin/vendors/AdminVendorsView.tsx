@@ -5,7 +5,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
-import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminVendorsTable } from "@/features/admin/vendors/AdminVendorsTable";
@@ -105,7 +104,6 @@ export function AdminVendorsView() {
         }}
         searchPlaceholder="Search email or business"
         searchAriaLabel="Search email or business"
-        inputClassName={adminFilterControlClass}
         onOpenFilter={() => setFilterOpen(true)}
         activeFilterCount={activeFilterCount}
         summary={

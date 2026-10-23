@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export type ClientMyBookingsSegment = "bookings" | "payments";
 
@@ -15,7 +15,7 @@ type ClientMyBookingsHubProps = {
 export function ClientMyBookingsHub({ segment, children }: ClientMyBookingsHubProps) {
   return (
     <div className="ez-stack ez-stack--lg">
-      <ClientEzPageHead
+      <PageHeader
         title="My bookings"
         actions={
           <div className="ez-seg" aria-label="Bookings or payments">

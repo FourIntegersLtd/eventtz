@@ -8,12 +8,13 @@ import {
 } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
-import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
+import { StatTile } from "@/components/ui/StatTile";
 import { AdminChartCard } from "@/features/admin/components/AdminChartCard";
 import { EzBarChart } from "@/components/charts/EzBarChart";
 import { EzDonutChart } from "@/components/charts/EzDonutChart";
 import { EzHorizontalBarChart } from "@/components/charts/EzHorizontalBarChart";
-import { AdminCommercePeriodFilter } from "@/features/admin/components/AdminCommercePeriodFilter";
+import { EzPeriodFilterButton } from "@/components/ui/EzPeriodFilterButton";
+import { ADMIN_PERIOD_OPTIONS } from "@/lib/commercePeriod";
 import { AdminInfoHint } from "@/features/admin/components/AdminInfoHint";
 import { MARKETPLACE_CHART_INFO } from "@/features/admin/components/adminChartInfoCopy";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -117,22 +118,22 @@ export function AdminMarketplaceAnalyticsView() {
       {error ? <AdminErrorBanner message={error} /> : null}
 
       <div className="ez-hrow" style={{ justifyContent: "flex-end" }}>
-        <AdminCommercePeriodFilter period={period} onPeriodChange={handlePeriodChange} />
+        <EzPeriodFilterButton options={ADMIN_PERIOD_OPTIONS} value={period} onChange={handlePeriodChange} defaultValue={30} />
       </div>
 
       <div className="ez-grid-4">
-        <AdminKpiCard
+        <StatTile
           label="Enquiries"
           value={kpis.enquiries}
           hint={`${kpis.vendorsActive} active vendors`}
         />
-        <AdminKpiCard label="Completed bookings" value={kpis.completed} />
-        <AdminKpiCard
+        <StatTile label="Completed bookings" value={kpis.completed} />
+        <StatTile
           label="Conversion"
           value={formatMarketplacePct(kpis.overallConversion)}
           hint={`Avg response ${formatMarketplaceSeconds(kpis.avgResponseSeconds)}`}
         />
-        <AdminKpiCard
+        <StatTile
           label="Revenue"
           value={formatGbp(revenueTotal, { decimals: 0, grouping: false })}
           hint={`Avg booking ${formatGbp(kpis.avgBookingValue, { decimals: 0, grouping: false })}`}

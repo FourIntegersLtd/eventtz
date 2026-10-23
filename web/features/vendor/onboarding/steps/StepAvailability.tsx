@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { isPastIsoDate } from "@/lib/eventDateValidation";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
-import { EzChip } from "../../../../components/ui/ez-form";
+import { Chip } from "../../../../components/ui/Chip";
 import { formatDate } from "@/lib/dateFormat";
 
 export type StepAvailabilityProps = {
@@ -105,13 +105,13 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
       <div className="ez-availability__days">
         <span className="ez-label">Which days do you take bookings?</span>
         {WEEKDAY_SHORT_LABELS.map((label, weekday) => (
-          <EzChip
+          <Chip
             key={label}
             active={data.availableWeekdays.includes(weekday)}
             onClick={() => toggleDay(weekday)}
           >
             {label}
-          </EzChip>
+          </Chip>
         ))}
       </div>
       <div className="ez-availability__limit">

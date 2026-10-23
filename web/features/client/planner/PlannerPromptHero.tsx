@@ -1,7 +1,7 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   PLANNER_EVENT_TYPE_OPTIONS,
   type PlannerFormFields,
@@ -20,7 +20,7 @@ type PlannerPromptHeroProps = {
 export function PlannerPromptHero({ form, onFormChange, onSubmit, loading }: PlannerPromptHeroProps) {
   return (
     <div className="ez-stack ez-stack--lg" style={{ maxWidth: 860 }}>
-      <ClientEzPageHead
+      <PageHeader
         eyebrow={PLANNER_COPY.heroEyebrow}
         title={PLANNER_COPY.heroHeadline}
         description={PLANNER_COPY.heroSupport}

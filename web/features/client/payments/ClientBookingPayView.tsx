@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { useClientBookingPay } from "@/features/client/payments/useClientBookingPay";
@@ -60,7 +60,7 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
     return (
       <div className="ez-stack ez-stack--lg w-full max-w-3xl">
         <Link href={bookingHref} className="ez-back">Back to booking</Link>
-        <ClientEzPageHead title={CLIENT_PAY_PAGE_COPY.venueTitle} description={CLIENT_PAY_PAGE_COPY.venueIntro} />
+        <PageHeader title={CLIENT_PAY_PAGE_COPY.venueTitle} description={CLIENT_PAY_PAGE_COPY.venueIntro} />
         {error ? (
           <LottieFailurePanel
             className="border-red-200 bg-red-50 py-6"
@@ -105,7 +105,7 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
   return (
     <div className="ez-stack ez-stack--lg w-full max-w-3xl">
       <Link href={bookingHref} className="ez-back">Back to booking</Link>
-      <ClientEzPageHead title="Pay to confirm your booking" description={CLIENT_PAY_PAGE_COPY.safetyIntro} />
+      <PageHeader title="Pay to confirm your booking" description={CLIENT_PAY_PAGE_COPY.safetyIntro} />
       {error && phase !== "redirecting" ? (
         <LottieFailurePanel
           className="border-red-200 bg-red-50 py-6"

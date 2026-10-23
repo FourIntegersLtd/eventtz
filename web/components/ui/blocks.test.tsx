@@ -3,12 +3,15 @@ import { describe, expect, it } from "vitest";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { OptionCard } from "@/components/ui/OptionCard";
 import { DataTable } from "@/components/ui/DataTable";
 import { DescriptionList } from "@/components/ui/DescriptionList";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
 import { StatTile } from "@/components/ui/StatTile";
+import { Star } from "lucide-react";
 import { Stepper } from "@/components/ui/Stepper";
 import { Tabs } from "@/components/ui/Tabs";
 import { TablePagination } from "@/components/ui/TablePagination";
@@ -69,8 +72,35 @@ describe("ui building blocks emit canvas markup", () => {
     expect(
       renderToStaticMarkup(<PageHeader eyebrow="Admin" title="Vendors" description="All vendors" actions={<b>go</b>} />),
     ).toBe(
-      '<header class="ez-pagehead"><div class="ez-pagehead__text"><span class="ez-eyebrow">Admin</span><h1 class="ez-h1">Vendors</h1><div class="ez-small">All vendors</div></div><div class="ez-pagehead__actions"><b>go</b></div></header>',
+      '<div class="ez-pagehead"><div class="ez-pagehead__text"><span class="ez-eyebrow">Admin</span><h1 class="ez-h1">Vendors</h1><p class="ez-small">All vendors</p></div><div class="ez-pagehead__actions"><b>go</b></div></div>',
     );
+  });
+
+  it("PageHeader can use body-size description", () => {
+    expect(renderToStaticMarkup(<PageHeader title="Home" description="Hi" descriptionSize="body" />)).toContain(
+      '<p class="ez-body">Hi</p>',
+    );
+  });
+
+  it("StatTile renders icon, hint and link variants", () => {
+    const markup = renderToStaticMarkup(<StatTile label="A" value={3} icon={Star} hint="h" />);
+    expect(markup).toContain('<span class="ez-kpi__label"><svg');
+    expect(markup).toContain('</svg>A</span><span class="ez-kpi__value">3</span><span class="ez-small">h</span></div>');
+    expect(renderToStaticMarkup(<StatTile label="A" value="1" delta="d" deltaTone="danger" />)).toContain(
+      'ez-kpi__delta ez-kpi__delta--down',
+    );
+    expect(renderToStaticMarkup(<StatTile label="A" value="1" href="/x" />)).toContain('<a class="ez-kpi ez-kpi--link" href="/x">');
+  });
+
+  it("Checkbox is an ez-check row and OptionCard marks the chosen option", () => {
+    expect(renderToStaticMarkup(<Checkbox checked onChange={() => {}}>Remember me</Checkbox>)).toContain(
+      '<span>Remember me</span>',
+    );
+    const markup = renderToStaticMarkup(
+      <OptionCard type="radio" checked onChange={() => {}} title="Solo" description="Just me" />,
+    );
+    expect(markup).toContain('class="ez-option ez-option--active"');
+    expect(markup).toContain('<span class="ez-strong">Solo</span><span class="ez-small">Just me</span>');
   });
 
   it("DescriptionList is an ez-dl of dt and dd pairs", () => {
@@ -155,7 +185,7 @@ describe("ui building blocks emit canvas markup", () => {
       />,
     );
     expect(markup).toBe(
-      '<div class="ez-table-wrap ez-table-wrap--embedded"><table class="ez-table" aria-label="Vendors"><thead><tr><th scope="col">Name</th><th scope="col">Total</th></tr></thead><tbody><tr><td class="ez-td-strong">Acme</td><td class="ez-td-num">3</td></tr></tbody></table></div>',
+      '<div class="ez-table-wrap w-full min-w-0 max-w-full ez-table-wrap--embedded"><table class="ez-table" aria-label="Vendors"><thead><tr><th scope="col">Name</th><th scope="col" class="ez-td-num">Total</th></tr></thead><tbody><tr><td class="ez-td-strong">Acme</td><td class="ez-td-num">3</td></tr></tbody></table></div>',
     );
   });
 });

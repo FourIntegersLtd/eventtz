@@ -1,12 +1,12 @@
 "use client";
 
 import { X } from "lucide-react";
-import { forwardRef, useId, type CSSProperties, type InputHTMLAttributes } from "react";
+import { forwardRef, useId, type CSSProperties, type InputHTMLAttributes, type ReactNode } from "react";
 import { DateInput } from "@/components/ui/DateInput";
 
 export type TextFieldProps = InputHTMLAttributes<HTMLInputElement> & {
-  label: string;
-  error?: string;
+  label: ReactNode;
+  error?: string | null;
   hint?: string;
   /** When `type="date"`, start blank until the user picks (optional end dates, filters). */
   allowEmpty?: boolean;

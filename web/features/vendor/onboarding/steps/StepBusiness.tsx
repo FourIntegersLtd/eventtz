@@ -12,7 +12,9 @@ import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../l
 import { checkBusinessNameAvailable } from "@/lib/vendorProfileApi";
 import { Modal } from "@/components/ui/Modal";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
-import { EzChip, EzTextField } from "../../../../components/ui/ez-form";
+import { Chip } from "../../../../components/ui/Chip";
+import { TextField } from "../../../../components/ui/TextField";
+import { TextArea } from "../../../../components/ui/TextArea";
 
 export type StepBusinessProps = {
   data: VendorOnboardingData;
@@ -98,17 +100,17 @@ export function StepBusiness({
 
   return (
     <div className="ez-stack">
-      <EzTextField
+      <TextField
         label="Business name"
         value={data.businessName}
-        onChange={(value) => {
+        onChange={({ target: { value } }) => {
           update({ businessName: value });
           setBusinessNameError(null);
           setNameAvailable(null);
         }}
         onBlur={() => void verifyBusinessName(data.businessName)}
         error={checkingName ? null : businessNameError}
-        help={
+        hint={
           checkingName ? "Checking availability…" : copy.businessNameSupporting
         }
       />
@@ -117,7 +119,7 @@ export function StepBusiness({
         <span className="ez-help">{copy.servicesSubtext}</span>
         <div className="ez-chip-row">
           {BUSINESS_STEP_SERVICE_CHIPS.map((option) => (
-            <EzChip
+            <Chip
               key={`${option.value}-${option.label}`}
               active={data.servicesOffered.includes(option.value)}
               onClick={() => {
@@ -131,7 +133,7 @@ export function StepBusiness({
               }}
             >
               {option.label}
-            </EzChip>
+            </Chip>
           ))}
         </div>
       </div>
@@ -139,7 +141,7 @@ export function StepBusiness({
         <span className="ez-label">{copy.eventTypesHeadline}</span>
         <div className="ez-chip-row">
           {EVENT_TYPE_OPTIONS.map((option) => (
-            <EzChip
+            <Chip
               key={option.value}
               active={isEventTypeActive(data.eventTypes, option.value)}
               onClick={() =>
@@ -149,17 +151,16 @@ export function StepBusiness({
               }
             >
               {option.label}
-            </EzChip>
+            </Chip>
           ))}
         </div>
       </div>
-      <EzTextField
+      <TextArea
         label="About your business"
-        multiline
         value={data.aiBioDraft}
         maxLength={BIO_MAX_CHARACTERS}
-        onChange={(value) => update({ aiBioDraft: value })}
-        help={`${bioLength} of ${BIO_MAX_CHARACTERS} characters. Clients read this first.`}
+        onChange={({ target: { value } }) => update({ aiBioDraft: value })}
+        hint={`${bioLength} of ${BIO_MAX_CHARACTERS} characters. Clients read this first.`}
       />
       <Modal
         isOpen={waitlistModalOpen}

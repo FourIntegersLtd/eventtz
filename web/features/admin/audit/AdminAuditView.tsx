@@ -12,15 +12,7 @@ import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
 import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import {
-  AdminTable,
-  AdminTableBody,
-  AdminTableCell,
-  AdminTableElement,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/features/admin/components/AdminTable";
+import { DataTable } from "@/components/ui/DataTable";
 import {
   AUDIT_CATEGORIES,
   auditEntityHref,
@@ -118,68 +110,78 @@ export function AdminAuditView() {
         <EmptyState title="No activity in this category" lottie="searchNoResults" />
       ) : (
         <>
-          <AdminTable>
-            <AdminTableElement className="min-w-[44rem]">
-              <AdminTableHead>
-                <AdminTableHeaderCell>When</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Admin</AdminTableHeaderCell>
-                <AdminTableHeaderCell>What happened</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Related to</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Category</AdminTableHeaderCell>
-                <AdminTableHeaderCell> </AdminTableHeaderCell>
-              </AdminTableHead>
-              <AdminTableBody>
-                {entries.map((e) => {
-                  const href = auditEntityHref(e);
-                  const entityLabel = formatAuditEntityLabel(e.entity_type);
-                  const summary = formatAuditSummary(e);
-                  const categoryMeta = getAuditCategoryMeta(e.action);
+          <DataTable
+            aria-label="Admin activity"
+            tableClassName="min-w-[44rem]"
+            rows={entries}
+            getRowKey={(entry) => entry.id}
+            columns={[
+              {
+                key: "when",
+                header: "When",
+                className: "whitespace-nowrap text-sm text-neutral-600",
+                cell: (entry) => formatAuditWhen(entry.created_at),
+              },
+              {
+                key: "admin",
+                header: "Admin",
+                className: "text-sm text-neutral-700",
+                cell: (entry) => entry.admin_email ?? "-",
+              },
+              {
+                key: "what",
+                header: "What happened",
+                cell: (entry) => {
+                  const summary = formatAuditSummary(entry);
                   return (
-                    <AdminTableRow key={e.id}>
-                      <AdminTableCell className="whitespace-nowrap text-sm text-neutral-600">
-                        {formatAuditWhen(e.created_at)}
-                      </AdminTableCell>
-                      <AdminTableCell className="text-sm text-neutral-700">
-                        {e.admin_email ?? "-"}
-                      </AdminTableCell>
-                      <AdminTableCell>
-                        <p className="text-sm font-medium text-neutral-900">
-                          {formatAuditActionLabel(e.action)}
-                        </p>
-                        {summary ? (
-                          <p className="mt-1.5 line-clamp-2 text-xs text-neutral-500">{summary}</p>
-                        ) : null}
-                      </AdminTableCell>
-                      <AdminTableCell className="text-sm">
-                        {href && e.entity_id ? (
-                          <Link href={href} className="hover:opacity-90">
-                            <AuditEntityBadge label={entityLabel} entityType={e.entity_type} />
-                          </Link>
-                        ) : (
-                          <AuditEntityBadge label={entityLabel} entityType={e.entity_type} />
-                        )}
-                      </AdminTableCell>
-                      <AdminTableCell>
-                        <AuditBadge
-                          label={categoryMeta.label}
-                          badgeClassName={categoryMeta.badgeClassName}
-                        />
-                      </AdminTableCell>
-                      <AdminTableCell>
-                        <Link
-                          href={`/admin/audit/${e.id}`}
-                          className="inline-flex items-center gap-0.5 text-xs font-medium text-primary hover:underline"
-                        >
-                          View
-                          <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-                        </Link>
-                      </AdminTableCell>
-                    </AdminTableRow>
+                    <>
+                      <p className="text-sm font-medium text-neutral-900">{formatAuditActionLabel(entry.action)}</p>
+                      {summary ? <p className="mt-1.5 line-clamp-2 text-xs text-neutral-500">{summary}</p> : null}
+                    </>
                   );
-                })}
-              </AdminTableBody>
-            </AdminTableElement>
-          </AdminTable>
+                },
+              },
+              {
+                key: "related",
+                header: "Related to",
+                className: "text-sm",
+                cell: (entry) => {
+                  const href = auditEntityHref(entry);
+                  const badge = (
+                    <AuditEntityBadge label={formatAuditEntityLabel(entry.entity_type)} entityType={entry.entity_type} />
+                  );
+                  return href && entry.entity_id ? (
+                    <Link href={href} className="hover:opacity-90">
+                      {badge}
+                    </Link>
+                  ) : (
+                    badge
+                  );
+                },
+              },
+              {
+                key: "category",
+                header: "Category",
+                cell: (entry) => {
+                  const categoryMeta = getAuditCategoryMeta(entry.action);
+                  return <AuditBadge label={categoryMeta.label} badgeClassName={categoryMeta.badgeClassName} />;
+                },
+              },
+              {
+                key: "view",
+                header: " ",
+                cell: (entry) => (
+                  <Link
+                    href={`/admin/audit/${entry.id}`}
+                    className="inline-flex items-center gap-0.5 text-xs font-medium text-primary hover:underline"
+                  >
+                    View
+                    <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+                  </Link>
+                ),
+              },
+            ]}
+          />
 
           <TablePagination
             offset={offset}

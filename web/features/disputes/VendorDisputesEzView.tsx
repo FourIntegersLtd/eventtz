@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Shield } from "lucide-react";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
@@ -17,12 +17,15 @@ import {
 import { TablePagination } from "@/components/ui/TablePagination";
 import { participantDisputeBookingLabel, participantDisputeStatusLabel } from "@/lib/bookingDisputeHelpers";
 import { formatDate } from "@/lib/dateFormat";
+import { Badge } from "@/components/ui/Badge";
+import type { Tone } from "@/lib/tone";
 
-function badgeClass(status: string): string {
-  if (status === "open") return "ez-badge ez-badge--danger";
-  if (status === "under_review") return "ez-badge ez-badge--warning";
-  if (status === "resolved") return "ez-badge ez-badge--success ez-badge--plain";
-  return "ez-badge ez-badge--neutral";
+/** Badge tone for a dispute status. */
+function disputeTone(status: string): Tone {
+  if (status === "open") return "danger";
+  if (status === "under_review") return "warning";
+  if (status === "resolved") return "success";
+  return "neutral";
 }
 
 function whenLabel(iso: string | null): string {
@@ -86,7 +89,7 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
 
   return (
     <div className="ez-stack ez-stack--lg">
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow="Work"
         title="Disputes"
         description="Raise or answer a problem. Payouts are paused while a dispute is open."
@@ -138,7 +141,7 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
                   <td className="ez-td-strong">{row.id.slice(0, 8).toUpperCase()}</td>
                   <td>{participantDisputeBookingLabel(row)}</td>
                   <td className="ez-td-status">
-                    <span className={badgeClass(row.status)}>{participantDisputeStatusLabel(row.status)}</span>
+                    <Badge tone={disputeTone(row.status)}>{participantDisputeStatusLabel(row.status)}</Badge>
                   </td>
                   <td>{row.status === "resolved" ? `Resolved ${whenLabel(row.resolved_at)}` : `Opened ${whenLabel(row.created_at)}`}</td>
                 </tr>
@@ -169,7 +172,7 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
                 <span className="ez-h3">
                   {active.counterparty_label || active.client_label || "Dispute"} · {participantDisputeBookingLabel(active)}
                 </span>
-                <span className={badgeClass(active.status)}>{participantDisputeStatusLabel(active.status)}</span>
+                <Badge tone={disputeTone(active.status)}>{participantDisputeStatusLabel(active.status)}</Badge>
               </div>
               <div className="ez-card__body">
                 <div className="ez-stack ez-stack--sm">

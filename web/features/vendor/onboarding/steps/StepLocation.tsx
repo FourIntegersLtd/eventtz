@@ -8,7 +8,9 @@ import type {
   VendorOnboardingData,
   VendorOnboardingUpdate,
 } from "../../../../lib/vendorOnboarding/types";
-import { EzChip, EzOption, EzTextField } from "../../../../components/ui/ez-form";
+import { Chip } from "../../../../components/ui/Chip";
+import { OptionCard } from "../../../../components/ui/OptionCard";
+import { TextField } from "../../../../components/ui/TextField";
 
 export type StepLocationProps = {
   data: VendorOnboardingData;
@@ -132,13 +134,13 @@ export function StepLocation({
           <span className="ez-label">Which country do you operate in?</span>
           <div className="ez-chip-row">
             {markets.map((candidate) => (
-              <EzChip
+              <Chip
                 key={candidate.countryCode}
                 active={data.countryCode === candidate.countryCode}
                 onClick={() => update({ countryCode: candidate.countryCode })}
               >
                 {candidate.label}
-              </EzChip>
+              </Chip>
             ))}
           </div>
         </div>
@@ -157,16 +159,16 @@ export function StepLocation({
               : `e.g. a city in ${market.label}`
           }
         />
-        <EzTextField
+        <TextField
           label="Region"
           value={data.region}
-          onChange={(value) => update({ region: value })}
+          onChange={({ target: { value } }) => update({ region: value })}
           placeholder="e.g. Greater London"
         />
-        <EzTextField
+        <TextField
           label="Postcode"
           value={data.postalCode}
-          onChange={(value) => update({ postalCode: value })}
+          onChange={({ target: { value } }) => update({ postalCode: value })}
           placeholder={market.countryCode === "GB" ? "e.g. SW1A 1AA" : "Postal code"}
         />
       </div>
@@ -174,7 +176,7 @@ export function StepLocation({
         <span className="ez-label">{copy.deliveryHeadline}</span>
         <span className="ez-help">{copy.deliverySubtext}</span>
         {deliveryOptions.map((option) => (
-          <EzOption
+          <OptionCard
             key={option.value}
             type="checkbox"
             name="deliv"
@@ -197,7 +199,7 @@ export function StepLocation({
         <span className="ez-label">{copy.radiusHeadline}</span>
         <div className="ez-form-grid">
           {radiusOptions.map((option) => (
-            <EzOption
+            <OptionCard
               key={option.value}
               type="radio"
               name="rad"
@@ -217,7 +219,7 @@ export function StepLocation({
         <span className="ez-label">{copy.policyHeadline}</span>
         <span className="ez-help">{copy.policySubtext}</span>
         {feeOptions.map((option) => (
-          <EzOption
+          <OptionCard
             key={option.value}
             type="radio"
             name="fee"
@@ -232,14 +234,14 @@ export function StepLocation({
           />
         ))}
         {data.travelDeliveryPolicy === "custom" ? (
-          <EzTextField
+          <TextField
             label={
               <>
                 Fee details <span className="ez-label__opt">(optional)</span>
               </>
             }
             value={data.travelDeliveryPolicyCustomText}
-            onChange={(value) => update({ travelDeliveryPolicyCustomText: value })}
+            onChange={({ target: { value } }) => update({ travelDeliveryPolicyCustomText: value })}
             placeholder={
               useOnboardingLayout
                 ? ""

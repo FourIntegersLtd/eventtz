@@ -10,7 +10,8 @@ import {
   type VendorOnboardingUpdate,
 } from "../../../../lib/vendorOnboarding/types";
 import { uploadedFileDisplayName } from "../../../../lib/vendorOnboarding/uploadedFileDisplayName";
-import { EzCheck, EzTextField } from "../../../../components/ui/ez-form";
+import { Checkbox } from "../../../../components/ui/Checkbox";
+import { TextField } from "../../../../components/ui/TextField";
 
 export type StepAdditionalInfoProps = {
   data: VendorOnboardingData;
@@ -149,25 +150,25 @@ export function StepAdditionalInfo({
           Find you online <span className="ez-label__opt">(optional)</span>
         </h3>
         <div className="ez-form-grid">
-          <EzTextField
+          <TextField
             label="Instagram"
             value={handleFor("instagram")}
             placeholder={placeholderFor("instagram")}
-            onChange={(value) => setHandle("instagram", value)}
+            onChange={({ target: { value } }) => setHandle("instagram", value)}
           />
-          <EzTextField
+          <TextField
             label="Website"
             value={handleFor("website")}
             placeholder={placeholderFor("website")}
-            onChange={(value) => setHandle("website", value)}
+            onChange={({ target: { value } }) => setHandle("website", value)}
           />
           {extraLinks.map((link) => (
-            <EzTextField
+            <TextField
               key={link.id}
               label={labelFor(link.platform)}
               value={link.handle}
               placeholder={placeholderFor(link.platform)}
-              onChange={(value) =>
+              onChange={({ target: { value } }) =>
                 update({
                   socialLinks: data.socialLinks.map((item) =>
                     item.id === link.id ? { ...item, handle: value } : item,
@@ -198,19 +199,19 @@ export function StepAdditionalInfo({
         <h3 className="ez-h3">
           Dietary details <span className="ez-label__opt">(optional)</span>
         </h3>
-        <EzCheck checked={data.isHalal} onChange={(checked) => update({ isHalal: checked })}>
+        <Checkbox checked={data.isHalal} onChange={(checked) => update({ isHalal: checked })}>
           Halal
-        </EzCheck>
-        <EzCheck checked={data.isVegan} onChange={(checked) => update({ isVegan: checked })}>
+        </Checkbox>
+        <Checkbox checked={data.isVegan} onChange={(checked) => update({ isVegan: checked })}>
           Vegan options available
-        </EzCheck>
-        <EzCheck checked={data.isVegetarian} onChange={(checked) => update({ isVegetarian: checked })}>
+        </Checkbox>
+        <Checkbox checked={data.isVegetarian} onChange={(checked) => update({ isVegetarian: checked })}>
           Vegetarian options available
-        </EzCheck>
-        <EzCheck checked={data.isGlutenFree} onChange={(checked) => update({ isGlutenFree: checked })}>
+        </Checkbox>
+        <Checkbox checked={data.isGlutenFree} onChange={(checked) => update({ isGlutenFree: checked })}>
           Gluten-free options available
-        </EzCheck>
-        <EzTextField
+        </Checkbox>
+        <TextField
           label={
             <>
               Allergen information <span className="ez-label__opt">(optional)</span>
@@ -218,7 +219,7 @@ export function StepAdditionalInfo({
           }
           value={data.allergenInfo}
           placeholder="e.g. Contains nuts and dairy; gluten-free options available on request"
-          onChange={(value) => update({ allergenInfo: value })}
+          onChange={({ target: { value } }) => update({ allergenInfo: value })}
         />
       </div>
 

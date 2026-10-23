@@ -18,15 +18,7 @@ import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminSuccessBanner } from "@/features/admin/components/AdminSuccessBanner";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import {
-  AdminTable,
-  AdminTableBody,
-  AdminTableCell,
-  AdminTableElement,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/features/admin/components/AdminTable";
+import { DataTable } from "@/components/ui/DataTable";
 import {
   fetchReferralSignups,
   patchReferralShoutout,
@@ -219,66 +211,62 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
           <p className="text-sm text-neutral-600">
             {total} signup{total === 1 ? "" : "s"}
           </p>
-          <AdminTable>
-            <AdminTableElement className="min-w-[48rem]">
-              <AdminTableHead>
-                <AdminTableHeaderCell>Email</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Business</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Signed up</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Approval</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Shoutout</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Profile</AdminTableHeaderCell>
-              </AdminTableHead>
-              <AdminTableBody>
-                {signups.map((row) => (
-                  <AdminTableRow key={row.user_id}>
-                    <AdminTableCell>{row.email ?? "-"}</AdminTableCell>
-                    <AdminTableCell>{row.business_name ?? "-"}</AdminTableCell>
-                    <AdminTableCell>{formatDay(row.attributed_at)}</AdminTableCell>
-                    <AdminTableCell>
-                      {row.approval_status ? (
-                        <VendorApprovalStatusBadge status={row.approval_status} />
-                      ) : (
-                        "-"
-                      )}
-                    </AdminTableCell>
-                    <AdminTableCell>
-                      <label className="flex cursor-pointer items-center gap-2 text-sm">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 rounded border-neutral-300 text-primary focus:ring-primary"
-                          checked={row.shoutout_completed}
-                          disabled={toggleBusyId === row.user_id}
-                          onChange={() => void onToggleShoutout(row)}
-                        />
-                        <span className="text-neutral-700">
-                          {row.shoutout_completed ? "Completed" : "Pending"}
-                        </span>
-                      </label>
-                      {row.shoutout_completed_at ? (
-                        <p className="mt-0.5 text-xs text-neutral-500">{formatDay(row.shoutout_completed_at)}</p>
-                      ) : null}
-                    </AdminTableCell>
-                    <AdminTableCell>
-                      {row.explore_path ? (
-                        <ButtonLink
-                          href={row.explore_path}
-                          variant="ghost"
-                          size="sm"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          View
-                        </ButtonLink>
-                      ) : (
-                        "-"
-                      )}
-                    </AdminTableCell>
-                  </AdminTableRow>
-                ))}
-              </AdminTableBody>
-            </AdminTableElement>
-          </AdminTable>
+          <DataTable
+            aria-label="Creator signups"
+            tableClassName="min-w-[48rem]"
+            rows={signups}
+            getRowKey={(row) => row.user_id}
+            columns={[
+              { key: "email", header: "Email", cell: (row) => row.email ?? "-" },
+              { key: "business", header: "Business", cell: (row) => row.business_name ?? "-" },
+              { key: "signedUp", header: "Signed up", cell: (row) => formatDay(row.attributed_at) },
+              {
+                key: "approval",
+                header: "Approval",
+                cell: (row) =>
+                  row.approval_status ? <VendorApprovalStatusBadge status={row.approval_status} /> : "-",
+              },
+              {
+                key: "shoutout",
+                header: "Shoutout",
+                cell: (row) => (
+                  <>
+                    <label className="flex cursor-pointer items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-neutral-300 text-primary focus:ring-primary"
+                        checked={row.shoutout_completed}
+                        disabled={toggleBusyId === row.user_id}
+                        onChange={() => void onToggleShoutout(row)}
+                      />
+                      <span className="text-neutral-700">{row.shoutout_completed ? "Completed" : "Pending"}</span>
+                    </label>
+                    {row.shoutout_completed_at ? (
+                      <p className="mt-0.5 text-xs text-neutral-500">{formatDay(row.shoutout_completed_at)}</p>
+                    ) : null}
+                  </>
+                ),
+              },
+              {
+                key: "profile",
+                header: "Profile",
+                cell: (row) =>
+                  row.explore_path ? (
+                    <ButtonLink
+                      href={row.explore_path}
+                      variant="ghost"
+                      size="sm"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View
+                    </ButtonLink>
+                  ) : (
+                    "-"
+                  ),
+              },
+            ]}
+          />
           <TablePagination
             offset={offset}
             limit={SIGNUPS_PAGE_SIZE}

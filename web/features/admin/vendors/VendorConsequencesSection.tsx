@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { formControlClass } from "@/components/ui/tokens";
-import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
 import {
   deleteVendorListingPause,
   postVendorWarning,
@@ -119,7 +118,7 @@ export function VendorConsequencesSection({ vendor }: Props) {
             <select
               value={action}
               onChange={(event) => setAction(event.target.value as ConsequenceAction)}
-              className={`${adminFilterControlClass} ez-select max-w-md`}
+              className="ez-input ez-select max-w-md"
               aria-label="Consequence action"
             >
               <option value="warn">Warn vendor (email only)</option>

@@ -11,16 +11,7 @@ import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
 import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
-import {
-  AdminTable,
-  AdminTableBody,
-  AdminTableCell,
-  AdminTableElement,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/features/admin/components/AdminTable";
+import { DataTable } from "@/components/ui/DataTable";
 import {
   ADMIN_BLOG_PAGE_SIZE,
   createAdminBlogPost,
@@ -141,7 +132,6 @@ export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps
         }}
         searchPlaceholder="Search title or slug"
         searchAriaLabel="Search posts"
-        inputClassName={adminFilterControlClass}
         onOpenFilter={() => setStatusFilterOpen(true)}
         activeFilterCount={statusFilter ? 1 : 0}
         summary={
@@ -195,37 +185,41 @@ export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps
           }
         />
       ) : (
-        <AdminTable>
-          <AdminTableElement className="min-w-[32rem]">
-            <AdminTableHead>
-              <AdminTableHeaderCell>Title</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Author</AdminTableHeaderCell>
-              <AdminTableHeaderCell className="ez-td-status">Status</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Date</AdminTableHeaderCell>
-              <AdminTableHeaderCell> </AdminTableHeaderCell>
-            </AdminTableHead>
-            <AdminTableBody>
-              {posts.map((p) => (
-                <AdminTableRow key={p.id}>
-                  <AdminTableCell>
-                    <p className="ez-td-strong">{p.title || "Untitled"}</p>
-                    <p className="ez-caption">/{p.slug}</p>
-                  </AdminTableCell>
-                  <AdminTableCell>{p.author_name?.trim() || "-"}</AdminTableCell>
-                  <AdminTableCell className="ez-td-status">{statusBadge(p.status)}</AdminTableCell>
-                  <AdminTableCell className="ez-small">
-                    {p.updated_at ? formatDateTime(p.updated_at) : "-"}
-                  </AdminTableCell>
-                  <AdminTableCell>
-                    <Link href={`/admin/blog/${p.id}`} className="ez-btn ez-btn--secondary ez-btn--sm">
-                      Edit
-                    </Link>
-                  </AdminTableCell>
-                </AdminTableRow>
-              ))}
-            </AdminTableBody>
-          </AdminTableElement>
-        </AdminTable>
+        <DataTable
+          aria-label="Blog posts"
+          tableClassName="min-w-[32rem]"
+          rows={posts}
+          getRowKey={(post) => post.id}
+          columns={[
+            {
+              key: "title",
+              header: "Title",
+              cell: (post) => (
+                <>
+                  <p className="ez-td-strong">{post.title || "Untitled"}</p>
+                  <p className="ez-caption">/{post.slug}</p>
+                </>
+              ),
+            },
+            { key: "author", header: "Author", cell: (post) => post.author_name?.trim() || "-" },
+            { key: "status", header: "Status", kind: "status", cell: (post) => statusBadge(post.status) },
+            {
+              key: "date",
+              header: "Date",
+              className: "ez-small",
+              cell: (post) => (post.updated_at ? formatDateTime(post.updated_at) : "-"),
+            },
+            {
+              key: "edit",
+              header: " ",
+              cell: (post) => (
+                <Link href={`/admin/blog/${post.id}`} className="ez-btn ez-btn--secondary ez-btn--sm">
+                  Edit
+                </Link>
+              ),
+            },
+          ]}
+        />
       )}
 
       <TablePagination

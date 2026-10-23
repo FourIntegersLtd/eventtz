@@ -10,8 +10,9 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { Modal } from "@/components/ui/Modal";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
-import { EzCheck, EzTextField } from "@/components/ui/ez-form";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { TextField } from "@/components/ui/TextField";
 import { useClientOnboarding } from "@/features/client/onboarding/ClientOnboardingProvider";
 import { ChangePasswordModal } from "@/features/settings/ChangePasswordModal";
 import { deleteAccountErrorMessage } from "@/features/settings/SettingsDeleteAccountSection";
@@ -144,7 +145,7 @@ export function ClientSettingsEzView() {
 
   return (
     <div className="ez-stack ez-stack--lg min-w-0 max-w-3xl">
-      <ClientEzPageHead
+      <PageHeader
         eyebrow="Account"
         title="Settings"
         description="Your sign-in, privacy, and shortcuts."
@@ -170,13 +171,13 @@ export function ClientSettingsEzView() {
             </div>
             <div className="ez-card__body">
               <div className="ez-form-grid">
-                <EzTextField
+                <TextField
                   label="Your name"
                   value={name}
                   autoComplete="name"
-                  onChange={setName}
+                  onChange={({ target: { value } }) => setName(value)}
                 />
-                <EzTextField
+                <TextField
                   label="Email"
                   type="email"
                   value={user?.email ?? ""}
@@ -255,26 +256,26 @@ export function ClientSettingsEzView() {
                     <span className="ez-strong">Share my email with vendors</span>
                     <span className="ez-small">{user?.email ?? "Your sign-in email"}</span>
                   </div>
-                  <EzCheck
+                  <Checkbox
                     checked={contact.share_email}
                     disabled={contactSaving}
                     onChange={() => void toggleContact("share_email")}
                   >
                     {contact.share_email ? "On" : "Off"}
-                  </EzCheck>
+                  </Checkbox>
                 </div>
                 <div className="ez-list-row">
                   <div className="ez-list-row__main">
                     <span className="ez-strong">Share my phone with vendors</span>
                     <span className="ez-small">When you add a number to bookings</span>
                   </div>
-                  <EzCheck
+                  <Checkbox
                     checked={contact.share_phone}
                     disabled={contactSaving}
                     onChange={() => void toggleContact("share_phone")}
                   >
                     {contact.share_phone ? "On" : "Off"}
-                  </EzCheck>
+                  </Checkbox>
                 </div>
               </div>
             </div>

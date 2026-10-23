@@ -38,7 +38,13 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `@layer components`, `ui/` blocks emit canvas `ez-*` markup (new `DataTable`, `TextField` absorbs
   `EzClearableInput`), `adminTheme.ts` and `sectionBlockTokens.ts` are deleted. design-diff results are
   identical to main (within 0.05%) on all 33 screens; the failures (P01, V01-V07, V13, V18, V19, V23, V24 and the
-  V11 `.ez-kpi` setup timeout) also fail on main. Deferred: `AdminTable` and raw tables not yet on `DataTable`.
+  V11 `.ez-kpi` setup timeout) also fail on main. Deferred: raw tables not yet on `DataTable`.
+- **Phase 2.3 (collapse duplicates).** `Client/Vendor/AdminEzPageHead` are now `PageHeader`; `AdminKpiCard` is
+  `StatTile`; `AdminTable` is `DataTable` (11 admin tables); `ez-form` is `TextField`/`TextArea`/`Checkbox`/
+  `OptionCard`/`Chip`; local status badges are `Badge`; `AdminCommercePeriodFilter`/`AdminFilterBar`/
+  `adminFilterControlClass` are the `Ez*` filters. Deferred, not an exact render match: the six `Field` helpers
+  (Tailwind rows, not `ez-dl`), `StatCard`/`VendorMetricsStrip`, `form-primitives`, `AdminFilterDateField`,
+  hand-rolled alerts and pills.
 
 **Phase 3 (api half): one pagination kernel, merged twins, one error code each.**
 - **Pagination kernel.** `core/pagination.py` holds `PageParams`/`PageDep` (default 25), `PagedResponse`,

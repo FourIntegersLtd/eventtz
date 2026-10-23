@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Star } from "lucide-react";
 import { useCallback, useState } from "react";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -57,7 +57,7 @@ export function VendorReviewsEzView({ embedded = false }: VendorReviewsEzViewPro
   return (
     <div className="ez-stack ez-stack--lg">
       {embedded ? null : (
-        <VendorEzPageHead
+        <PageHeader descriptionSize="body"
           eyebrow="Business"
           title="Reviews"
           description="What clients say about your business."

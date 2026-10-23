@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Download } from "lucide-react";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { fetchReceiptHtmlBlob, type PaymentReceipt } from "@/lib/receiptsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 
@@ -84,7 +84,7 @@ export function VendorReceiptEzPage({ bookingId, load }: VendorReceiptEzPageProp
       <Link className="ez-back" href={`/vendor/bookings/${bookingId}`}>
         All bookings
       </Link>
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow={statement ? "Statement" : "Receipt"}
         title={statement ? "Payout statement" : "Payment record"}
         description={`${receipt.receipt_number} · ${receipt.counterparty_name}, ${receipt.event_name}`}

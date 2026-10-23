@@ -1,7 +1,7 @@
 "use client";
 
 import type { PortalRole } from "@/lib/portalRole";
-import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ParticipantDisputesPortalView } from "@/features/disputes/ParticipantDisputesPortalView";
 
 type DisputesPortalPageProps = {
@@ -13,7 +13,7 @@ export function DisputesPortalPage({ role, selectedDisputeId = null }: DisputesP
   return (
     <div className="ez-stack ez-stack--lg">
       {role === "client" ? (
-        <ClientEzPageHead
+        <PageHeader
           title="Help and disputes"
           description="Open a case when something went wrong on a booking."
         />

@@ -6,7 +6,7 @@ import { MessageCircle, Calendar, Wallet, Activity } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { copyToClipboard } from "@/lib/copyToClipboard";
 import type { VendorBookingListItem } from "@/lib/vendorBookingsApi";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import type { VendorAnalytics } from "@/lib/vendorAnalyticsApi";
 import { vendorDashboardAnalyticsSlice } from "@/features/vendor/dashboard/vendorDashboardAnalytics";
 import {
@@ -48,7 +48,7 @@ export function VendorDashboardEzView({
 
   return (
     <div className="ez-stack ez-stack--lg">
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow="Welcome back"
         title={`Good morning, ${greetingName}`}
         description="Here is what needs you today."
