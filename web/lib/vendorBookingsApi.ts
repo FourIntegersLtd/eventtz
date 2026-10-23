@@ -1,4 +1,5 @@
 import type { components } from "@/lib/api-schema";
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 import type {
   BookingInitiator,
@@ -38,13 +39,15 @@ export type VendorBookingsPage = {
 export const VENDOR_BOOKINGS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 /** The api types `line_items` as free-form dicts; the real row shape is `BookingLineItem`. */
-export type VendorBookingDetail = Omit<components["schemas"]["VendorBookingDetail"], "line_items"> & {
-  line_items: BookingLineItem[];
-};
+export type VendorBookingDetail = WithFields<
+  components["schemas"]["VendorBookingDetail"],
+  { line_items: BookingLineItem[] }
+>;
 
-export type VendorBookingDetailResponse = Omit<components["schemas"]["VendorBookingDetailResponse"], "booking"> & {
-  booking: VendorBookingDetail;
-};
+export type VendorBookingDetailResponse = WithFields<
+  components["schemas"]["VendorBookingDetailResponse"],
+  { booking: VendorBookingDetail }
+>;
 
 export type VendorBookingStatusResponse = components["schemas"]["VendorBookingStatusResponse"];
 

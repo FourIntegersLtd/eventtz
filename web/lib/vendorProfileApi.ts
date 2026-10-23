@@ -1,21 +1,16 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 import { isHttpStatus } from "@/lib/api-errors";
-import type { VendorApprovalStatus, VendorProfileStatus } from "@/lib/domain-types";
 export { getApiErrorDetail } from "@/lib/api-errors";
 
-export type VendorProfileResponse = {
-  success: boolean;
-  current_step: number;
-  onboarding_status: VendorProfileStatus | string;
-  /** pending until an admin approves; approved unlocks profile review after submission. */
-  approval_status?: VendorApprovalStatus | string;
-  profile_form_data: Record<string, unknown>;
-  updated_at?: string;
-  /** Stripe Connect can both charge and pay out for this vendor. */
-  payouts_verified?: boolean;
-  /** Approved AND payouts verified. False while approved means clients cannot see them yet. */
-  listing_visible?: boolean;
-};
+/**
+ * `profile_form_data` is a free-form dict in the API schema, so it stays `Record<string, unknown>`.
+ * `onboarding_status` and `approval_status` are plain strings in the API and are narrowed by the
+ * screens that read them.
+ */
+export type VendorProfileResponse = components["schemas"]["VendorProfileState"];
+
+type VendorProfilePutBody = components["schemas"]["VendorProfilePutBody"];
 
 export function isVendorProfileForbiddenError(error: unknown): boolean {
   return isHttpStatus(error, 403);
@@ -26,22 +21,24 @@ export async function fetchVendorProfile(): Promise<VendorProfileResponse> {
   return data;
 }
 
-export async function saveVendorProfile(body: {
-  current_step: number;
-  profile_form_data: Record<string, unknown>;
-  onboarding_status?: string;
-}): Promise<VendorProfileResponse> {
-  const { data } = await api.put<VendorProfileResponse>(
-    "/api/v1/vendor/profile",
-    body,
-  );
+/**
+ * The API accepts the status as `status` or (the field's own name) `onboarding_status`
+ * (`populate_by_name`), and the screens send the latter.
+ */
+export async function saveVendorProfile(
+  body: Pick<VendorProfilePutBody, "current_step"> & {
+    profile_form_data: Record<string, unknown>;
+    onboarding_status?: string;
+  },
+): Promise<VendorProfileResponse> {
+  const { data } = await api.put<VendorProfileResponse>("/api/v1/vendor/profile", body);
   return data;
 }
 
 export async function checkBusinessNameAvailable(
   businessName: string,
 ): Promise<{ available: boolean }> {
-  const { data } = await api.get<{ success: boolean; available: boolean }>(
+  const { data } = await api.get<components["schemas"]["VendorBusinessNameAvailabilityResponse"]>(
     "/api/v1/vendor/profile/business-name-available",
     { params: { business_name: businessName.trim() } },
   );

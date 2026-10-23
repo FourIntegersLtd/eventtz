@@ -1,3 +1,5 @@
+import type { WithFields } from "@/lib/apiTypeHelpers";
+import type { components } from "@/lib/api-schema";
 import api from "./axios";
 import { uploadImage } from "./mediaApi";
 import { getApiErrorDetail } from "./api-errors";
@@ -5,7 +7,7 @@ import { getApiErrorDetail } from "./api-errors";
 /** When true, onboarding skips POST /analyze-portfolio-image (no OpenAI vision call). */
 export const SKIP_PORTFOLIO_IMAGE_ANALYSIS = true;
 
-export type GenerateVendorBioResult = { bio: string };
+export type GenerateVendorBioResult = components["schemas"]["GenerateVendorBioResponse"];
 
 export async function postGenerateVendorBio(
   profileFormData: Record<string, unknown>,
@@ -17,36 +19,30 @@ export async function postGenerateVendorBio(
   return res.data;
 }
 
-export type AnalyzePortfolioImageResult = {
-  ok: boolean;
-  score: number;
-  summary: string;
-};
+export type AnalyzePortfolioImageResult = components["schemas"]["AnalyzePortfolioImageResponse"];
 
-export type PackageCoachPackageFeedback = {
-  package_id?: string | null;
-  package_title: string;
-  items: string[];
-  suggested_title?: string | null;
-  suggested_details?: string | null;
-  suggested_duration?: string | null;
-};
+/**
+ * The suggestion fields are optional here because the screens also build local feedback rows
+ * (the model leaves them null when it has nothing to suggest).
+ */
+export type PackageCoachPackageFeedback = Pick<
+  components["schemas"]["PackageCoachPackageFeedback"],
+  "package_title" | "items"
+> &
+  Partial<Omit<components["schemas"]["PackageCoachPackageFeedback"], "package_title" | "items">>;
 
-export type PackageCoachTip = {
-  severity: "tip" | "suggestion" | string;
-  package_id?: string | null;
-  package_title?: string | null;
-  code: string;
-  message: string;
-};
+export type PackageCoachTip = components["schemas"]["PackageCoachTip"];
 
-export type PackageCoachResult = {
-  overall_ok: boolean;
-  summary?: string;
-  package_feedback: PackageCoachPackageFeedback[];
-  tips?: PackageCoachTip[];
-  applied_package_ids?: string[];
-};
+/** `summary` and `tips` are optional and `applied_package_ids` is added: the panels build local results. */
+export type PackageCoachResult = WithFields<
+  components["schemas"]["ReviewVendorPackagesResponse"],
+  {
+    summary?: string;
+    tips?: PackageCoachTip[];
+    applied_package_ids?: string[];
+    package_feedback: PackageCoachPackageFeedback[];
+  }
+>;
 
 export async function postReviewVendorPackages(
   profileFormData: Record<string, unknown>,

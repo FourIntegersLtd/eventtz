@@ -58,7 +58,9 @@ const initial: VendorDashboardState = {
 };
 
 /** Whether an approved vendor's form holds a preset; `null` for a draft or unloaded profile (no nudge). */
-export function cancellationPolicyChosenFor(profile: VendorProfileResponse | null): boolean | null {
+export function cancellationPolicyChosenFor(
+  profile: Pick<VendorProfileResponse, "approval_status" | "profile_form_data"> | null,
+): boolean | null {
   if (!profile || profile.approval_status !== "approved") return null;
   return typeof profile.profile_form_data.cancellationPolicy === "string";
 }

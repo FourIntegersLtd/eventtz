@@ -1,15 +1,10 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 export { getApiErrorDetail } from "@/lib/api-errors";
 
-export type BookingCheckoutResponse = {
-  success: boolean;
-  checkout_url: string;
-};
+export type BookingCheckoutResponse = components["schemas"]["BookingCheckoutResponse"];
 
-export type BookingCheckoutSyncResponse = {
-  success: boolean;
-  payment_status: string;
-};
+export type BookingCheckoutSyncResponse = components["schemas"]["BookingCheckoutSyncResponse"];
 
 /** Starts a Stripe Checkout session for an accepted, unpaid client booking. */
 export async function postBookingCheckout(bookingId: string): Promise<string> {
@@ -24,9 +19,12 @@ export async function postBookingCheckoutSync(
   bookingId: string,
   sessionId?: string | null,
 ): Promise<BookingCheckoutSyncResponse> {
+  const body: components["schemas"]["BookingCheckoutSyncBody"] = sessionId
+    ? { session_id: sessionId }
+    : {};
   const { data } = await api.post<BookingCheckoutSyncResponse>(
     `/api/v1/client/booking-requests/${bookingId}/checkout/sync`,
-    sessionId ? { session_id: sessionId } : {},
+    body,
   );
   return data;
 }

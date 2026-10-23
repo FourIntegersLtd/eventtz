@@ -1,27 +1,14 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type BlogPostStatus = "draft" | "published";
 
-export type BlogPostListItem = {
-  id: string;
-  slug: string;
-  title: string;
-  subtitle: string | null;
-  cover_image_url: string | null;
-  excerpt: string | null;
-  author_name: string | null;
-  status: BlogPostStatus;
-  published_at: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-};
+export type BlogPostListItem = components["schemas"]["BlogPostListItem"];
 
-export type BlogPostAdminDetail = BlogPostListItem & {
-  body_json: Record<string, unknown>;
-  body_html: string;
-  author_admin_user_id: string | null;
-};
+export type BlogPostAdminDetail = components["schemas"]["BlogPostAdminDetail"];
+
+type BlogPostAdminDetailResponse = components["schemas"]["BlogPostAdminDetailResponse"];
 
 function prefix() {
   return "/api/v1/admin/blog";
@@ -43,12 +30,10 @@ export async function fetchAdminBlogPostsPage(
   const search = opts?.search?.trim();
   if (search) params.search = search;
   if (opts?.status) params.status = opts.status;
-  const { data } = await api.get<{
-    posts: BlogPostListItem[];
-    total: number;
-    offset: number;
-    limit: number;
-  }>(`${prefix()}/posts`, { params });
+  const { data } = await api.get<components["schemas"]["BlogPostsListResponse"]>(
+    `${prefix()}/posts`,
+    { params },
+  );
   return {
     posts: data.posts ?? [],
     total: data.total ?? 0,
@@ -63,35 +48,22 @@ export async function fetchAdminBlogPosts(): Promise<BlogPostListItem[]> {
 }
 
 export async function fetchAdminBlogPost(postId: string): Promise<BlogPostAdminDetail> {
-  const { data } = await api.get<{ post: BlogPostAdminDetail }>(
+  const { data } = await api.get<BlogPostAdminDetailResponse>(
     `${prefix()}/posts/${encodeURIComponent(postId)}`,
   );
   return data.post;
 }
 
-export async function createAdminBlogPost(body?: {
-  title?: string;
-  subtitle?: string | null;
-  slug?: string | null;
-}): Promise<BlogPostAdminDetail> {
-  const { data } = await api.post<{ post: BlogPostAdminDetail }>(`${prefix()}/posts`, body ?? {});
+export async function createAdminBlogPost(body?: components["schemas"]["BlogPostCreateBody"]): Promise<BlogPostAdminDetail> {
+  const { data } = await api.post<BlogPostAdminDetailResponse>(`${prefix()}/posts`, body ?? {});
   return data.post;
 }
 
 export async function updateAdminBlogPost(
   postId: string,
-  body: {
-    title?: string;
-    subtitle?: string | null;
-    slug?: string;
-    cover_image_url?: string | null;
-    body_json?: Record<string, unknown>;
-    body_html?: string;
-    excerpt?: string | null;
-    author_name?: string | null;
-  },
+  body: components["schemas"]["BlogPostUpdateBody"],
 ): Promise<BlogPostAdminDetail> {
-  const { data } = await api.patch<{ post: BlogPostAdminDetail }>(
+  const { data } = await api.patch<BlogPostAdminDetailResponse>(
     `${prefix()}/posts/${encodeURIComponent(postId)}`,
     body,
   );
@@ -99,14 +71,14 @@ export async function updateAdminBlogPost(
 }
 
 export async function publishAdminBlogPost(postId: string): Promise<BlogPostAdminDetail> {
-  const { data } = await api.post<{ post: BlogPostAdminDetail }>(
+  const { data } = await api.post<BlogPostAdminDetailResponse>(
     `${prefix()}/posts/${encodeURIComponent(postId)}/publish`,
   );
   return data.post;
 }
 
 export async function unpublishAdminBlogPost(postId: string): Promise<BlogPostAdminDetail> {
-  const { data } = await api.post<{ post: BlogPostAdminDetail }>(
+  const { data } = await api.post<BlogPostAdminDetailResponse>(
     `${prefix()}/posts/${encodeURIComponent(postId)}/unpublish`,
   );
   return data.post;

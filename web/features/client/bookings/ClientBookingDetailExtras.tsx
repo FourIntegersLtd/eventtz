@@ -14,7 +14,6 @@ import { ReceiptActions } from "@/features/receipts/ReceiptActions";
 import { hasPaymentReceipt } from "@/lib/receiptsApi";
 import type { ClientBookingDetail } from "@/lib/clientBookingsApi";
 import { BookingDateChangeCard } from "@/features/bookings/BookingDateChangeCard";
-import type { BookingDateChangeFields } from "@/lib/bookingDateChangeApi";
 
 type ClientBookingDetailExtrasProps = {
   detail: ClientBookingDetail;
@@ -75,7 +74,7 @@ export function ClientBookingDetailExtras({
         paymentStatus={detail.payment_status}
         eventDate={detail.event_date}
         eventEndDate={detail.event_end_date}
-        dateChange={detail as ClientBookingDetail & BookingDateChangeFields}
+        dateChange={detail}
       />
 
       {showUpdatedPriceBanner ? (

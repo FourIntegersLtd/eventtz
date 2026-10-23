@@ -13,7 +13,6 @@ import { PayoutSetupRequiredModal } from "@/features/vendor/payments/PayoutSetup
 import { VendorBookingsEzList } from "@/features/vendor/bookings/VendorBookingsEzList";
 import { BookingDateChangeCard, dateChangeIsVisible } from "@/features/bookings/BookingDateChangeCard";
 import { paymentDeadlineLine } from "@/features/bookings/bookingTerms";
-import type { BookingDateChangeFields } from "@/lib/bookingDateChangeApi";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
 
 /** Payment deadline and date-change controls for the right-hand action card. */
@@ -31,7 +30,7 @@ function vendorSideActions(detail: VendorBookingDetail) {
 
 /** Date-change control for the right-hand action card. Hidden when a change is not allowed. */
 function vendorDateChangeAction(detail: VendorBookingDetail) {
-  const dateChange = detail as VendorBookingDetail & BookingDateChangeFields;
+  const dateChange = detail;
   if (
     !dateChangeIsVisible(
       detail.booking_status,

@@ -1,32 +1,18 @@
+import type { components } from "@/lib/api-schema";
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type ParticipantRole = "client" | "vendor";
 
-export type ParticipantDispute = {
-  id: string;
-  booking_request_id: string;
-  opened_by_user_id: string;
-  status: "open" | "under_review" | "resolved" | "closed";
-  summary: string;
-  created_at: string | null;
-  updated_at: string | null;
-  resolved_at: string | null;
-  resolution_note: string | null;
-  /** True if an in-app Messages thread was linked for staff review when the case was opened. */
-  chat_included_for_review?: boolean;
-  event_name?: string | null;
-  event_date?: string | null;
-  booking_lifecycle_status?: string | null;
-  conversation_id?: string | null;
-  opened_by_role?: "client" | "vendor" | null;
-  opened_by_you?: boolean;
-  opened_by_display_name?: string | null;
-  client_label?: string | null;
-  vendor_display_name?: string | null;
-  counterparty_label?: string | null;
-  payment_status?: string | null;
-};
+/**
+ * `chat_included_for_review` is read by the dispute panel but the API does not send it today
+ * (candidate for the pydantic model).
+ */
+export type ParticipantDispute = WithFields<
+  components["schemas"]["DisputePublic"],
+  { chat_included_for_review?: boolean }
+>;
 
 function participantDisputesPath(role: ParticipantRole, suffix: string): string {
   return `/api/v1/${role}/${suffix}`;
@@ -36,7 +22,7 @@ export async function fetchParticipantBookingDisputes(
   role: ParticipantRole,
   bookingId: string,
 ): Promise<ParticipantDispute[]> {
-  const { data } = await api.get<{ success: boolean; disputes: ParticipantDispute[] }>(
+  const { data } = await api.get<components["schemas"]["DisputesListResponse"]>(
     participantDisputesPath(role, `booking-requests/${bookingId}/disputes`),
   );
   return data.disputes ?? [];
@@ -47,9 +33,9 @@ export async function postParticipantBookingDispute(
   bookingId: string,
   summary: string,
 ): Promise<ParticipantDispute> {
-  const { data } = await api.post<{ success: boolean; dispute: ParticipantDispute }>(
+  const { data } = await api.post<components["schemas"]["CreateDisputeResponse"]>(
     participantDisputesPath(role, `booking-requests/${bookingId}/disputes`),
-    { summary },
+    { summary } satisfies components["schemas"]["CreateDisputeBody"],
   );
   return data.dispute;
 }
@@ -67,14 +53,10 @@ export async function fetchParticipantDisputesPage(
   limit: number;
   open_count: number;
 }> {
-  const { data } = await api.get<{
-    success: boolean;
-    disputes: ParticipantDispute[];
-    total: number;
-    offset: number;
-    limit: number;
-    open_count?: number;
-  }>(participantDisputesPath(role, "disputes"), { params: { offset, limit } });
+  const { data } = await api.get<components["schemas"]["DisputesListResponse"]>(
+    participantDisputesPath(role, "disputes"),
+    { params: { offset, limit } },
+  );
   return {
     disputes: data.disputes ?? [],
     total: data.total ?? 0,
@@ -93,7 +75,7 @@ export async function fetchParticipantDispute(
   role: ParticipantRole,
   disputeId: string,
 ): Promise<ParticipantDispute> {
-  const { data } = await api.get<{ success: boolean; dispute: ParticipantDispute }>(
+  const { data } = await api.get<components["schemas"]["DisputeDetailResponse"]>(
     participantDisputesPath(role, `disputes/${encodeURIComponent(disputeId)}`),
   );
   return data.dispute;

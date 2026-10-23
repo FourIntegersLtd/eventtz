@@ -1,13 +1,8 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-export type AdminClientRow = {
-  user_id: string;
-  email?: string | null;
-  created_at?: string | null;
-  account_suspended: boolean;
-  booking_count: number;
-};
+export type AdminClientRow = components["schemas"]["AdminClientRow"];
 
 export type AdminClientsQuery = {
   offset?: number;
@@ -26,13 +21,7 @@ export type AdminClientsListResult = {
 export async function fetchAdminClients(
   q: AdminClientsQuery = {},
 ): Promise<AdminClientsListResult> {
-  const { data } = await api.get<{
-    success: boolean;
-    clients: AdminClientRow[];
-    total: number;
-    offset: number;
-    limit: number;
-  }>("/api/v1/admin/clients", {
+  const { data } = await api.get<components["schemas"]["AdminClientsListResponse"]>("/api/v1/admin/clients", {
     params: {
       offset: q.offset ?? 0,
       limit: q.limit ?? DEFAULT_LIST_PAGE_SIZE,
@@ -48,18 +37,13 @@ export async function fetchAdminClients(
   };
 }
 
-export type AdminDirectoryUser = {
-  user_id: string;
-  label: string;
-  kind: "client" | "vendor";
-  email?: string | null;
-};
+export type AdminDirectoryUser = components["schemas"]["AdminDirectoryUserRow"];
 
 export async function searchAdminDirectoryUsers(
   q: string,
   opts?: { kinds?: ("client" | "vendor")[]; limit?: number },
 ): Promise<AdminDirectoryUser[]> {
-  const { data } = await api.get<{ success: boolean; users: AdminDirectoryUser[] }>(
+  const { data } = await api.get<components["schemas"]["AdminDirectorySearchResponse"]>(
     "/api/v1/admin/directory/search",
     {
       params: {
@@ -73,5 +57,5 @@ export async function searchAdminDirectoryUsers(
 }
 
 export async function patchClientSuspended(userId: string, suspended: boolean): Promise<void> {
-  await api.patch(`/api/v1/admin/clients/${userId}/suspended`, { suspended });
+  await api.patch(`/api/v1/admin/clients/${userId}/suspended`, { suspended } satisfies components["schemas"]["AdminClientSuspendedBody"]);
 }

@@ -1,9 +1,11 @@
+import type { components } from "@/lib/api-schema";
+
 /**
  * UK address lookup API - DISABLED (getAddress.io / OS Places commented out).
  * Venue addresses use free text via VenueAddressFields instead.
  */
 
-export type AddressAutocompleteItem = { id: string; address: string };
+export type AddressAutocompleteItem = components["schemas"]["AddressAutocompleteItem"];
 
 export type AddressAutocompleteResult = {
   suggestions: AddressAutocompleteItem[];
@@ -17,10 +19,10 @@ export async function fetchAddressAutocomplete(
   return { suggestions: [], providerConfigured: false };
 }
 
-export type AddressResolveResult = {
-  postcode: string;
-  formatted_line: string;
-};
+export type AddressResolveResult = Pick<
+  components["schemas"]["AddressResolveResponse"],
+  "postcode" | "formatted_line"
+>;
 
 export async function fetchAddressResolve(_addressId: string): Promise<AddressResolveResult> {
   // getAddress.io / OS Places lookup disabled - use VenueAddressFields free text.

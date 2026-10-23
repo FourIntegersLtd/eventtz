@@ -62,7 +62,14 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `npm run api:types:check` runs in `ci-web` and `test_openapi_fresh.py` keeps `openapi.json` fresh. Response
   schemas mark every field required (`app/openapi.py`). Bookings (client and vendor), both dashboards,
   vendor payments, `/auth/me` and explore now alias the generated schema; `lib/api-types.ts` is deleted.
-  Left: the other ~40 `lib/*Api.ts` files still hold hand-written types and move over as screens are touched.
+  Phase 3.6b: every other `lib/*Api.ts` now aliases the generated schema (`lib/apiTypeHelpers.ts` `WithFields`
+  narrows a field); `lib/noHandWrittenApiShapes.test.ts` fails on a hand-written type named like a schema.
+  Still hand-narrowed because the API types them as free-form dicts (candidates for pydantic models):
+  vendor analytics (`overview`, `funnel`, `*_by_month`), admin marketplace analytics, chat `metadata`,
+  admin booking `booking` and `support.open_dispute`, admin vendor insights `bookings_by_month`, copilot
+  `package_feedback`, `profile_form_data`. Drift found: the planner vendor card and `chat_included_for_review`
+  on disputes are read by screens but not sent by the API; `message_role` on help/copilot history is sent
+  while the schema shows its `role` alias; `addressApi.ts` is only partly aliased (module disabled).
 
 **Phase 4: dead code and docs** (PR "Rebuild audit Phase 4", except `test_list_pagination.py`, which Phase 3 owns).
 - **Deleted web files with no importers (grep of every import form, then `npm run build`):**

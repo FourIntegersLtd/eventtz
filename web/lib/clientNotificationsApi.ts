@@ -1,3 +1,4 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
 /** Fired after client marks booking notifications read (sidebar badge). */
@@ -5,10 +6,8 @@ export const BOOKING_NOTIFICATIONS_CLEARED_EVENT = "eventtz:booking-notification
 /** Fired when booking notifications may have changed (SSE, status updates) and counts should refetch. */
 export const BOOKING_NOTIFICATIONS_REFRESH_EVENT = "eventtz:booking-notifications-refresh";
 
-export type BookingNotificationsUnreadResponse = {
-  success: boolean;
-  unread_count: number;
-};
+export type BookingNotificationsUnreadResponse =
+  components["schemas"]["BookingNotificationsUnreadResponse"];
 
 export async function fetchClientBookingNotificationsUnreadCount(): Promise<number> {
   const { data } = await api.get<BookingNotificationsUnreadResponse>(

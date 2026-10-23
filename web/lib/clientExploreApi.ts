@@ -1,3 +1,4 @@
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 import type { components } from "@/lib/api-schema";
 import type { VendorApprovalStatus, VendorProfileStatus } from "@/lib/domain-types";
@@ -20,11 +21,7 @@ export type ExploreVendor = {
   conversion_rate?: number | null;
 };
 
-export type ExploreVendorFeaturedReview = {
-  rating: number;
-  body_excerpt: string;
-  reviewer_display: string;
-};
+export type ExploreVendorFeaturedReview = components["schemas"]["ExploreVendorFeaturedReview"];
 
 export type ExploreVendorSearchRow = ExploreVendor & {
   matched_services: string[];
@@ -34,31 +31,14 @@ export type ExploreVendorSearchRow = ExploreVendor & {
   match_hint?: string | null;
 };
 
-export type ExplorePlanNeed = {
-  id: string;
-  label: string;
-  service_key: string;
-  keywords: string[];
-  optional: boolean;
-  rationale?: string | null;
-};
+export type ExplorePlanNeed = components["schemas"]["ExplorePlanNeed"];
 
-export type ExploreSearchPlan = {
-  title: string;
-  event_types: string[];
-  needs: ExplorePlanNeed[];
-  intent_summary?: string | null;
-};
+export type ExploreSearchPlan = components["schemas"]["ExploreSearchPlan"];
 
-export type ExploreSearchSection = {
-  need_id: string;
-  label: string;
-  service_key: string;
-  optional: boolean;
-  vendors: ExploreVendorSearchRow[];
-  total_count: number;
-  why?: string | null;
-};
+export type ExploreSearchSection = WithFields<
+  components["schemas"]["ExploreSearchSection"],
+  { vendors: ExploreVendorSearchRow[] }
+>;
 
 export type MarketplaceSort =
   | "relevance"
@@ -101,7 +81,9 @@ type ExploreVendorSearchApiResponse = {
  * counts, which need the full list rather than a ranked/paginated page.
  */
 export async function fetchExploreVendors(): Promise<ExploreVendor[]> {
-  const { data } = await api.get<Omit<components["schemas"]["ExploreVendorsResponse"], "vendors"> & { vendors: ExploreVendor[] }>("/api/v1/vendors/explore");
+  const { data } = await api.get<
+    WithFields<components["schemas"]["ExploreVendorsResponse"], { vendors: ExploreVendor[] }>
+  >("/api/v1/vendors/explore");
   return data.vendors ?? [];
 }
 
