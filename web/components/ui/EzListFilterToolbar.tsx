@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { ListFilter } from "lucide-react";
-import { EzClearableInput } from "@/components/ui/EzClearableInput";
+import { TextField } from "@/components/ui/TextField";
 
 type EzListFilterToolbarProps = {
   searchValue?: string;
@@ -41,13 +41,16 @@ export function EzListFilterToolbar({
         className={`ez-hrow flex-wrap gap-3 ${showSearch ? "ez-between" : "justify-start"}`}
       >
         {showSearch ? (
-          <div className="ez-field min-w-0 flex-1" style={{ maxWidth: searchMaxWidth }}>
-            <EzClearableInput
+          <div className="min-w-0 flex-1" style={{ maxWidth: searchMaxWidth }}>
+            <TextField
+              type="search"
+              label={searchAriaLabel ?? searchPlaceholder ?? "Search"}
+              hideLabel
               value={searchValue}
-              onChange={onSearchChange}
-              inputClassName={inputClassName}
+              onChange={(event) => onSearchChange(event.target.value)}
+              onClear={() => onSearchChange("")}
+              className={inputClassName}
               placeholder={searchPlaceholder ?? "Search"}
-              aria-label={searchAriaLabel ?? searchPlaceholder ?? "Search"}
               clearLabel="Clear search"
             />
           </div>

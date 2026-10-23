@@ -2,7 +2,7 @@
 
 import { ChevronRight } from "lucide-react";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
+import { CARD_PADDING, CARD_SURFACE } from "@/components/ui/tokens";
 import { VENDOR_COPILOT } from "@/features/vendor/copilot/copilotBranding";
 import { GrowthScoreRing } from "@/features/vendor/copilot/GrowthScoreRing";
 import { useVendorCopilot } from "@/features/vendor/copilot/VendorCopilotContext";
@@ -24,7 +24,7 @@ export function VendorGrowthGlanceTile() {
   if (loading) {
     return (
       <div
-        className={`flex min-w-0 w-full flex-col justify-between overflow-hidden sm:col-span-2 lg:col-span-1 ${portalCard} ${portalCardPadding}`}
+        className={`flex min-w-0 w-full flex-col justify-between overflow-hidden sm:col-span-2 lg:col-span-1 ${CARD_SURFACE} ${CARD_PADDING}`}
         aria-hidden
       >
         <p className="text-base font-medium text-neutral-500">{VENDOR_COPILOT.glanceTitle}</p>
@@ -37,7 +37,7 @@ export function VendorGrowthGlanceTile() {
   if (error || !brief) {
     return (
       <div
-        className={`flex min-w-0 w-full flex-col justify-between overflow-hidden sm:col-span-2 lg:col-span-1 ${portalCard} ${portalCardPadding}`}
+        className={`flex min-w-0 w-full flex-col justify-between overflow-hidden sm:col-span-2 lg:col-span-1 ${CARD_SURFACE} ${CARD_PADDING}`}
       >
         <p className="text-base font-medium text-neutral-500">{VENDOR_COPILOT.glanceTitle}</p>
         <p className="mt-4 text-sm text-neutral-600">Score unavailable</p>
@@ -58,7 +58,7 @@ export function VendorGrowthGlanceTile() {
       type="button"
       onClick={() => openCopilot({ name: "home" })}
       aria-label={`Open ${VENDOR_COPILOT.glanceTitle}. Growth score ${brief.growth_score}. Focus: ${focusLine}`}
-      className={`group flex min-w-0 w-full flex-col justify-between overflow-hidden text-left sm:col-span-2 lg:col-span-1 ${portalCard} ${portalCardPadding} ${tileInteractiveClass} ${tintClass}`}
+      className={`group flex min-w-0 w-full flex-col justify-between overflow-hidden text-left sm:col-span-2 lg:col-span-1 ${CARD_SURFACE} ${CARD_PADDING} ${tileInteractiveClass} ${tintClass}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-2">

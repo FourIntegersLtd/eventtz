@@ -1,33 +1,41 @@
 import { describe, expect, it } from "vitest";
 import { getButtonClassName } from "@/components/ui/buttonStyles";
-import { TONE } from "@/components/ui/tokens";
+import { CARD_SURFACE, TONE, formControlClass } from "@/components/ui/tokens";
 import { getInitials } from "@/components/ui/Avatar";
 import { getBookingStatusMeta } from "@/lib/domain-types";
 import { paymentStatusTone } from "@/lib/bookingStatusStyles";
 
 describe("getButtonClassName", () => {
-  it("styles the primary variant at the default size", () => {
+  it("styles the primary variant at the default size with the canvas classes", () => {
     const classes = getButtonClassName();
-    expect(classes).toContain("bg-primary text-white");
-    expect(classes).toContain("font-medium");
-    expect(classes).toContain("min-h-11 px-4 py-2 text-sm");
+    expect(classes.split(" ").slice(0, 2)).toEqual(["ez-btn", "ez-btn--primary"]);
+    expect(classes).not.toContain("ez-btn--sm");
+    expect(classes).not.toContain("ez-btn--lg");
   });
 
-  it("styles secondary as white with a strong line", () => {
-    expect(getButtonClassName({ variant: "secondary" })).toContain(
-      "border border-line-strong bg-white text-ink hover:bg-surface-3",
-    );
+  it("maps secondary and its outline alias to ez-btn--secondary", () => {
+    expect(getButtonClassName({ variant: "secondary" })).toContain("ez-btn ez-btn--secondary");
+    expect(getButtonClassName({ variant: "outline" })).toContain("ez-btn ez-btn--secondary");
   });
 
-  it("styles destructive as a soft danger button", () => {
-    expect(getButtonClassName({ variant: "destructive" })).toContain(
-      "border border-danger-line bg-danger-soft text-danger",
-    );
+  it("styles destructive as the quiet danger button on the danger tint", () => {
+    expect(getButtonClassName({ variant: "destructive" })).toContain("ez-btn--danger-quiet bg-danger-soft");
   });
 
-  it("styles ghost with a surface-3 hover and adds the lg size", () => {
-    expect(getButtonClassName({ variant: "ghost" })).toContain("hover:bg-surface-3");
-    expect(getButtonClassName({ size: "lg" })).toContain("min-h-12 px-6 py-3 text-base");
+  it("maps ghost, inverted, sizes and the pill shape", () => {
+    expect(getButtonClassName({ variant: "ghost" })).toContain("ez-btn--ghost");
+    expect(getButtonClassName({ variant: "inverted" })).toContain("ez-btn--inverse");
+    expect(getButtonClassName({ variant: "invertedOutline" })).toContain("ez-btn--inverse-outline");
+    expect(getButtonClassName({ size: "lg" })).toContain("ez-btn--lg");
+    expect(getButtonClassName({ size: "sm", shape: "pill" })).toContain("ez-btn--sm");
+    expect(getButtonClassName({ shape: "pill" })).toContain("ez-btn--pill");
+  });
+});
+
+describe("canvas surface tokens", () => {
+  it("emits ez classes for cards and form controls", () => {
+    expect(CARD_SURFACE).toBe("ez-card shadow-xs");
+    expect(formControlClass("mt-1")).toBe("ez-input py-2.5 mt-1");
   });
 });
 

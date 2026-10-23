@@ -1,11 +1,5 @@
 import type { ElementType, ReactNode } from "react";
-import {
-  portalCard,
-  portalCardPadding,
-  portalCardPaddingLg,
-  portalInsetCard,
-} from "@/components/portal-shell/portalTheme";
-import { panelCardSurface } from "@/components/ui/sectionBlockTokens";
+import { CARD_PADDING, CARD_SURFACE } from "@/components/ui/tokens";
 
 export type CardVariant = "portal" | "portal-inset" | "admin" | "muted" | "callout";
 export type CardPadding = "none" | "md" | "lg";
@@ -18,23 +12,24 @@ type CardProps<T extends ElementType = "div"> = {
   children: ReactNode;
 };
 
+/** Canvas card modifiers: the plain card, flat (`muted`) and brand tint (`callout`). */
 const VARIANT_CLASSES: Record<CardVariant, string> = {
-  portal: portalCard,
-  "portal-inset": portalInsetCard,
-  admin: panelCardSurface,
-  muted: "rounded-2xl border border-line bg-surface-3",
-  callout: "rounded-2xl border border-primary-border bg-primary-soft",
+  portal: CARD_SURFACE,
+  "portal-inset": CARD_SURFACE,
+  admin: CARD_SURFACE,
+  muted: "ez-card ez-card--flat",
+  callout: "ez-card ez-card--brand",
 };
 
 const PADDING_CLASSES: Record<CardPadding, string> = {
   none: "",
-  md: portalCardPadding,
-  lg: portalCardPaddingLg,
+  md: CARD_PADDING,
+  lg: "p-6 sm:p-8",
 };
 
 /**
- * Shared surface container - portal cards, admin cards, nested inset panels, and
- * `muted` (surface-3) and `callout` (brand tint) variants.
+ * Shared surface container (`ez-card`): portal, admin and inset panels share one look;
+ * `muted` is the flat tint and `callout` the brand tint.
  */
 function CardRoot<T extends ElementType = "div">({
   as,
@@ -55,23 +50,19 @@ function CardRoot<T extends ElementType = "div">({
 
 type CardSlotProps = { className?: string; children: ReactNode };
 
-/** Top slot of a Card: title row with a hairline below. */
+/** Top slot of a Card: title row with a hairline below (`ez-card__head`). */
 export function CardHeader({ className = "", children }: CardSlotProps) {
-  return <div className={`border-b border-line px-5 py-4 ${className}`.trim()}>{children}</div>;
+  return <div className={`ez-card__head ${className}`.trim()}>{children}</div>;
 }
 
-/** Main slot of a Card, 20px padding. */
+/** Main slot of a Card, 20px padding (`ez-card__body`). */
 export function CardBody({ className = "", children }: CardSlotProps) {
-  return <div className={`p-5 ${className}`.trim()}>{children}</div>;
+  return <div className={`ez-card__body ${className}`.trim()}>{children}</div>;
 }
 
-/** Bottom slot of a Card: action row with a hairline above. */
+/** Bottom slot of a Card: action row with a hairline above (`ez-card__foot`). */
 export function CardFooter({ className = "", children }: CardSlotProps) {
-  return (
-    <div className={`flex flex-wrap items-center justify-end gap-2 border-t border-line px-5 py-4 ${className}`.trim()}>
-      {children}
-    </div>
-  );
+  return <div className={`ez-card__foot ${className}`.trim()}>{children}</div>;
 }
 
 export const Card = Object.assign(CardRoot, {

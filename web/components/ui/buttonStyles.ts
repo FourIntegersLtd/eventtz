@@ -1,4 +1,4 @@
-import { FOCUS_RING, RADIUS } from "@/components/ui/tokens";
+import { FOCUS_RING } from "@/components/ui/tokens";
 
 export type ButtonVariant =
   | "primary"
@@ -11,33 +11,33 @@ export type ButtonVariant =
 export type ButtonSize = "sm" | "md" | "lg";
 export type ButtonShape = "default" | "pill";
 
+/** Canvas modifier per variant (`ez-btn--*` in eventtz.css). `outline` is an alias of `secondary`. */
 export const BUTTON_VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: "bg-primary text-white hover:opacity-95 disabled:opacity-50",
-  secondary:
-    "border border-line-strong bg-white text-ink hover:bg-surface-3 disabled:opacity-50",
-  ghost: "text-ink-2 hover:bg-surface-3 disabled:opacity-50",
-  destructive:
-    "border border-danger-line bg-danger-soft text-danger hover:bg-danger-line/60 disabled:opacity-50",
-  inverted: "bg-white text-primary hover:opacity-95 disabled:opacity-50",
-  outline:
-    "border border-line-strong bg-white text-ink hover:bg-surface-3 disabled:opacity-50",
-  invertedOutline:
-    "border border-white/40 bg-transparent text-white hover:bg-white/10 disabled:opacity-50",
+  primary: "ez-btn--primary",
+  secondary: "ez-btn--secondary",
+  ghost: "ez-btn--ghost",
+  // Soft danger: the quiet canvas button on the danger tint.
+  destructive: "ez-btn--danger-quiet bg-danger-soft",
+  inverted: "ez-btn--inverse",
+  outline: "ez-btn--secondary",
+  invertedOutline: "ez-btn--inverse-outline",
 };
 
+/** `md` is the base `ez-btn` size, so it adds no modifier. */
 export const BUTTON_SIZE_CLASSES: Record<ButtonSize, string> = {
-  sm: "min-h-11 px-3 py-2.5 text-sm",
-  md: "min-h-11 px-4 py-2 text-sm",
-  lg: "min-h-12 px-6 py-3 text-base",
+  sm: "ez-btn--sm",
+  md: "",
+  lg: "ez-btn--lg",
 };
 
 const BUTTON_SHAPE_CLASSES: Record<ButtonShape, string> = {
-  default: RADIUS.md,
-  pill: "rounded-full",
+  default: "",
+  pill: "ez-btn--pill",
 };
 
-export const BUTTON_MOTION_PRESS = "duration-150 ease-out active:scale-[0.97]";
+export const BUTTON_MOTION_PRESS = "active:scale-[0.97]";
 
+/** Class string for a button or a link that looks like one: `ez-btn` plus canvas modifiers. */
 export function getButtonClassName({
   variant = "primary",
   size = "md",
@@ -50,12 +50,12 @@ export function getButtonClassName({
   className?: string;
 } = {}): string {
   return [
-    "inline-flex items-center justify-center gap-2 font-medium transition",
-    BUTTON_MOTION_PRESS,
-    FOCUS_RING,
+    "ez-btn",
     BUTTON_VARIANT_CLASSES[variant],
     BUTTON_SIZE_CLASSES[size],
     BUTTON_SHAPE_CLASSES[shape],
+    BUTTON_MOTION_PRESS,
+    FOCUS_RING,
     className,
   ]
     .filter(Boolean)

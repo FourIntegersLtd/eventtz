@@ -1,10 +1,9 @@
 import type { ReactNode } from "react";
-import { RADIUS, TONE } from "@/components/ui/tokens";
 import type { Tone } from "@/lib/tone";
 
 export type BannerProps = {
   tone?: Tone;
-  /** Optional leading icon, e.g. a lucide icon at h-5 w-5. */
+  /** Optional leading icon, e.g. a lucide icon (the canvas sizes it to 20px). */
   icon?: ReactNode;
   title?: string;
   /** Optional call to action, usually a Button size="sm". */
@@ -13,7 +12,7 @@ export type BannerProps = {
   children?: ReactNode;
 };
 
-/** Inline notice box that replaces hand-rolled amber and red alert boxes. */
+/** Inline notice box (`ez-banner--<tone>`) that replaces hand-rolled amber and red alert boxes. */
 export function Banner({
   tone = "info",
   icon,
@@ -22,18 +21,17 @@ export function Banner({
   className = "",
   children,
 }: BannerProps) {
-  const toneClasses = TONE[tone];
   return (
     <div
       role={tone === "danger" ? "alert" : "status"}
-      className={`flex flex-wrap items-start gap-3 ${RADIUS.lg} border p-4 ${toneClasses.background} ${toneClasses.line} ${className}`.trim()}
+      className={`ez-banner ez-banner--${tone} ${className}`.trim()}
     >
-      {icon ? <span className={`mt-0.5 shrink-0 ${toneClasses.text}`}>{icon}</span> : null}
-      <div className="min-w-0 flex-1 space-y-1">
-        {title ? <p className={`text-sm font-medium ${toneClasses.text}`}>{title}</p> : null}
-        {children ? <div className="text-sm leading-relaxed text-ink-2">{children}</div> : null}
+      {icon}
+      <div className="ez-banner__body">
+        {title ? <span className="ez-banner__title">{title}</span> : null}
+        {children ? <div>{children}</div> : null}
       </div>
-      {action ? <div className="shrink-0">{action}</div> : null}
+      {action ? <div className="ez-banner__actions">{action}</div> : null}
     </div>
   );
 }

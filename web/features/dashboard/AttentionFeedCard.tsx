@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { AlertCircle, ChevronDown, ChevronRight, Info, Sparkles } from "lucide-react";
-import { portalCard } from "@/components/portal-shell/portalTheme";
+import { CARD_SURFACE } from "@/components/ui/tokens";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
@@ -49,7 +49,7 @@ export function AttentionFeedCard({
   const visible = expanded || !canCollapse ? sorted : sorted.slice(0, previewCount);
 
   return (
-    <div className={`w-full min-w-0 overflow-hidden ${portalCard}`}>
+    <div className={`w-full min-w-0 overflow-hidden ${CARD_SURFACE}`}>
       <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
         <div>
           <p className="text-[15px] font-semibold tracking-tight text-neutral-900">To do</p>

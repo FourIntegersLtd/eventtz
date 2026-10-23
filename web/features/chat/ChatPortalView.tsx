@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { portalCard } from "@/components/portal-shell/portalTheme";
+import { CARD_SURFACE } from "@/components/ui/tokens";
 import {
   CHAT_CONVERSATIONS_PAGE_SIZE,
   type ChatConversation,
@@ -96,7 +96,7 @@ export function ChatPortalView({
       hasSelection={!!selectedConversationId}
       list={
         <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-          <div className={`flex h-full min-h-0 flex-1 flex-col overflow-hidden ${portalCard}`}>
+          <div className={`flex h-full min-h-0 flex-1 flex-col overflow-hidden ${CARD_SURFACE}`}>
             <div className="border-b border-neutral-100 px-5 py-4 sm:px-6">
               <p className="text-sm font-semibold text-neutral-900">
                 {loading
@@ -239,13 +239,13 @@ export function ChatPortalView({
           </div>
         ) : loading ? (
           <div
-            className={`flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden ${portalCard}`}
+            className={`flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden ${CARD_SURFACE}`}
           >
             <LoadingState label="Loading conversations…" variant="centered" branded />
           </div>
         ) : (
           <div
-            className={`flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden ${portalCard}`}
+            className={`flex h-full min-h-0 flex-1 items-center justify-center overflow-hidden ${CARD_SURFACE}`}
           >
             <EmptyState
               className="border-0"

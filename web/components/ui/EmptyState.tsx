@@ -2,13 +2,8 @@
 
 import type { ReactNode } from "react";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
-import { RADIUS } from "@/components/ui/tokens";
 import type { EmptyLottieAssetKey } from "@/lib/lottieAssets";
-import {
-  EMPTY_STATE_ICON_CLASS,
-  EMPTY_STATE_VARIANTS,
-  type EmptyStateVariant,
-} from "@/lib/emptyStateVariants";
+import { EMPTY_STATE_VARIANTS, type EmptyStateVariant } from "@/lib/emptyStateVariants";
 
 export type { EmptyLottieAssetKey } from "@/lib/lottieAssets";
 export type { EmptyStateVariant } from "@/lib/emptyStateVariants";
@@ -25,6 +20,7 @@ export type EmptyStateProps = {
   className?: string;
 };
 
+/** The illustration: a Lottie as is, an icon inside the canvas `ez-empty__art` disc. */
 function resolveEmptyVisual(
   variant: EmptyStateVariant | undefined,
   lottie: EmptyLottieAssetKey | undefined,
@@ -34,7 +30,11 @@ function resolveEmptyVisual(
     const preset = EMPTY_STATE_VARIANTS[variant];
     if (preset.icon) {
       const Icon = preset.icon;
-      return <Icon className={EMPTY_STATE_ICON_CLASS} strokeWidth={1.75} aria-hidden />;
+      return (
+        <div className="ez-empty__art">
+          <Icon strokeWidth={1.75} aria-hidden />
+        </div>
+      );
     }
     if (preset.lottie) {
       return <LottieIllustration asset={preset.lottie} ariaLabel="" />;
@@ -44,13 +44,13 @@ function resolveEmptyVisual(
     return <LottieIllustration asset={lottie} ariaLabel="" />;
   }
   if (icon) {
-    return <div className="text-ink-3">{icon}</div>;
+    return <div className="ez-empty__art">{icon}</div>;
   }
   return null;
 }
 
 /**
- * Consistent empty-list treatment (bookings, messages, notifications) - a
+ * Consistent empty-list treatment (`ez-empty`: bookings, messages, notifications) - a
  * short human sentence plus exactly one next action. Never render a bare
  * "No data" message; every consumer should pass at least a title.
  */
@@ -66,15 +66,11 @@ export function EmptyState({
   const visual = resolveEmptyVisual(variant, lottie, icon);
 
   return (
-    <div
-      className={`flex flex-col items-center gap-3 border border-dashed border-line-strong px-6 py-10 text-center ${RADIUS.lg} ${className}`.trim()}
-    >
+    <div className={`ez-empty ${className}`.trim()}>
       {visual}
-      <p className="font-heading text-base font-semibold text-ink">{title}</p>
-      {description ? (
-        <p className="max-w-sm text-sm leading-relaxed text-ink-3">{description}</p>
-      ) : null}
-      {action ? <div className="mt-1">{action}</div> : null}
+      <h3 className="ez-h2">{title}</h3>
+      {description ? <p className="ez-body">{description}</p> : null}
+      {action ? <div>{action}</div> : null}
     </div>
   );
 }

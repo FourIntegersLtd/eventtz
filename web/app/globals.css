@@ -1,43 +1,43 @@
 @import "tailwindcss";
 /* Canvas design language (web/design/canvas): every class is ez- prefixed and every token --ez-, so it never collides with Tailwind. Screens are transcribed from the artboards with these classes. */
-@import "../design/canvas/project/eventtz.css";
+@import "../design/canvas/project/eventtz.css" layer(components);
 
 /* Segmented switches are links in the admin console. The design colours them as controls, not brand links. */
 .ez-page a.ez-seg__item { color: var(--ez-ink-2); text-decoration: none; }
 .ez-page a.ez-seg__item--active { color: var(--ez-brand-700); }
 
 :root {
-  --background: #ffffff;
+  --background: var(--ez-surface);
   --foreground: #171717;
-  --primary: #3e1964;
-  --primary-soft: #f3eef9;
-  --primary-muted: #ebe4f4;
+  --primary: var(--ez-brand-700);
+  --primary-soft: var(--ez-brand-100);
+  --primary-muted: var(--ez-brand-200);
   --primary-border: rgba(62, 25, 100, 0.14);
   --primary-shadow: rgba(62, 25, 100, 0.08);
-  --accent-gold: #c4a05a;
-  --accent-violet: #8b6bb8;
-  --page-bg: #f8f6fb;
+  --accent-gold: var(--ez-gold-500);
+  --accent-violet: var(--ez-brand-500);
+  --page-bg: var(--ez-brand-50);
   /* Soft design language (approved canvas): surfaces, lines, ink, tones, shadows. */
-  --surface: #ffffff;
-  --surface-3: #f5f3f8;
-  --line: #ece8f1;
-  --line-strong: #e2dce9;
-  --ink: #18151d;
-  --ink-2: #4d4955;
-  --ink-3: #6e6a76;
-  --success: #1f7a4d;
-  --success-soft: #ecf8f1;
-  --success-line: #c9ead7;
-  --warning: #7a5a00;
-  --warning-soft: #fdf9e8;
-  --warning-line: #f2e3a5;
-  --danger: #b42318;
-  --danger-soft: #fdf0ef;
-  --danger-line: #f5cdc8;
-  --info: #1f5f9e;
-  --info-soft: #eef5fd;
-  --info-line: #cfe2f7;
-  --scrim: rgba(24, 21, 29, 0.36);
+  --surface: var(--ez-surface);
+  --surface-3: var(--ez-surface-3);
+  --line: var(--ez-line);
+  --line-strong: var(--ez-line-strong);
+  --ink: var(--ez-ink);
+  --ink-2: var(--ez-ink-2);
+  --ink-3: var(--ez-ink-3);
+  --success: var(--ez-success);
+  --success-soft: var(--ez-success-bg);
+  --success-line: var(--ez-success-line);
+  --warning: var(--ez-warning);
+  --warning-soft: var(--ez-warning-bg);
+  --warning-line: var(--ez-warning-line);
+  --danger: var(--ez-danger);
+  --danger-soft: var(--ez-danger-bg);
+  --danger-line: var(--ez-danger-line);
+  --info: var(--ez-info);
+  --info-soft: var(--ez-info-bg);
+  --info-line: var(--ez-info-line);
+  --scrim: var(--ez-scrim);
   --auth-bg: #f5f2f8;
 
   /* Horizontal inset shared by portal topbars, main content, and marketing shells (matches Eventtz logo). */
@@ -109,17 +109,13 @@
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
   --color-info-line: var(--info-line);
+  --shadow-xs: var(--ez-shadow-1);
+  --shadow-card: var(--ez-shadow-2);
+  --shadow-overlay: var(--ez-shadow-3);
+  --radius-control: var(--ez-r-control);
+  --radius-card: var(--ez-r-card);
   --font-sans: var(--font-jakarta), ui-sans-serif, sans-serif;
   --font-heading: var(--font-fraunces), ui-serif, serif;
-}
-
-/* Literal (non-inline) theme values: these generate shadow-xs, shadow-card, shadow-overlay, rounded-control, rounded-card. */
-@theme {
-  --shadow-xs: 0 1px 2px rgba(24, 21, 29, 0.04);
-  --shadow-card: 0 6px 20px rgba(62, 25, 100, 0.06);
-  --shadow-overlay: 0 24px 56px rgba(32, 11, 53, 0.16);
-  --radius-control: 10px;
-  --radius-card: 16px;
 }
 
 @media (prefers-color-scheme: dark) {

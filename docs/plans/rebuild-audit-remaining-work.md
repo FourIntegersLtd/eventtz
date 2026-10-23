@@ -34,6 +34,12 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 - **Freeze suite.** The fixes for the 9 acceptance tests that already failed on `main` ship with the
   Phase 1 PR.
 
+- **Phase 2.1 (tokens and blocks).** `globals.css` tokens are `var(--ez-*)`, `eventtz.css` loads in
+  `@layer components`, `ui/` blocks emit canvas `ez-*` markup (new `DataTable`, `TextField` absorbs
+  `EzClearableInput`), `adminTheme.ts` and `sectionBlockTokens.ts` are deleted. design-diff results are
+  identical to main (within 0.05%) on all 33 screens; the failures (P01, V01-V07, V13, V18, V19, V23, V24 and the
+  V11 `.ez-kpi` setup timeout) also fail on main. Deferred: `AdminTable` and raw tables not yet on `DataTable`.
+
 **Phase 3 (api half): one pagination kernel, merged twins, one error code each.**
 - **Pagination kernel.** `core/pagination.py` holds `PageParams`/`PageDep` (default 25), `PagedResponse`,
   `paged()` (primary-key tie-breaker) and `escape_like()`. Every list router, schema and repository uses

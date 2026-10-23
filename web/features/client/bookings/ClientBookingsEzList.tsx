@@ -6,7 +6,7 @@ import type { BookingListTab } from "@/features/bookings/BookingListPanel";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-import { EzClearableInput } from "@/components/ui/EzClearableInput";
+import { TextField } from "@/components/ui/TextField";
 
 function statusBadgeClass(status: string): string {
   const normalized = status.toLowerCase();
@@ -72,13 +72,16 @@ export function ClientBookingsEzList({
       </div>
 
       <div className="ez-hrow">
-        <EzClearableInput
+        <TextField
           id="client-bookings-search"
+          type="search"
+          label="Search by vendor or event"
+          hideLabel
           value={listSearch}
           placeholder="Search by vendor or event"
-          aria-label="Search by vendor or event"
           wrapperStyle={{ width: "min(18rem, 100%)" }}
-          onChange={(value) => onListSearchChange?.(value)}
+          onChange={(event) => onListSearchChange?.(event.target.value)}
+          onClear={() => onListSearchChange?.("")}
         />
       </div>
 
