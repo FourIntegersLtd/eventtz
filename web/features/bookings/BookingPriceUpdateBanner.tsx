@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
+import { formatGbp } from "@/lib/money";
 
 type BookingPriceUpdateBannerProps = {
   wasTotalLabel: string;
@@ -14,15 +15,6 @@ type BookingPriceUpdateBannerProps = {
   onAccept: () => void;
   onDecline: () => void;
 };
-
-function formatAdjustmentAmount(amountGbp: number): string {
-  const abs = Math.abs(amountGbp);
-  const formatted = abs.toLocaleString("en-GB", {
-    minimumFractionDigits: abs % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
-  return amountGbp < 0 ? `-£${formatted}` : `+£${formatted}`;
-}
 
 export function BookingPriceUpdateBanner({
   wasTotalLabel,
@@ -54,7 +46,7 @@ export function BookingPriceUpdateBanner({
                 <li key={adjustment.id} className="flex items-baseline justify-between gap-3 text-sm">
                   <span className="font-medium text-neutral-900">{adjustment.label}</span>
                   <span className="shrink-0 font-semibold tabular-nums text-neutral-900">
-                    {formatAdjustmentAmount(adjustment.amount_gbp)}
+                    {formatGbp(adjustment.amount_gbp, { showPlus: true })}
                   </span>
                 </li>
               ))}

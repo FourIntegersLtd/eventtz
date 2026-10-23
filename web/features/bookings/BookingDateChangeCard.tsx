@@ -17,6 +17,7 @@ import {
 } from "@/lib/bookingDateChangeApi";
 import { realtimeBus } from "@/lib/realtimeBus";
 import { todayIsoDate } from "@/lib/eventDateValidation";
+import { formatDate } from "@/lib/dateFormat";
 
 type BookingDateChangeCardProps = {
   role: DateChangeRole;
@@ -44,7 +45,7 @@ export function dateChangeIsVisible(
 function formatDay(iso: string): string {
   const parsed = new Date(`${iso.slice(0, 10)}T00:00:00`);
   if (Number.isNaN(parsed.getTime())) return iso;
-  return parsed.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  return formatDate(parsed, "dayLongMonthYear");
 }
 
 function formatRange(startIso: string, endIso: string | null | undefined): string {

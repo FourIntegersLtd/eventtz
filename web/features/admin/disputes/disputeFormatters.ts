@@ -1,11 +1,12 @@
 import type { AdminDisputeCase } from "@/lib/adminPlatformApi";
 import { participantDisputeBookingLabel } from "@/lib/bookingDisputeHelpers";
+import { formatDate } from "@/lib/dateFormat";
 
 export function formatWhen(iso: string | null | undefined): string {
   if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso);
-  return d.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+  return formatDate(d, "dateTimeMedium");
 }
 
 export function statusLabel(s: AdminDisputeCase["status"]): string {
@@ -45,7 +46,7 @@ export function formatEventDate(iso: string | null | undefined): string {
   if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso);
-  return d.toLocaleDateString("en-GB", { dateStyle: "medium" });
+  return formatDate(d, "dateMedium");
 }
 
 export function openedByLabel(

@@ -11,7 +11,6 @@ import { chartHasData } from "@/components/charts/chartUtils";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import {
-  formatVendorMoney,
   formatVendorPct,
   formatVendorSeconds,
   toVendorMonthSeries,
@@ -20,6 +19,7 @@ import {
   VENDOR_ANALYTICS_PERIOD_OPTIONS,
 } from "@/features/vendor/analytics/vendorAnalyticsModel";
 import { EzPeriodFilterButton } from "@/components/ui/EzPeriodFilterButton";
+import { formatCount, formatGbp } from "@/lib/money";
 
 type VendorAnalyticsEzViewProps = {
   data: VendorAnalytics;
@@ -65,7 +65,7 @@ export function VendorAnalyticsEzView({
       <div className="ez-grid-3">
         <div className="ez-kpi">
           <span className="ez-kpi__label">Enquiries</span>
-          <span className="ez-kpi__value">{kpis.enquiries.toLocaleString("en-GB")}</span>
+          <span className="ez-kpi__value">{formatCount(kpis.enquiries)}</span>
           <span className="ez-caption">{kpis.pending} pending</span>
         </div>
         <div className="ez-kpi">
@@ -75,8 +75,8 @@ export function VendorAnalyticsEzView({
         </div>
         <div className="ez-kpi">
           <span className="ez-kpi__label">Completed</span>
-          <span className="ez-kpi__value">{kpis.completed.toLocaleString("en-GB")}</span>
-          <span className="ez-caption">{formatVendorMoney(kpis.revenue)} revenue</span>
+          <span className="ez-kpi__value">{formatCount(kpis.completed)}</span>
+          <span className="ez-caption">{formatGbp(kpis.revenue, { decimals: 0 })} revenue</span>
         </div>
       </div>
 

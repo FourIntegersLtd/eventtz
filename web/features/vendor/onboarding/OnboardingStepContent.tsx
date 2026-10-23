@@ -19,6 +19,7 @@ import {
   StepSubmitted,
 } from "./steps";
 import { ReturnedForEditsScreen, openReviewForResubmit } from "./steps/submittedScreens";
+import { formatDate } from "@/lib/dateFormat";
 
 type Props = {
   step: number;
@@ -209,12 +210,7 @@ export function OnboardingStepContent({
     case 9:
       if (returnedForEdits && !isLiveEdit) {
         const reviewedLabel = data.returnedForEditsAt.trim()
-          ? new Intl.DateTimeFormat("en-GB", {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            }).format(new Date(data.returnedForEditsAt))
+          ? formatDate(new Date(data.returnedForEditsAt), "weekdayDayMonthYear")
           : "recently";
         return (
           <ReturnedForEditsScreen

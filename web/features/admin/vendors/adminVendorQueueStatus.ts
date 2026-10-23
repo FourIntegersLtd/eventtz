@@ -1,5 +1,6 @@
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { payloadStr } from "./vendorFormatters";
+import { formatDate } from "@/lib/dateFormat";
 
 export type VendorQueueTab = "pending" | "returned" | "draft" | "approved" | "suspended";
 
@@ -30,7 +31,7 @@ export function vendorSubmittedLabel(row: AdminVendorRow): string {
   if (!raw) return "-";
   const date = new Date(String(raw));
   if (Number.isNaN(date.getTime())) return String(raw).slice(0, 10);
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(date, "dayMonthYear");
 }
 
 export function vendorQueueStatusBadge(row: AdminVendorRow): {

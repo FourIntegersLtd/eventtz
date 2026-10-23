@@ -11,15 +11,12 @@ import {
   YAxis,
 } from "recharts";
 import { formatAxisDate } from "./chartUtils";
+import { formatGbp } from "@/lib/money";
 
 type EzAreaChartProps = {
   data: { date: string; value: number }[];
   valueLabel?: string;
 };
-
-function formatGbp(value: number): string {
-  return `£${value.toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-}
 
 /** Single-series area chart over dates (e.g. revenue per day), drawn in the `--ez-chart-1` token. */
 export function EzAreaChart({ data, valueLabel = "Value" }: EzAreaChartProps) {
@@ -52,7 +49,7 @@ export function EzAreaChart({ data, valueLabel = "Value" }: EzAreaChartProps) {
         />
         <Tooltip
           contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--ez-line)" }}
-          formatter={(value) => [formatGbp(Number(value ?? 0)), valueLabel]}
+          formatter={(value) => [formatGbp(Number(value ?? 0), { decimals: 0 }), valueLabel]}
           labelFormatter={(_, payload) => {
             const row = payload?.[0]?.payload as { date?: string } | undefined;
             return row?.date ?? "";

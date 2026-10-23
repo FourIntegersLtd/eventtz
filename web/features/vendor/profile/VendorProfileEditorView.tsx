@@ -29,6 +29,7 @@ import {
 import { displayServicesOffered } from "@/lib/vendorBrowseLabels";
 import { isConfiguredPackage } from "@/lib/vendorOnboarding/packageQuality";
 import { isPerUnitPricing } from "@/lib/packagePricing";
+import { formatGbp } from "@/lib/money";
 
 const INLINE_ICON = { display: "inline", verticalAlign: "baseline" } as const;
 
@@ -62,7 +63,7 @@ function lowestPackagePrice(data: VendorOnboardingData): string | null {
   const pkg = data.packages.find((item) => Number.parseFloat(item.price) === min);
   const suffix =
     pkg && isPerUnitPricing(pkg.pricingMode) ? ` per ${pkg.unitLabel.trim() || "person"}` : "";
-  return `£${min.toFixed(2)}${suffix}`;
+  return `${formatGbp(min, { decimals: 2, grouping: false })}${suffix}`;
 }
 
 /** Live approved-vendor profile (design V28): checklist hub, section editor, and preview aside. */

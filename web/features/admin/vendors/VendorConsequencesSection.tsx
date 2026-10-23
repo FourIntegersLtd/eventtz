@@ -11,6 +11,7 @@ import {
   putVendorListingPause,
   type AdminVendorRow,
 } from "@/lib/adminVendorsApi";
+import { formatDate } from "@/lib/dateFormat";
 
 type Props = { vendor: AdminVendorRow };
 
@@ -85,11 +86,7 @@ export function VendorConsequencesSection({ vendor }: Props) {
             <div className="ez-banner__body">
               <p className="text-sm text-neutral-800">
                 Listing paused until{" "}
-                {new Date(pausedUntil).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
+                {formatDate(new Date(pausedUntil), "dayMonthYear")}
                 . It returns on its own after that.
               </p>
               <Button

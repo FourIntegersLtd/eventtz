@@ -2,7 +2,7 @@
 
 import { Send } from "lucide-react";
 import type { CelebrationPlanResponse } from "@/lib/clientPlannerApi";
-import { formatGbp } from "./plannerModel";
+import { formatGbp } from "@/lib/money";
 import { PLANNER_COPY } from "./plannerCopy";
 
 type BudgetBreakdownProps = {
@@ -29,10 +29,10 @@ export function BudgetBreakdown({
   const remainingCaption = () => {
     if (budget.user_budget_gbp == null) return null;
     if (budget.over_budget) {
-      return `${formatGbp(Math.abs(budget.remaining_budget_gbp ?? 0))} over your ${formatGbp(budget.user_budget_gbp)} budget.`;
+      return `${formatGbp(Math.abs(budget.remaining_budget_gbp ?? 0), { decimals: 0 })} over your ${formatGbp(budget.user_budget_gbp, { decimals: 0 })} budget.`;
     }
     if (budget.remaining_budget_gbp != null && budget.remaining_budget_gbp >= 0) {
-      return `On budget. ${formatGbp(budget.remaining_budget_gbp)} left of ${formatGbp(budget.user_budget_gbp)}.`;
+      return `On budget. ${formatGbp(budget.remaining_budget_gbp, { decimals: 0 })} left of ${formatGbp(budget.user_budget_gbp, { decimals: 0 })}.`;
     }
     return null;
   };
@@ -50,12 +50,12 @@ export function BudgetBreakdown({
           {budget.lines.map((line) => (
             <div key={line.need_id} className="ez-lines__row">
               <span>{line.label}</span>
-              <span>{formatGbp(line.amount_gbp)}</span>
+              <span>{formatGbp(line.amount_gbp, { decimals: 0 })}</span>
             </div>
           ))}
           <div className="ez-lines__total">
             <span>Estimated total</span>
-            <span>{formatGbp(budget.total_estimated_gbp)}</span>
+            <span>{formatGbp(budget.total_estimated_gbp, { decimals: 0 })}</span>
           </div>
         </div>
         <div className="ez-progress" aria-hidden>

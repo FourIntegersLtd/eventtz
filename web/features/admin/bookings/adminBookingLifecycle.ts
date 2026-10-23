@@ -1,3 +1,5 @@
+import { formatDate } from "@/lib/dateFormat";
+
 export type AdminTimelineItem = {
   title: string;
   caption: string;
@@ -12,7 +14,7 @@ function formatCaption(value: unknown): string {
   if (value == null) return "";
   const date = new Date(String(value));
   if (Number.isNaN(date.getTime())) return String(value);
-  return date.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+  return formatDate(date, "dateTimeMedium");
 }
 
 /** Request lifecycle timeline from booking timestamps and status. */

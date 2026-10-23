@@ -5,6 +5,11 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Done
 
+**Phase 3.7: one money and date formatter.**
+- `web/lib/money.ts` (`formatGbp`, `formatPence`, `formatCount`, `formatMoney`) and `web/lib/dateFormat.ts` (`formatDate` with named styles) are the only formatters. About 16 local copies and the inline `toLocaleString` / `Intl` sites were migrated and deleted.
+- `web/lib/formatGuard.test.ts` fails on new inline money or date formatting, with a meta-test.
+- Each screen keeps its old output through an option (`decimals`, `prefix`, `grouping`). Known changes: negatives read "-£x", `formatMoney` is fixed to en-GB, half-penny vendor inputs round like Intl instead of `toFixed`.
+
 **Phase 0: critical fixes** (#72, merged).
 - Frozen API contract restored and pinned.
 - Vendor search no longer leaks client emails.

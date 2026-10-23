@@ -11,6 +11,7 @@ import {
 } from "@/lib/reviewsApi";
 import { StarRating } from "@/components/ui/StarRating";
 import { ReviewPhotoGallery } from "@/features/reviews/ReviewPhotoGallery";
+import { formatDate } from "@/lib/dateFormat";
 
 const PREVIEW_LEN = 220;
 
@@ -25,7 +26,7 @@ function formatRelative(iso: string | null): string {
   if (days < 30) return `${days} days ago`;
   const months = Math.floor(days / 30);
   if (months < 12) return `${months} month${months === 1 ? "" : "s"} ago`;
-  return d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+  return formatDate(d, "monthYear");
 }
 
 function ReviewCard({

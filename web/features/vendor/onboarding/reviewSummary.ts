@@ -21,6 +21,7 @@ import {
 import type { VendorOnboardingData } from "../../../lib/vendorOnboarding/types";
 import { uploadedFileDisplayName } from "../../../lib/vendorOnboarding/uploadedFileDisplayName";
 import { vendorOnboardingStepErrors } from "./vendorOnboardingValidation";
+import { formatGbp } from "@/lib/money";
 
 /** One label and value line inside a review card. */
 export type ReviewRow = { label: string; value: string };
@@ -45,7 +46,7 @@ export function describeWorkingDays(weekdays: number[]): string {
 
 /** "£18.00 per person" or "£450.00": the package price as the review shows it. */
 function packagePriceLabel(pkg: VendorOnboardingData["packages"][number]): string {
-  const amount = `£${Number(pkg.price).toFixed(2)}`;
+  const amount = formatGbp(Number(pkg.price), { decimals: 2, grouping: false });
   return isPerUnitPricing(pkg.pricingMode) ? `${amount} per ${pkg.unitLabel.trim() || "item"}` : amount;
 }
 

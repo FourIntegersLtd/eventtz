@@ -30,6 +30,7 @@ import {
 } from "./plannerFormModel";
 import { plannerConfidenceBadge } from "./plannerConfidence";
 import { useGeneratePlan } from "./useGeneratePlan";
+import { formatGbp } from "@/lib/money";
 
 export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
   const router = useRouter();
@@ -153,7 +154,7 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
       location: plan.celebration.location ?? plan.brief.location ?? "",
       guestCount: plan.celebration.guest_count ? String(plan.celebration.guest_count) : "",
       budget:
-        plan.celebration.budget_gbp != null ? `£${plan.celebration.budget_gbp.toLocaleString("en-GB")}` : "",
+        plan.celebration.budget_gbp != null ? formatGbp(plan.celebration.budget_gbp, { decimals: "upTo2" }) : "",
       preferredDate: plan.celebration.preferred_date ?? plan.brief.preferred_date ?? "",
     });
     router.push("/client/planner");

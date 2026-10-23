@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { formatEventDate } from "@/lib/dateFormat";
-import { formatBookingMoneyLabel } from "@/lib/bookingServiceFee";
+import { formatGbp } from "@/lib/money";
 import type { VendorReferralBookingRow } from "@/lib/vendorReferralsApi";
 
 type SettingsReferralBookingsTableProps = {
@@ -69,11 +69,11 @@ export function SettingsReferralBookingsTable({
                 ) : null}
               </td>
               <td className="px-4 py-3 tabular-nums">
-                {formatBookingMoneyLabel(row.vendor_portion_gbp)}
+                {formatGbp(row.vendor_portion_gbp, { roundToPence: true })}
               </td>
               <td className="px-5 py-3 tabular-nums text-emerald-700 sm:px-6">
                 {row.referral_fee_discount_gbp > 0
-                  ? formatBookingMoneyLabel(row.referral_fee_discount_gbp)
+                  ? formatGbp(row.referral_fee_discount_gbp, { roundToPence: true })
                   : "-"}
               </td>
             </tr>
