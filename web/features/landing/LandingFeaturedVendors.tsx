@@ -15,7 +15,7 @@ import {
 import { expandVendorsForSearchResults } from "@/features/marketplace/marketplaceSearchModel";
 import { FEATURED_VENDORS_SECTION } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
-import { LandingSection } from "@/features/landing/LandingSection";
+import { LandingSection } from "@/components/landing/LandingSection";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieEmptyPanel } from "@/components/ui/LottieEmptyPanel";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
@@ -23,7 +23,7 @@ import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
 import {
   LANDING_SECTION_CONTENT_MT,
   landingSectionClass,
-} from "@/features/landing/landingSectionStyles";
+} from "@/components/landing/landingSectionStyles";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 export function LandingFeaturedVendors() {

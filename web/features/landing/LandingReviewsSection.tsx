@@ -7,12 +7,12 @@ import { Card } from "@/components/ui/Card";
 import { StarRating } from "@/components/ui/StarRating";
 import { REVIEWS_SECTION } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
-import { LandingSection } from "@/features/landing/LandingSection";
+import { LandingSection } from "@/components/landing/LandingSection";
 import { LoadingState } from "@/components/ui/LoadingState";
 import {
   LANDING_SECTION_CONTENT_MT,
   landingSectionClass,
-} from "@/features/landing/landingSectionStyles";
+} from "@/components/landing/landingSectionStyles";
 
 const MAX_REVIEWS = 3;
 const PREVIEW_LEN = 180;

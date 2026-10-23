@@ -13,7 +13,7 @@ import { PasswordField } from "@/components/ui/PasswordField";
 import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
 import { EzCheck, EzTextField } from "@/components/ui/ez-form";
 import { useClientOnboarding } from "@/features/client/onboarding/ClientOnboardingProvider";
-import { ChangePasswordModal } from "@/features/settings/ChangePasswordModal";
+import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
 import { deleteAccountErrorMessage } from "@/features/settings/SettingsDeleteAccountSection";
 import { persistContactSharingToggle } from "@/features/settings/ContactSharingSettingsSection";
 import { getClientOnboarding, updateClientOnboarding } from "@/lib/clientOnboardingApi";

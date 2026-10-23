@@ -3,7 +3,7 @@ import {
   LANDING_HORIZONTAL_PADDING,
   LANDING_PAGE_MAX_WIDTH,
   LANDING_SCROLL_MT_CLASS,
-} from "@/features/landing/landingSectionStyles";
+} from "@/components/landing/landingSectionStyles";
 
 type LandingSectionProps = {
   id?: string;

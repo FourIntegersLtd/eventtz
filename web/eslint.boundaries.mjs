@@ -18,22 +18,61 @@ import { fileURLToPath } from "node:url";
 const webRoot = dirname(fileURLToPath(import.meta.url));
 
 /**
- * Feature modules every feature may import. A bare area name shares the whole area; `area/path`
- * shares only that sub-path. Keep this short: a candidate that is generic UI or a constant
- * belongs in components/ or lib/ instead.
+ * Feature modules every feature may import: named sub-paths (`area/path`), never a whole area.
+ * Keep this short: a candidate that is generic UI or a constant belongs in components/ or lib/
+ * instead. components/README.md repeats this list as a table; lib/eslintBoundariesLists.test.ts
+ * fails when the two drift or an entry goes stale.
  */
 export const SHARED_FEATURE_MODULES = [
-  "bookings", // booking view models, terms, pricing breakdown, quote and detail panels
+  // bookings: view models, terms, copy, pricing breakdown, quote and detail panels
+  "bookings/ActiveEventPrefillBanner",
+  "bookings/BookingCompletionBanner",
+  "bookings/BookingDateChangeCard",
+  "bookings/BookingDisputeSection",
+  "bookings/BookingListPanel",
+  "bookings/BookingPayoutPendingBanner",
+  "bookings/BookingPriceUpdateBanner",
+  "bookings/BookingPricingBreakdown",
+  "bookings/BookingTermsNotices",
+  "bookings/ClientFeeBreakdownSummary",
+  "bookings/MasterDetailLayout",
+  "bookings/MultiVendorPackagePicker",
+  "bookings/ParticipantDisputesListView",
+  "bookings/VendorBookingDetailEzPanel",
+  "bookings/VendorQuoteFormModal",
+  "bookings/bookingConfirmCopy",
+  "bookings/bookingListConstants",
+  "bookings/bookingPriceLabels",
+  "bookings/bookingTerms",
+  "bookings/bookingViewModel",
+  "bookings/cancellationPolicyCopy",
+  "bookings/eventDay",
+  "bookings/eventEnquirePrefill",
+  "bookings/groupBookingsByEvent",
+  "bookings/multiVendorPackageSelection",
+  "bookings/toBookingDetailViewModel",
+  "bookings/useEnquireEventFormState",
+  "bookings/useLaunchingSoonBookingGuard",
+  "bookings/useParticipantBookingsScaffold",
   "vendors/display", // vendor listing presentation (browse cards, pricing blocks)
-  "receipts", // receipt actions and views
-  "landing", // public-site chrome: LandingNav, LandingFooter, LandingSection, section styles
-  "reviews", // review cards, panels and queries
-  "chat", // chat drawer, thread and composer
-  "dashboard", // attention feed and calendar cards shared by the client and vendor dashboards
-  "auth", // authRouting helpers
+  "receipts/ReceiptActions", // receipt download and share buttons
+  "landing/landingData", // landing categories and copy, read by the marketplace category counts
+  "reviews/BookingReviewPanel",
+  "reviews/ReviewCard",
+  "reviews/ReviewPhotoGallery",
+  "reviews/ReviewPhotoPicker",
+  "reviews/VendorReviewsEzView",
+  "reviews/reviewFormatters",
+  "reviews/useReviewsQuery",
+  "chat/ChatDrawer",
+  "chat/ChatPortalView",
+  "dashboard/AttentionFeedCard",
+  "dashboard/BookingsCalendarCard",
+  "dashboard/attentionFeedHelpers",
+  "dashboard/attentionTypes",
+  "auth/authRouting",
   "vendor/copilot", // AI co-pilot, also hosted by the help widget and chat
   "help/helpContent", // static help copy, also read by the co-pilot
-  "settings/ChangePasswordModal",
   "vendor/onboarding/serializeVendorPayload", // vendor profile payload shape, read by admin review and settings
 ];
 
@@ -45,13 +84,11 @@ export const AREA_COMPOSES = {
   help: ["contact"], // the help hub embeds the contact form
 };
 
-/** Files in components/ that compose feature widgets on purpose (portal chrome, route guards, legal pages). */
+/** Files in components/ that compose feature widgets on purpose (portal chrome, route guards). */
 export const COMPONENT_FEATURE_ALLOW_LIST = [
   "components/portal-shell/PortalShell.tsx",
   "components/admin-shell/AdminShell.tsx",
   "components/auth/RequireRole.tsx",
-  "components/compliances/CompliancePageShell.tsx",
-  "components/compliances/ComplianceReader.tsx",
 ];
 
 const featureAreas = readdirSync(join(webRoot, "features"), { withFileTypes: true })
@@ -113,6 +150,12 @@ const MOTION_IMPORT_RULE = {
   message: "Import motion only inside components/ui. Use MotionReveal, Drawer, Modal or BottomSheet, or add a primitive there.",
 };
 
+/** Rule for components/ and components/ui alike: neither may reach into features/ or app/. */
+const COMPONENT_BOUNDARY_RULE = {
+  group: ["@/features/**", "@/app/**"],
+  message: "components/ may import only lib/ and components/. Move the shared piece into lib/ or components/.",
+};
+
 const restrict = (group, message) => ({
   "eventtz/import-boundary": ["error", { patterns: [{ group, message }, MOTION_IMPORT_RULE] }],
 });
@@ -160,27 +203,12 @@ export const boundaryConfigs = [
   {
     files: ["components/**/*.{ts,tsx}"],
     ignores: COMPONENT_FEATURE_ALLOW_LIST,
-    rules: restrict(
-      ["@/features/**", "@/app/**"],
-      "components/ may import only lib/ and components/. Move the shared piece into lib/ or components/.",
-    ),
+    rules: restrict(COMPONENT_BOUNDARY_RULE.group, COMPONENT_BOUNDARY_RULE.message),
   },
   {
     // components/ui is where motion/react lives: same boundary, minus the motion rule.
     files: ["components/ui/**/*.{ts,tsx}"],
-    rules: {
-      "eventtz/import-boundary": [
-        "error",
-        {
-          patterns: [
-            {
-              group: ["@/features/**", "@/app/**"],
-              message: "components/ may import only lib/ and components/. Move the shared piece into lib/ or components/.",
-            },
-          ],
-        },
-      ],
-    },
+    rules: { "eventtz/import-boundary": ["error", { patterns: [COMPONENT_BOUNDARY_RULE] }] },
   },
   {
     files: ["app/**/*.{ts,tsx}"],

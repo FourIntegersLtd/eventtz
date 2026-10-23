@@ -3,8 +3,8 @@
 import { GALLERY_VIDEOS, INSPIRATION_SECTION } from "@/features/landing/landingData";
 import { InspirationVideoShowcase } from "@/features/landing/InspirationVideoShowcase";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
-import { LandingSection } from "@/features/landing/LandingSection";
-import { landingSectionClass } from "@/features/landing/landingSectionStyles";
+import { LandingSection } from "@/components/landing/LandingSection";
+import { landingSectionClass } from "@/components/landing/landingSectionStyles";
 
 export function LandingInspirationGrid() {
   return (

@@ -5,12 +5,12 @@ import { ChevronDown } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { FAQ_SECTION, FAQ_SECTIONS } from "@/features/landing/landingData";
 import { LandingSectionHeading } from "@/features/landing/LandingSectionHeading";
-import { LandingSection } from "@/features/landing/LandingSection";
+import { LandingSection } from "@/components/landing/LandingSection";
 import {
   LANDING_SECTION_CONTENT_MT,
   LANDING_SECTION_STACK_MT,
   landingSectionClass,
-} from "@/features/landing/landingSectionStyles";
+} from "@/components/landing/landingSectionStyles";
 
 type FaqTab = "client" | "vendor";
 

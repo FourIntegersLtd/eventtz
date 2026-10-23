@@ -12,7 +12,7 @@ import type { PortalRole } from "@/lib/portalRole";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { updateClientOnboarding, getClientOnboarding } from "@/lib/clientOnboardingApi";
 import { parseForm, preferredNameFormSchema } from "@/lib/validation";
-import { ChangePasswordModal } from "./ChangePasswordModal";
+import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
 import { SettingsSection } from "./SettingsSection";
 
 type Props = {

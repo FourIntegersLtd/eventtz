@@ -39,6 +39,13 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `EzClearableInput`), `adminTheme.ts` and `sectionBlockTokens.ts` are deleted. design-diff results are
   identical to main (within 0.05%) on all 33 screens; the failures (P01, V01-V07, V13, V18, V19, V23, V24 and the
   V11 `.ez-kpi` setup timeout) also fail on main. Deferred: `AdminTable` and raw tables not yet on `DataTable`.
+- **Phase 2.6 (web boundaries).** `SHARED_FEATURE_MODULES` names sub-paths only (no whole area); the landing
+  chrome (`LandingNav`, `LandingFooter`, `LandingSection`, `landingSectionStyles`, `useLandingNavScroll`, new
+  `landingChromeData`) is `components/landing/` and `ChangePasswordModal` is `components/auth/`, so
+  `CompliancePageShell` and `ComplianceReader` left the allow-list. `lib/eslintBoundariesLists.test.ts` checks
+  every shared, composes and allow-list entry still exists and is used, and that the README table equals the
+  list. The `ui` rule shares `COMPONENT_BOUNDARY_RULE`. Skipped (another agent deletes them): `ClientEzPageHead`,
+  `VendorEzPageHead`, `AdminErrorBanner`, `ez-form`, `form-primitives`. ESLint errors 128, same as main.
 
 **Phase 3 (api half): one pagination kernel, merged twins, one error code each.**
 - **Pagination kernel.** `core/pagination.py` holds `PageParams`/`PageDep` (default 25), `PagedResponse`,
