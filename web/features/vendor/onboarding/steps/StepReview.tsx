@@ -210,6 +210,7 @@ export function StepReview({
         className="min-h-[100px]"
         value={data.aiBioDraft}
         onChange={(event) => update({ aiBioDraft: event.target.value })}
+        onClear={() => update({ aiBioDraft: "" })}
       />
       <p
         className={`text-right text-xs ${overLimit ? "text-red-600" : "text-neutral-400"}`}

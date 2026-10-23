@@ -62,3 +62,4 @@ the api is picked up by the worker log. Outside services are off locally.
 - Only the `api` service migrates; the worker has no pre-deploy command (`docs/runbooks/railway.md`).
 - Never weaken a guard or delete its meta-test to get green; `test_ownership` fails on any file matching no row or two rows.
 - `openapi.baseline.json` fails CI if a path disappears. `web/lib/api-schema.d.ts` is generated; `make ci` runs `test_openapi_fresh`.
+- design-diff over many screens: sign-in is rate limited, so flush the local Redis db between screens (`docker exec eventtz-api-redis-1 redis-cli -n 7 flushdb`) or later screens time out. For a list or paging change design-diff has no screen: seed more than 25 rows in the local DB and compare page 1 and 2 of base and branch (two dev servers, pixelmatch).

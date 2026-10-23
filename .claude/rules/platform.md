@@ -47,3 +47,4 @@ Owner: `platform-owner`. Proof: `verify-platform`. Review: `quality-reviewer` al
 - A setting read from the environment directly, or added without `.env.example`.
 - A shared web component or `lib/` change that breaks a screen owned by another area (check every importer).
 - A new `ruff`/`mypy`/eslint error, or a guard weakened or its meta-test removed to get green.
+- **React Compiler lint traps in shared hooks** (`react-hooks/refs`, `set-state-in-effect`, `preserve-manual-memoization`): do not write a ref during render, do not call setState inside an effect (derive the value during render, for example reset an offset by comparing a key), and do not add `useCallback`/`useMemo` whose deps the compiler cannot match. Keep the latest callbacks in a ref updated in an effect (`lib/useServerList.ts`). Compare eslint per file and rule against main: one new error is a regression.
