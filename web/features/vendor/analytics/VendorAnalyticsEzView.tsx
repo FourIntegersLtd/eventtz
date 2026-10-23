@@ -9,6 +9,7 @@ import { EzDonutChart } from "@/components/charts/EzDonutChart";
 import { chartHasData } from "@/components/charts/chartUtils";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { StatTile } from "@/components/ui/StatTile";
 import {
   formatVendorPct,
   formatVendorSeconds,
@@ -64,21 +65,9 @@ export function VendorAnalyticsEzView({
       />
 
       <div className="ez-grid-3">
-        <div className="ez-kpi">
-          <span className="ez-kpi__label">Enquiries</span>
-          <span className="ez-kpi__value">{formatCount(kpis.enquiries)}</span>
-          <span className="ez-caption">{kpis.pending} pending</span>
-        </div>
-        <div className="ez-kpi">
-          <span className="ez-kpi__label">Conversion</span>
-          <span className="ez-kpi__value">{formatVendorPct(kpis.conversion)}</span>
-          <span className="ez-caption">Avg response {formatVendorSeconds(kpis.avgResponseSeconds)}</span>
-        </div>
-        <div className="ez-kpi">
-          <span className="ez-kpi__label">Completed</span>
-          <span className="ez-kpi__value">{formatCount(kpis.completed)}</span>
-          <span className="ez-caption">{formatGbp(kpis.revenue, { decimals: 0 })} revenue</span>
-        </div>
+        <StatTile label="Enquiries" value={formatCount(kpis.enquiries)} caption={`${kpis.pending} pending`} />
+        <StatTile label="Conversion" value={formatVendorPct(kpis.conversion)} caption={`Avg response ${formatVendorSeconds(kpis.avgResponseSeconds)}`} />
+        <StatTile label="Completed" value={formatCount(kpis.completed)} caption={`${formatGbp(kpis.revenue, { decimals: 0 })} revenue`} />
       </div>
 
       <div className="ez-grid-2">

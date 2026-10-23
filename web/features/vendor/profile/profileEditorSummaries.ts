@@ -1,6 +1,7 @@
 /**
  * One-line summaries for the live profile hub (design V28), derived from onboarding data.
  */
+import type { Tone } from "@/lib/tone";
 import { vendorCancellationPolicyLabel } from "@/features/bookings/cancellationPolicyCopy";
 import {
   MIN_PORTFOLIO_IMAGES,
@@ -22,7 +23,7 @@ export type ProfileHubSectionRow = {
   step: number;
   title: string;
   summary: string;
-  badge: { label: string; className: string };
+  badge: { label: string; tone: Tone };
 };
 
 function dietaryLine(data: VendorOnboardingData): string {
@@ -88,13 +89,13 @@ export function profileHubSectionRows(data: VendorOnboardingData): ProfileHubSec
   return specs.map((spec) => {
     const section = PROFILE_SECTIONS.find((item) => item.step === spec.step);
     const incomplete = vendorOnboardingStepErrors(spec.step, data).length > 0;
-    const portfolioShort =
+    const portfolioShort: ProfileHubSectionRow["badge"] | null =
       spec.step === 7 && portfolioCount < MIN_PORTFOLIO_IMAGES
-        ? { label: `Add ${MIN_PORTFOLIO_IMAGES - portfolioCount} more`, className: "ez-badge ez-badge--warning" }
+        ? { label: `Add ${MIN_PORTFOLIO_IMAGES - portfolioCount} more`, tone: "warning" }
         : null;
-    const badge = portfolioShort ?? (incomplete
-      ? { label: "Needs attention", className: "ez-badge ez-badge--warning" }
-      : { label: "Complete", className: "ez-badge ez-badge--success" });
+    const badge: ProfileHubSectionRow["badge"] = portfolioShort ?? (incomplete
+      ? { label: "Needs attention", tone: "warning" }
+      : { label: "Complete", tone: "success" });
     return {
       slug: section?.slug ?? "business",
       step: spec.step,
