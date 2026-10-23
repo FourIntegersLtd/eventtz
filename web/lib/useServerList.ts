@@ -44,12 +44,21 @@ export function previousOffset(offset: number, limit: number): number {
 }
 
 /** What the newest answered request returned; `requestKey` says which request it answers. */
-type ServerListOutcome<TItem> = {
+export type ServerListOutcome<TItem> = {
   requestKey: string;
   items: TItem[];
   total: number;
   error: string | null;
 };
+
+/** The outcome of a failed request: the last good rows stay on screen so a transient error does not blank the table. The rows may belong to an earlier query; show `error` beside them. */
+export function failedOutcome<TItem>(
+  previous: ServerListOutcome<TItem>,
+  requestKey: string,
+  error: string,
+): ServerListOutcome<TItem> {
+  return { requestKey, items: previous.items, total: previous.total, error };
+}
 
 type UseServerListOptions<TItem, TFilters> = {
   /** Loads one window. May be an inline function: the latest one is used, so it needs no memoising. */
@@ -105,7 +114,7 @@ export function useServerList<TItem, TFilters = Record<string, never>>({
       })
       .catch(() => {
         if (!cancelled) {
-          setOutcome({ requestKey, items: [], total: 0, error: latest.current.errorMessage });
+          setOutcome((previous) => failedOutcome(previous, requestKey, latest.current.errorMessage));
         }
       });
     return () => {

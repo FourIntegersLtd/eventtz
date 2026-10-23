@@ -9,7 +9,7 @@ export default function ClientMessagesThreadPage() {
     typeof params?.conversationId === "string" ? params.conversationId : "";
 
   if (!conversationId) {
-    return <p className="text-sm text-neutral-600">Invalid conversation.</p>;
+    return <p className="text-sm text-ink-2">Invalid conversation.</p>;
   }
 
   return <ChatPortalView portal="client" selectedConversationId={conversationId} />;
