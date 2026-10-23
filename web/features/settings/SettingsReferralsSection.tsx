@@ -6,7 +6,7 @@ import { CopyToClipboardButton } from "@/components/ui/CopyToClipboardButton";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { TextField } from "@/components/ui/TextField";
-import { formatBookingMoneyLabel } from "@/lib/bookingServiceFee";
+import { formatGbp } from "@/lib/money";
 import { isHttpStatus } from "@/lib/api-errors";
 import {
   formatVendorReferralCodeInput,
@@ -167,10 +167,10 @@ export function SettingsReferralsSection() {
               {sortedTiers.map((tier) => (
                 <tr key={tier.min_spend_gbp}>
                   <td className="px-5 py-2.5 text-neutral-800 sm:px-6">
-                    {formatBookingMoneyLabel(tier.min_spend_gbp)}+
+                    {formatGbp(tier.min_spend_gbp, { roundToPence: true })}+
                   </td>
                   <td className="px-5 py-2.5 font-medium tabular-nums text-emerald-700 sm:px-6">
-                    {formatBookingMoneyLabel(tier.fee_discount_gbp)}
+                    {formatGbp(tier.fee_discount_gbp, { roundToPence: true })}
                   </td>
                 </tr>
               ))}
@@ -233,7 +233,7 @@ export function SettingsReferralsSection() {
       {bookings ? (
         <SettingsSection
           title="Referral bookings"
-          description={`${bookingCount} booking${bookingCount === 1 ? "" : "s"} · ${formatBookingMoneyLabel(totalSavings)} saved for clients`}
+          description={`${bookingCount} booking${bookingCount === 1 ? "" : "s"} · ${formatGbp(totalSavings, { roundToPence: true })} saved for clients`}
         >
           <div className="border-t border-neutral-100">
             <SettingsReferralBookingsTable

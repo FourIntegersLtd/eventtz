@@ -2,13 +2,13 @@
 
 import { ChevronDown } from "lucide-react";
 import { forwardRef, useId, type SelectHTMLAttributes } from "react";
-import { FORM_CONTROL, FORM_CONTROL_FOCUS, FOCUS_RING } from "@/components/ui/tokens";
 
 export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   label: string;
   error?: string;
 };
 
+/** Canvas select: `ez-field` with an `ez-label` and an `ez-select-wrap` around the `ez-input ez-select`. */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
   { label, error, id, className = "", children, ...rest },
   ref,
@@ -16,28 +16,27 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   const generatedId = useId();
   const inputId = id ?? generatedId;
   return (
-    <div className="min-w-0 space-y-1.5">
-      <label htmlFor={inputId} className="block text-sm font-medium text-ink">
+    <div className="ez-field">
+      <label htmlFor={inputId} className="ez-label">
         {label}
       </label>
-      <div className="relative">
+      <div className="ez-select-wrap">
         <select
           ref={ref}
           id={inputId}
           aria-invalid={Boolean(error)}
-          className={`${FORM_CONTROL} ${FORM_CONTROL_FOCUS} appearance-none pr-9 ${FOCUS_RING} ${
-            error ? "border-danger-line" : ""
-          } ${className}`.trim()}
+          className={`ez-input ez-select${error ? " ez-input--error" : ""} ${className}`.trim()}
           {...rest}
         >
           {children}
         </select>
-        <ChevronDown
-          className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-3"
-          aria-hidden
-        />
+        <ChevronDown aria-hidden />
       </div>
-      {error ? <p className="text-xs font-medium text-danger">{error}</p> : null}
+      {error ? (
+        <span className="ez-error-text" role="alert">
+          {error}
+        </span>
+      ) : null}
     </div>
   );
 });

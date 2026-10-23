@@ -1,3 +1,5 @@
+import { formatDate } from "./dateFormat";
+
 /**
  * Mirrors backend `vendor_search_service` rules for blocked dates + available weekdays.
  * Used for instant client-side feedback; server enforces on submit.
@@ -81,13 +83,7 @@ function joinList(items: string[]): string {
 }
 
 function formatCalendarDay(iso: string, withWeekday: boolean): string {
-  return new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-GB", {
-    ...(withWeekday ? { weekday: "long" as const } : {}),
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  return formatDate(new Date(`${iso}T12:00:00Z`), withWeekday ? "longWeekdayDayMonthYear" : "dayMonthYear", "UTC");
 }
 
 function pythonWeekday(iso: string): number {

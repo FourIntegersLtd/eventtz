@@ -12,7 +12,7 @@ type TablePaginationProps = {
   className?: string;
 };
 
-/** Standard prev/next pager for admin and portal tables (offset/limit APIs). */
+/** Standard prev/next pager for admin and portal tables (offset/limit APIs), in canvas `ez-btn` markup. */
 export function TablePagination({
   offset,
   limit,
@@ -32,7 +32,7 @@ export function TablePagination({
   const canNext = offset + limit < total;
 
   return (
-    <div className={`ez-between ${className}`.trim()}>
+    <nav aria-label="Pagination" className={`ez-between ${className}`.trim()}>
       <span className="ez-caption">
         Showing {pageStart}-{pageEnd} of {total}
       </span>
@@ -54,6 +54,6 @@ export function TablePagination({
           Next
         </button>
       </div>
-    </div>
+    </nav>
   );
 }

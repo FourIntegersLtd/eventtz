@@ -15,17 +15,14 @@ import {
   landingSectionClass,
 } from "@/features/landing/landingSectionStyles";
 import { LandingSection } from "@/features/landing/LandingSection";
+import { formatDate } from "@/lib/dateFormat";
 
 /** Formats an ISO timestamp as a UK long date, or an empty string when missing or invalid. */
 function formatPublished(iso: string | null | undefined): string {
   if (!iso) return "";
   const publishedDate = new Date(iso);
   if (Number.isNaN(publishedDate.getTime())) return "";
-  return publishedDate.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return formatDate(publishedDate, "dayLongMonthYear");
 }
 
 /** The short line shown under a post title, or null when it is empty or only repeats the title. */

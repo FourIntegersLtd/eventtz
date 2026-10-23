@@ -5,6 +5,11 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Done
 
+**Phase 3.7: one money and date formatter.**
+- `web/lib/money.ts` (`formatGbp`, `formatPence`, `formatCount`, `formatMoney`) and `web/lib/dateFormat.ts` (`formatDate` with named styles) are the only formatters. About 16 local copies and the inline `toLocaleString` / `Intl` sites were migrated and deleted.
+- `web/lib/formatGuard.test.ts` fails on new inline money or date formatting, with a meta-test.
+- Each screen keeps its old output through an option (`decimals`, `prefix`, `grouping`). Known changes: negatives read "-£x", `formatMoney` is fixed to en-GB, half-penny vendor inputs round like Intl instead of `toFixed`.
+
 **Phase 0: critical fixes** (#72, merged).
 - Frozen API contract restored and pinned.
 - Vendor search no longer leaks client emails.
@@ -28,6 +33,12 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 - **Fee parity.** The service fee and referral tiers live in `policyConstants.json`, and a test pins them to the api.
 - **Freeze suite.** The fixes for the 9 acceptance tests that already failed on `main` ship with the
   Phase 1 PR.
+
+- **Phase 2.1 (tokens and blocks).** `globals.css` tokens are `var(--ez-*)`, `eventtz.css` loads in
+  `@layer components`, `ui/` blocks emit canvas `ez-*` markup (new `DataTable`, `TextField` absorbs
+  `EzClearableInput`), `adminTheme.ts` and `sectionBlockTokens.ts` are deleted. design-diff results are
+  identical to main (within 0.05%) on all 33 screens; the failures (P01, V01-V07, V13, V18, V19, V23, V24 and the
+  V11 `.ez-kpi` setup timeout) also fail on main. Deferred: `AdminTable` and raw tables not yet on `DataTable`.
 
 **Phase 3 (api half): one pagination kernel, merged twins, one error code each.**
 - **Pagination kernel.** `core/pagination.py` holds `PageParams`/`PageDep` (default 25), `PagedResponse`,

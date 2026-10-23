@@ -1,16 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
-import {
-  contentCardPadding,
-  contentCardSurface,
-  panelCardSurface,
-  sectionBlockBody,
-  sectionHeaderDescription,
-  sectionHeaderTitle,
-  sectionHeaderWrap,
-  sectionSubheading,
-} from "@/components/ui/sectionBlockTokens";
+import { CARD_PADDING, CARD_SURFACE } from "@/components/ui/tokens";
+
+const sectionHeaderWrap = "mb-5";
+const sectionHeaderTitle = "text-base font-medium tracking-tight text-ink";
+const sectionHeaderDescription = "mt-1.5 text-[13px] leading-relaxed text-ink-3";
+const sectionSubheading =
+  "mb-4 w-full border-b border-line pb-3 text-left text-base font-medium tracking-tight text-ink";
+const sectionBlockBody = "space-y-5";
 
 export function SectionHeader({
   title,
@@ -98,9 +96,9 @@ export function ContentCard({
   className?: string;
   padding?: "md" | "none";
 }) {
-  const pad = padding === "md" ? contentCardPadding : "";
+  const pad = padding === "md" ? CARD_PADDING : "";
   return (
-    <div className={`${contentCardSurface} ${pad} ${className}`.trim()}>{children}</div>
+    <div className={`${CARD_SURFACE} ${pad} ${className}`.trim()}>{children}</div>
   );
 }
 
@@ -121,7 +119,7 @@ export function PanelCard({
   bodyClassName?: string;
 }) {
   return (
-    <section className={`${panelCardSurface} overflow-hidden ${className}`.trim()}>
+    <section className={`${CARD_SURFACE} overflow-hidden ${className}`.trim()}>
       {title ? (
         <div className="px-5 pt-5 sm:px-6 sm:pt-6">
           <SectionHeader

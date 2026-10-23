@@ -8,6 +8,7 @@ import {
   FOOTER_COMPANY_NAME,
   FOOTER_CONTACT_EMAIL,
 } from "@/lib/footerLinks";
+import { formatGbp } from "@/lib/money";
 
 /** Vendor price used in the worked examples, in pounds. */
 const EXAMPLE_VENDOR_PRICE_GBP = 1000;
@@ -113,11 +114,6 @@ function formatVersionDate(version: string): string {
 function joinWords(words: readonly string[]): string {
   if (words.length <= 1) return words.join("");
   return `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`;
-}
-
-/** Formats a pound amount, e.g. 1000 becomes "£1,000". */
-function pounds(amount: number): string {
-  return `£${amount.toLocaleString("en-GB")}`;
 }
 
 /** Capitalises the first letter of a word. */
@@ -423,9 +419,9 @@ export function TermsOfServiceContent() {
             <strong>Clients</strong> pay a Service Fee of {serviceFeePercent}% of
             the Vendor Price. It is shown on the Vendor’s listing and again before
             payment, and includes VAT where VAT applies. For example, if the
-            Vendor Price is {pounds(EXAMPLE_VENDOR_PRICE_GBP)}, the Service Fee is{" "}
-            {pounds(exampleFeeGbp)} and the Client pays{" "}
-            {pounds(EXAMPLE_VENDOR_PRICE_GBP + exampleFeeGbp)}.
+            Vendor Price is {formatGbp(EXAMPLE_VENDOR_PRICE_GBP)}, the Service Fee is{" "}
+            {formatGbp(exampleFeeGbp)} and the Client pays{" "}
+            {formatGbp(EXAMPLE_VENDOR_PRICE_GBP + exampleFeeGbp)}.
           </li>
           <li>
             A Vendor may share a referral link that reduces the Service Fee. See
@@ -555,14 +551,14 @@ export function TermsOfServiceContent() {
 
         <p>
           <strong>Example:</strong> the Vendor’s policy is Moderate, the Vendor
-          Price is {pounds(EXAMPLE_VENDOR_PRICE_GBP)} and the Client paid a{" "}
-          {pounds(exampleFeeGbp)} Service Fee. The Client cancels{" "}
+          Price is {formatGbp(EXAMPLE_VENDOR_PRICE_GBP)} and the Client paid a{" "}
+          {formatGbp(exampleFeeGbp)} Service Fee. The Client cancels{" "}
           {policy.cancellationPresets.moderate[1][0] + 3} days before the event.
           The Client receives {moderateExampleRefundPercent}% of the Vendor Price
-          ({pounds(exampleRefundGbp)}) plus the full Service Fee (
-          {pounds(exampleFeeGbp)}), a total of{" "}
-          {pounds(exampleRefundGbp + exampleFeeGbp)}. The Vendor is paid the
-          remaining {pounds(EXAMPLE_VENDOR_PRICE_GBP - exampleRefundGbp)}.
+          ({formatGbp(exampleRefundGbp)}) plus the full Service Fee (
+          {formatGbp(exampleFeeGbp)}), a total of{" "}
+          {formatGbp(exampleRefundGbp + exampleFeeGbp)}. The Vendor is paid the
+          remaining {formatGbp(EXAMPLE_VENDOR_PRICE_GBP - exampleRefundGbp)}.
         </p>
 
         <h3>{SECTION_NUMBERS.get("cancellations-refunds")}.4 Cooling-off period</h3>
@@ -714,7 +710,7 @@ export function TermsOfServiceContent() {
         <h3>Damage deposits for rentals and decor</h3>
         <p>
           For {depositCategories}, a Vendor may request a damage deposit of up to{" "}
-          {pounds(policy.depositMaxGbp)}. The Client pays it with the Booking.
+          {formatGbp(policy.depositMaxGbp)}. The Client pays it with the Booking.
           It is not part of the Vendor Price and Eventtz holds it. The deposit is
           returned to the Client automatically {policy.depositClaimDays} days
           after the last day of the event, unless the Vendor makes a claim within
@@ -1019,7 +1015,7 @@ export function TermsOfServiceContent() {
             Our total liability to you for anything connected with Eventtz is
             limited to the greater of: the fees you paid Eventtz in the{" "}
             {policy.liabilityCapMonthsOfFees} months before the problem arose, or{" "}
-            {pounds(policy.liabilityCapMinimumGbp)}.
+            {formatGbp(policy.liabilityCapMinimumGbp)}.
           </li>
           <li>
             Nothing in these Terms limits our liability for death or personal

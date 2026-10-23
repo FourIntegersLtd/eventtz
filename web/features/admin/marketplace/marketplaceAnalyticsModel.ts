@@ -115,7 +115,3 @@ export function formatMarketplaceSeconds(s: number | null | undefined): string {
   return `${(s / 3600).toFixed(1)} h`;
 }
 
-export function formatMarketplaceMoney(n: number | null | undefined): string {
-  if (n == null || Number.isNaN(n)) return "-";
-  return `£${Number(n).toFixed(0)}`;
-}

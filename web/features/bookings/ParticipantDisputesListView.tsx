@@ -1,6 +1,6 @@
 "use client";
 
-import { portalCard } from "@/components/portal-shell/portalTheme";
+import { CARD_SURFACE } from "@/components/ui/tokens";
 import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -22,6 +22,7 @@ import {
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
 import type { PortalRole } from "@/lib/portalRole";
+import { formatDateTimeSeconds } from "@/lib/dateFormat";
 
 type Props = {
   role: PortalRole;
@@ -39,7 +40,7 @@ function openedByLabel(d: ParticipantDispute): string {
 
 function updatedLabel(d: ParticipantDispute): string {
   const raw = d.updated_at || d.created_at;
-  return raw ? new Date(raw).toLocaleString("en-GB") : "-";
+  return raw ? formatDateTimeSeconds(new Date(raw)) : "-";
 }
 
 export function ParticipantDisputesListView({ role, selectedId = null, onSelect }: Props) {
@@ -95,7 +96,7 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
     <div className="space-y-4">
       {error ? <LottieFailureInline message={error} /> : null}
 
-      <div className={`overflow-hidden ${portalCard}`}>
+      <div className={`overflow-hidden ${CARD_SURFACE}`}>
         {rows.length === 0 ? (
           <EmptyState className="border-0 py-14" title="No disputes yet." lottie="allCaughtUp" />
         ) : (

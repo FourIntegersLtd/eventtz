@@ -7,6 +7,7 @@ import {
   MAX_MONEY_GBP as ONBOARDING_MAX_MONEY_GBP,
   MIN_MONEY_GBP as ONBOARDING_MIN_MONEY_GBP,
 } from "@/lib/vendorOnboarding/constants";
+import { formatGbp } from "@/lib/money";
 
 /** Re-export for callers that import limits from validation/money. */
 export const MIN_MONEY_GBP = ONBOARDING_MIN_MONEY_GBP;
@@ -54,7 +55,7 @@ export function validateSingleMoneyAmount(
     return `${label} must be a valid amount`;
   }
   if (n < min || n > max) {
-    if (n < min) return `${label} must be at least £${min.toFixed(2)}`;
+    if (n < min) return `${label} must be at least ${formatGbp(min, { decimals: 2, grouping: false })}`;
     return `${label} is out of allowed range`;
   }
   return null;

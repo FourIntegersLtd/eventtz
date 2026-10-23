@@ -1,6 +1,7 @@
 /** Shared vendor discount parsing and client-facing price display helpers. */
 
 import { parseSingleMoneyNumber } from "@/lib/validation/money";
+import { formatGbp } from "./money";
 
 function coerceStr(p: Record<string, unknown>, k: string): string {
   const v = p[k];
@@ -15,13 +16,6 @@ export function parseMoneyNumber(raw: string): number | null {
   if (!s) return null;
   const n = Number.parseFloat(s);
   return Number.isFinite(n) ? n : null;
-}
-
-export function formatGbp(n: number): string {
-  return n.toLocaleString("en-GB", {
-    minimumFractionDigits: n % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 export type VendorDiscountConfig = {
@@ -82,7 +76,7 @@ export function buildDiscountPromoLines(config: VendorDiscountConfig): string[] 
     config.bulkPct > 0
   ) {
     lines.push(
-      `Extra ${formatDiscountPercent(config.bulkPct)} off bookings over GBP ${formatGbp(config.bulkThreshold)} (applied automatically if eligible)`,
+      `Extra ${formatDiscountPercent(config.bulkPct)} off bookings over ${formatGbp(config.bulkThreshold, { prefix: "GBP " })} (applied automatically if eligible)`,
     );
   }
   if (config.offPeakPct != null && config.offPeakPct > 0) {
@@ -176,14 +170,11 @@ export function computeBookingEstimateGbp(
 }
 
 export function formatBookingEstimateLabel(sumNumeric: number, hasTbc: boolean): string {
-  const formatted = sumNumeric.toLocaleString("en-GB", {
-    minimumFractionDigits: sumNumeric % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
+  const formatted = formatGbp(sumNumeric, { prefix: "GBP " });
   if (hasTbc) {
-    return sumNumeric > 0 ? `GBP ${formatted} + TBC` : "TBC";
+    return sumNumeric > 0 ? `${formatted} + TBC` : "TBC";
   }
-  return `GBP ${formatted}`;
+  return formatted;
 }
 
 export type ListPriceDisplay = {
@@ -219,15 +210,15 @@ export function listPriceDisplay(
   if (hasActiveListDiscount(config)) {
     const sale = salePriceAfterDiscount(listPrice, config.discountPct);
     return {
-      priceDisplay: formatGbp(sale),
-      compareAtDisplay: formatGbp(listPrice),
+      priceDisplay: formatGbp(sale, { prefix: "" }),
+      compareAtDisplay: formatGbp(listPrice, { prefix: "" }),
       unitPriceGbp: sale,
       discountBadge: badge,
     };
   }
 
   return {
-    priceDisplay: formatGbp(listPrice),
+    priceDisplay: formatGbp(listPrice, { prefix: "" }),
     compareAtDisplay: null,
     unitPriceGbp: listPrice,
     discountBadge: null,

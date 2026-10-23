@@ -36,6 +36,7 @@ import type { EventEnquirePrefill } from "@/features/bookings/eventEnquirePrefil
 import { useEnquireEventFormState } from "@/features/bookings/useEnquireEventFormState";
 import type { MarketplaceBookingSearchPrefill } from "@/lib/marketplaceSearchParams";
 import { CLIENT_BOOKING_NOTES_MAX_LENGTH } from "@/lib/validation/bookings";
+import { formatGbp } from "@/lib/money";
 
 export type VendorBookingSearchPrefill = MarketplaceBookingSearchPrefill;
 
@@ -459,10 +460,7 @@ export function VendorBookingModal({
                       : opt.unitPriceGbp;
                     const lineLabel =
                       lineTotal != null
-                        ? `GBP ${lineTotal.toLocaleString("en-GB", {
-                            minimumFractionDigits: lineTotal % 1 === 0 ? 0 : 2,
-                            maximumFractionDigits: 2,
-                          })}`
+                        ? formatGbp(lineTotal, { prefix: "GBP " })
                         : null;
                     return (
                     <li key={opt.id} className="space-y-2 px-3 py-2.5">
@@ -519,10 +517,7 @@ export function VendorBookingModal({
                     <span className="text-sm font-medium text-emerald-900">{line.heading}</span>
                     <span className="shrink-0 text-sm font-semibold text-emerald-800">
                       {line.unitPriceGbp != null
-                        ? `GBP ${Math.abs(line.unitPriceGbp).toLocaleString("en-GB", {
-                            minimumFractionDigits: line.unitPriceGbp % 1 === 0 ? 0 : 2,
-                            maximumFractionDigits: 2,
-                          })}`
+                        ? formatGbp(Math.abs(line.unitPriceGbp), { prefix: "GBP " })
                         : "TBC"}
                     </span>
                   </li>

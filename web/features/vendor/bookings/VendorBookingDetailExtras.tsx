@@ -12,7 +12,7 @@ import {
   cancellationPolicyLabel,
   cancellationPolicyTiers,
 } from "@/features/bookings/cancellationPolicyCopy";
-import { formatGbp } from "@/lib/vendorDiscountDisplay";
+import { formatGbp } from "@/lib/money";
 import { ReceiptActions } from "@/features/receipts/ReceiptActions";
 import { hasPaymentReceipt } from "@/lib/receiptsApi";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
@@ -113,7 +113,7 @@ export function VendorBookingDetailExtras({
 
 function CancellationOutcome({ detail }: { detail: VendorBookingDetail }) {
   const share = detail.cancellation_vendor_share_gbp ?? 0;
-  const shareLabel = `£${formatGbp(share)}`;
+  const shareLabel = `${formatGbp(share)}`;
   const held = share > 0 && !detail.cancellation_payout_at;
   const policy = detail.cancellation_policy ?? "";
   const tiers = policy ? cancellationPolicyTiers(policy) : [];

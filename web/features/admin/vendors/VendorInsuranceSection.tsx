@@ -11,6 +11,8 @@ import {
   type AdminVendorInsurance,
   type AdminVendorRow,
 } from "@/lib/adminVendorsApi";
+import { formatDate } from "@/lib/dateFormat";
+import { formatGbp } from "@/lib/money";
 
 type Props = { vendor: AdminVendorRow };
 
@@ -27,11 +29,7 @@ const STATUS_LABELS: Record<string, { label: string; tone: string }> = {
 
 /** Format an ISO date (`2027-03-01`) for staff, without shifting it across time zones. */
 function formatDay(isoDay: string): string {
-  return new Date(`${isoDay}T12:00:00Z`).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return formatDate(new Date(`${isoDay}T12:00:00Z`), "dayLongMonthYear");
 }
 
 /** Staff check of the vendor's public liability certificate: record its expiry and cover, or withdraw it. */
@@ -103,7 +101,7 @@ export function VendorInsuranceSection({ vendor }: Props) {
         </li>
         {checkedFile && insurance.expires_on ? (
           <li>
-            Checked: £{(insurance.cover_gbp ?? 0).toLocaleString("en-GB")} cover until{" "}
+            Checked: {formatGbp(insurance.cover_gbp ?? 0, { decimals: "upTo2" })} cover until{" "}
             {formatDay(insurance.expires_on)}
             {checkedFile !== insurance.certificate_url ? " (an older file; the new upload needs checking)" : ""}.
           </li>

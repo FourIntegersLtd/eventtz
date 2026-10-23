@@ -26,6 +26,7 @@ import { portalRoute } from "@/components/portal-shell/portalNav";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { disputeSummarySchema, parseForm } from "@/lib/validation";
+import { formatDateTimeSeconds } from "@/lib/dateFormat";
 
 const POLL_MS = 50_000;
 
@@ -148,7 +149,7 @@ export function BookingDisputeSection({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <ParticipantDisputeStatusBadge status={d.status} />
                     <span className="text-xs text-neutral-500">
-                      {d.created_at ? new Date(d.created_at).toLocaleString("en-GB") : ""}
+                      {d.created_at ? formatDateTimeSeconds(new Date(d.created_at)) : ""}
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-neutral-700 line-clamp-3">{d.summary}</p>

@@ -7,6 +7,7 @@ import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import type { AdminBookingSupportMeta } from "@/lib/adminPlatformApi";
 import { adminBookingRef } from "./adminBookingRef";
 import { NeedsAttentionBanner } from "./AdminBookingDetailShared";
+import { formatDate } from "@/lib/dateFormat";
 
 type Props = {
   bookingId: string;
@@ -26,7 +27,7 @@ function createdCaption(createdAt: unknown, eventName: string): string {
     const date = new Date(String(createdAt));
     if (!Number.isNaN(date.getTime())) {
       parts.unshift(
-        `created ${date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}`,
+        `created ${formatDate(date, "weekdayDayMonthYear")}`,
       );
     }
   }

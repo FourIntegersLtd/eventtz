@@ -35,6 +35,7 @@ import {
   type ShoutoutFilter,
 } from "@/lib/adminReferralsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
+import { formatDate } from "@/lib/dateFormat";
 
 function CreatorDetailRow({
   icon: Icon,
@@ -62,11 +63,11 @@ const SHOUTOUT_OPTIONS = [
   { value: "completed" as const, label: "Shoutout completed" },
 ];
 
-function formatDate(iso: string | null): string {
+function formatDay(iso: string | null): string {
   if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(d, "dayMonthYear");
 }
 
 type AdminReferralSignupsViewProps = {
@@ -233,7 +234,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
                   <AdminTableRow key={row.user_id}>
                     <AdminTableCell>{row.email ?? "-"}</AdminTableCell>
                     <AdminTableCell>{row.business_name ?? "-"}</AdminTableCell>
-                    <AdminTableCell>{formatDate(row.attributed_at)}</AdminTableCell>
+                    <AdminTableCell>{formatDay(row.attributed_at)}</AdminTableCell>
                     <AdminTableCell>
                       {row.approval_status ? (
                         <VendorApprovalStatusBadge status={row.approval_status} />
@@ -255,7 +256,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
                         </span>
                       </label>
                       {row.shoutout_completed_at ? (
-                        <p className="mt-0.5 text-xs text-neutral-500">{formatDate(row.shoutout_completed_at)}</p>
+                        <p className="mt-0.5 text-xs text-neutral-500">{formatDay(row.shoutout_completed_at)}</p>
                       ) : null}
                     </AdminTableCell>
                     <AdminTableCell>

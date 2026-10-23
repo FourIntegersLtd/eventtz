@@ -27,12 +27,13 @@ import {
 } from "@/lib/adminReferralsApi";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { copyToClipboard } from "@/lib/copyToClipboard";
+import { formatDate } from "@/lib/dateFormat";
 
-function formatDate(iso: string | null): string {
+function formatDay(iso: string | null): string {
   if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "-";
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(d, "dayMonthYear");
 }
 
 export function AdminReferralsView() {
@@ -143,7 +144,7 @@ export function AdminReferralsView() {
                   <AdminTableCell className="ez-td-status">
                     {p.is_active ? "Active" : "Inactive"}
                   </AdminTableCell>
-                  <AdminTableCell>{formatDate(p.created_at)}</AdminTableCell>
+                  <AdminTableCell>{formatDay(p.created_at)}</AdminTableCell>
                   <AdminTableCell>
                     <Link
                       href={`/admin/referrals/${p.id}`}

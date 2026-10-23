@@ -1,7 +1,6 @@
 "use client";
 
 import { forwardRef, useId, type TextareaHTMLAttributes } from "react";
-import { FORM_CONTROL, FORM_CONTROL_FOCUS, FOCUS_RING } from "@/components/ui/tokens";
 
 export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
@@ -9,6 +8,7 @@ export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   hint?: string;
 };
 
+/** Canvas text area: `ez-field` with an `ez-label`, an `ez-input ez-input--area`, then the help or error line. */
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea(
   { label, error, hint, id, className = "", rows = 4, ...rest },
   ref,
@@ -16,8 +16,8 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
   const generatedId = useId();
   const inputId = id ?? generatedId;
   return (
-    <div className="min-w-0 space-y-1.5">
-      <label htmlFor={inputId} className="block text-sm font-medium text-ink">
+    <div className="ez-field">
+      <label htmlFor={inputId} className="ez-label">
         {label}
       </label>
       <textarea
@@ -26,19 +26,17 @@ export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function 
         rows={rows}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
-        className={`${FORM_CONTROL} ${FORM_CONTROL_FOCUS} resize-none ${FOCUS_RING} ${
-          error ? "border-danger-line" : ""
-        } ${className}`.trim()}
+        className={`ez-input ez-input--area${error ? " ez-input--error" : ""} ${className}`.trim()}
         {...rest}
       />
       {error ? (
-        <p id={`${inputId}-error`} className="text-xs font-medium text-danger">
+        <span id={`${inputId}-error`} className="ez-error-text" role="alert">
           {error}
-        </p>
+        </span>
       ) : hint ? (
-        <p id={`${inputId}-hint`} className="text-xs text-ink-3">
+        <span id={`${inputId}-hint`} className="ez-help">
           {hint}
-        </p>
+        </span>
       ) : null}
     </div>
   );

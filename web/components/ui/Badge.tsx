@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { TONE } from "@/components/ui/tokens";
 import type { Tone } from "@/lib/tone";
 
 export type BadgeProps = {
@@ -9,14 +8,7 @@ export type BadgeProps = {
   children: ReactNode;
 };
 
-/** Pill-shaped status label. Every status badge in the app is a thin wrapper over this. */
+/** Pill-shaped status label (`ez-badge--<tone>`). Every status badge in the app is a thin wrapper over this. */
 export function Badge({ tone = "neutral", className = "", children }: BadgeProps) {
-  const toneClasses = TONE[tone];
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${toneClasses.text} ${toneClasses.background} ${toneClasses.line} ${className}`.trim()}
-    >
-      {children}
-    </span>
-  );
+  return <span className={`ez-badge ez-badge--${tone} shrink-0 ${className}`.trim()}>{children}</span>;
 }

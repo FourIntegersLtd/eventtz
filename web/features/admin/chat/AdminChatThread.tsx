@@ -6,16 +6,17 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { fetchAdminChatMessages, type AdminChatMessageItem } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { adminCard } from "@/components/admin-shell/adminTheme";
+import { CARD_SURFACE } from "@/components/ui/tokens";
 import { chatBubbleClass } from "@/lib/chatBubbleClasses";
 import { LinkifyMessageBody } from "@/lib/linkifyMessageBody";
+import { formatDate } from "@/lib/dateFormat";
 
 
 function formatTime(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" });
+  return formatDate(d, "dateTimeShort");
 }
 
 function ParticipantAvatar({
@@ -118,7 +119,7 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
     <div className={`flex w-full flex-col gap-3 ${compact ? "" : "min-h-[280px]"} ${className}`.trim()}>
       {!compact ? (
         clientUserId && vendorUserId ? (
-          <div className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between ${adminCard} px-4 py-3`}>
+          <div className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between ${CARD_SURFACE} px-4 py-3`}>
             <div className="flex min-w-0 items-center gap-2 text-sm">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/[0.08] text-primary">
                 <User className="h-4 w-4" strokeWidth={2} aria-hidden />
@@ -159,7 +160,7 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
         ) : !clientUserId || !vendorUserId ? (
           <ul className="space-y-3">
             {messages.map((m) => (
-              <li key={m.id} className={`${adminCard} px-3 py-2 text-sm`}>
+              <li key={m.id} className={`${CARD_SURFACE} px-3 py-2 text-sm`}>
                 <p className="font-mono text-[10px] text-neutral-500">{m.sender_user_id}</p>
                 <LinkifyMessageBody
                   body={m.body}

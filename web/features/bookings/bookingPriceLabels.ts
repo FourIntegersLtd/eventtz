@@ -1,5 +1,6 @@
 import type { BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
-import { DEFAULT_CURRENCY, formatMoney } from "@/lib/markets";
+import { DEFAULT_CURRENCY } from "@/lib/markets";
+import { formatMoney } from "@/lib/money";
 import {
   computeClientFeeBreakdown,
   referralDiscountForBookingPreview,

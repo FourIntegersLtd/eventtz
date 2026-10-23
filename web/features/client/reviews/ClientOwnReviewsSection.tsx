@@ -1,6 +1,6 @@
 "use client";
 
-import { portalCard } from "@/components/portal-shell/portalTheme";
+import { CARD_SURFACE } from "@/components/ui/tokens";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { ReviewCard } from "@/features/reviews/ReviewCard";
 import { useReviewsQuery } from "@/features/reviews/useReviewsQuery";
@@ -49,7 +49,7 @@ export function ClientOwnReviewsSection({ showShell = true }: ClientOwnReviewsSe
           You haven&apos;t left any reviews yet.
         </p>
       ) : (
-        <ul className={`divide-y divide-neutral-100 overflow-hidden ${portalCard} ${showShell ? "mt-4" : ""}`}>
+        <ul className={`divide-y divide-neutral-100 overflow-hidden ${CARD_SURFACE} ${showShell ? "mt-4" : ""}`}>
           {reviews.map((review) => (
             <li key={review.id}>
               <ClientReviewRow review={review} />
