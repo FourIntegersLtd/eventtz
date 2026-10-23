@@ -35,7 +35,7 @@ export type BookingDetailAction = {
 };
 
 /**
- * Role-agnostic shape for `BookingDetailPanel`. Everything the panel itself
+ * Role-agnostic shape for a booking detail screen. Everything the screen itself
  * renders (header, event & contact grid, pricing, notes) reads only from
  * this - role-specific bits (vendor quote adjustments, client review form,
  * accept/decline actions) are passed in as actions/slots by the caller.
