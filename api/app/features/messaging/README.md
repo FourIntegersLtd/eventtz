@@ -9,6 +9,8 @@ broadcasts, replies and edits, and the staff viewer for any thread.
 - As a **client**, I **message a listed vendor**, and see their business name in my inbox.
 - As a **vendor**, I **message a client who has enquired with me**, and my first reply on an
   enquiry records my response time.
+- As a **client or vendor**, I **reply in a DM that has an active dispute**, and both parties'
+  dispute screens re-read (`dispute_changed`, after commit).
 - As a **client or vendor**, I **read my Eventtz Support thread** and reply to it; staff appear as
   "Eventtz Admin", never by name or email.
 - As **staff**, I **message one or more users** (super admins: every client, vendor or user), and
