@@ -49,4 +49,6 @@ visibility, the listing override or pause, deletion, or anything staff-facing th
 - A price, discount or package option read from request input, or an incomplete package offered to clients.
 - Validation changed on one side only (api `payload_validation.py` vs web onboarding validation), so a step saves but fails on submit.
 - An image or document URL from outside the vendor's `users/{id}/` prefix stored in the payload.
+- The admin listing-photo editor sending a saved `listingDisplayOrder` / `listingHiddenImageUrls` URL the vendor has since removed or replaced: the api refuses it (`listing_media_url_invalid`), so the editor offers only current profile and portfolio photos (`adminListingMedia.test.ts`).
+- A staff bulk reminder (profile or payout nudge) emailing a suspended vendor or a closed account: `_nudge` skips them via `is_suspended` and `identity.closed_account_ids` (`test_vendor_bulk_nudges.py`).
 - An AI route that sends contact details to the model, or breaks the 503/fallback behaviour.
