@@ -52,7 +52,7 @@ Helper: **`lib/mutationFeedback.ts`** (`withMutationFeedback`, `mutationErrorMes
 - **Flex rows:** add **`min-w-0`** on text children and **`flex-wrap`** on toolbars/filter bars so narrow phones do not overflow.
 - **Grids:** default to **`grid-cols-1`** on xs; step up at **`sm:`** / **`md:`**. Admin tables may use **`overflow-x-auto`** or card fallback below **`md`**.
 - **Horizontal scrollbars (mobile):** below **`md`**, **`globals.css`** hides horizontal scrollbar tracks app-wide (landing, auth, client/vendor portal, admin). Use **`overflow-x-auto`** when content must scroll sideways; touch/swipe still works - do not add per-component scrollbar-hiding unless you need desktop-only behaviour.
-- **Master-detail:** **`MasterDetailLayout`** - one pane at a time below **`lg`** (bookings, messages).
+- **Master-detail:** **`MasterDetailLayout`** - one pane at a time below **`lg`** (used by chat only).
 
 Feature-local **constants, labels, formatters** stay under that feature unless reused across 2+ domains (then consider `lib/`).
 

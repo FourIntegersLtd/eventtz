@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, TypeVar
+
+from app.core.time import uk_today
 
 ListItem = TypeVar("ListItem")
 
@@ -20,18 +22,16 @@ def _noon_utc(day_key: str) -> datetime:
     return datetime.fromisoformat(f"{day_key}T12:00:00").replace(tzinfo=UTC)
 
 
-def _local_today_key() -> str:
-    """Today's date in the server's local timezone as `YYYY-MM-DD`."""
-    today = datetime.now(UTC).astimezone().date()
-    return today.isoformat()
+def _today_noon(today: date | None) -> datetime:
+    """Noon UTC on `today`, defaulting to the current London date."""
+    return _noon_utc((today or uk_today()).isoformat())
 
 
-def pick_next_upcoming(active: list[Any]) -> Any | None:
+def pick_next_upcoming(active: list[Any], *, today: date | None = None) -> Any | None:
     """The soonest upcoming active booking, or the earliest by date if none are future."""
     if not active:
         return None
-    today_key = _local_today_key()
-    today_noon = _noon_utc(today_key)
+    today_noon = _today_noon(today)
     scored: list[tuple[float, Any]] = []
     for booking in active:
         start_key = _date_key_from_iso(getattr(booking, "event_date", None))
@@ -53,10 +53,9 @@ def _booking_status(booking: Any) -> str | None:
     return getattr(booking, "booking_status", None) or getattr(booking, "status", None)
 
 
-def accepted_upcoming(active: list[Any]) -> list[Any]:
+def accepted_upcoming(active: list[Any], *, today: date | None = None) -> list[Any]:
     """Accepted bookings whose event window has not fully ended before today."""
-    today_key = _local_today_key()
-    today_noon = _noon_utc(today_key)
+    today_noon = _today_noon(today)
     accepted = [booking for booking in active if _booking_status(booking) == "accepted"]
     upcoming: list[Any] = []
     for booking in accepted:
@@ -69,10 +68,9 @@ def accepted_upcoming(active: list[Any]) -> list[Any]:
     return upcoming
 
 
-def bookings_by_date(accepted_upcoming_rows: list[Any]) -> dict[str, list[Any]]:
+def bookings_by_date(accepted_upcoming_rows: list[Any], *, today: date | None = None) -> dict[str, list[Any]]:
     """Map each local date key to bookings spanning that day (multi-day events included)."""
-    today_key = _local_today_key()
-    today_noon = _noon_utc(today_key)
+    today_noon = _today_noon(today)
     by_date: dict[str, list[Any]] = {}
     for booking in accepted_upcoming_rows:
         start_key = _date_key_from_iso(getattr(booking, "event_date", None))

@@ -40,12 +40,17 @@ async def test_presigned_image_uses_images_folder_and_cap() -> None:
     )
     presigned = await service.create_upload_url(UPLOADER, body, storage)
     [recorded] = storage.presigned
-    assert recorded["content_type"] == "image/png"
-    assert recorded["max_bytes"] == 50_000_000
+    assert recorded == {
+        "key": presigned.path,
+        "content_type": "image/png",
+        "max_bytes": 50_000_000,
+    }
     assert presigned.path.startswith("users/user-123/images/")
     assert presigned.path.endswith(".png")
-    assert presigned.upload_url.startswith("https://")
-    assert presigned.fields["Content-Type"] == "image/png"
+    assert presigned.bucket == "fake-bucket"
+    assert presigned.public_url == f"https://files.example/{presigned.path}"
+    assert presigned.upload_url == "https://files.example/upload"
+    assert presigned.fields == {"key": presigned.path, "Content-Type": "image/png"}
 
 
 async def test_presigned_file_over_limit_is_refused_before_storage(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -59,9 +64,37 @@ async def test_presigned_file_over_limit_is_refused_before_storage(monkeypatch: 
         content_type="video/mp4",
         content_length=6,
     )
+    storage = FakeStorage()
     with pytest.raises(FileTooLarge):
-        await service.create_upload_url(UPLOADER, body, FakeStorage())
-    assert FakeStorage().presigned == []
+        await service.create_upload_url(UPLOADER, body, storage)
+    assert storage.presigned == []
+
+
+async def test_presigned_file_is_recorded_under_the_files_folder_with_the_file_cap() -> None:
+    """A video presign uses the files folder, its declared type and the file byte cap."""
+    storage = FakeStorage()
+    body = CreateUploadUrlBody(
+        kind=MediaUploadUrlKind.file,
+        filename="clip.MP4",
+        content_type="video/mp4",
+        content_length=2048,
+    )
+    presigned = await service.create_upload_url(UPLOADER, body, storage)
+    [recorded] = storage.presigned
+    assert recorded == {"key": presigned.path, "content_type": "video/mp4", "max_bytes": 50_000_000}
+    assert presigned.path.startswith("users/user-123/files/")
+    assert presigned.path.endswith(".mp4")
+
+
+async def test_presigned_wrong_type_is_refused_and_records_nothing() -> None:
+    """A PDF on the image kind is refused before any POST policy is minted."""
+    storage = FakeStorage()
+    body = CreateUploadUrlBody(
+        kind=MediaUploadUrlKind.image, filename="cert.pdf", content_type="application/pdf", content_length=10
+    )
+    with pytest.raises(ImageOnly):
+        await service.create_upload_url(UPLOADER, body, storage)
+    assert storage.presigned == []
 
 
 async def test_presigned_upload_fails_when_storage_is_off() -> None:
