@@ -1,29 +1,10 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-export type ReferralPartner = {
-  id: string;
-  slug: string;
-  display_name: string;
-  instagram_handle: string | null;
-  notes: string | null;
-  is_active: boolean;
-  referral_link: string;
-  created_at: string | null;
-  updated_at: string | null;
-};
+export type ReferralPartner = components["schemas"]["ReferralPartnerRow"];
 
-export type ReferralVendorSignup = {
-  user_id: string;
-  email: string | null;
-  business_name: string | null;
-  approval_status: string | null;
-  onboarding_status: string | null;
-  attributed_at: string | null;
-  shoutout_completed: boolean;
-  shoutout_completed_at: string | null;
-  explore_path: string | null;
-};
+export type ReferralVendorSignup = components["schemas"]["ReferralVendorSignupRow"];
 
 export type ShoutoutFilter = "all" | "pending" | "completed";
 
@@ -38,12 +19,10 @@ export async function fetchReferralPartnersPage(
   offset: number;
   limit: number;
 }> {
-  const { data } = await api.get<{
-    partners: ReferralPartner[];
-    total: number;
-    offset: number;
-    limit: number;
-  }>("/api/v1/admin/referrals/partners", { params: { offset, limit } });
+  const { data } = await api.get<components["schemas"]["ReferralPartnerListResponse"]>(
+    "/api/v1/admin/referrals/partners",
+    { params: { offset, limit } },
+  );
   return {
     partners: data.partners ?? [],
     total: data.total ?? 0,
@@ -57,26 +36,19 @@ export async function fetchReferralPartners(): Promise<ReferralPartner[]> {
   return page.partners;
 }
 
-export async function createReferralPartner(body: {
-  display_name: string;
-  instagram_handle?: string;
-  slug?: string;
-  notes?: string;
-}): Promise<ReferralPartner> {
-  const { data } = await api.post<{ partner: ReferralPartner }>("/api/v1/admin/referrals/partners", body);
+export async function createReferralPartner(body: components["schemas"]["CreateReferralPartnerRequest"]): Promise<ReferralPartner> {
+  const { data } = await api.post<components["schemas"]["ReferralPartnerResponse"]>(
+    "/api/v1/admin/referrals/partners",
+    body,
+  );
   return data.partner;
 }
 
 export async function updateReferralPartner(
   partnerId: string,
-  body: {
-    display_name?: string;
-    instagram_handle?: string;
-    notes?: string;
-    is_active?: boolean;
-  },
+  body: components["schemas"]["UpdateReferralPartnerRequest"],
 ): Promise<ReferralPartner> {
-  const { data } = await api.patch<{ partner: ReferralPartner }>(
+  const { data } = await api.patch<components["schemas"]["ReferralPartnerResponse"]>(
     `/api/v1/admin/referrals/partners/${partnerId}`,
     body,
   );
@@ -98,13 +70,9 @@ export async function fetchReferralSignups(
   if (opts?.limit != null) params.set("limit", String(opts.limit));
   if (opts?.shoutout) params.set("shoutout", opts.shoutout);
   const qs = params.toString();
-  const { data } = await api.get<{
-    partner: ReferralPartner;
-    signups: ReferralVendorSignup[];
-    total: number;
-    offset: number;
-    limit: number;
-  }>(`/api/v1/admin/referrals/partners/${partnerId}/signups${qs ? `?${qs}` : ""}`);
+  const { data } = await api.get<components["schemas"]["ReferralSignupListResponse"]>(
+    `/api/v1/admin/referrals/partners/${partnerId}/signups${qs ? `?${qs}` : ""}`,
+  );
   return data;
 }
 
@@ -114,7 +82,7 @@ export async function patchReferralShoutout(
 ): Promise<ReferralVendorSignup> {
   const { data } = await api.patch<ReferralVendorSignup>(
     `/api/v1/admin/referrals/signups/${userId}`,
-    { shoutout_completed: shoutoutCompleted },
+    { shoutout_completed: shoutoutCompleted } satisfies components["schemas"]["UpdateReferralShoutoutRequest"],
   );
   return data;
 }

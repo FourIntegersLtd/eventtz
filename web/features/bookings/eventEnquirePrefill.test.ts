@@ -9,6 +9,7 @@ const basePlan = {
   success: true,
   plan_id: "plan-1",
   status: "active",
+  client_event_id: null,
   celebration: {
     title: "Sarah's 30th",
     event_type: "birthday",
@@ -47,8 +48,8 @@ const basePlan = {
   },
   recommendations: [],
   next_steps: [],
-  created_at: null,
-  updated_at: null,
+  created_at: "2026-09-01T10:00:00Z",
+  updated_at: "2026-09-01T10:00:00Z",
 } satisfies CelebrationPlanResponse;
 
 describe("eventPrefillFromCelebrationPlan", () => {

@@ -1,24 +1,11 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
-export type AdminEmailTemplate = {
-  id: string;
-  label: string;
-  category: string;
-  description: string | null;
-};
+export type AdminEmailTemplate = components["schemas"]["AdminEmailTemplateRow"];
 
-export type AdminEmailTestSendBody = {
-  template_id: string;
-  to_email: string;
-  message_body?: string;
-  message_body_html?: string;
-};
+export type AdminEmailTestSendBody = components["schemas"]["AdminEmailTestSendBody"];
 
-export type AdminEmailTestSendResult = {
-  success: boolean;
-  delivered: boolean;
-  message: string | null;
-};
+export type AdminEmailTestSendResult = components["schemas"]["AdminEmailTestSendResponse"];
 
 export const DEFAULT_ADMIN_EMAIL_TEST_BODY =
   "This is a test email from Eventtz. If you received this, Resend delivery is working.";
@@ -30,7 +17,9 @@ function prefix() {
 }
 
 export async function fetchAdminEmailTemplates(): Promise<AdminEmailTemplate[]> {
-  const { data } = await api.get<{ templates: AdminEmailTemplate[] }>(`${prefix()}/templates`);
+  const { data } = await api.get<components["schemas"]["AdminEmailTemplatesListResponse"]>(
+    `${prefix()}/templates`,
+  );
   return data.templates ?? [];
 }
 

@@ -1,34 +1,12 @@
+import type { components } from "@/lib/api-schema";
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 
-export type AdminBookingListSupportSummary = {
-  needs_attention_count: number;
-  max_severity: "critical" | "warning" | null;
-  primary_label: string | null;
-  next_action: string | null;
-};
+export type AdminBookingListSupportSummary = components["schemas"]["AdminBookingListSupportSummary"];
 
-export type AdminBookingListItem = {
-  id: string;
-  status: string;
-  event_name: string;
-  event_date: string;
-  client_email?: string | null;
-  vendor_email?: string | null;
-  vendor_display_name: string;
-  created_at?: string | null;
-  client_total_label?: string | null;
-  paid_at?: string | null;
-  payment_status: string;
-  support?: AdminBookingListSupportSummary | null;
-};
+export type AdminBookingListItem = components["schemas"]["AdminBookingListItem"];
 
-export type AdminBookingsListResponse = {
-  success: boolean;
-  bookings: AdminBookingListItem[];
-  total: number;
-  offset: number;
-  limit: number;
-};
+export type AdminBookingsListResponse = components["schemas"]["AdminBookingsListResponse"];
 
 export type AdminBookingsQuery = {
   offset?: number;
@@ -43,7 +21,7 @@ export type AdminBookingsQuery = {
 export async function fetchAdminBookings(
   q: AdminBookingsQuery = {},
 ): Promise<AdminBookingsListResponse> {
-  const { data } = await api.get<AdminBookingsListResponse>("/api/v1/admin/bookings", {
+  const { data } = await api.get<components["schemas"]["AdminBookingsListResponse"]>("/api/v1/admin/bookings", {
     params: q,
   });
   return data;
@@ -58,34 +36,27 @@ export async function fetchAdminBookingDetail(bookingId: string): Promise<Record
 
 export async function patchBookingPaymentFields(
   bookingId: string,
-  body: {
-    stripe_payment_intent_id?: string | null;
-    stripe_charge_id?: string | null;
-    payment_amount_gbp?: number | null;
-  },
+  body: Partial<components["schemas"]["AdminPaymentFieldsPatchBody"]>,
 ): Promise<void> {
   await api.patch(`/api/v1/admin/bookings/${bookingId}/payment-fields`, body);
 }
 
-export type AdminBookingAttentionFlag = {
-  code: string;
-  severity: "critical" | "warning";
-  label: string;
-};
+export type AdminBookingAttentionFlag = components["schemas"]["AdminBookingNeedsAttentionFlag"];
 
-export type AdminBookingSupportMeta = {
-  needs_attention: AdminBookingAttentionFlag[];
-  open_dispute: {
-    id: string;
-    status: string;
-    summary: string;
-    created_at?: string | null;
-  } | null;
-  support_hold: boolean;
-  vendor_stripe_payouts_enabled: boolean;
-  next_action: string | null;
-};
+/** `open_dispute` is a free-form dict in the API schema; narrowed by hand (candidate for pydantic). */
+export type AdminBookingSupportMeta = WithFields<
+  components["schemas"]["AdminBookingSupportMeta"],
+  {
+    open_dispute: {
+      id: string;
+      status: string;
+      summary: string;
+      created_at?: string | null;
+    } | null;
+  }
+>;
 
+/** `booking` is a free-form dict in the API schema, so the detail stays a record plus `support`. */
 export type AdminBookingDetail = Record<string, unknown> & {
   support?: AdminBookingSupportMeta;
 };
@@ -126,14 +97,15 @@ export async function adminCompleteBookingCancellation(
 
 export async function adminCancelBookingOnBehalf(
   bookingId: string,
-  body: { party: "client" | "vendor"; reason: string; exceptional?: boolean },
+  body: Omit<components["schemas"]["AdminCancelOnBehalfBody"], "exceptional"> &
+    Partial<Pick<components["schemas"]["AdminCancelOnBehalfBody"], "exceptional">>,
 ): Promise<AdminBookingDetail> {
   return postAdminBookingAction(bookingId, "cancel-on-behalf", body);
 }
 
 export async function adminConfirmBookingCompletion(
   bookingId: string,
-  body: { party: "client" | "vendor" },
+  body: components["schemas"]["AdminConfirmCompletionBody"],
 ): Promise<AdminBookingDetail> {
   return postAdminBookingAction(bookingId, "confirm-completion", body);
 }
@@ -148,7 +120,7 @@ export async function adminSetBookingSupportHold(
 ): Promise<AdminBookingDetail> {
   const { data } = await api.patch<{ success: boolean; booking: AdminBookingDetail }>(
     `/api/v1/admin/bookings/${bookingId}/support-hold`,
-    { hold },
+    { hold } satisfies components["schemas"]["AdminSupportHoldBody"],
   );
   return data.booking;
 }

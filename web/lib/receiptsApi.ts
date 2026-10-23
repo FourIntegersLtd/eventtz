@@ -1,42 +1,13 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
-export type ReceiptLineItem = {
-  label: string;
-  amount_label: string;
-};
+export type ReceiptLineItem = components["schemas"]["ReceiptLineItem"];
 
-export type ReceiptDocumentType =
-  | "client_payment_receipt"
-  | "vendor_payment_record"
-  | "vendor_payout_statement";
+export type PaymentReceipt = components["schemas"]["PaymentReceiptPayload"];
 
-export type PaymentReceipt = {
-  document_type: ReceiptDocumentType;
-  receipt_number: string;
-  booking_request_id: string;
-  event_name: string;
-  event_date: string;
-  payment_status: string;
-  paid_at: string | null;
-  payout_released_at: string | null;
-  counterparty_name: string;
-  line_items: ReceiptLineItem[];
-  subtotal_label: string | null;
-  service_fee_label: string | null;
-  service_fee_percent: number | null;
-  total_label: string;
-  vendor_share_label: string | null;
-  platform_fee_label: string | null;
-  payment_reference: string | null;
-  transfer_reference: string | null;
-  stripe_receipt_url: string | null;
-  status_note: string | null;
-};
+export type ReceiptDocumentType = PaymentReceipt["document_type"];
 
-type PaymentReceiptResponse = {
-  success: boolean;
-  receipt: PaymentReceipt;
-};
+type PaymentReceiptResponse = components["schemas"]["PaymentReceiptResponse"];
 
 const RECEIPT_ELIGIBLE = new Set(["paid", "payout_released", "refunded", "partially_refunded"]);
 

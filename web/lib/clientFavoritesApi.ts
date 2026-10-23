@@ -1,7 +1,8 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
 export async function fetchClientFavoriteVendorIds(): Promise<string[]> {
-  const { data } = await api.get<{ success: boolean; vendor_user_ids: string[] }>(
+  const { data } = await api.get<components["schemas"]["ClientFavoritesListResponse"]>(
     "/api/v1/client/favorites",
   );
   return data.vendor_user_ids ?? [];
@@ -16,9 +17,12 @@ export async function removeClientFavorite(vendorUserId: string): Promise<void> 
 }
 
 export async function mergeClientFavorites(vendorUserIds: string[]): Promise<number> {
-  const { data } = await api.post<{ success: boolean; merged: number }>(
+  const body: components["schemas"]["ClientFavoritesMergeBody"] = {
+    vendor_user_ids: vendorUserIds,
+  };
+  const { data } = await api.post<components["schemas"]["ClientFavoritesMergeResponse"]>(
     "/api/v1/client/favorites/merge",
-    { vendor_user_ids: vendorUserIds },
+    body,
   );
   return data.merged ?? 0;
 }

@@ -6,6 +6,7 @@ const plan = {
   success: true,
   plan_id: "plan-abc",
   status: "active",
+  client_event_id: null,
   celebration: {
     title: "Sarah's wedding",
     event_type: "wedding",
@@ -59,6 +60,7 @@ const plan = {
         conversion_rate: 0.5,
         min_list_price_gbp: 500,
         base_city: "London",
+        city: "London",
         cover_image_url: null,
         unavailable: false,
         price_on_request: false,
@@ -70,8 +72,8 @@ const plan = {
     },
   ],
   next_steps: [],
-  created_at: null,
-  updated_at: null,
+  created_at: "2026-09-01T10:00:00Z",
+  updated_at: "2026-09-01T10:00:00Z",
 } satisfies CelebrationPlanResponse;
 
 describe("buildPlannerBrowseUrl", () => {

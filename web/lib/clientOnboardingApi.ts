@@ -1,14 +1,10 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
-export type ClientOnboardingState = {
-  completed: boolean;
-  preferred_name: string | null;
-};
+export type ClientOnboardingState = components["schemas"]["ClientOnboardingState"];
 
-type ClientOnboardingResponse = {
-  success: boolean;
-  onboarding: ClientOnboardingState;
-};
+type ClientOnboardingResponse = components["schemas"]["ClientOnboardingResponse"];
+type ClientOnboardingPatchBody = components["schemas"]["ClientOnboardingPatchBody"];
 
 export async function getClientOnboarding(): Promise<ClientOnboardingState> {
   const { data } = await api.get<ClientOnboardingResponse>("/api/v1/client/onboarding");
@@ -19,9 +15,10 @@ export async function updateClientOnboarding(input: {
   preferredName?: string | null;
   markCompleted?: boolean;
 }): Promise<ClientOnboardingState> {
-  const { data } = await api.patch<ClientOnboardingResponse>("/api/v1/client/onboarding", {
+  const body: ClientOnboardingPatchBody = {
     preferred_name: input.preferredName ?? undefined,
     mark_completed: input.markCompleted ?? undefined,
-  });
+  };
+  const { data } = await api.patch<ClientOnboardingResponse>("/api/v1/client/onboarding", body);
   return data.onboarding;
 }

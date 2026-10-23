@@ -1,57 +1,22 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-export type ReferralFeeTier = {
-  min_spend_gbp: number;
-  fee_discount_gbp: number;
-};
+export type ReferralFeeTier = components["schemas"]["ReferralFeeTier"];
 
-export type VendorClientReferralInfo = {
-  referral_code: string;
-  has_referral_code: boolean;
-  share_link: string;
-  service_fee_percent: number;
-  tiers: ReferralFeeTier[];
-  enabled: boolean;
-};
+/** Without the `success` flag, so a screen can build one from a freshly created code. */
+export type VendorClientReferralInfo = Omit<
+  components["schemas"]["VendorClientReferralResponse"],
+  "success"
+>;
 
-export type VendorReferralSetCodeResponse = {
-  referral_code: string;
-  share_link: string;
-};
+export type VendorReferralSetCodeResponse = components["schemas"]["VendorReferralSetCodeResponse"];
 
-export type VendorReferralPreview = {
-  valid: boolean;
-  code_valid: boolean;
-  tiers: ReferralFeeTier[];
-  service_fee_percent: number;
-  qualified_discount_gbp: number;
-  tier_min_spend_gbp: number | null;
-  service_fee_before_discount_gbp: number;
-  service_fee_gbp: number;
-};
+export type VendorReferralPreview = components["schemas"]["VendorReferralPreviewResponse"];
 
-export type VendorReferralBookingRow = {
-  booking_request_id: string;
-  event_name: string;
-  event_date: string;
-  booking_status: string;
-  payment_status: string;
-  vendor_portion_gbp: number;
-  referral_fee_discount_gbp: number;
-  referral_code?: string;
-  client_display_name: string | null;
-  created_at: string | null;
-};
+export type VendorReferralBookingRow = components["schemas"]["VendorReferralBookingRow"];
 
-export type VendorReferralBookingsResponse = {
-  total_referral_bookings: number;
-  total_fee_savings_gbp: number;
-  bookings: VendorReferralBookingRow[];
-  total?: number;
-  offset?: number;
-  limit?: number;
-};
+export type VendorReferralBookingsResponse = components["schemas"]["VendorReferralBookingsResponse"];
 
 export const VENDOR_REFERRAL_BOOKINGS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
@@ -86,10 +51,7 @@ export async function fetchVendorReferralPreview(
   return data;
 }
 
-export async function setVendorReferralCode(input: {
-  code?: string;
-  generate?: boolean;
-}): Promise<VendorReferralSetCodeResponse> {
+export async function setVendorReferralCode(input: Partial<components["schemas"]["VendorReferralSetCodeRequest"]>): Promise<VendorReferralSetCodeResponse> {
   const { data } = await api.post<VendorReferralSetCodeResponse>("/api/v1/vendor/referral/code", input);
   return data;
 }

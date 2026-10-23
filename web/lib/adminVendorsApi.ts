@@ -1,3 +1,5 @@
+import type { components } from "@/lib/api-schema";
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 import type {
   VendorApprovalStatus,
@@ -6,36 +8,7 @@ import type {
 } from "@/lib/domain-types";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-export type AdminVendorRow = {
-  id: string | null;
-  user_id: string;
-  email: string | null;
-  onboarding_status: VendorProfileStatus | string;
-  approval_status: VendorApprovalStatus | string;
-  current_step: number | null;
-  profile_form_data: Record<string, unknown>;
-  created_at?: string;
-  updated_at?: string;
-  stripe_account_id?: string | null;
-  stripe_charges_enabled?: boolean;
-  stripe_payouts_enabled?: boolean;
-  /** Stripe Connect can both charge and pay out for this vendor. */
-  payouts_verified?: boolean;
-  /** The vendor is live on client explore right now. */
-  listing_visible?: boolean;
-  /** Admin override on top of the automatic approval + Stripe rule. */
-  listing_override?: VendorListingOverride | string;
-  listing_override_reason?: string | null;
-  /** Staff-only: cancellations counted against the vendor in the last 180 days. */
-  vendor_cancellation_count?: number;
-  /** Staff-only: the count has reached the review threshold. */
-  cancellation_review_flag?: boolean;
-  /** Listing pause still running (ISO time) and why. */
-  listing_paused_until?: string | null;
-  listing_pause_reason?: string | null;
-  /** Public liability insurance as staff checked it. */
-  insurance?: AdminVendorInsurance;
-};
+export type AdminVendorRow = components["schemas"]["AdminVendorRow"];
 
 export type AdminVendorInsuranceStatus =
   | "missing"
@@ -44,17 +17,7 @@ export type AdminVendorInsuranceStatus =
   | "expiring"
   | "expired";
 
-export type AdminVendorInsurance = {
-  status: AdminVendorInsuranceStatus | string;
-  /** The certificate the vendor uploaded most recently. */
-  certificate_url: string | null;
-  /** The certificate staff checked. */
-  verified_certificate_url: string | null;
-  /** ISO date the checked cover ends. */
-  expires_on: string | null;
-  cover_gbp: number | null;
-  verified_at: string | null;
-};
+export type AdminVendorInsurance = components["schemas"]["VendorInsuranceState"];
 
 export type AdminVendorsQuery = {
   offset?: number;
@@ -76,13 +39,7 @@ export type AdminVendorsListResult = {
 export async function fetchAdminVendors(
   q: AdminVendorsQuery = {},
 ): Promise<AdminVendorsListResult> {
-  const { data } = await api.get<{
-    success: boolean;
-    vendors: AdminVendorRow[];
-    total: number;
-    offset: number;
-    limit: number;
-  }>("/api/v1/admin/vendors", {
+  const { data } = await api.get<components["schemas"]["AdminVendorsListResponse"]>("/api/v1/admin/vendors", {
     params: {
       offset: q.offset ?? 0,
       limit: q.limit ?? DEFAULT_LIST_PAGE_SIZE,
@@ -102,7 +59,7 @@ export async function fetchAdminVendors(
 
 /** One vendor, in the list's row shape, for the vendor's own admin page. */
 export async function fetchAdminVendor(userId: string): Promise<AdminVendorRow> {
-  const { data } = await api.get<{ success: boolean; vendor: AdminVendorRow }>(
+  const { data } = await api.get<components["schemas"]["AdminVendorDetailResponse"]>(
     `/api/v1/admin/vendors/${userId}`,
   );
   return data.vendor;
@@ -126,12 +83,7 @@ export async function patchVendorUnsubmit(
   userId: string,
   options: { message?: string; sendEmail?: boolean } = {},
 ): Promise<AdminVendorUnsubmitResult> {
-  const { data } = await api.patch<{
-    success: boolean;
-    user_id: string;
-    status: string;
-    email_sent: boolean;
-  }>(`/api/v1/admin/vendors/${userId}/unsubmit`, {
+  const { data } = await api.patch<components["schemas"]["AdminVendorUnsubmitResponse"]>(`/api/v1/admin/vendors/${userId}/unsubmit`, {
     message: options.message?.trim() || undefined,
     send_email: options.sendEmail ?? true,
   });
@@ -146,10 +98,7 @@ export async function patchVendorListingOverride(
   listing_override: VendorListingOverride,
   reason?: string,
 ): Promise<{ listing_override: VendorListingOverride | string; listing_visible: boolean }> {
-  const { data } = await api.patch<{
-    listing_override: VendorListingOverride | string;
-    listing_visible: boolean;
-  }>(`/api/v1/admin/vendors/${userId}/listing-override`, {
+  const { data } = await api.patch<components["schemas"]["AdminVendorListingOverrideResponse"]>(`/api/v1/admin/vendors/${userId}/listing-override`, {
     listing_override,
     reason: reason?.trim() || undefined,
   });
@@ -172,11 +121,7 @@ export async function patchVendorListingMedia(
   display_order: string[];
   hidden_image_urls: string[];
 }> {
-  const { data } = await api.patch<{
-    listing_cover_image_url: string | null;
-    display_order: string[];
-    hidden_image_urls: string[];
-  }>(`/api/v1/admin/vendors/${userId}/listing-media`, {
+  const { data } = await api.patch<components["schemas"]["AdminVendorListingMediaResponse"]>(`/api/v1/admin/vendors/${userId}/listing-media`, {
     display_order: payload.displayOrder,
     hidden_image_urls: payload.hiddenImageUrls,
   });
@@ -187,22 +132,15 @@ export async function patchVendorListingMedia(
   };
 }
 
-export type AdminVendorRestoreStripeResult = {
-  stripe_account_id: string | null;
-  stripe_charges_enabled: boolean;
-  stripe_payouts_enabled: boolean;
-  restored_from_transfer_id: string | null;
-};
+export type AdminVendorRestoreStripeResult = Omit<
+  components["schemas"]["AdminVendorRestoreStripeConnectResponse"],
+  "success" | "user_id"
+>;
 
 export async function restoreAdminVendorStripeConnect(
   userId: string,
 ): Promise<AdminVendorRestoreStripeResult> {
-  const { data } = await api.post<{
-    stripe_account_id: string | null;
-    stripe_charges_enabled: boolean;
-    stripe_payouts_enabled: boolean;
-    restored_from_transfer_id: string | null;
-  }>(`/api/v1/admin/vendors/${userId}/restore-stripe-connect`);
+  const { data } = await api.post<components["schemas"]["AdminVendorRestoreStripeConnectResponse"]>(`/api/v1/admin/vendors/${userId}/restore-stripe-connect`);
   return {
     stripe_account_id: data.stripe_account_id ?? null,
     stripe_charges_enabled: Boolean(data.stripe_charges_enabled),
@@ -216,37 +154,23 @@ export type AdminVendorBookingsByMonthRow = {
   [status: string]: string | number;
 };
 
-export type AdminVendorInsights = {
-  success: boolean;
-  user_id: string;
-  review_average: number | null;
-  review_count: number;
-  bookings_total: number;
-  bookings_by_status: Record<string, number>;
-  bookings_by_month: AdminVendorBookingsByMonthRow[];
-  open_disputes_on_bookings: number;
-  explore_path: string;
-};
+/** `bookings_by_month` rows are free-form dicts in the API schema; narrowed by hand. */
+export type AdminVendorInsights = WithFields<
+  components["schemas"]["AdminVendorInsightsResponse"],
+  { bookings_by_month: AdminVendorBookingsByMonthRow[] }
+>;
 
 export async function fetchAdminVendorInsights(userId: string): Promise<AdminVendorInsights> {
   const { data } = await api.get<AdminVendorInsights>(`/api/v1/admin/vendors/${userId}/insights`);
   return data;
 }
 
-export type AdminVendorProfileNudgeResult = {
-  sent: number;
-  skipped: number;
-  failures: { user_id: string; error: string }[];
-};
+export type AdminVendorProfileNudgeResult = Omit<components["schemas"]["AdminVendorProfileNudgeResponse"], "success">;
 
 export async function postAdminVendorProfileNudge(
   userIds: string[],
 ): Promise<AdminVendorProfileNudgeResult> {
-  const { data } = await api.post<{
-    sent: number;
-    skipped: number;
-    failures?: { user_id: string; error: string }[];
-  }>("/api/v1/admin/vendors/nudge-profile-complete", {
+  const { data } = await api.post<components["schemas"]["AdminVendorProfileNudgeResponse"]>("/api/v1/admin/vendors/nudge-profile-complete", {
     user_ids: userIds,
   });
   return {
@@ -259,11 +183,7 @@ export async function postAdminVendorProfileNudge(
 export async function postAdminVendorPayoutNudge(
   userIds: string[],
 ): Promise<AdminVendorProfileNudgeResult> {
-  const { data } = await api.post<{
-    sent: number;
-    skipped: number;
-    failures?: { user_id: string; error: string }[];
-  }>("/api/v1/admin/vendors/nudge-setup-payouts", {
+  const { data } = await api.post<components["schemas"]["AdminVendorProfileNudgeResponse"]>("/api/v1/admin/vendors/nudge-setup-payouts", {
     user_ids: userIds,
   });
   return {
@@ -275,7 +195,7 @@ export async function postAdminVendorPayoutNudge(
 
 /** Email the vendor a formal warning (recorded in the audit log). */
 export async function postVendorWarning(userId: string, message: string): Promise<boolean> {
-  const { data } = await api.post<{ email_sent: boolean }>(`/api/v1/admin/vendors/${userId}/warn`, {
+  const { data } = await api.post<components["schemas"]["AdminVendorWarnResponse"]>(`/api/v1/admin/vendors/${userId}/warn`, {
     message: message.trim(),
   });
   return Boolean(data.email_sent);
@@ -287,7 +207,7 @@ export async function putVendorListingPause(
   days: number,
   reason: string,
 ): Promise<{ listing_paused_until: string | null }> {
-  const { data } = await api.put<{ listing_paused_until: string | null }>(
+  const { data } = await api.put<components["schemas"]["AdminVendorPauseResponse"]>(
     `/api/v1/admin/vendors/${userId}/listing-pause`,
     { days, reason: reason.trim() },
   );
@@ -305,7 +225,7 @@ export async function putVendorInsurance(
   expiresOn: string,
   coverGbp: number,
 ): Promise<{ insurance: AdminVendorInsurance; listing_visible: boolean }> {
-  const { data } = await api.put<{ insurance: AdminVendorInsurance; listing_visible: boolean }>(
+  const { data } = await api.put<components["schemas"]["AdminVendorInsuranceResponse"]>(
     `/api/v1/admin/vendors/${userId}/insurance`,
     { expires_on: expiresOn, cover_gbp: coverGbp },
   );
@@ -316,7 +236,7 @@ export async function putVendorInsurance(
 export async function deleteVendorInsurance(
   userId: string,
 ): Promise<{ insurance: AdminVendorInsurance; listing_visible: boolean }> {
-  const { data } = await api.delete<{ insurance: AdminVendorInsurance; listing_visible: boolean }>(
+  const { data } = await api.delete<components["schemas"]["AdminVendorInsuranceResponse"]>(
     `/api/v1/admin/vendors/${userId}/insurance`,
   );
   return { insurance: data.insurance, listing_visible: Boolean(data.listing_visible) };

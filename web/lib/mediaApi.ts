@@ -1,10 +1,7 @@
+import type { components } from "@/lib/api-schema";
 import { directUpload } from "./mediaDirectUpload";
 
-export type ImageUploadResult = {
-  bucket: string;
-  path: string;
-  public_url: string;
-};
+export type ImageUploadResult = components["schemas"]["ImageUploadResponse"];
 
 /** Default axios timeout is 30s — presign JSON is fast; S3 POST uses `fetch` without this cap. */
 export const IMAGE_UPLOAD_TIMEOUT_MS = 120_000;
