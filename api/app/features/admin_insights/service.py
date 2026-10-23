@@ -8,13 +8,14 @@ staff account is signed in (`CurrentStaff`), and no route here is super-admin-on
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 #: `marketplace_events.event_name` values the analytics overview counts.
 from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.time import uk_today
 from app.features.admin_insights import domain, repository
 from app.features.admin_insights.errors import InvalidDateFilter
 from app.features.admin_insights.schemas import (
@@ -144,12 +145,13 @@ async def marketplace_analytics(
     to_date_raw: str | None,
     category_offset: int = 0,
     category_limit: int = DEFAULT_LIST_LIMIT,
+    now: datetime | None = None,
 ) -> AdminMarketplaceAnalyticsResponse:
     """The marketplace funnel over client-initiated enquiries in the given date range.
 
     Defaults to the trailing 30 days when no range is given, same as the dashboard charts.
     """
-    parsed_to = _parse_date(to_date_raw) or date.today()
+    parsed_to = _parse_date(to_date_raw) or uk_today(now)
     parsed_from = _parse_date(from_date_raw) or (parsed_to - timedelta(days=29))
     from_date = parsed_from.isoformat()
     to_date = parsed_to.isoformat()

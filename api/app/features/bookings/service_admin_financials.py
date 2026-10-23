@@ -11,11 +11,12 @@ from __future__ import annotations
 import csv
 import io
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
+from app.core.time import uk_day_key, uk_today
 from app.features.bookings import repository_admin, service_pricing
 from app.features.bookings.domain_financials import (
     CSV_HEADER,
@@ -66,7 +67,7 @@ async def _financials_rows(
 ) -> list[tuple[BookingRow, PaidBookingFinancials]]:
     """Every paid booking in range, paired with its priced financials (breakdown recomputed fresh).
 
-    `only_days` (first day, last day) narrows the read to those UTC days, so the daily table
+    `only_days` (first day, last day) narrows the read to those London days, so the daily table
     prices one page of days rather than every paid booking.
     """
     bookings = await repository_admin.paid_bookings_for_financials(
@@ -126,12 +127,14 @@ class _DailyPenceTotals:
     vendor_pence: int = field(default=0)
 
 
-def _daily_window(date_from: str | None, date_to: str | None) -> tuple[date, date]:
+def _daily_window(
+    date_from: str | None, date_to: str | None, now: datetime | None = None
+) -> tuple[date, date]:
     """First and last day of the daily table (default: the 30 days up to today, capped at 366 days).
 
     Mirrors the baseline's `_financials_chart_range`.
     """
-    today = datetime.now(UTC).date()
+    today = uk_today(now)
     start = date_from and date_from[:10]
     end = date_to and date_to[:10]
     # Default window is the 30 days up to today (29 days back), baseline parity.
@@ -156,7 +159,7 @@ def _daily_buckets(
 
     for booking, financials in rows:
         paid_at = _paid_at_iso(booking)
-        bucket_day = paid_at[:10] if paid_at and len(paid_at) >= 10 else None
+        bucket_day = uk_day_key(paid_at)
         if bucket_day is None or bucket_day not in buckets:
             continue
         bucket = buckets[bucket_day]

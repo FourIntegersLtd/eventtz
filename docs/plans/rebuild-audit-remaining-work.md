@@ -45,6 +45,13 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `adminFilterControlClass` are the `Ez*` filters. Deferred, not an exact render match: the six `Field` helpers
   (Tailwind rows, not `ez-dl`), `StatCard`/`VendorMetricsStrip`, `form-primitives`, `AdminFilterDateField`,
   hand-rolled alerts and pills.
+- **Phase 2.6 (web boundaries).** `SHARED_FEATURE_MODULES` names sub-paths only (no whole area); the landing
+  chrome (`LandingNav`, `LandingFooter`, `LandingSection`, `landingSectionStyles`, `useLandingNavScroll`, new
+  `landingChromeData`) is `components/landing/` and `ChangePasswordModal` is `components/auth/`, so
+  `CompliancePageShell` and `ComplianceReader` left the allow-list. `lib/eslintBoundariesLists.test.ts` checks
+  every shared, composes and allow-list entry still exists and is used, and that the README table equals the
+  list. The `ui` rule shares `COMPONENT_BOUNDARY_RULE`. Skipped (another agent deletes them): `ClientEzPageHead`,
+  `VendorEzPageHead`, `AdminErrorBanner`, `ez-form`, `form-primitives`. ESLint errors 128, same as main.
 
 **Phase 3 (api half): one pagination kernel, merged twins, one error code each.**
 - **Pagination kernel.** `core/pagination.py` holds `PageParams`/`PageDep` (default 25), `PagedResponse`,
@@ -57,6 +64,11 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 - **Error codes.** `invalid_booking_id` and `no_fields_to_update` are one class each in `core/errors.py`;
   `session_expired` and `account_deleted` reuse the `core/auth.py` classes with a message override.
   `test_visibility_helpers_only` also catches `.notin_`, `.is_`, `filter_by` and dict-row access.
+- **Generated API types (Phase 3.6).** `npm run api:types` writes `web/lib/api-schema.d.ts` from `api/openapi.json`;
+  `npm run api:types:check` runs in `ci-web` and `test_openapi_fresh.py` keeps `openapi.json` fresh. Response
+  schemas mark every field required (`app/openapi.py`). Bookings (client and vendor), both dashboards,
+  vendor payments, `/auth/me` and explore now alias the generated schema; `lib/api-types.ts` is deleted.
+  Left: the other ~40 `lib/*Api.ts` files still hold hand-written types and move over as screens are touched.
 
 **Phase 4: dead code and docs** (PR "Rebuild audit Phase 4", except `test_list_pagination.py`, which Phase 3 owns).
 - **Deleted web files with no importers (grep of every import form, then `npm run build`):**
@@ -80,12 +92,19 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Open questions and follow-ups from Phase 4
 
-- **Only the portal dashboard uses London "today" so far.** Six sites still use UTC and disagree with it between
-  00:00 and 01:00 BST: `vendors/service_moderation.py:600` (insurance expiry), `vendors/service_listing.py:39`
-  (listing visibility), `vendors/service_profile.py:33`, `bookings/service_admin_financials.py:124`,
-  `marketplace/service_analytics.py:22`, `admin_insights/domain.py:32`. Each belongs to a different owner, so
-  move them to `core.time.uk_today()` as follow-ups. The dashboard service also calls the clock once per helper;
-  compute `uk_today()` once and pass `today=` to all three, then make it required.
+- **Done (PR "UK calendar day for every business date").** Every `date.today()` / `datetime.now(UTC).date()` in
+  `api/app` now goes through `core.time.uk_today()`: the six sites above plus `bookings/schemas.py`,
+  `bookings/service_date_change.py`, `planner/service_plans.py` and `admin_insights/service.py`. The portal
+  dashboard computes `uk_today()` once and `today=` is required. Services take an optional `now` (the test clock).
+  `tests/guards/test_dates_use_uk_calendar_day.py` bans the direct forms.
+- **Also done in the same PR.** Admin chart bounds and bucketing (`admin_insights`), the financials daily table
+  and `paid_on_or_*` bounds, and the reminder job's "tomorrow" (`domain_maintenance.tomorrow_uk`) use London days.
+  The guard also bans `.astimezone(UTC).date()`.
+- **Still UTC, follow-ups.** (1) `bookings/domain_cancellation.py:107` (`days_before_event`) sets the refund tier:
+  money-owner moves it to `uk_date` with a golden check, then drops it from `UTC_DAY_ALLOWED_FILES` in the guard.
+  (2) The financials summary filters `date_from` / `date_to` (date-only strings) still mean midnight UTC
+  (`repository_admin._as_datetime_bound`, frozen by acceptance), so a 23:30 UTC payment on the day before `date_from`
+  is a London-day-of-`date_from` payment in the daily table but outside the summary total. Decide whether to freeze-break.
 
 ### Decision for you: should a client shown as "Client" be searchable by vendors?
 
@@ -173,11 +192,6 @@ compared with `main`.
    - Delete the `limit: 200` wrappers.
    - Replace the dispute 50-second poll with realtime.
    - Remaining page-only KPIs: vendor "Next release" and admin referrals "Active creators".
-6. **Generated API types (ADR 0007).**
-   - Add `openapi-typescript` (dev dependency, approved), `npm run api:types` and a CI drift check.
-   - Add an api test that `openapi.json` is fresh.
-   - Migrate the `lib/*Api.ts` types, starting with bookings, dashboards and payments.
-   - Update the AGENTS.md trap about hand-written types.
 7. **Formatting.**
    - One `lib/money.ts` (`formatGbp`, `formatPence`, en-GB).
    - `lib/dateFormat.ts` is the only date formatter.

@@ -9,13 +9,14 @@ them from row-shaped dicts (`id`, `status`).
 from __future__ import annotations
 
 import re
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # A client referral code is at most this many digits (as in the referrals slice).
 from app.core.pagination import PagedResponse
+from app.core.time import uk_today
 
 # The admin console's booking view, re-exported so the recovery routes can answer with it
 # (a router imports only its slice's `schemas`).
@@ -44,9 +45,9 @@ def _stripped_or_none(value: object) -> str | None:
     return stripped or None
 
 
-def _check_event_dates(event_date: date, event_end_date: date | None) -> None:
-    """Reject an event that starts in the past or ends before it starts."""
-    if event_date < date.today():
+def _check_event_dates(event_date: date, event_end_date: date | None, now: datetime | None = None) -> None:
+    """Reject an event that starts before today (London) or ends before it starts."""
+    if event_date < uk_today(now):
         raise ValueError("Event date cannot be in the past.")
     if event_end_date is not None and event_end_date < event_date:
         raise ValueError("Event end date must be on or after the event start date.")

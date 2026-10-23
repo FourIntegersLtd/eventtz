@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { TextField } from "@/components/ui/TextField";
 import { useClientOnboarding } from "@/features/client/onboarding/ClientOnboardingProvider";
-import { ChangePasswordModal } from "@/features/settings/ChangePasswordModal";
+import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
 import { deleteAccountErrorMessage } from "@/features/settings/SettingsDeleteAccountSection";
 import { persistContactSharingToggle } from "@/features/settings/ContactSharingSettingsSection";
 import { getClientOnboarding, updateClientOnboarding } from "@/lib/clientOnboardingApi";

@@ -1,21 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import {
-  CREATE_ACCOUNT_LINK,
-  REGISTER_LINK,
-  SIGN_IN_LINK,
-  SOCIAL_LINKS,
-  WAITLIST_LINK_LABEL,
-  WAITLIST_URL,
-} from "@/features/landing/landingData";
+import { CREATE_ACCOUNT_LINK, REGISTER_LINK, SIGN_IN_LINK, SOCIAL_LINKS, WAITLIST_LINK_LABEL, WAITLIST_URL } from "./landingChromeData";
 import {
   FOOTER_ADDRESS_LINES,
   FOOTER_COMPANY_NAME,
   FOOTER_CONTACT_EMAIL,
   FOOTER_LEGAL_LINKS,
 } from "@/lib/footerLinks";
-import { LANDING_PAGE_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
+import { LANDING_PAGE_CONTAINER_CLASS } from "@/components/landing/landingSectionStyles";
 
 const SOCIAL_ICON_CLASS =
   "flex h-10 w-10 items-center justify-center rounded-control border border-line-strong bg-white text-ink-2 transition-all hover:scale-105 hover:bg-primary-soft hover:text-primary";

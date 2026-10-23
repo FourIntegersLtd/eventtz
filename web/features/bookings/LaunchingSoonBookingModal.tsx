@@ -3,7 +3,7 @@
 import { Rocket } from "lucide-react";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { Modal } from "@/components/ui/Modal";
-import { WAITLIST_LINK_LABEL, WAITLIST_URL } from "@/features/landing/landingData";
+import { WAITLIST_LINK_LABEL, WAITLIST_URL } from "@/components/landing/landingChromeData";
 
 type LaunchingSoonBookingModalProps = {
   isOpen: boolean;

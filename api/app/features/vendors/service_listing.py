@@ -6,11 +6,12 @@ repeats it in SQL so the database does the filtering.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date, datetime
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.time import uk_today
 from app.features.vendors import repository
 from app.features.vendors.domain_insurance import has_valid_insurance
 from app.features.vendors.domain_profile_form import vendor_display_name
@@ -34,9 +35,9 @@ def _public_payload(row: ListedVendorRow, today: date) -> dict[str, Any]:
     return payload
 
 
-def _listed(rows: list[ListedVendorRow]) -> list[ListedVendor]:
-    """The public view of repository rows."""
-    today = datetime.now(UTC).date()
+def _listed(rows: list[ListedVendorRow], now: datetime | None = None) -> list[ListedVendor]:
+    """The public view of repository rows; insurance counts as in date until the London day ends."""
+    today = uk_today(now)
     return [
         ListedVendor.model_validate(
             {**row.model_dump(exclude={"insurance_expires_on"}), "payload": _public_payload(row, today)}

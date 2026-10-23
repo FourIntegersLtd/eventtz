@@ -11,7 +11,7 @@ import {
   LANDING_PAGE_MAX_WIDTH,
   LANDING_SCROLL_MT_CLASS,
   LANDING_SECTION_SHELL,
-} from "@/features/landing/landingSectionStyles";
+} from "@/components/landing/landingSectionStyles";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const TRUST_ITEMS = [

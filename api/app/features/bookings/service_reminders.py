@@ -221,7 +221,7 @@ async def send_event_tomorrow_reminders(session: AsyncSession, mailer: Mailer, *
     """Tell both sides of each paid booking whose event starts tomorrow (UTC); returns how many bookings."""
     limit = domain_maintenance.MAINTENANCE_BATCH_LIMIT
     candidates = await repository_maintenance.paid_bookings_starting_on(
-        session, domain_maintenance.tomorrow_utc(now), limit=limit * 3
+        session, domain_maintenance.tomorrow_uk(now), limit=limit * 3
     )
     contacts = await identity.contact_emails(
         session,

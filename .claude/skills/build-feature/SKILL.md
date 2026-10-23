@@ -24,7 +24,7 @@ written down first. Work through the steps in order; each ends with something wr
 5. **Smallest build**: reuse first, no new layer without a second caller, delete what is now
    dead, no shims. Follow `AGENTS.md` (SQL in `repository*.py`, `AppError` codes, pence in
    `domain.py`, docstrings, descriptive names). A schema change is an Alembic revision reviewed by
-   hand; a response change runs `make openapi` and updates `web/lib/api-types.ts` by hand; a new
+   hand; a response change runs `make openapi` and runs `npm run api:types` in web/; a new
    setting goes in `core/settings.py` and `api/.env.example`.
 6. **Prove** with the owner's verify skill at the level it names, and check the running app,
    stored row or rendered screen. Then `quality-reviewer` always, and `reviewer` (opus) plus

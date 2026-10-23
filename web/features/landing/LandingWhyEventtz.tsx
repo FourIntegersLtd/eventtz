@@ -4,11 +4,11 @@ import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { WHY_EVENTTZ_PILLARS, WHY_EVENTTZ_SECTION } from "@/features/landing/landingData";
-import { LandingSection } from "@/features/landing/LandingSection";
+import { LandingSection } from "@/components/landing/LandingSection";
 import {
   LANDING_SECTION_BG,
   LANDING_SECTION_BORDER,
-} from "@/features/landing/landingSectionStyles";
+} from "@/components/landing/landingSectionStyles";
 
 export function LandingWhyEventtz() {
   return (

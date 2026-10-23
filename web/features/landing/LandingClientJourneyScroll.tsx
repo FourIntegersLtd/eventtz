@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  CLIENT_JOURNEY_SCROLL_SECTION,
-  CLIENT_JOURNEY_SCROLL_STEPS,
-} from "@/features/landing/landingData";
+import { CLIENT_JOURNEY_SCROLL_SECTION, CLIENT_JOURNEY_SCROLL_STEPS } from "@/features/landing/landingData";
 import { LandingScrollFeatureShowcase } from "@/features/landing/LandingScrollFeatureShowcase";
 
 export function LandingClientJourneyScroll() {

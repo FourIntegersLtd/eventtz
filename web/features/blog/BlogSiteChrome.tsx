@@ -1,9 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { LandingFooter } from "@/features/landing/LandingFooter";
-import { LandingNav } from "@/features/landing/LandingNav";
-import { LANDING_NAV_OFFSET_CLASS } from "@/features/landing/landingSectionStyles";
+import { LandingFooter } from "@/components/landing/LandingFooter";
+import { LandingNav } from "@/components/landing/LandingNav";
+import { LANDING_NAV_OFFSET_CLASS } from "@/components/landing/landingSectionStyles";
 
 type BlogSiteChromeProps = {
   children: ReactNode;

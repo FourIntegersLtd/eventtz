@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import type { ApiEntityResponse } from "@/lib/api-types";
+import type { components } from "@/lib/api-schema";
 import type { UserType } from "@/lib/domain-types";
 
 export type AuthUser = {
@@ -72,7 +72,7 @@ export async function refreshSession(): Promise<AuthResponse> {
 }
 
 export async function getMe(): Promise<AuthUser> {
-  const { data } = await api.get<ApiEntityResponse<AuthUser>>("/api/v1/auth/me");
+  const { data } = await api.get<Omit<components["schemas"]["MeResponse"], "user"> & { user: AuthUser }>("/api/v1/auth/me");
   return data.user;
 }
 

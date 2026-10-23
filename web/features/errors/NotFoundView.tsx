@@ -2,10 +2,10 @@
 
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { LandingFooter } from "@/features/landing/LandingFooter";
-import { LandingNav } from "@/features/landing/LandingNav";
-import { LandingSection } from "@/features/landing/LandingSection";
-import { landingSectionClass } from "@/features/landing/landingSectionStyles";
+import { LandingFooter } from "@/components/landing/LandingFooter";
+import { LandingNav } from "@/components/landing/LandingNav";
+import { LandingSection } from "@/components/landing/LandingSection";
+import { landingSectionClass } from "@/components/landing/landingSectionStyles";
 
 /** Public 404: landing nav and footer around a centred message on the page background. */
 export function NotFoundView() {

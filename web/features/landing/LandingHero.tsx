@@ -5,13 +5,9 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { HeroMarketplaceSearch } from "@/features/marketplace/HeroMarketplaceSearch";
-import {
-  HERO_CTA,
-  HERO_HEADLINE,
-  HERO_SUBHEADLINE,
-} from "@/features/landing/landingData";
+import { HERO_CTA, HERO_HEADLINE, HERO_SUBHEADLINE } from "@/features/landing/landingData";
 import { HeroRotatingWord } from "@/features/landing/HeroRotatingWord";
-import { LANDING_HERO_CONTAINER_CLASS } from "@/features/landing/landingSectionStyles";
+import { LANDING_HERO_CONTAINER_CLASS } from "@/components/landing/landingSectionStyles";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 const HERO_IMAGE_SRC = "/images/landing-images/hero.png";

@@ -8,23 +8,12 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getButtonClassName } from "@/components/ui/buttonStyles";
-import {
-  BLOG_LINK,
-  BROWSE_LINK,
-  CONTACT_US_LINK,
-  EXPLORE_NAV_LINKS,
-  REGISTER_LINK,
-  MOBILE_NAV_SECTION_LINKS,
-  NAV_DROPDOWN_LINK_CLASS,
-  navLinkClass,
-  resolveLandingSectionPrefix,
-  SIGN_IN_LINK,
-} from "@/features/landing/landingData";
-import { useLandingNavScroll } from "@/features/landing/useLandingNavScroll";
+import { BLOG_LINK, BROWSE_LINK, CONTACT_US_LINK, EXPLORE_NAV_LINKS, REGISTER_LINK, MOBILE_NAV_SECTION_LINKS, NAV_DROPDOWN_LINK_CLASS, navLinkClass, resolveLandingSectionPrefix, SIGN_IN_LINK } from "./landingChromeData";
+import { useLandingNavScroll } from "@/components/landing/useLandingNavScroll";
 import {
   LANDING_NAV_MENU_TOP_CLASS,
   LANDING_PAGE_CONTAINER_CLASS,
-} from "@/features/landing/landingSectionStyles";
+} from "@/components/landing/landingSectionStyles";
 
 type NavLinkItemProps = {
   href: string;

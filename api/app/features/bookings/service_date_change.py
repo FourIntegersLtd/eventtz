@@ -8,12 +8,13 @@ daily-capacity trigger has the last word when the move lands on a full day.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.ports import Mailer
+from app.core.time import uk_today
 from app.features.bookings import domain, repository
 from app.features.bookings.errors import (
     BookingNotFound,
@@ -61,9 +62,9 @@ async def _booking_for(session: AsyncSession, role: Role, user_id: str, booking_
     return booking
 
 
-def _check_new_dates(event_date: date, event_end_date: date | None) -> None:
-    """Refuse a start in the past, an end before the start, or a span longer than a booking may cover."""
-    if event_date < date.today() or (event_end_date is not None and event_end_date < event_date):
+def _check_new_dates(event_date: date, event_end_date: date | None, now: datetime | None = None) -> None:
+    """Refuse a start before today (London), an end before the start, or an over-long span."""
+    if event_date < uk_today(now) or (event_end_date is not None and event_end_date < event_date):
         raise DateChangeInPast()
     domain.event_days(event_date, event_end_date)
 
