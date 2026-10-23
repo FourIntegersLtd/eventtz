@@ -3,15 +3,8 @@
 import Link from "next/link";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { EmptyState } from "@/components/ui/EmptyState";
-import {
-  AdminTable,
-  AdminTableBody,
-  AdminTableCell,
-  AdminTableElement,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/features/admin/components/AdminTable";
+import { Badge } from "@/components/ui/Badge";
+import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { vendorIsBulkEmailSelectable } from "@/features/admin/vendors/adminVendorBulkEmail";
 import { payloadStr } from "./vendorFormatters";
 import {
@@ -32,6 +25,11 @@ export function adminVendorHref(userId: string): string {
   return `/admin/directory/vendors/${userId}`;
 }
 
+/** The name shown for a vendor row, with a placeholder when the profile has none. */
+function vendorBusinessName(row: AdminVendorRow): string {
+  return payloadStr(row.profile_form_data ?? {}, "businessName") || "No business name";
+}
+
 export function AdminVendorsTable({
   rows,
   selectedUserIds,
@@ -46,73 +44,74 @@ export function AdminVendorsTable({
     );
   }
 
+  const columns: DataTableColumn<AdminVendorRow>[] = [
+    ...(bulkEnabled
+      ? [
+          {
+            key: "select",
+            header: <span className="sr-only">Select</span>,
+            headerClassName: "w-10",
+            className: "w-10",
+            cell: (row: AdminVendorRow) =>
+              vendorIsBulkEmailSelectable(row) ? (
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-neutral-300 text-primary focus:ring-primary"
+                  checked={selectedSet.has(row.user_id)}
+                  aria-label={`Select ${vendorBusinessName(row)}`}
+                  onChange={(event) => onToggleSelected(row.user_id, event.target.checked)}
+                />
+              ) : null,
+          },
+        ]
+      : []),
+    {
+      key: "vendor",
+      header: "Vendor",
+      kind: "strong" as const,
+      className: "min-w-[10rem] max-w-[14rem]",
+      cell: (row) => (
+        <Link
+          href={adminVendorHref(row.user_id)}
+          className="block truncate hover:underline"
+          title={vendorBusinessName(row)}
+        >
+          {vendorBusinessName(row)}
+        </Link>
+      ),
+    },
+    { key: "category", header: "Category", cell: (row) => vendorCategoryLabel(row) },
+    { key: "area", header: "Area", cell: (row) => vendorAreaLabel(row) },
+    { key: "submitted", header: "Submitted", className: "whitespace-nowrap", cell: (row) => vendorSubmittedLabel(row) },
+    {
+      key: "status",
+      header: "Status",
+      kind: "status" as const,
+      className: "whitespace-nowrap",
+      cell: (row) => {
+        const status = vendorQueueStatusBadge(row);
+        return <Badge tone={status.tone}>{status.label}</Badge>;
+      },
+    },
+    {
+      key: "review",
+      header: " ",
+      className: "whitespace-nowrap",
+      cell: (row) => (
+        <Link href={adminVendorHref(row.user_id)} className="ez-btn ez-btn--secondary ez-btn--sm">
+          Review
+        </Link>
+      ),
+    },
+  ];
+
   return (
-    <AdminTable>
-      <AdminTableElement className="min-w-[44rem]">
-        <AdminTableHead>
-          {bulkEnabled ? (
-            <AdminTableHeaderCell className="w-10">
-              <span className="sr-only">Select</span>
-            </AdminTableHeaderCell>
-          ) : null}
-          <AdminTableHeaderCell>Vendor</AdminTableHeaderCell>
-          <AdminTableHeaderCell>Category</AdminTableHeaderCell>
-          <AdminTableHeaderCell>Area</AdminTableHeaderCell>
-          <AdminTableHeaderCell>Submitted</AdminTableHeaderCell>
-          <AdminTableHeaderCell className="ez-td-status">Status</AdminTableHeaderCell>
-          <AdminTableHeaderCell> </AdminTableHeaderCell>
-        </AdminTableHead>
-        <AdminTableBody>
-          {rows.map((row) => {
-            const payload = row.profile_form_data ?? {};
-            const business = payloadStr(payload, "businessName") || "No business name";
-            const status = vendorQueueStatusBadge(row);
-            const selectable = bulkEnabled && vendorIsBulkEmailSelectable(row);
-            return (
-              <AdminTableRow key={row.user_id}>
-                {bulkEnabled ? (
-                  <AdminTableCell className="w-10">
-                    {selectable ? (
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-neutral-300 text-primary focus:ring-primary"
-                        checked={selectedSet.has(row.user_id)}
-                        aria-label={`Select ${business}`}
-                        onChange={(event) =>
-                          onToggleSelected(row.user_id, event.target.checked)
-                        }
-                      />
-                    ) : null}
-                  </AdminTableCell>
-                ) : null}
-                <AdminTableCell className="ez-td-strong min-w-[10rem] max-w-[14rem]">
-                  <Link
-                    href={adminVendorHref(row.user_id)}
-                    className="block truncate hover:underline"
-                    title={business}
-                  >
-                    {business}
-                  </Link>
-                </AdminTableCell>
-                <AdminTableCell>{vendorCategoryLabel(row)}</AdminTableCell>
-                <AdminTableCell>{vendorAreaLabel(row)}</AdminTableCell>
-                <AdminTableCell className="whitespace-nowrap">{vendorSubmittedLabel(row)}</AdminTableCell>
-                <AdminTableCell className="ez-td-status whitespace-nowrap">
-                  <span className={`ez-badge ez-badge--${status.tone}`}>{status.label}</span>
-                </AdminTableCell>
-                <AdminTableCell className="whitespace-nowrap">
-                  <Link
-                    href={adminVendorHref(row.user_id)}
-                    className="ez-btn ez-btn--secondary ez-btn--sm"
-                  >
-                    Review
-                  </Link>
-                </AdminTableCell>
-              </AdminTableRow>
-            );
-          })}
-        </AdminTableBody>
-      </AdminTableElement>
-    </AdminTable>
+    <DataTable
+      aria-label="Vendors"
+      tableClassName="min-w-[44rem]"
+      rows={rows}
+      getRowKey={(row) => row.user_id}
+      columns={columns}
+    />
   );
 }

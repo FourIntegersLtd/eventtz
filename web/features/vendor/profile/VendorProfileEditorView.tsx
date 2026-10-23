@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { VendorReviewsEzView } from "@/features/reviews/VendorReviewsEzView";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   PROFILE_SECTIONS,
   profileSectionHref,
@@ -90,7 +90,7 @@ export function VendorProfileEditorView({
     const previousSection = sectionIndex > 0 ? PROFILE_SECTIONS[sectionIndex - 1] : null;
     return (
       <div className="ez-stack ez-stack--lg">
-        <VendorEzPageHead
+        <PageHeader descriptionSize="body"
           eyebrow="Business"
           title="Your profile"
           description="Edit one section, then save."
@@ -121,7 +121,7 @@ export function VendorProfileEditorView({
 
   return (
     <div className="ez-stack ez-stack--lg">
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow="Business"
         title="Your profile"
         description="This is what clients see on Eventtz."

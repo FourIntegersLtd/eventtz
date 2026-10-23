@@ -218,7 +218,7 @@ function AdminUserFooter({
 
 /**
  * Signed-in admin shell, transcribed from the canvas admin artboards: `ez-shell--admin`
- * with grouped nav, a user chip, and `ez-content` (page titles live in `AdminEzPageHead`).
+ * with grouped nav, a user chip, and `ez-content` (page titles use `PageHeader`).
  */
 export function AdminShell({ children }: AdminShellProps) {
   const pathname = usePathname();

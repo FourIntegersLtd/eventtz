@@ -4,16 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ParticipantDisputeStatusBadge } from "@/components/badges/ParticipantDisputeStatusBadge";
-import {
-  AdminTable,
-  AdminTableBody,
-  AdminTableCell,
-  AdminTableElement,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/features/admin/components/AdminTable";
-import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
+import { DataTable } from "@/components/ui/DataTable";
 import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
 import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
@@ -70,7 +61,6 @@ export function DisputesTable({
         onSearchChange={onSearchChange}
         searchPlaceholder="Search booking or party"
         searchAriaLabel="Search booking or party"
-        inputClassName={adminFilterControlClass}
         searchMaxWidth="16rem"
         onOpenFilter={() => setStatusModalOpen(true)}
         activeFilterCount={statusActive ? 1 : 0}
@@ -95,55 +85,69 @@ export function DisputesTable({
       {rows.length === 0 ? (
         <EmptyState title="No disputes match this filter" lottie="searchNoResults" />
       ) : (
-        <AdminTable>
-          <AdminTableElement className="min-w-[40rem]">
-            <AdminTableHead>
-              <AdminTableHeaderCell>Status</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Summary</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Booking</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Actions</AdminTableHeaderCell>
-            </AdminTableHead>
-            <AdminTableBody>
-              {rows.map((r) => (
-                <AdminTableRow key={r.id}>
-                  <AdminTableCell className="w-[7rem] align-top">
-                    <ParticipantDisputeStatusBadge status={r.status} />
-                    {r.status === "resolved" && r.resolution_action ? (
-                      <p className="mt-1 text-[11px] leading-snug text-neutral-500">
-                        {resolutionActionLabel(r.resolution_action)}
-                      </p>
-                    ) : null}
-                  </AdminTableCell>
-                  <AdminTableCell className="min-w-[12rem] max-w-md align-top">
-                    <p className="line-clamp-2 text-sm text-neutral-900">{r.summary}</p>
-                  </AdminTableCell>
-                  <AdminTableCell className="max-w-[11rem] align-top">
-                    <Link
-                      href={`/admin/bookings/${r.booking_request_id}`}
-                      className="line-clamp-2 text-sm font-medium text-primary hover:underline"
-                      title={disputeBookingLabel(r)}
-                    >
-                      {disputeBookingLabel(r)}
-                    </Link>
-                  </AdminTableCell>
-                  <AdminTableCell className="whitespace-nowrap align-top text-xs text-neutral-500">
-                    {formatWhen(r.updated_at)}
-                  </AdminTableCell>
-                  <AdminTableCell className="align-top">
-                    <button
-                      type="button"
-                      onClick={() => onManage(r)}
-                      className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-50"
-                    >
-                      Manage
-                    </button>
-                  </AdminTableCell>
-                </AdminTableRow>
-              ))}
-            </AdminTableBody>
-          </AdminTableElement>
-        </AdminTable>
+        <DataTable
+          aria-label="Disputes"
+          tableClassName="min-w-[40rem]"
+          rows={rows}
+          getRowKey={(row) => row.id}
+          columns={[
+            {
+              key: "status",
+              header: "Status",
+              className: "w-[7rem] align-top",
+              cell: (row) => (
+                <>
+                  <ParticipantDisputeStatusBadge status={row.status} />
+                  {row.status === "resolved" && row.resolution_action ? (
+                    <p className="mt-1 text-[11px] leading-snug text-neutral-500">
+                      {resolutionActionLabel(row.resolution_action)}
+                    </p>
+                  ) : null}
+                </>
+              ),
+            },
+            {
+              key: "summary",
+              header: "Summary",
+              className: "min-w-[12rem] max-w-md align-top",
+              cell: (row) => <p className="line-clamp-2 text-sm text-neutral-900">{row.summary}</p>,
+            },
+            {
+              key: "booking",
+              header: "Booking",
+              className: "max-w-[11rem] align-top",
+              cell: (row) => (
+                <Link
+                  href={`/admin/bookings/${row.booking_request_id}`}
+                  className="line-clamp-2 text-sm font-medium text-primary hover:underline"
+                  title={disputeBookingLabel(row)}
+                >
+                  {disputeBookingLabel(row)}
+                </Link>
+              ),
+            },
+            {
+              key: "updated",
+              header: "Updated",
+              className: "whitespace-nowrap align-top text-xs text-neutral-500",
+              cell: (row) => formatWhen(row.updated_at),
+            },
+            {
+              key: "actions",
+              header: "Actions",
+              className: "align-top",
+              cell: (row) => (
+                <button
+                  type="button"
+                  onClick={() => onManage(row)}
+                  className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-50"
+                >
+                  Manage
+                </button>
+              ),
+            },
+          ]}
+        />
       )}
     </>
   );

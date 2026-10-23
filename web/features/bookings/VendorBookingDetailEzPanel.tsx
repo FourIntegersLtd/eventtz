@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { Calendar, Check, ExternalLink, MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import type { Tone } from "@/lib/tone";
 import { CopyToClipboardButton } from "@/components/ui/CopyToClipboardButton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
@@ -34,20 +36,20 @@ function formatBookingLocation(
 }
 
 /** Badge colour for the money status, separate from the booking status chip. */
-function paymentBadgeClass(status: string): string {
-  if (status === "paid" || status === "payout_released") return "ez-badge--success";
-  if (status === "pending") return "ez-badge--warning";
-  if (status === "refunded" || status === "partially_refunded") return "ez-badge--info";
-  return "ez-badge--neutral";
+function paymentBadgeTone(status: string): Tone {
+  if (status === "paid" || status === "payout_released") return "success";
+  if (status === "pending") return "warning";
+  if (status === "refunded" || status === "partially_refunded") return "info";
+  return "neutral";
 }
 
-function statusBadgeClass(status: string): string {
+function statusBadgeTone(status: string): Tone {
   const normalized = status.toLowerCase();
-  if (normalized.includes("pending")) return "ez-badge--warning";
-  if (normalized.includes("complete")) return "ez-badge--success";
-  if (normalized.includes("declin") || normalized.includes("cancel")) return "ez-badge--neutral";
-  if (normalized.includes("accept")) return "ez-badge--brand";
-  return "ez-badge--info";
+  if (normalized.includes("pending")) return "warning";
+  if (normalized.includes("complete")) return "success";
+  if (normalized.includes("declin") || normalized.includes("cancel")) return "neutral";
+  if (normalized.includes("accept")) return "brand";
+  return "info";
 }
 
 function EzActionButton({ action }: { action: BookingDetailAction }) {
@@ -143,11 +145,9 @@ export function VendorBookingDetailEzPanel({
           </p>
         </div>
         <div className="ez-pagehead__actions ez-hrow">
-          <span className={`ez-badge ${statusBadgeClass(booking.status)}`}>{booking.status}</span>
+          <Badge tone={statusBadgeTone(booking.status)}>{booking.status}</Badge>
           {booking.paymentStatus ? (
-            <span className={`ez-badge ${paymentBadgeClass(booking.paymentStatus)}`}>
-              {paymentStatusLabel(booking.paymentStatus)}
-            </span>
+            <Badge tone={paymentBadgeTone(booking.paymentStatus)}>{paymentStatusLabel(booking.paymentStatus)}</Badge>
           ) : null}
           {headerActions.map((action) => (
             <EzActionButton key={action.key} action={action} />

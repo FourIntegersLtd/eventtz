@@ -13,7 +13,7 @@ import {
   useVendorPayoutsReady,
 } from "@/features/vendor/payments/useVendorPayoutsReady";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { fetchVendorDashboard } from "@/lib/portalDashboardApi";
 import { formatEventDate } from "@/lib/dateFormat";
 import { formatMoney } from "@/lib/money";
@@ -115,7 +115,7 @@ export function VendorPaymentsView() {
 
   return (
     <div className="ez-stack ez-stack--lg">
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow="Payments"
         title="Payments and payouts"
         description="Track every payment in and every payout out."

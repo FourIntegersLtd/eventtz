@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { AdminCommercePeriodFilter } from "@/features/admin/components/AdminCommercePeriodFilter";
+import { EzPeriodFilterButton } from "@/components/ui/EzPeriodFilterButton";
+import { ADMIN_PERIOD_OPTIONS } from "@/lib/commercePeriod";
 import { AdminConsolePage } from "@/features/admin/layout/AdminConsolePage";
 import {
   AdminDashboardView,
@@ -16,7 +17,7 @@ export default function AdminDashboardPage() {
     <AdminConsolePage
       title="Dashboard"
       description={adminDashboardTodayLine()}
-      actions={<AdminCommercePeriodFilter period={period} onPeriodChange={setPeriod} />}
+      actions={<EzPeriodFilterButton options={ADMIN_PERIOD_OPTIONS} value={period} onChange={setPeriod} defaultValue={30} />}
     >
       <AdminDashboardView period={period} />
     </AdminConsolePage>

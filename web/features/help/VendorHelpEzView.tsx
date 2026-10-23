@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Calendar, ChevronDown, ChevronRight, Search, Send, Shield, Wallet } from "lucide-react";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useToast } from "@/components/ui/Toast";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
@@ -102,7 +102,7 @@ export function VendorHelpEzView() {
 
   return (
     <div className="ez-stack ez-stack--lg" style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow="Account"
         title="Help"
         description="Answers first, a person if you need one."

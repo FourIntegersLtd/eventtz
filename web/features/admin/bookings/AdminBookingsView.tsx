@@ -8,7 +8,6 @@ import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
-import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
 import {
   AdminBookingsFilterModal,
   bookingStatusFilterLabel,
@@ -16,15 +15,7 @@ import {
 } from "@/features/admin/bookings/AdminBookingsFilterModal";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import {
-  AdminTable,
-  AdminTableBody,
-  AdminTableCell,
-  AdminTableElement,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/features/admin/components/AdminTable";
+import { DataTable } from "@/components/ui/DataTable";
 import { useAdminBookings } from "@/features/admin/bookings/useAdminBookings";
 import type { AdminBookingListItem } from "@/lib/adminPlatformApi";
 
@@ -103,7 +94,6 @@ export function AdminBookingsView() {
         }}
         searchPlaceholder="Search event name"
         searchAriaLabel="Search event name"
-        inputClassName={adminFilterControlClass}
         onOpenFilter={() => setFilterOpen(true)}
         activeFilterCount={activeFilterCount}
         summary={
@@ -166,53 +156,62 @@ export function AdminBookingsView() {
         />
       ) : (
         <>
-          <AdminTable>
-            <AdminTableElement className="min-w-[68rem]">
-              <AdminTableHead>
-                <AdminTableHeaderCell>Ref</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Event</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Client</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Vendor</AdminTableHeaderCell>
-                <AdminTableHeaderCell>Event date</AdminTableHeaderCell>
-                <AdminTableHeaderCell className="ez-td-num">Total</AdminTableHeaderCell>
-                <AdminTableHeaderCell className="ez-td-status">Request</AdminTableHeaderCell>
-                <AdminTableHeaderCell className="ez-td-status">Payment</AdminTableHeaderCell>
-                <AdminTableHeaderCell> </AdminTableHeaderCell>
-              </AdminTableHead>
-              <AdminTableBody>
-                {rows.map((r) => (
-                  <AdminTableRow key={r.id} className={supportRowClass(r.support)}>
-                    <AdminTableCell className="ez-td-strong">{bookingRef(r.id)}</AdminTableCell>
-                    <AdminTableCell className="text-neutral-900">{r.event_name || "-"}</AdminTableCell>
-                    <AdminTableCell className="max-w-[10rem] truncate text-neutral-700">
-                      {r.client_email ?? "-"}
-                    </AdminTableCell>
-                    <AdminTableCell>
-                      <div className="font-medium text-neutral-800">{r.vendor_display_name}</div>
-                      {r.vendor_email ? (
-                        <div className="text-xs text-neutral-500">{r.vendor_email}</div>
-                      ) : null}
-                    </AdminTableCell>
-                    <AdminTableCell className="text-neutral-700">{r.event_date || "-"}</AdminTableCell>
-                    <AdminTableCell className="ez-td-num text-neutral-700">
-                      {r.client_total_label ?? "-"}
-                    </AdminTableCell>
-                    <AdminTableCell className="ez-td-status">
-                      <StatusBadge status={r.status} />
-                    </AdminTableCell>
-                    <AdminTableCell className="ez-td-status">
-                      <PaymentStatusBadge status={r.payment_status} />
-                    </AdminTableCell>
-                    <AdminTableCell>
-                      <Link href={`/admin/bookings/${r.id}`} className="ez-btn ez-btn--secondary ez-btn--sm">
-                        Support
-                      </Link>
-                    </AdminTableCell>
-                  </AdminTableRow>
-                ))}
-              </AdminTableBody>
-            </AdminTableElement>
-          </AdminTable>
+          <DataTable
+            aria-label="Bookings"
+            tableClassName="min-w-[68rem]"
+            rows={rows}
+            getRowKey={(row) => row.id}
+            rowClassName={(row) => supportRowClass(row.support)}
+            columns={[
+              { key: "ref", header: "Ref", kind: "strong", cell: (row) => bookingRef(row.id) },
+              { key: "event", header: "Event", className: "text-neutral-900", cell: (row) => row.event_name || "-" },
+              {
+                key: "client",
+                header: "Client",
+                className: "max-w-[10rem] truncate text-neutral-700",
+                cell: (row) => row.client_email ?? "-",
+              },
+              {
+                key: "vendor",
+                header: "Vendor",
+                cell: (row) => (
+                  <>
+                    <div className="font-medium text-neutral-800">{row.vendor_display_name}</div>
+                    {row.vendor_email ? <div className="text-xs text-neutral-500">{row.vendor_email}</div> : null}
+                  </>
+                ),
+              },
+              { key: "date", header: "Event date", className: "text-neutral-700", cell: (row) => row.event_date || "-" },
+              {
+                key: "total",
+                header: "Total",
+                kind: "num",
+                className: "text-neutral-700",
+                cell: (row) => row.client_total_label ?? "-",
+              },
+              {
+                key: "request",
+                header: "Request",
+                kind: "status",
+                cell: (row) => <StatusBadge status={row.status} />,
+              },
+              {
+                key: "payment",
+                header: "Payment",
+                kind: "status",
+                cell: (row) => <PaymentStatusBadge status={row.payment_status} />,
+              },
+              {
+                key: "support",
+                header: " ",
+                cell: (row) => (
+                  <Link href={`/admin/bookings/${row.id}`} className="ez-btn ez-btn--secondary ez-btn--sm">
+                    Support
+                  </Link>
+                ),
+              },
+            ]}
+          />
           <TablePagination
             offset={offset}
             limit={limit}

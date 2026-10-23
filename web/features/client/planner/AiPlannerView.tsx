@@ -10,7 +10,7 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { ensurePlanClientEvent } from "@/lib/clientPlannerApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { BudgetBreakdown } from "./BudgetBreakdown";
 import { PlannerGeneratingState } from "./PlannerGeneratingState";
 import { PlannerPromptHero } from "./PlannerPromptHero";
@@ -215,7 +215,7 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
             <BackLink href="/client/planner" label={PLANNER_COPY.backToPlanner} className="ez-back" />
           ) : null}
 
-          <ClientEzPageHead
+          <PageHeader
             eyebrow="Your plan"
             title={plan.celebration.title}
             actions={

@@ -1,5 +1,6 @@
 "use client";
 
+import { StatTile } from "@/components/ui/StatTile";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -10,8 +11,9 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { Modal } from "@/components/ui/Modal";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
-import { EzCheck, EzTextField } from "@/components/ui/ez-form";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { TextField } from "@/components/ui/TextField";
 import { initialVendorOnboardingData, type VendorOnboardingData } from "@/lib/vendorOnboarding/types";
 import {
   mergePayloadIntoVendorData,
@@ -284,7 +286,7 @@ export function VendorSettingsEzView() {
 
   return (
     <div className="ez-stack ez-stack--lg">
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow="Account"
         title="Settings"
         description="Your sign-in, notifications and referrals."
@@ -307,32 +309,32 @@ export function VendorSettingsEzView() {
             </div>
             <div className="ez-card__body">
               <div className="ez-form-grid">
-                <EzTextField
+                <TextField
                   label="First name"
                   value={data.firstName}
                   autoComplete="given-name"
-                  onChange={(value) => setData((prev) => ({ ...prev, firstName: value }))}
+                  onChange={({ target: { value } }) => setData((prev) => ({ ...prev, firstName: value }))}
                 />
-                <EzTextField
+                <TextField
                   label="Last name"
                   value={data.lastName}
                   autoComplete="family-name"
-                  onChange={(value) => setData((prev) => ({ ...prev, lastName: value }))}
+                  onChange={({ target: { value } }) => setData((prev) => ({ ...prev, lastName: value }))}
                 />
-                <EzTextField
+                <TextField
                   label="Email"
                   type="email"
                   value={user?.email ?? data.email}
                   readOnly
                   onChange={() => undefined}
                 />
-                <EzTextField
+                <TextField
                   label="Phone number"
                   type="tel"
                   value={data.phone}
                   autoComplete="tel"
                   error={phoneError}
-                  onChange={(value) => {
+                  onChange={({ target: { value } }) => {
                     setData((prev) => ({ ...prev, phone: value }));
                     setPhoneError(null);
                   }}
@@ -356,21 +358,21 @@ export function VendorSettingsEzView() {
                   <span className="ez-strong">New enquiries</span>
                   <span className="ez-small">Email and in-app</span>
                 </div>
-                <EzCheck
+                <Checkbox
                   checked={data.emailOnEnquiry}
                   onChange={(checked) => setData((prev) => ({ ...prev, emailOnEnquiry: checked }))}
                 >
                   {data.emailOnEnquiry ? "On" : "Off"}
-                </EzCheck>
+                </Checkbox>
               </div>
               <div className="ez-list-row">
                 <div className="ez-list-row__main">
                   <span className="ez-strong">Payments and payouts</span>
                   <span className="ez-small">Always on for security</span>
                 </div>
-                <EzCheck checked disabled onChange={() => undefined}>
+                <Checkbox checked disabled onChange={() => undefined}>
                   On
-                </EzCheck>
+                </Checkbox>
               </div>
               <p className="ez-caption" style={{ marginTop: 8 }}>
                 Enquiry emails save with Save changes. Payment emails cannot be turned off.
@@ -389,26 +391,26 @@ export function VendorSettingsEzView() {
                     <span className="ez-strong">Share my email</span>
                     <span className="ez-small">{user?.email ?? "Your sign-in email"}</span>
                   </div>
-                  <EzCheck
+                  <Checkbox
                     checked={contact.share_email}
                     disabled={contactSaving}
                     onChange={() => void toggleContact("share_email")}
                   >
                     {contact.share_email ? "On" : "Off"}
-                  </EzCheck>
+                  </Checkbox>
                 </div>
                 <div className="ez-list-row">
                   <div className="ez-list-row__main">
                     <span className="ez-strong">Share my phone</span>
                     <span className="ez-small">From your profile</span>
                   </div>
-                  <EzCheck
+                  <Checkbox
                     checked={contact.share_phone}
                     disabled={contactSaving}
                     onChange={() => void toggleContact("share_phone")}
                   >
                     {contact.share_phone ? "On" : "Off"}
-                  </EzCheck>
+                  </Checkbox>
                 </div>
               </div>
             </div>
@@ -471,14 +473,8 @@ export function VendorSettingsEzView() {
               </div>
               <div className="ez-card__body">
                 <div className="ez-grid-2">
-                  <div className="ez-kpi">
-                    <span className="ez-kpi__label">Bookings</span>
-                    <span className="ez-kpi__value">{invited}</span>
-                  </div>
-                  <div className="ez-kpi">
-                    <span className="ez-kpi__label">Accepted</span>
-                    <span className="ez-kpi__value">{approved}</span>
-                  </div>
+                  <StatTile label="Bookings" value={invited} />
+                  <StatTile label="Accepted" value={approved} />
                 </div>
                 <div className="ez-table-wrap">
                   <table className="ez-table">
@@ -565,7 +561,7 @@ export function VendorSettingsEzView() {
                     {referral?.referral_code}
                   </p>
                   {referral?.share_link ? (
-                    <EzTextField
+                    <TextField
                       label="Your link"
                       value={referral.share_link}
                       readOnly
@@ -590,13 +586,13 @@ export function VendorSettingsEzView() {
                   <p className="ez-small">
                     Choose a code once. It cannot be changed later. Leave blank for a random 6-digit code.
                   </p>
-                  <EzTextField
+                  <TextField
                     label="Referral code (optional)"
                     value={draftReferralCode}
                     inputMode="numeric"
                     maxLength={VENDOR_REFERRAL_CODE_MAX_LEN}
                     placeholder={`Random, or 1–${VENDOR_REFERRAL_CODE_MAX_LEN} digits`}
-                    onChange={(value) => setDraftReferralCode(formatVendorReferralCodeInput(value))}
+                    onChange={({ target: { value } }) => setDraftReferralCode(formatVendorReferralCodeInput(value))}
                   />
                   <div className="ez-hrow">
                     <button

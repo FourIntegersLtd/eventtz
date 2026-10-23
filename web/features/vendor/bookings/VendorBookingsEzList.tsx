@@ -5,7 +5,7 @@ import type { BookingListRowViewModel } from "@/features/bookings/bookingViewMod
 import type { BookingListTab } from "@/features/bookings/BookingListPanel";
 import { vendorBookingDetailHref } from "@/features/vendor/bookings/vendorBookingViewModel";
 import { TablePagination } from "@/components/ui/TablePagination";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import { TextField } from "@/components/ui/TextField";
 
@@ -51,7 +51,7 @@ export function VendorBookingsEzList({
 }: VendorBookingsEzListProps) {
   return (
     <div className="ez-stack ez-stack--lg">
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow="Work"
         title="Bookings"
         description="Respond to enquiries and manage confirmed events."

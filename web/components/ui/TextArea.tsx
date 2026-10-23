@@ -1,10 +1,10 @@
 "use client";
 
-import { forwardRef, useId, type TextareaHTMLAttributes } from "react";
+import { forwardRef, useId, type ReactNode, type TextareaHTMLAttributes } from "react";
 
 export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
-  label: string;
-  error?: string;
+  label: ReactNode;
+  error?: string | null;
   hint?: string;
 };
 

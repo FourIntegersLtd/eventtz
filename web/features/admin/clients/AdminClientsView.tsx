@@ -10,7 +10,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { patchClientSuspended, type AdminClientRow } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
-import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
 import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
 import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
@@ -18,15 +17,7 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { useAdminClients } from "@/features/admin/clients/useAdminClients";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
-import {
-  AdminTable,
-  AdminTableBody,
-  AdminTableCell,
-  AdminTableElement,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/features/admin/components/AdminTable";
+import { DataTable } from "@/components/ui/DataTable";
 import { formatDate } from "@/lib/dateFormat";
 
 function clientInitials(email: string | null | undefined): string {
@@ -138,7 +129,6 @@ export function AdminClientsView() {
           }}
           searchPlaceholder="Search email"
           searchAriaLabel="Search email"
-          inputClassName={adminFilterControlClass}
           onOpenFilter={() => setStatusFilterOpen(true)}
           activeFilterCount={suspendedFilter ? 1 : 0}
           summary={
@@ -188,48 +178,45 @@ export function AdminClientsView() {
           />
         ) : (
           <>
-            <AdminTable>
-              <AdminTableElement className="min-w-[36rem]">
-                <AdminTableHead>
-                  <AdminTableHeaderCell>Client</AdminTableHeaderCell>
-                  <AdminTableHeaderCell className="ez-td-num">Bookings</AdminTableHeaderCell>
-                  <AdminTableHeaderCell>Joined</AdminTableHeaderCell>
-                  <AdminTableHeaderCell className="ez-td-status">Status</AdminTableHeaderCell>
-                </AdminTableHead>
-                <AdminTableBody>
-                  {rows.map((row) => {
-                    const active = row.user_id === selectedId;
-                    return (
-                      <AdminTableRow
-                        key={row.user_id}
-                        className={active ? "ez-table-row--active" : undefined}
-                        onClick={() => setSelectedId(row.user_id)}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <AdminTableCell className="ez-td-strong min-w-[12rem]">
-                          <div className="ez-hrow" style={{ flexWrap: "nowrap", gap: "10px" }}>
-                            <span className="ez-avatar ez-avatar--sm">
-                              {clientInitials(row.email)}
-                            </span>
-                            <div className="min-w-0 flex-1">
-                              <div className="ez-strong truncate">{clientDisplayName(row.email)}</div>
-                              <div className="ez-caption truncate">{row.email ?? "-"}</div>
-                            </div>
-                          </div>
-                        </AdminTableCell>
-                        <AdminTableCell className="ez-td-num tabular-nums">
-                          {row.booking_count}
-                        </AdminTableCell>
-                        <AdminTableCell>{joinedLabel(row.created_at)}</AdminTableCell>
-                        <AdminTableCell className="ez-td-status">
-                          <AccountStatusBadge suspended={row.account_suspended} />
-                        </AdminTableCell>
-                      </AdminTableRow>
-                    );
-                  })}
-                </AdminTableBody>
-              </AdminTableElement>
-            </AdminTable>
+            <DataTable
+              aria-label="Clients"
+              tableClassName="min-w-[36rem]"
+              rows={rows}
+              getRowKey={(row) => row.user_id}
+              rowClassName={(row) => (row.user_id === selectedId ? "ez-table-row--active" : undefined)}
+              onRowClick={(row) => setSelectedId(row.user_id)}
+              columns={[
+                {
+                  key: "client",
+                  header: "Client",
+                  kind: "strong",
+                  className: "min-w-[12rem]",
+                  cell: (row) => (
+                    <div className="ez-hrow" style={{ flexWrap: "nowrap", gap: "10px" }}>
+                      <span className="ez-avatar ez-avatar--sm">{clientInitials(row.email)}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="ez-strong truncate">{clientDisplayName(row.email)}</div>
+                        <div className="ez-caption truncate">{row.email ?? "-"}</div>
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  key: "bookings",
+                  header: "Bookings",
+                  kind: "num",
+                  className: "tabular-nums",
+                  cell: (row) => row.booking_count,
+                },
+                { key: "joined", header: "Joined", cell: (row) => joinedLabel(row.created_at) },
+                {
+                  key: "status",
+                  header: "Status",
+                  kind: "status",
+                  cell: (row) => <AccountStatusBadge suspended={row.account_suspended} />,
+                },
+              ]}
+            />
             <TablePagination
               offset={offset}
               limit={limit}

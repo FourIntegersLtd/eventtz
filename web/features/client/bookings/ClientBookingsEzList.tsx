@@ -7,13 +7,16 @@ import { TablePagination } from "@/components/ui/TablePagination";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import { TextField } from "@/components/ui/TextField";
+import { Badge } from "@/components/ui/Badge";
+import type { Tone } from "@/lib/tone";
 
-function statusBadgeClass(status: string): string {
+/** Badge tone for a booking status label. */
+function statusBadgeTone(status: string): Tone {
   const normalized = status.toLowerCase();
-  if (normalized.includes("pending")) return "ez-badge--warning";
-  if (normalized.includes("paid") || normalized.includes("complete")) return "ez-badge--success";
-  if (normalized.includes("declin") || normalized.includes("cancel")) return "ez-badge--neutral";
-  return "ez-badge--info";
+  if (normalized.includes("pending")) return "warning";
+  if (normalized.includes("paid") || normalized.includes("complete")) return "success";
+  if (normalized.includes("declin") || normalized.includes("cancel")) return "neutral";
+  return "info";
 }
 
 function clientBookingDetailHref(id: string): string {
@@ -118,7 +121,7 @@ export function ClientBookingsEzList({
                     </td>
                     <td className="ez-td-status">
                       <Link className="ez-table__celllink" href={href}>
-                        <span className={`ez-badge ${statusBadgeClass(row.status)}`}>{row.status}</span>
+                        <Badge tone={statusBadgeTone(row.status)}>{row.status}</Badge>
                       </Link>
                     </td>
                     <td className="ez-td-num">

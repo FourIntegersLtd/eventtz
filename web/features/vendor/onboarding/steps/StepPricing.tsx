@@ -16,7 +16,9 @@ import {
 import { VendorListingOptimizerPanel } from "@/features/vendor/copilot/VendorListingOptimizerPanel";
 import { PackageExamplesModal } from "../ui/PackageExamplesModal";
 import { consumeCoachScrollTarget } from "../packageCoachApply";
-import { EzCheck, EzTextField } from "../../../../components/ui/ez-form";
+import { Checkbox } from "../../../../components/ui/Checkbox";
+import { TextField } from "../../../../components/ui/TextField";
+import { TextArea } from "../../../../components/ui/TextArea";
 import { singleGbpAmountFieldError } from "@/lib/validation/money";
 import {
   damageDepositError,
@@ -179,36 +181,36 @@ export function StepPricing({
 
         {ratesVisible ? (
           <div className="ez-form-grid">
-            <EzTextField
+            <TextField
               label="Hourly rate (£ per hour)"
               inputMode="decimal"
               value={data.hourlyRate}
-              onChange={(value) => update({ hourlyRate: value })}
+              onChange={({ target: { value } }) => update({ hourlyRate: value })}
               placeholder="e.g. 75"
               error={hourlyRateError}
             />
-            <EzTextField
+            <TextField
               label="Daily rate (£ per day)"
               inputMode="decimal"
               value={data.dailyRate}
-              onChange={(value) => update({ dailyRate: value })}
+              onChange={({ target: { value } }) => update({ dailyRate: value })}
               placeholder="e.g. 500"
               error={dailyRateError}
             />
-            <EzCheck
+            <Checkbox
               checked={data.useDefaultTravelHourly}
               onChange={(checked) =>
                 update({ useDefaultTravelHourly: checked })
               }
             >
               Use default travel rule for hourly work
-            </EzCheck>
-            <EzCheck
+            </Checkbox>
+            <Checkbox
               checked={data.useDefaultTravelDaily}
               onChange={(checked) => update({ useDefaultTravelDaily: checked })}
             >
               Use default travel rule for daily work
-            </EzCheck>
+            </Checkbox>
           </div>
         ) : null}
 
@@ -219,19 +221,19 @@ export function StepPricing({
               {`You get the first part after the event, and the rest once the client confirms they have their photos or video (or your delivery deadline passes). Leave a box blank to use ${policy.deliveryUpfrontPercentDefault}% and ${policy.deliveryDeadlineDaysDefault} days.`}
             </p>
             <div className="ez-form-grid">
-              <EzTextField
+              <TextField
                 label={`Paid after the event (%, ${policy.deliveryUpfrontPercentMin} to ${policy.deliveryUpfrontPercentMax})`}
                 inputMode="numeric"
                 value={data.deliveryUpfrontPercent}
-                onChange={(value) => update({ deliveryUpfrontPercent: value })}
+                onChange={({ target: { value } }) => update({ deliveryUpfrontPercent: value })}
                 placeholder={`${policy.deliveryUpfrontPercentDefault}`}
                 error={splitErrors.upfront}
               />
-              <EzTextField
+              <TextField
                 label={`Days to deliver (1 to ${policy.deliveryDeadlineDaysMax})`}
                 inputMode="numeric"
                 value={data.deliveryDeadlineDays}
-                onChange={(value) => update({ deliveryDeadlineDays: value })}
+                onChange={({ target: { value } }) => update({ deliveryDeadlineDays: value })}
                 placeholder={`${policy.deliveryDeadlineDaysDefault}`}
                 error={splitErrors.deadline}
               />
@@ -245,13 +247,13 @@ export function StepPricing({
               Refundable damage deposit{" "}
               <span className="ez-label__opt">(optional)</span>
             </h3>
-            <EzTextField
+            <TextField
               label="Deposit (£)"
               inputMode="decimal"
               value={data.damageDepositGbp}
-              onChange={(value) => update({ damageDepositGbp: value })}
+              onChange={({ target: { value } }) => update({ damageDepositGbp: value })}
               placeholder="e.g. 100"
-              help={`Clients get it back within ${policy.depositClaimDays} days after the event unless you report damage. Up to ${formatGbp(policy.depositMaxGbp)}.`}
+              hint={`Clients get it back within ${policy.depositClaimDays} days after the event unless you report damage. Up to ${formatGbp(policy.depositMaxGbp)}.`}
               error={depositError}
             />
           </div>
@@ -307,10 +309,10 @@ export function StepPricing({
                   </div>
                 </div>
                 <div className="ez-form-grid">
-                  <EzTextField
+                  <TextField
                     label="Package name"
                     value={pkg.title}
-                    onChange={(value) => patch({ title: value })}
+                    onChange={({ target: { value } }) => patch({ title: value })}
                     placeholder={packageNamePlaceholder(primaryService)}
                     error={errors.title}
                   />
@@ -343,28 +345,27 @@ export function StepPricing({
                       <ChevronDown strokeWidth={1.75} aria-hidden />
                     </div>
                   </div>
-                  <EzTextField
+                  <TextField
                     label="Price (£)"
                     value={pkg.price}
-                    onChange={(value) => patch({ price: value })}
-                    help="One amount, not a range."
+                    onChange={({ target: { value } }) => patch({ price: value })}
+                    hint="One amount, not a range."
                     error={errors.price}
                   />
                   {perUnit ? (
-                    <EzTextField
+                    <TextField
                       label="Unit name"
                       value={pkg.unitLabel}
-                      onChange={(value) => patch({ unitLabel: value })}
+                      onChange={({ target: { value } }) => patch({ unitLabel: value })}
                       placeholder="e.g. chair, table, person"
                       error={errors.unitLabel}
                     />
                   ) : null}
                 </div>
-                <EzTextField
+                <TextArea
                   label="What is included"
-                  multiline
                   value={pkg.details}
-                  onChange={(value) => patch({ details: value })}
+                  onChange={({ target: { value } }) => patch({ details: value })}
                   placeholder={packageIncludedPlaceholder(primaryService)}
                   error={errors.details}
                 />
@@ -372,48 +373,48 @@ export function StepPricing({
                   <>
                     {perUnit ? null : (
                       <div className="ez-form-grid">
-                        <EzTextField
+                        <TextField
                           label="Duration (optional)"
                           value={pkg.duration}
-                          onChange={(value) => patch({ duration: value })}
+                          onChange={({ target: { value } }) => patch({ duration: value })}
                           placeholder="e.g. 2 hr coverage"
                         />
                       </div>
                     )}
                     {perUnit ? (
                       <div className="ez-form-grid">
-                        <EzTextField
+                        <TextField
                           label="Min quantity (optional)"
                           inputMode="numeric"
                           value={pkg.minQuantity}
-                          onChange={(value) => patch({ minQuantity: value })}
+                          onChange={({ target: { value } }) => patch({ minQuantity: value })}
                           placeholder="e.g. 10"
                           error={errors.minQuantity}
                         />
-                        <EzTextField
+                        <TextField
                           label="Max quantity (optional)"
                           inputMode="numeric"
                           value={pkg.maxQuantity}
-                          onChange={(value) => patch({ maxQuantity: value })}
+                          onChange={({ target: { value } }) => patch({ maxQuantity: value })}
                           placeholder="e.g. 200"
                           error={errors.maxQuantity}
                         />
-                        <EzTextField
+                        <TextField
                           label="Hire period (optional)"
                           value={pkg.duration}
-                          onChange={(value) => patch({ duration: value })}
+                          onChange={({ target: { value } }) => patch({ duration: value })}
                           placeholder="e.g. 3-day hire"
                         />
                       </div>
                     ) : null}
-                    <EzCheck
+                    <Checkbox
                       checked={pkg.useDefaultTravelPackage ?? true}
                       onChange={(checked) =>
                         patch({ useDefaultTravelPackage: checked })
                       }
                     >
                       Use the default travel and delivery rule from Location
-                    </EzCheck>
+                    </Checkbox>
                   </>
                 ) : null}
               </div>
@@ -444,39 +445,39 @@ export function StepPricing({
           Discounts <span className="ez-label__opt">(optional)</span>
         </h3>
         <div className="ez-form-grid">
-          <EzTextField
+          <TextField
             label="Offer name"
             value={data.discountLabel}
-            onChange={(value) => updateDiscount({ discountLabel: value })}
+            onChange={({ target: { value } }) => updateDiscount({ discountLabel: value })}
             placeholder="e.g. Easter discount"
           />
-          <EzTextField
+          <TextField
             label="Off-peak discount (%)"
             value={data.offPeakDiscountPercent}
-            onChange={(value) =>
+            onChange={({ target: { value } }) =>
               updateDiscount({ offPeakDiscountPercent: value })
             }
           />
           {useOnboardingLayout ? null : (
             <>
-              <EzTextField
+              <TextField
                 label="Percentage off (%)"
                 value={data.discountPercentage}
-                onChange={(value) => updateDiscount({ discountPercentage: value })}
+                onChange={({ target: { value } }) => updateDiscount({ discountPercentage: value })}
                 placeholder="10"
               />
-              <EzTextField
+              <TextField
                 label="Bulk booking threshold (£)"
                 value={data.bulkDiscountThreshold}
-                onChange={(value) =>
+                onChange={({ target: { value } }) =>
                   updateDiscount({ bulkDiscountThreshold: value })
                 }
                 placeholder="500"
               />
-              <EzTextField
+              <TextField
                 label="Bulk booking discount (%)"
                 value={data.bulkDiscountPercent}
-                onChange={(value) => updateDiscount({ bulkDiscountPercent: value })}
+                onChange={({ target: { value } }) => updateDiscount({ bulkDiscountPercent: value })}
                 placeholder="10"
               />
             </>

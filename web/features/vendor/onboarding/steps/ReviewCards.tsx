@@ -8,7 +8,7 @@ import { Fragment } from "react";
 import { Check, Pencil, TriangleAlert } from "lucide-react";
 import { buildReviewCards } from "../reviewSummary";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
-import { EzCheck } from "../../../../components/ui/ez-form";
+import { Checkbox } from "../../../../components/ui/Checkbox";
 
 /** Inline svgs sit on the text baseline in the artboard; Tailwind preflight would make them block. */
 const INLINE_ICON_STYLE = { display: "inline", verticalAlign: "baseline" } as const;
@@ -62,12 +62,12 @@ export function ReviewCards({
           </div>
         </div>
       ))}
-      <EzCheck
+      <Checkbox
         checked={confirmed}
         onChange={(checked) => update({ confirmTruthful: checked, confirmTerms: checked })}
       >
         I confirm my details are accurate and I agree to the vendor terms.
-      </EzCheck>
+      </Checkbox>
     </div>
   );
 }

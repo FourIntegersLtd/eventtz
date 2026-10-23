@@ -9,21 +9,13 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { StarRating } from "@/components/ui/StarRating";
 import { fetchAdminReviews, type AdminReviewRow } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
-import { AdminFilterBar } from "@/features/admin/components/AdminFilterBar";
 import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
 import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import {
-  AdminTable,
-  AdminTableBody,
-  AdminTableCell,
-  AdminTableElement,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/features/admin/components/AdminTable";
+import { Badge } from "@/components/ui/Badge";
+import { DataTable } from "@/components/ui/DataTable";
 import { adminTrustReviewsHref, formatReviewWhen } from "./reviewFormatters";
 
 type ReviewFilter = "all" | "published" | "hidden";
@@ -92,7 +84,7 @@ export function AdminReviewsView() {
       {error ? <AdminErrorBanner message={error} /> : null}
 
       {vendorUserId ? (
-        <AdminFilterBar>
+        <div className="ez-hrow flex-wrap items-end gap-3" style={{ alignItems: "flex-end" }}>
           <p className="min-w-0 flex-1 ez-small">
             Showing reviews for{" "}
             <span className="ez-strong">{resolvedVendorName ?? "this vendor"}</span>
@@ -101,7 +93,7 @@ export function AdminReviewsView() {
           <Link href={adminTrustReviewsHref()} className="ez-btn ez-btn--secondary ez-btn--sm">
             Clear filter
           </Link>
-        </AdminFilterBar>
+        </div>
       ) : null}
 
       <EzListFilterToolbar
@@ -142,66 +134,68 @@ export function AdminReviewsView() {
           lottie="searchNoResults"
         />
       ) : (
-        <AdminTable>
-          <AdminTableElement className="min-w-[40rem]">
-            <AdminTableHead>
-              <AdminTableHeaderCell>Vendor</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Rating</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Review</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Client</AdminTableHeaderCell>
-              <AdminTableHeaderCell className="ez-td-status">Status</AdminTableHeaderCell>
-              <AdminTableHeaderCell>Date</AdminTableHeaderCell>
-              <AdminTableHeaderCell> </AdminTableHeaderCell>
-            </AdminTableHead>
-            <AdminTableBody>
-              {rows.map((row) => {
+        <DataTable
+          aria-label="Reviews"
+          tableClassName="min-w-[40rem]"
+          rows={rows}
+          getRowKey={(row) => row.id}
+          rowClassName={(row) => (row.hidden_at ? "opacity-70" : undefined)}
+          columns={[
+            {
+              key: "vendor",
+              header: "Vendor",
+              kind: "strong",
+              className: "align-top",
+              cell: (row) => {
                 const vendorLabel = row.vendor_display_name ?? "Vendor";
                 return (
-                  <AdminTableRow key={row.id} className={row.hidden_at ? "opacity-70" : undefined}>
-                    <AdminTableCell className="ez-td-strong align-top">
-                      <Link
-                        href={adminTrustReviewsHref({
-                          vendorUserId: row.vendor_user_id,
-                          vendorName: vendorLabel,
-                        })}
-                        className="hover:underline"
-                      >
-                        {vendorLabel}
-                      </Link>
-                    </AdminTableCell>
-                    <AdminTableCell className="align-top">
-                      <StarRating rating={row.rating} size="sm" />
-                    </AdminTableCell>
-                    <AdminTableCell className="max-w-md align-top">
-                      <p className="line-clamp-2 text-sm">{row.body || "-"}</p>
-                    </AdminTableCell>
-                    <AdminTableCell className="align-top text-sm">
-                      {row.client_email ?? "-"}
-                    </AdminTableCell>
-                    <AdminTableCell className="ez-td-status align-top whitespace-nowrap">
-                      {row.hidden_at ? (
-                        <ReviewVisibilityBadge hidden />
-                      ) : (
-                        <span className="ez-badge ez-badge--success">Published</span>
-                      )}
-                    </AdminTableCell>
-                    <AdminTableCell className="align-top ez-caption whitespace-nowrap">
-                      {formatReviewWhen(row.created_at)}
-                    </AdminTableCell>
-                    <AdminTableCell className="align-top">
-                      <Link
-                        href={`/admin/trust/reviews/${row.id}`}
-                        className="ez-btn ez-btn--secondary ez-btn--sm"
-                      >
-                        Open
-                      </Link>
-                    </AdminTableCell>
-                  </AdminTableRow>
+                  <Link
+                    href={adminTrustReviewsHref({ vendorUserId: row.vendor_user_id, vendorName: vendorLabel })}
+                    className="hover:underline"
+                  >
+                    {vendorLabel}
+                  </Link>
                 );
-              })}
-            </AdminTableBody>
-          </AdminTableElement>
-        </AdminTable>
+              },
+            },
+            {
+              key: "rating",
+              header: "Rating",
+              className: "align-top",
+              cell: (row) => <StarRating rating={row.rating} size="sm" />,
+            },
+            {
+              key: "review",
+              header: "Review",
+              className: "max-w-md align-top",
+              cell: (row) => <p className="line-clamp-2 text-sm">{row.body || "-"}</p>,
+            },
+            { key: "client", header: "Client", className: "align-top text-sm", cell: (row) => row.client_email ?? "-" },
+            {
+              key: "status",
+              header: "Status",
+              kind: "status",
+              className: "align-top whitespace-nowrap",
+              cell: (row) => (row.hidden_at ? <ReviewVisibilityBadge hidden /> : <Badge tone="success">Published</Badge>),
+            },
+            {
+              key: "date",
+              header: "Date",
+              className: "align-top ez-caption whitespace-nowrap",
+              cell: (row) => formatReviewWhen(row.created_at),
+            },
+            {
+              key: "open",
+              header: " ",
+              className: "align-top",
+              cell: (row) => (
+                <Link href={`/admin/trust/reviews/${row.id}`} className="ez-btn ez-btn--secondary ez-btn--sm">
+                  Open
+                </Link>
+              ),
+            },
+          ]}
+        />
       )}
 
       <TablePagination

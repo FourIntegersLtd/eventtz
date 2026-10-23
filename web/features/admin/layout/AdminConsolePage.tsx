@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { AdminShell } from "@/components/admin-shell/AdminShell";
-import { AdminEzPageHead } from "@/features/admin/layout/AdminEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 type AdminConsolePageProps = {
   title: string;
@@ -25,7 +25,7 @@ export function AdminConsolePage({
     <AdminShell>
       <div className="ez-stack ez-stack--lg">
         {showPageHead ? (
-          <AdminEzPageHead title={title} description={description} actions={actions} />
+          <PageHeader title={title} description={description} actions={actions} />
         ) : null}
         {children}
       </div>

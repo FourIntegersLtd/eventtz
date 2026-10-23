@@ -10,6 +10,10 @@ export type DataTableColumn<Row> = {
   /** Renders the cell for one row. */
   cell: (row: Row) => ReactNode;
   kind?: DataTableCellKind;
+  /** Extra classes on every body cell of this column (sizing, truncation, alignment). */
+  className?: string;
+  /** Extra classes on this column's header cell. */
+  headerClassName?: string;
 };
 
 export type DataTableProps<Row> = {
@@ -21,6 +25,10 @@ export type DataTableProps<Row> = {
   onRowClick?: (row: Row) => void;
   /** Drop the outer rounded border when the table sits inside an `ez-card`. */
   embedded?: boolean;
+  /** Extra classes on the `<table>` itself, e.g. a minimum width that makes a narrow screen scroll. */
+  tableClassName?: string;
+  /** Extra classes for one row, e.g. the selected or muted state. */
+  rowClassName?: (row: Row) => string | undefined;
   /** Accessible name of the table. */
   "aria-label": string;
   className?: string;
@@ -31,6 +39,12 @@ const CELL_KIND_CLASSES: Record<DataTableCellKind, string> = {
   num: "ez-td-num",
   status: "ez-td-status",
 };
+
+/** Joins the class names that are set, or returns undefined when none is. */
+function joinClasses(...names: (string | undefined)[]): string | undefined {
+  const joined = names.filter(Boolean).join(" ");
+  return joined || undefined;
+}
 
 /**
  * Canvas data table (`ez-table-wrap` > `ez-table`) driven by column definitions.
@@ -43,19 +57,21 @@ export function DataTable<Row>({
   getRowKey,
   onRowClick,
   embedded = false,
+  tableClassName = "",
+  rowClassName,
   className = "",
   ...aria
 }: DataTableProps<Row>) {
   return (
-    <div className={`ez-table-wrap${embedded ? " ez-table-wrap--embedded" : ""} ${className}`.trim()}>
-      <table className="ez-table" aria-label={aria["aria-label"]}>
+    <div className={`ez-table-wrap w-full min-w-0 max-w-full${embedded ? " ez-table-wrap--embedded" : ""} ${className}`.trim()}>
+      <table className={`ez-table ${tableClassName}`.trim()} aria-label={aria["aria-label"]}>
         <thead>
           <tr>
             {columns.map((column) => (
               <th
                 key={column.key}
                 scope="col"
-                className={column.kind === "status" ? CELL_KIND_CLASSES.status : undefined}
+                className={joinClasses(column.kind === "status" || column.kind === "num" ? CELL_KIND_CLASSES[column.kind] : undefined, column.headerClassName)}
               >
                 {column.header}
               </th>
@@ -66,11 +82,15 @@ export function DataTable<Row>({
           {rows.map((row) => (
             <tr
               key={getRowKey(row)}
+              className={rowClassName?.(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               style={onRowClick ? { cursor: "pointer" } : undefined}
             >
               {columns.map((column) => (
-                <td key={column.key} className={column.kind ? CELL_KIND_CLASSES[column.kind] : undefined}>
+                <td
+                  key={column.key}
+                  className={joinClasses(column.kind ? CELL_KIND_CLASSES[column.kind] : undefined, column.className)}
+                >
                   {column.cell(row)}
                 </td>
               ))}

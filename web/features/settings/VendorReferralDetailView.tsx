@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { formatEventDate } from "@/lib/dateFormat";
 import { formatGbp } from "@/lib/money";
 import { isHttpStatus } from "@/lib/api-errors";
@@ -75,7 +75,7 @@ export function VendorReferralDetailView({ bookingId }: VendorReferralDetailView
 
   return (
     <div className="ez-stack ez-stack--lg">
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow="Referrals"
         title={row.client_display_name || "Referral"}
         description={row.event_name}

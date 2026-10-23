@@ -10,19 +10,12 @@ import {
   type AdminFinancialsSummary,
 } from "@/lib/adminFinancialsApi";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
-import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
+import { StatTile } from "@/components/ui/StatTile";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { AdminCommercePeriodFilter } from "@/features/admin/components/AdminCommercePeriodFilter";
+import { EzPeriodFilterButton } from "@/components/ui/EzPeriodFilterButton";
+import { ADMIN_PERIOD_OPTIONS } from "@/lib/commercePeriod";
 import { AdminFinancialsCharts } from "@/features/admin/financials/AdminFinancialsCharts";
-import {
-  AdminTable,
-  AdminTableBody,
-  AdminTableCell,
-  AdminTableElement,
-  AdminTableHead,
-  AdminTableHeaderCell,
-  AdminTableRow,
-} from "@/features/admin/components/AdminTable";
+import { DataTable } from "@/components/ui/DataTable";
 import {
   commercePeriodRange,
   type CommercePeriodDays,
@@ -108,29 +101,29 @@ export function AdminFinancialsView({ onRegisterPageActions }: AdminFinancialsVi
     <div className="ez-stack ez-stack--lg min-w-0 max-w-full">
       {error ? <AdminErrorBanner message={error} /> : null}
 
-      <AdminCommercePeriodFilter period={period} onPeriodChange={handlePeriodChange} />
+      <EzPeriodFilterButton options={ADMIN_PERIOD_OPTIONS} value={period} onChange={handlePeriodChange} defaultValue={30} />
 
       {loading ? (
         <AdminLoadingState />
       ) : summary ? (
         <>
           <div className="ez-grid-4">
-            <AdminKpiCard
+            <StatTile
               label="Gross merchandise value"
               value={formatGbp(summary.gmv_gbp, { decimals: 2 })}
               hint={`${summary.paid_booking_count} paid bookings`}
             />
-            <AdminKpiCard
+            <StatTile
               label="Platform fees"
               value={formatGbp(summary.platform_fee_gbp, { decimals: 2 })}
               hint={`${summary.service_fee_percent}% service fee`}
             />
-            <AdminKpiCard
+            <StatTile
               label="Payouts sent"
               value={formatGbp(summary.payout_released_gbp, { decimals: 2 })}
               hint="Already transferred to vendors"
             />
-            <AdminKpiCard
+            <StatTile
               label="Payouts held"
               value={formatGbp(summary.held_in_platform_balance_gbp, { decimals: 2 })}
               hint="Still with Eventtz"
@@ -144,34 +137,36 @@ export function AdminFinancialsView({ onRegisterPageActions }: AdminFinancialsVi
               <div className="ez-card__head">
                 <h2 className="ez-h3">Daily totals</h2>
               </div>
-              <AdminTable>
-                <AdminTableElement>
-                  <AdminTableHead>
-                    <AdminTableHeaderCell>Date</AdminTableHeaderCell>
-                    <AdminTableHeaderCell className="ez-td-num">Bookings</AdminTableHeaderCell>
-                    <AdminTableHeaderCell className="ez-td-num">GMV</AdminTableHeaderCell>
-                    <AdminTableHeaderCell className="ez-td-num">Platform fee</AdminTableHeaderCell>
-                    <AdminTableHeaderCell className="ez-td-num">Vendor portion</AdminTableHeaderCell>
-                  </AdminTableHead>
-                  <AdminTableBody>
-                    {dailyRows.map((bucket) => (
-                      <AdminTableRow key={bucket.date}>
-                        <AdminTableCell className="ez-td-strong">{bucket.date}</AdminTableCell>
-                        <AdminTableCell className="ez-td-num tabular-nums">{bucket.count}</AdminTableCell>
-                        <AdminTableCell className="ez-td-num tabular-nums">
-                          {formatGbp(bucket.gmv_gbp, { decimals: 2 })}
-                        </AdminTableCell>
-                        <AdminTableCell className="ez-td-num tabular-nums">
-                          {formatGbp(bucket.platform_fee_gbp, { decimals: 2 })}
-                        </AdminTableCell>
-                        <AdminTableCell className="ez-td-num tabular-nums">
-                          {formatGbp(bucket.vendor_portion_gbp, { decimals: 2 })}
-                        </AdminTableCell>
-                      </AdminTableRow>
-                    ))}
-                  </AdminTableBody>
-                </AdminTableElement>
-              </AdminTable>
+              <DataTable
+                aria-label="Daily totals"
+                rows={dailyRows}
+                getRowKey={(bucket) => bucket.date}
+                columns={[
+                  { key: "date", header: "Date", kind: "strong", cell: (bucket) => bucket.date },
+                  { key: "count", header: "Bookings", kind: "num", className: "tabular-nums", cell: (bucket) => bucket.count },
+                  {
+                    key: "gmv",
+                    header: "GMV",
+                    kind: "num",
+                    className: "tabular-nums",
+                    cell: (bucket) => formatGbp(bucket.gmv_gbp, { decimals: 2 }),
+                  },
+                  {
+                    key: "fee",
+                    header: "Platform fee",
+                    kind: "num",
+                    className: "tabular-nums",
+                    cell: (bucket) => formatGbp(bucket.platform_fee_gbp, { decimals: 2 }),
+                  },
+                  {
+                    key: "vendor",
+                    header: "Vendor portion",
+                    kind: "num",
+                    className: "tabular-nums",
+                    cell: (bucket) => formatGbp(bucket.vendor_portion_gbp, { decimals: 2 }),
+                  },
+                ]}
+              />
               <TablePagination
                 offset={dailyOffset}
                 limit={ADMIN_FINANCIALS_DAILY_PAGE_SIZE}

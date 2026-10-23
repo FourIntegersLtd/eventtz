@@ -5,7 +5,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AdminAttentionList, type AdminAttentionItem } from "@/features/admin/components/AdminAttentionList";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
-import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
+import { StatTile } from "@/components/ui/StatTile";
 import { AdminDashboardCharts } from "@/features/admin/dashboard/AdminDashboardCharts";
 import { useAdminDashboard } from "@/features/admin/dashboard/useAdminDashboard";
 import { useAdminDashboardMetrics } from "@/features/admin/dashboard/useAdminDashboardMetrics";
@@ -141,14 +141,14 @@ export function AdminDashboardView({ period }: AdminDashboardViewProps) {
   return (
     <div className="ez-stack ez-stack--lg">
       <div className="ez-grid-4">
-        <AdminKpiCard label="Gross booking value" value={formatGbp(periodGmv, { prefix: "" })} />
-        <AdminKpiCard label="Platform fees" value={platformFeesLabel} />
-        <AdminKpiCard
+        <StatTile label="Gross booking value" value={formatGbp(periodGmv, { prefix: "" })} />
+        <StatTile label="Platform fees" value={platformFeesLabel} />
+        <StatTile
           label="Active bookings"
           value={activeBookings}
           href="/admin/commerce?tab=bookings"
         />
-        <AdminKpiCard
+        <StatTile
           label="Paid bookings"
           value={summary.bookings_paid_count}
           href="/admin/commerce?tab=financials"

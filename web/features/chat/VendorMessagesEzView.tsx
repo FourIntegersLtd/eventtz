@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ChatThreadView } from "@/features/chat/ChatThreadView";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -86,7 +86,7 @@ export function VendorMessagesEzView({ selectedConversationId }: VendorMessagesE
 
   return (
     <div className="ez-stack ez-stack--lg" style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow="Work"
         title="Messages"
         description="Chat with clients about their events."

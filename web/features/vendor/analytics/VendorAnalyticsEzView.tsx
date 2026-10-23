@@ -9,7 +9,7 @@ import { EzBarChart } from "@/components/charts/EzBarChart";
 import { EzDonutChart } from "@/components/charts/EzDonutChart";
 import { chartHasData } from "@/components/charts/chartUtils";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { PageHeader } from "@/components/ui/PageHeader";
 import {
   formatVendorPct,
   formatVendorSeconds,
@@ -48,7 +48,7 @@ export function VendorAnalyticsEzView({
 
   return (
     <div className="ez-stack ez-stack--lg">
-      <VendorEzPageHead
+      <PageHeader descriptionSize="body"
         eyebrow="Insights"
         title="Analytics"
         description={description}

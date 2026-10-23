@@ -1,6 +1,8 @@
 "use client";
 
 import { ArrowUpRight, Check, Circle, ExternalLink } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import type { Tone } from "@/lib/tone";
 import type { VendorPaymentsStatus } from "@/lib/vendorPaymentsApi";
 import { isVendorPayoutsReady } from "@/features/vendor/payments/useVendorPayoutsReady";
 
@@ -29,10 +31,10 @@ function stepIcon(done: boolean) {
 export function VendorPayoutStateCard({ variant, connecting, onConnect }: VendorPayoutStateCardProps) {
   const head =
     variant === "not_started"
-      ? { eyebrow: "Not started", badge: "Not connected", badgeClass: "ez-badge--neutral" }
+      ? { eyebrow: "Not started", badge: "Not connected", badgeTone: "neutral" as Tone }
       : variant === "in_progress"
-        ? { eyebrow: "In review", badge: "Verification pending", badgeClass: "ez-badge--warning" }
-        : { eyebrow: "Ready", badge: "Payouts on", badgeClass: "ez-badge--success" };
+        ? { eyebrow: "In review", badge: "Verification pending", badgeTone: "warning" as Tone }
+        : { eyebrow: "Ready", badge: "Payouts on", badgeTone: "success" as Tone };
 
   const title =
     variant === "not_started"
@@ -69,7 +71,7 @@ export function VendorPayoutStateCard({ variant, connecting, onConnect }: Vendor
     <div className="ez-card">
       <div className="ez-card__head">
         <span className="ez-eyebrow">{head.eyebrow}</span>
-        <span className={`ez-badge ${head.badgeClass}`}>{head.badge}</span>
+        <Badge tone={head.badgeTone}>{head.badge}</Badge>
       </div>
       <div className="ez-card__body">
         <div className="ez-stack">
