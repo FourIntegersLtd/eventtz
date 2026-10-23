@@ -18,7 +18,6 @@ const ALLOW_LISTED_FILES: string[] = [
   "features/admin/team/AdminTeamView.tsx",
   "features/bookings/BookingDateChangeCard.tsx",
   "features/bookings/VendorBookingDetailEzPanel.tsx",
-  "features/chat/VendorMessagesEzView.tsx",
   "features/client/planner/BudgetBreakdown.tsx",
   "features/disputes/VendorDisputesEzView.tsx",
   "features/vendor/bookings/VendorBookingDetailExtras.tsx",

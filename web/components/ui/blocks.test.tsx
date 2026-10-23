@@ -181,6 +181,12 @@ describe("ui building blocks emit canvas markup", () => {
     );
   });
 
+  it("Badge accepts the canvas gold accent", () => {
+    expect(renderToStaticMarkup(<Badge tone="gold">Assistant</Badge>)).toBe(
+      '<span class="ez-badge ez-badge--gold shrink-0">Assistant</span>',
+    );
+  });
+
   it("Badge plain drops the dot and Button block goes full width", () => {
     expect(renderToStaticMarkup(<Badge plain>Cover</Badge>)).toBe(
       '<span class="ez-badge ez-badge--neutral ez-badge--plain shrink-0">Cover</span>',
