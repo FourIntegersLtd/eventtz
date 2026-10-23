@@ -32,7 +32,7 @@ broadcasts, replies and edits, and the staff viewer for any thread.
 ## Routes
 `GET /chat/unread-count`, `GET/POST /chat/conversations`, `GET /chat/conversations/{id}`,
 `GET/POST /chat/conversations/{id}/messages`, `POST /chat/conversations/{id}/read`,
-`POST /admin/messages/send`, `GET /admin/messages/conversations`,
+`POST /admin/messages/send`, `GET /admin/messages/unread-count`, `GET /admin/messages/conversations`,
 `GET /admin/messages/conversations/{id}`, `GET/POST /admin/messages/conversations/{id}/messages`,
 `PATCH /admin/messages/conversations/{id}/messages/{message_id}`,
 `POST /admin/messages/conversations/{id}/read`, `GET /admin/chat/conversations/{id}/messages`.

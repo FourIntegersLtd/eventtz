@@ -34,6 +34,7 @@ from app.features.messaging.schemas import (
     AdminSupportMessageEditBody,
     AdminSupportMessageEditResponse,
     AdminSupportMessagesListResponse,
+    ChatUnreadCountResponse,
 )
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -58,6 +59,18 @@ async def admin_messages_send(
         recipient_user_ids=body.recipient_user_ids,
         audience=body.audience,
     )
+
+
+@router.get(
+    "/messages/unread-count",
+    response_model=ChatUnreadCountResponse,
+    responses=error_responses(*ROLE_ERRORS),
+)
+async def admin_messages_unread_count(
+    session: SessionDep, principal: CurrentStaff
+) -> ChatUnreadCountResponse:
+    """Unread support messages across all threads (the staff Messages badge)."""
+    return ChatUnreadCountResponse(unread_count=await service_support.staff_unread_total(session))
 
 
 @router.get(

@@ -59,6 +59,8 @@ ADDITIVE_OPERATIONS = frozenset(
     {
         # One vendor for the staff vendor page (the baseline only had the list, shown in a popup).
         ("GET", "/api/v1/admin/vendors/{}"),
+        # Staff Messages badge total, summed in SQL (the baseline summed up to 200 threads in the browser).
+        ("GET", "/api/v1/admin/messages/unread-count"),
         # Portal home dashboards and admin daily financials (server-side aggregates).
         ("GET", "/api/v1/client/dashboard"),
         ("GET", "/api/v1/vendor/dashboard"),
