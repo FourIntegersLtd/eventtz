@@ -141,18 +141,6 @@ export async function fetchClientBookingsPage(
   };
 }
 
-/** @deprecated Prefer paginated `fetchClientBookingsPage` or `fetchClientDashboard`. */
-export async function fetchClientBookings(
-  groupOrParams: ClientBookingsListGroup | ClientBookingsListParamsWithPage = "active",
-): Promise<ClientBookingListItem[]> {
-  const page = await fetchClientBookingsPage({
-    ...(typeof groupOrParams === "string" ? { group: groupOrParams } : groupOrParams),
-    offset: 0,
-    limit: 200,
-  });
-  return page.bookings;
-}
-
 export async function fetchClientBookingDetail(
   bookingId: string,
 ): Promise<ClientBookingDetail> {

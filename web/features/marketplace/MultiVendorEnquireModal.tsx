@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -302,14 +303,12 @@ export function MultiVendorEnquireModal({
         />
         {error ? <LottieFailureInline message={error} /> : null}
         {calendarConflictMessage ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950">
-            {calendarConflictMessage}
-          </div>
+          <Banner tone="warning">{calendarConflictMessage}</Banner>
         ) : null}
         {loadWarning ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 whitespace-pre-wrap">
+          <Banner tone="warning" className="whitespace-pre-wrap">
             {loadWarning}
-          </div>
+          </Banner>
         ) : null}
         {bannerVisible && pendingPrefill ? (
           <ActiveEventPrefillBanner

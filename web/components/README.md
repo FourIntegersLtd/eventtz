@@ -21,9 +21,13 @@ Reusable UI and cross-cutting chrome only. **Product screens and domain widgets 
 ## Design rule
 
 Use `Card`, `Button`, `Badge` and `Banner` (plus `Tabs`, `Chip`, `PageHeader`, `StatTile`, `Avatar`,
-`DescriptionList`, `Stepper`) from `ui/` instead of hand-rolled card, button, pill or alert classes.
+`DescriptionList` (and `DescriptionRow` for rows inside a custom `dl`), `Stepper`) from `ui/` instead of hand-rolled card, button, pill or alert classes.
 Colours, shadows and radii come from the tokens in `app/globals.css`, surfaced by `ui/tokens.ts`
 (`TONE`, `SHADOW`, `RADIUS`, `FORM_CONTROL`). Preview everything at `/internal/ui-kit`.
+
+Other shared pieces: `StatTile` (`compact` for dense strips), `TextArea` (`hideLabel`), `EzFilterDateField` (date filter),
+`EzListFilterToolbar` (search and filters for any list) and `lib/useServerList.ts` (paged, filtered, searched
+server lists; the bookings lists use it through `features/bookings/BookingsEzList`).
 
 ## Dependency rules
 
@@ -43,7 +47,7 @@ A feature **area** is the first path segment under `features/` (`admin`, `client
 
 | Module | Why it is shared |
 |--------|------------------|
-| `features/bookings/{ActiveEventPrefillBanner,BookingCompletionBanner,BookingDateChangeCard,BookingDisputeSection,BookingListPanel,BookingPayoutPendingBanner,BookingPriceUpdateBanner,BookingPricingBreakdown,BookingTermsNotices,ClientFeeBreakdownSummary,MasterDetailLayout,MultiVendorPackagePicker,ParticipantDisputesListView,VendorBookingDetailEzPanel,VendorQuoteFormModal}` | Booking panels, banners and modals rendered by client, vendor, admin, chat and marketplace |
+| `features/bookings/{ActiveEventPrefillBanner,BookingCompletionBanner,BookingDateChangeCard,BookingDisputeSection,BookingPayoutPendingBanner,BookingPriceUpdateBanner,BookingPricingBreakdown,BookingTermsNotices,BookingsEzList,ClientFeeBreakdownSummary,MasterDetailLayout,MultiVendorPackagePicker,ParticipantDisputesListView,VendorBookingDetailEzPanel,VendorQuoteFormModal}` | Booking panels, banners and modals rendered by client, vendor, admin, chat and marketplace |
 | `features/bookings/{bookingConfirmCopy,bookingListConstants,bookingPriceLabels,bookingTerms,bookingViewModel,cancellationPolicyCopy,eventDay,eventEnquirePrefill,groupBookingsByEvent,multiVendorPackageSelection,toBookingDetailViewModel,useEnquireEventFormState,useLaunchingSoonBookingGuard,useParticipantBookingsScaffold}` | Booking view models, terms, copy and hooks used across areas |
 | `features/vendors/display` | Vendor listing presentation (browse cards, portfolio, pricing blocks) |
 | `features/receipts/ReceiptActions` | Receipt download and share buttons |

@@ -2,7 +2,7 @@
 
 import { DateInput } from "@/components/ui/DateInput";
 
-type AdminFilterDateFieldProps = {
+type EzFilterDateFieldProps = {
   label: string;
   value: string;
   onChange: (value: string) => void;
@@ -10,13 +10,14 @@ type AdminFilterDateFieldProps = {
   className?: string;
 };
 
-export function AdminFilterDateField({
+/** Labelled date input for a filter modal, with an "optional" hint; an empty value clears the filter. */
+export function EzFilterDateField({
   label,
   value,
   onChange,
   optional = true,
   className = "",
-}: AdminFilterDateFieldProps) {
+}: EzFilterDateFieldProps) {
   return (
     <label
       className={`grid w-full min-w-0 max-w-full grid-cols-1 text-sm lg:w-auto lg:min-w-[12.5rem] ${className}`.trim()}

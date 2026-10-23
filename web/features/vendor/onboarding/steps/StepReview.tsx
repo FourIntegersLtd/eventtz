@@ -20,6 +20,7 @@ import {
   hasPortfolioContent,
   packageTravelPolicyLabel,
 } from "../../../../lib/vendorOnboarding/reviewDisplayHelpers";
+import { DescriptionRow } from "@/components/ui/DescriptionList";
 import { getMarket } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
 import { VendorPortfolioThumbGrid } from "@/features/vendors/display/VendorPortfolioThumbGrid";
@@ -29,7 +30,7 @@ import type {
   VendorOnboardingData,
   VendorOnboardingUpdate,
 } from "../../../../lib/vendorOnboarding/types";
-import { ClearableTextarea, labelClass } from "../../../../components/ui/form-primitives";
+import { TextArea } from "@/components/ui/TextArea";
 import { uploadedFileDisplayName } from "../../../../lib/vendorOnboarding/uploadedFileDisplayName";
 import { ReviewCards } from "./ReviewCards";
 import { vendorCancellationPolicyLabel } from "@/features/bookings/cancellationPolicyCopy";
@@ -110,26 +111,6 @@ function ReviewSection({
       </div>
       <div className="border-t border-neutral-100">{children}</div>
     </section>
-  );
-}
-
-function Field({
-  label,
-  value,
-}: {
-  label: string;
-  value: ReactNode;
-}) {
-  return (
-    <div
-      data-review-field
-      className="flex flex-col gap-0.5 px-5 py-3.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 sm:px-6"
-    >
-      <dt className="shrink-0 text-[13px] text-neutral-500">{label}</dt>
-      <dd className="min-w-0 text-sm font-medium text-neutral-900 sm:text-right">
-        {value}
-      </dd>
-    </div>
   );
 }
 
@@ -223,10 +204,12 @@ export function StepReview({
     </div>
   ) : (
     <div className="space-y-3">
-      <ClearableTextarea
+      <TextArea
+        label="Public bio"
+        hideLabel
         className="min-h-[100px]"
         value={data.aiBioDraft}
-        onChange={(v) => update({ aiBioDraft: v })}
+        onChange={(event) => update({ aiBioDraft: event.target.value })}
       />
       <p
         className={`text-right text-xs ${overLimit ? "text-red-600" : "text-neutral-400"}`}
@@ -257,14 +240,14 @@ export function StepReview({
         readOnly={readOnly}
       >
         <FieldList compact={!isLiveEdit}>
-          <Field
+          <DescriptionRow layout="review"
             label="Full name"
             value={
               [data.firstName, data.lastName].filter(Boolean).join(" ") || "-"
             }
           />
-          <Field label="Email" value={data.email || "-"} />
-          <Field label="Phone" value={data.phone || "-"} />
+          <DescriptionRow layout="review" label="Email" value={data.email || "-"} />
+          <DescriptionRow layout="review" label="Phone" value={data.phone || "-"} />
         </FieldList>
       </ReviewSection>
 
@@ -276,9 +259,9 @@ export function StepReview({
         readOnly={readOnly}
       >
         <FieldList compact={!isLiveEdit}>
-          <Field label="Business name" value={data.businessName || "-"} />
-          <Field label="Services" value={formatReviewServices(data.servicesOffered)} />
-          <Field label="Event types" value={formatReviewEventTypes(data.eventTypes)} />
+          <DescriptionRow layout="review" label="Business name" value={data.businessName || "-"} />
+          <DescriptionRow layout="review" label="Services" value={formatReviewServices(data.servicesOffered)} />
+          <DescriptionRow layout="review" label="Event types" value={formatReviewEventTypes(data.eventTypes)} />
         </FieldList>
       </ReviewSection>
 
@@ -290,17 +273,17 @@ export function StepReview({
         readOnly={readOnly}
       >
         <FieldList compact={!isLiveEdit}>
-          <Field label="Country" value={getMarket(data.countryCode).label} />
-          <Field label="Base city" value={data.baseCity || "-"} />
+          <DescriptionRow layout="review" label="Country" value={getMarket(data.countryCode).label} />
+          <DescriptionRow layout="review" label="Base city" value={data.baseCity || "-"} />
           {readOnly || data.region ? (
-            <Field label="Region" value={data.region || "-"} />
+            <DescriptionRow layout="review" label="Region" value={data.region || "-"} />
           ) : null}
           {readOnly || data.postalCode ? (
-            <Field label="Postcode" value={data.postalCode || "-"} />
+            <DescriptionRow layout="review" label="Postcode" value={data.postalCode || "-"} />
           ) : null}
-          <Field label="Delivery modes" value={deliveryLabel} />
-          <Field label="Travel radius" value={radiusLabel} />
-          <Field
+          <DescriptionRow layout="review" label="Delivery modes" value={deliveryLabel} />
+          <DescriptionRow layout="review" label="Travel radius" value={radiusLabel} />
+          <DescriptionRow layout="review"
             label="Default policy"
             value={
               data.travelDeliveryPolicy
@@ -321,20 +304,20 @@ export function StepReview({
         readOnly={readOnly}
       >
         <FieldList compact={!isLiveEdit}>
-          <Field label="Hourly rate" value={`£${data.hourlyRate || "-"}`} />
-          <Field label="Daily rate" value={`£${data.dailyRate || "-"}`} />
-          <Field label="Cancellation policy" value={vendorCancellationPolicyLabel(data.cancellationPolicy)} />
+          <DescriptionRow layout="review" label="Hourly rate" value={`£${data.hourlyRate || "-"}`} />
+          <DescriptionRow layout="review" label="Daily rate" value={`£${data.dailyRate || "-"}`} />
+          <DescriptionRow layout="review" label="Cancellation policy" value={vendorCancellationPolicyLabel(data.cancellationPolicy)} />
           {readOnly ? (
             <>
-              <Field
+              <DescriptionRow layout="review"
                 label="Default travel rule for hourly"
                 value={yesNo(data.useDefaultTravelHourly)}
               />
-              <Field
+              <DescriptionRow layout="review"
                 label="Default travel rule for daily"
                 value={yesNo(data.useDefaultTravelDaily)}
               />
-              <Field label="Offers discounts" value={yesNo(data.offerDiscounts)} />
+              <DescriptionRow layout="review" label="Offers discounts" value={yesNo(data.offerDiscounts)} />
             </>
           ) : null}
         </FieldList>
@@ -408,7 +391,7 @@ export function StepReview({
         readOnly={readOnly}
       >
         <FieldList compact={!isLiveEdit}>
-          <Field
+          <DescriptionRow layout="review"
             label="Available days"
             value={
               data.availableWeekdays.length
@@ -416,12 +399,12 @@ export function StepReview({
                 : "-"
             }
           />
-          <Field
+          <DescriptionRow layout="review"
             label="Max bookings / day"
             value={data.maxBookingsPerDay || "-"}
           />
           {readOnly || blockedDatesLabel ? (
-            <Field label="Blocked dates" value={blockedDatesLabel ?? "-"} />
+            <DescriptionRow layout="review" label="Blocked dates" value={blockedDatesLabel ?? "-"} />
           ) : null}
         </FieldList>
       </ReviewSection>
@@ -436,7 +419,7 @@ export function StepReview({
         >
           <FieldList compact={!isLiveEdit}>
             {readOnly || portfolioImageCount > 0 ? (
-              <Field
+              <DescriptionRow layout="review"
                 label="Portfolio images"
                 value={
                   portfolioImageCount > 0
@@ -446,7 +429,7 @@ export function StepReview({
               />
             ) : null}
             {readOnly || data.portfolioVideoNamesPersisted.length > 0 ? (
-              <Field
+              <DescriptionRow layout="review"
                 label="Videos"
                 value={
                   data.portfolioVideoNamesPersisted.length
@@ -460,7 +443,7 @@ export function StepReview({
               />
             ) : null}
             {readOnly || data.socialLinks.length > 0 ? (
-              <Field
+              <DescriptionRow layout="review"
                 label="Social links"
                 value={
                   data.socialLinks.length
@@ -495,7 +478,7 @@ export function StepReview({
         >
           <FieldList compact={!isLiveEdit}>
             {readOnly || data.foodHygieneCertNamePersisted ? (
-              <Field
+              <DescriptionRow layout="review"
                 label="Food hygiene certificate"
                 value={
                   data.foodHygieneCertNamePersisted
@@ -509,7 +492,7 @@ export function StepReview({
               />
             ) : null}
             {readOnly || data.indemnityCertNamePersisted ? (
-              <Field
+              <DescriptionRow layout="review"
                 label="Indemnity / insurance"
                 value={
                   data.indemnityCertNamePersisted
@@ -524,15 +507,15 @@ export function StepReview({
             ) : null}
             {readOnly ? (
               <>
-                <Field label="Halal" value={yesNo(data.isHalal)} />
-                <Field label="Vegan" value={yesNo(data.isVegan)} />
-                <Field label="Vegetarian" value={yesNo(data.isVegetarian)} />
-                <Field label="Gluten-free" value={yesNo(data.isGlutenFree)} />
-                <Field
+                <DescriptionRow layout="review" label="Halal" value={yesNo(data.isHalal)} />
+                <DescriptionRow layout="review" label="Vegan" value={yesNo(data.isVegan)} />
+                <DescriptionRow layout="review" label="Vegetarian" value={yesNo(data.isVegetarian)} />
+                <DescriptionRow layout="review" label="Gluten-free" value={yesNo(data.isGlutenFree)} />
+                <DescriptionRow layout="review"
                   label="Allergen info"
                   value={data.allergenInfo.trim() || "-"}
                 />
-                <Field
+                <DescriptionRow layout="review"
                   label="Other documents"
                   value={
                     data.otherDocsNamesPersisted.length
@@ -551,16 +534,16 @@ export function StepReview({
               </>
             ) : (
               <>
-                {data.isHalal ? <Field label="Halal" value="Yes" /> : null}
-                {data.isVegan ? <Field label="Vegan" value="Yes" /> : null}
+                {data.isHalal ? <DescriptionRow layout="review" label="Halal" value="Yes" /> : null}
+                {data.isVegan ? <DescriptionRow layout="review" label="Vegan" value="Yes" /> : null}
                 {data.isVegetarian ? (
-                  <Field label="Vegetarian" value="Yes" />
+                  <DescriptionRow layout="review" label="Vegetarian" value="Yes" />
                 ) : null}
                 {data.isGlutenFree ? (
-                  <Field label="Gluten-free" value="Yes" />
+                  <DescriptionRow layout="review" label="Gluten-free" value="Yes" />
                 ) : null}
                 {data.allergenInfo.trim() ? (
-                  <Field label="Allergen info" value={data.allergenInfo.trim()} />
+                  <DescriptionRow layout="review" label="Allergen info" value={data.allergenInfo.trim()} />
                 ) : null}
               </>
             )}
@@ -625,7 +608,7 @@ export function StepReview({
       <div className="space-y-7">
         {profilePhotoBlock}
         <div>
-          <label className={labelClass()}>Public bio</label>
+          <label className="ez-label">Public bio</label>
           <p className="mb-2 text-xs text-neutral-500">
             Short bio for your public profile.
           </p>
@@ -693,7 +676,7 @@ export function StepReview({
       <div data-design-extra="bio-photo" className="ez-stack">
         {profilePhotoBlock}
         <div>
-          <label className={labelClass()}>Public bio</label>
+          <label className="ez-label">Public bio</label>
           <p className="mb-2 text-xs text-neutral-500">Short bio for your public profile.</p>
           {bioBlock}
         </div>

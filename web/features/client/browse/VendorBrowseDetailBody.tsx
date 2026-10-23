@@ -11,7 +11,7 @@ import { VendorMetricsStrip } from "@/features/vendors/display/VendorMetricsStri
 import type { ExploreVendor } from "@/lib/clientExploreApi";
 import { displayEventTypes, displayServicesOffered } from "../../../lib/vendorBrowseLabels";
 import { buildBrowseVendorProfileFacts } from "./browseVendorFacts";
-import { BrowseProfileFactRow } from "./BrowseProfileFactRow";
+import { DescriptionRow } from "@/components/ui/DescriptionList";
 import {
   BrowseProfileGoodToKnowCard,
   hasBrowseGoodToKnowContent,
@@ -377,19 +377,19 @@ export function VendorBrowseDetailBody({
               </div>
               <dl className="space-y-1 px-5 pb-4">
                 {facts.howTheyWork.length > 0 ? (
-                  <BrowseProfileFactRow
+                  <DescriptionRow layout="fact"
                     label="How they work"
                     value={facts.howTheyWork.join(" · ")}
                   />
                 ) : null}
                 {facts.travelRadiusLabel ? (
-                  <BrowseProfileFactRow
+                  <DescriptionRow layout="fact"
                     label="Travel radius"
                     value={facts.travelRadiusLabel}
                   />
                 ) : null}
                 {facts.travelFeePolicy ? (
-                  <BrowseProfileFactRow
+                  <DescriptionRow layout="fact"
                     label="Travel fees"
                     value={facts.travelFeePolicy}
                     tone={
@@ -400,7 +400,7 @@ export function VendorBrowseDetailBody({
                   />
                 ) : null}
                 {facts.travelCustomNote ? (
-                  <BrowseProfileFactRow label="Travel note" value={facts.travelCustomNote} tone="notice" />
+                  <DescriptionRow layout="fact" label="Travel note" value={facts.travelCustomNote} tone="notice" />
                 ) : null}
               </dl>
             </div>

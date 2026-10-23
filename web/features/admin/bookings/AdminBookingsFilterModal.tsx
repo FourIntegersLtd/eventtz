@@ -4,7 +4,7 @@ import { EzFilterModalSection } from "@/components/ui/EzFilterModalSection";
 import { EzFilterOptionList } from "@/components/ui/EzFilterOptionList";
 import { EzListFilterModal } from "@/components/ui/EzListFilterModal";
 import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
-import { AdminFilterDateField } from "@/features/admin/components/AdminFilterDateField";
+import { EzFilterDateField } from "@/components/ui/EzFilterDateField";
 
 const BOOKING_STATUS_FILTER_OPTIONS: EzFilterOption<string>[] = [
   { id: "", title: "All statuses" },
@@ -55,8 +55,8 @@ export function AdminBookingsFilterModal({
         description="Optional range on the booking event date."
       >
         <div className="flex flex-col gap-4">
-          <AdminFilterDateField label="From" value={dateFrom} onChange={onDateFromChange} />
-          <AdminFilterDateField label="To" value={dateTo} onChange={onDateToChange} />
+          <EzFilterDateField label="From" value={dateFrom} onChange={onDateFromChange} />
+          <EzFilterDateField label="To" value={dateTo} onChange={onDateToChange} />
         </div>
       </EzFilterModalSection>
 

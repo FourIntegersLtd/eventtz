@@ -1,5 +1,6 @@
 "use client";
 
+import { DescriptionList } from "@/components/ui/DescriptionList";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -145,16 +146,16 @@ export function AdminReviewDetailView({ reviewId }: Props) {
               <h2 className="ez-h3">Booking</h2>
             </div>
             <div className="ez-card__body">
-              <dl className="ez-dl">
-                <dt>Event</dt>
-                <dd>{review.booking_event_name ?? "-"}</dd>
-                <dt>Event date</dt>
-                <dd>{formatReviewEventDate(review.booking_event_date)}</dd>
-                <dt>Request status</dt>
-                <dd>
-                  {review.booking_status ? <StatusBadge status={review.booking_status} /> : "-"}
-                </dd>
-              </dl>
+              <DescriptionList
+                items={[
+                  { label: "Event", value: review.booking_event_name ?? "-" },
+                  { label: "Event date", value: formatReviewEventDate(review.booking_event_date) },
+                  {
+                    label: "Request status",
+                    value: review.booking_status ? <StatusBadge status={review.booking_status} /> : "-",
+                  },
+                ]}
+              />
               <div className="ez-hrow" style={{ marginTop: "12px" }}>
                 <Link
                   href={`/admin/bookings/${review.booking_request_id}`}

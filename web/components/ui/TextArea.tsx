@@ -6,18 +6,20 @@ export type TextAreaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: ReactNode;
   error?: string | null;
   hint?: string;
+  /** Keep the label for screen readers only (the area sits under a visible heading). */
+  hideLabel?: boolean;
 };
 
 /** Canvas text area: `ez-field` with an `ez-label`, an `ez-input ez-input--area`, then the help or error line. */
 export const TextArea = forwardRef<HTMLTextAreaElement, TextAreaProps>(function TextArea(
-  { label, error, hint, id, className = "", rows = 4, ...rest },
+  { label, error, hint, hideLabel = false, id, className = "", rows = 4, ...rest },
   ref,
 ) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   return (
     <div className="ez-field">
-      <label htmlFor={inputId} className="ez-label">
+      <label htmlFor={inputId} className={`ez-label${hideLabel ? " sr-only" : ""}`}>
         {label}
       </label>
       <textarea

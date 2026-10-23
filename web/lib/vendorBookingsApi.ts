@@ -97,18 +97,6 @@ export async function fetchVendorBookingsPage(
   };
 }
 
-/** @deprecated Prefer paginated `fetchVendorBookingsPage` or portal dashboard APIs. */
-export async function fetchVendorBookings(
-  groupOrParams: VendorBookingsListGroup | "all" | VendorBookingsListParamsWithPage = "active",
-): Promise<VendorBookingListItem[]> {
-  const page = await fetchVendorBookingsPage({
-    ...(typeof groupOrParams === "string" ? { group: groupOrParams } : groupOrParams),
-    offset: 0,
-    limit: 200,
-  });
-  return page.bookings;
-}
-
 export async function patchVendorBookingStatus(
   bookingId: string,
   bookingStatus: "accepted" | "declined" | "cancelled",

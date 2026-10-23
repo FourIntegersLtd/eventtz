@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import type { BookingLineItemRow, BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
 
 /**
- * Role-agnostic row shape for `BookingListPanel`. Client and vendor feature
+ * Role-agnostic row shape for `BookingsEzList`. Client and vendor feature
  * folders map their own API response types down to this before rendering -
- * the panel itself never imports `clientBookingsApi`/`vendorBookingsApi`.
+ * the list itself never imports `clientBookingsApi`/`vendorBookingsApi`.
  */
 export type BookingListRowViewModel = {
   id: string;

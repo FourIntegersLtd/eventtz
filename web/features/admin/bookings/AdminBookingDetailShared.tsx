@@ -19,15 +19,6 @@ export function DetailSection({ title, children }: { title: string; children: Re
   );
 }
 
-export function Field({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div>
-      <dt className="text-xs text-neutral-500">{label}</dt>
-      <dd className="mt-0.5 text-sm text-neutral-900">{value}</dd>
-    </div>
-  );
-}
-
 /** Mask Stripe-style ids for support screens (full value on expand). */
 export function maskStripeId(value: unknown): string | null {
   const full = value != null ? String(value).trim() : "";

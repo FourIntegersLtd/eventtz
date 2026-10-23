@@ -4,7 +4,8 @@ import type { ComponentType, ReactNode } from "react";
 import { CANCELLATION_POLICY_GUARANTEES } from "@/features/bookings/cancellationPolicyCopy";
 
 import type { BrowseVendorProfileFacts } from "./browseVendorFacts";
-import { BrowseProfileCallout, BrowseProfileFactRow } from "./BrowseProfileFactRow";
+import { DescriptionRow } from "@/components/ui/DescriptionList";
+import { BrowseProfileCallout } from "./BrowseProfileCallout";
 
 type BrowseProfileGoodToKnowCardProps = {
   facts: BrowseVendorProfileFacts;
@@ -113,7 +114,7 @@ export function BrowseProfileGoodToKnowCard({
           <Section icon={UtensilsCrossed} title="Food and dietary">
             <dl className="space-y-1">
               {facts.foodNotes.map((note) => (
-                <BrowseProfileFactRow
+                <DescriptionRow layout="fact"
                   key={note.label}
                   label={note.label}
                   value={note.value}

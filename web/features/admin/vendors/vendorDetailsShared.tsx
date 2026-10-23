@@ -52,44 +52,6 @@ export function parseVendorDetailsTabId(raw: string | null | undefined): VendorD
   return "profile";
 }
 
-export function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  tone = "default",
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: ReactNode;
-  sub?: ReactNode;
-  tone?: "default" | "success" | "warning" | "danger";
-}) {
-  const toneClass =
-    tone === "success"
-      ? "bg-emerald-50 text-emerald-700"
-      : tone === "warning"
-        ? "bg-amber-50 text-amber-700"
-        : tone === "danger"
-          ? "bg-red-50 text-red-700"
-          : "bg-neutral-100 text-neutral-600";
-
-  return (
-    <div className="rounded-xl border border-neutral-200/80 bg-neutral-50/40 p-5">
-      <div className="flex items-start gap-3">
-        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${toneClass}`}>
-          <Icon className="h-4 w-4" aria-hidden />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">{label}</p>
-          <p className="mt-1.5 font-heading text-xl font-semibold tabular-nums text-neutral-900">{value}</p>
-          {sub ? <div className="mt-1 text-xs text-neutral-600">{sub}</div> : null}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 const BOOKING_STATUS_ORDER: BookingStatus[] = [
   "pending",
   "accepted",
@@ -395,30 +357,6 @@ export function ProfileSection({
       <SectionSubheading title={title} />
       <div className="space-y-5">{children}</div>
     </ContentCard>
-  );
-}
-
-export function ProfileField({
-  icon: Icon,
-  label,
-  value,
-  mono = false,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: ReactNode;
-  mono?: boolean;
-}) {
-  return (
-    <div className="flex gap-3">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
-      <div className="min-w-0 flex-1">
-        <dt className="text-xs font-medium text-neutral-500">{label}</dt>
-        <dd className={`mt-1 text-sm text-neutral-900 ${mono ? "break-all font-mono text-xs" : ""}`.trim()}>
-          {value}
-        </dd>
-      </div>
-    </div>
   );
 }
 
