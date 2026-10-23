@@ -224,6 +224,18 @@ async def unread_counts_for_user(session: AsyncSession, user_id: str) -> dict[st
     return {str(thread_id): int(unread) for thread_id, unread in result.tuples()}
 
 
+def _staff_unread() -> tuple[ColumnElement[bool], ...]:
+    """Conditions for a message staff have not read: the end user sent it after `admin_last_read_at`."""
+    return (
+        Conversation.kind == "support",
+        Message.sender_user_id == Conversation.support_user_id,
+        or_(
+            Conversation.admin_last_read_at.is_(None),
+            Message.created_at > Conversation.admin_last_read_at,
+        ),
+    )
+
+
 async def staff_unread_counts(session: AsyncSession, conversation_ids: list[str]) -> dict[str, int]:
     """Per support thread: messages the end user sent after staff last read it."""
     parsed_ids = [parsed for parsed in (as_uuid(thread_id) for thread_id in conversation_ids) if parsed]
@@ -234,16 +246,23 @@ async def staff_unread_counts(session: AsyncSession, conversation_ids: list[str]
         .join(Message, Message.conversation_id == Conversation.id)
         .where(
             Conversation.id.in_(parsed_ids),
-            Conversation.kind == "support",
-            Message.sender_user_id == Conversation.support_user_id,
-            or_(
-                Conversation.admin_last_read_at.is_(None),
-                Message.created_at > Conversation.admin_last_read_at,
-            ),
+            *_staff_unread(),
         )
         .group_by(Conversation.id)
     )
     return {str(thread_id): int(unread) for thread_id, unread in result.tuples()}
+
+
+async def staff_unread_total(session: AsyncSession) -> int:
+    """Messages end users sent in any support thread after staff last read it (the staff badge)."""
+    result = await session.execute(
+        select(func.count(Message.id))
+        .join(Conversation, Message.conversation_id == Conversation.id)
+        .where(
+            *_staff_unread(),
+        )
+    )
+    return int(result.scalar_one())
 
 
 async def latest_messages(

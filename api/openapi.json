@@ -19242,6 +19242,59 @@
         ]
       }
     },
+    "/api/v1/admin/messages/unread-count": {
+      "get": {
+        "description": "Unread support messages across all threads (the staff Messages badge).",
+        "operationId": "admin_messages_unread_count_api_v1_admin_messages_unread_count_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatUnreadCountResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "unauthenticated",
+            "x-codes": [
+              "unauthenticated"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "forbidden",
+            "x-codes": [
+              "forbidden"
+            ]
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Admin Messages Unread Count",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/referrals/partners": {
       "get": {
         "description": "Every partner, newest first, with the link each one shares.",

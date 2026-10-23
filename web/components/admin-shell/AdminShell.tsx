@@ -25,7 +25,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { loginPathWithNext } from "@/features/auth/authRouting";
 import { EventtzLogo } from "@/components/branding/EventtzLogo";
 import { resolveAdminRole, isSuperAdmin } from "@/lib/adminRole";
-import { fetchAdminSupportConversations } from "@/lib/adminMessagesApi";
+import { fetchAdminUnreadCount } from "@/lib/adminMessagesApi";
 import { CHAT_UNREAD_CLEARED_EVENT } from "@/lib/chatApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { HelpWidget } from "@/features/help/HelpWidget";
@@ -229,8 +229,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
   const refreshMessagesUnread = useCallback(async () => {
     try {
-      const list = await fetchAdminSupportConversations();
-      setMessagesUnread(list.reduce((sum, conversation) => sum + (conversation.unread_count || 0), 0));
+      setMessagesUnread(await fetchAdminUnreadCount());
     } catch {
       /* badge is best-effort */
     }

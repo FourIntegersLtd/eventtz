@@ -25,10 +25,12 @@ export async function sendAdminMessages(body: AdminMessageSendBody): Promise<Adm
 
 export const ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
-/** Fetch-everything wrapper still used by `components/admin-shell/AdminShell.tsx` (platform-owner's) for its unread badge. */
-export async function fetchAdminSupportConversations(): Promise<AdminSupportConversation[]> {
-  const page = await fetchAdminSupportConversationsPage(0, 200);
-  return page.conversations;
+/** Unread support messages across every thread, summed in SQL (the staff Messages badge). */
+export async function fetchAdminUnreadCount(): Promise<number> {
+  const { data } = await api.get<components["schemas"]["ChatUnreadCountResponse"]>(
+    `${prefix()}/unread-count`,
+  );
+  return data.unread_count ?? 0;
 }
 
 export async function fetchAdminSupportConversationsPage(

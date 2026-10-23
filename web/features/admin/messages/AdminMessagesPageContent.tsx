@@ -6,7 +6,7 @@ import { AdminSectionTabs } from "@/features/admin/layout/AdminSectionTabs";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminMessagesComposeView } from "@/features/admin/messages/AdminMessagesComposeView";
 import { AdminMessagesInboxView } from "@/features/admin/messages/AdminMessagesInboxView";
-import { fetchAdminSupportConversations } from "@/lib/adminMessagesApi";
+import { fetchAdminUnreadCount } from "@/lib/adminMessagesApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
 const TABS = [
@@ -25,10 +25,7 @@ function MessagesTabs() {
 
   const refreshUnreadBadge = useCallback(async () => {
     try {
-      // No unread-count endpoint exists (the paged list's `total` counts threads, not unread
-      // messages), so sum over up to 200 threads as before.
-      const conversations = await fetchAdminSupportConversations();
-      setInboxUnread(conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0));
+      setInboxUnread(await fetchAdminUnreadCount());
     } catch {
       /* badge is best-effort */
     }

@@ -182,6 +182,11 @@ async def list_support_threads_page(
     return rows, total
 
 
+async def staff_unread_total(session: AsyncSession) -> int:
+    """Unread support messages across every thread, for the staff badge."""
+    return await repository.staff_unread_total(session)
+
+
 async def _support_thread(session: AsyncSession, conversation_id: str) -> ThreadRow:
     """The support thread, or "not found" (also for a DM's id)."""
     thread = await repository.get_support_thread(session, conversation_id)
