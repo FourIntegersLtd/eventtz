@@ -155,7 +155,7 @@ export function AdminTeamMemberActionsMenu({
             id={menuId}
             role="menu"
             aria-label={`Actions for ${label}`}
-            className="overflow-hidden rounded-lg border border-neutral-200 bg-white py-1 shadow-lg ring-1 ring-black/5"
+            className="overflow-hidden rounded-lg border border-line bg-white py-1 shadow-lg ring-1 ring-black/5"
             style={{
               position: "fixed",
               top: menuRect.top,
@@ -173,15 +173,15 @@ export function AdminTeamMemberActionsMenu({
                     role="menuitem"
                     disabled={item.disabled}
                     onClick={() => void item.onSelect()}
-                    className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition hover:bg-neutral-50 disabled:opacity-50 ${TOUCH_TARGET} ${
+                    className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition hover:bg-surface-2 disabled:opacity-50 ${TOUCH_TARGET} ${
                       item.tone === "danger"
-                        ? "text-red-700 hover:bg-red-50"
-                        : "text-neutral-800"
+                        ? "text-danger hover:bg-surface-2"
+                        : "text-ink"
                     }`}
                   >
                     <Icon
                       className={`h-4 w-4 shrink-0 ${
-                        item.tone === "danger" ? "text-red-600" : "text-neutral-500"
+                        item.tone === "danger" ? "text-danger" : "text-ink-3"
                       }`}
                       aria-hidden
                     />
@@ -206,7 +206,7 @@ export function AdminTeamMemberActionsMenu({
         aria-label={`Actions for ${label}`}
         disabled={busy}
         onClick={() => setOpen((v) => !v)}
-        className={`inline-flex h-9 w-7 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 transition hover:border-neutral-300 hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-60 ${FOCUS_RING}`}
+        className={`inline-flex h-9 w-7 items-center justify-center rounded-full border border-line bg-white text-ink-2 transition hover:border-line-strong hover:bg-surface-2 hover:text-ink disabled:opacity-60 ${FOCUS_RING}`}
       >
         {busy ? (
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

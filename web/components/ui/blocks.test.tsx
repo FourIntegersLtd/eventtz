@@ -62,6 +62,21 @@ describe("ui building blocks emit canvas markup", () => {
     expect(markup).toContain('aria-selected="false" class="ez-tab">Past</button>');
   });
 
+  it("Tabs with an href render links that keep the ez-tab classes", () => {
+    const markup = renderToStaticMarkup(
+      <Tabs
+        aria-label="Settings sections"
+        value="account"
+        options={[
+          { value: "account", label: "Account", href: "/vendor/settings" },
+          { value: "referrals", label: "Referrals", href: "/vendor/settings?tab=referrals" },
+        ]}
+      />,
+    );
+    expect(markup).toContain('<a role="tab" aria-selected="true" class="ez-tab ez-tab--active" href="/vendor/settings">Account</a>');
+    expect(markup).toContain('class="ez-tab" href="/vendor/settings?tab=referrals">Referrals</a>');
+  });
+
   it("StatTile is an ez-kpi", () => {
     expect(renderToStaticMarkup(<StatTile label="Revenue" value="£1,200" delta="+4%" deltaTone="success" />)).toBe(
       '<div class="ez-kpi"><span class="ez-kpi__label">Revenue</span><span class="ez-kpi__value">£1,200</span><span class="ez-kpi__delta text-success">+4%</span></div>',
@@ -96,6 +111,12 @@ describe("ui building blocks emit canvas markup", () => {
       'ez-kpi__delta ez-kpi__delta--down',
     );
     expect(renderToStaticMarkup(<StatTile label="A" value="1" href="/x" />)).toContain('<a class="ez-kpi ez-kpi--link" href="/x">');
+  });
+
+  it("Checkbox passes required through to the input", () => {
+    expect(renderToStaticMarkup(<Checkbox checked={false} required onChange={() => {}}>Agree</Checkbox>)).toContain(
+      'required=""',
+    );
   });
 
   it("Checkbox is an ez-check row and OptionCard marks the chosen option", () => {

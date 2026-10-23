@@ -31,7 +31,7 @@ export function ForgotPasswordView({ variant = "default" }: ForgotPasswordViewPr
   const [sentMessage, setSentMessage] = useState<string | null>(null);
 
   const signInHref = isAdmin ? loginPathWithNext("/admin/dashboard") : "/login";
-  const shellClassName = isAdmin ? "bg-neutral-50" : undefined;
+  const shellClassName = isAdmin ? "bg-surface-2" : undefined;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

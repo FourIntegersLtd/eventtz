@@ -6,6 +6,7 @@ import { AuthPageShell } from "@/components/auth/AuthPageShell";
 import { Button } from "@/components/ui/Button";
 import { Banner } from "@/components/ui/Banner";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { TextField } from "@/components/ui/TextField";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { dashboardPathForUserType } from "@/features/auth/authRouting";
@@ -173,33 +174,24 @@ export function UnifiedRegisterView() {
             />
 
             <div>
-              <label className="flex items-start gap-3 text-sm text-ink-2">
-                <input
-                  type="checkbox"
-                  required
-                  checked={termsAgreed}
-                  onChange={(event) => setTermsAgreed(event.target.checked)}
-                  className="mt-0.5 h-5 w-5 shrink-0 rounded border-neutral-300 text-primary"
-                />
-                <span>
-                  I agree to the{" "}
-                  <Link
-                    href="/compliances/terms-of-service"
-                    target="_blank"
-                    className="font-medium text-primary hover:underline"
-                  >
-                    Terms of Service
-                  </Link>{" "}
-                  and{" "}
-                  <Link
-                    href="/compliances/privacy-policy"
-                    target="_blank"
-                    className="font-medium text-primary hover:underline"
-                  >
-                    Privacy Policy
-                  </Link>
-                </span>
-              </label>
+              <Checkbox required checked={termsAgreed} onChange={setTermsAgreed}>
+                I agree to the{" "}
+                <Link
+                  href="/compliances/terms-of-service"
+                  target="_blank"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/compliances/privacy-policy"
+                  target="_blank"
+                  className="font-medium text-primary hover:underline"
+                >
+                  Privacy Policy
+                </Link>
+              </Checkbox>
               {fieldErrors.terms ? (
                 <p className="mt-1 text-sm text-danger">{fieldErrors.terms}</p>
               ) : null}
