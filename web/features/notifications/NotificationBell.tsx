@@ -104,7 +104,7 @@ export function NotificationBell({
         aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications"}
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={`relative inline-flex items-center justify-center rounded-lg text-neutral-600 transition duration-150 ease-out hover:bg-neutral-100 active:scale-95 ${TOUCH_TARGET} ${FOCUS_RING}`}
+        className={`relative inline-flex items-center justify-center rounded-lg text-ink-2 transition duration-150 ease-out hover:bg-surface-3 active:scale-95 ${TOUCH_TARGET} ${FOCUS_RING}`}
       >
         <Bell className="h-5 w-5" aria-hidden />
         {unreadCount > 0 ? (
@@ -119,10 +119,10 @@ export function NotificationBell({
 
       {open ? (
         <div
-          className={`absolute right-0 z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] animate-ui-fade-in border border-neutral-200 bg-white ${RADIUS.md} ${SHADOW.overlay}`}
+          className={`absolute right-0 z-40 mt-2 w-80 max-w-[calc(100vw-2rem)] animate-ui-fade-in border border-line bg-white ${RADIUS.md} ${SHADOW.overlay}`}
         >
-          <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
-            <p className="text-sm font-semibold text-neutral-900">Notifications</p>
+          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+            <p className="text-sm font-semibold text-ink">Notifications</p>
             <Link
               href={footerHref}
               onClick={() => setOpen(false)}
@@ -147,9 +147,9 @@ export function NotificationBell({
                 {items.slice(0, 8).map((item, i) => {
                   const content = (
                     <>
-                      <p className="truncate text-sm font-medium text-neutral-900">{item.title}</p>
+                      <p className="truncate text-sm font-medium text-ink">{item.title}</p>
                       {item.body ? (
-                        <p className="mt-0.5 line-clamp-2 text-xs text-neutral-500">{item.body}</p>
+                        <p className="mt-0.5 line-clamp-2 text-xs text-ink-3">{item.body}</p>
                       ) : null}
                     </>
                   );
@@ -159,7 +159,7 @@ export function NotificationBell({
                         <Link
                           href={item.href}
                           onClick={() => setOpen(false)}
-                          className="block rounded-lg px-3 py-2 transition duration-150 ease-out hover:bg-neutral-50"
+                          className="block rounded-lg px-3 py-2 transition duration-150 ease-out hover:bg-surface-3"
                         >
                           {content}
                         </Link>

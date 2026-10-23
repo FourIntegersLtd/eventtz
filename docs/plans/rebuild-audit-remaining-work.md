@@ -5,6 +5,11 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Done
 
+**Comms screens, comms-owned part** (PR "Rebuild audit: comms screens on the design system and server lists").
+- Client and vendor notifications are one `NotificationsPageView` (`portal` prop): the vendor keeps its header, topic `Tabs` and "Mark all as read"; the client page keeps its own header and still marks notices read on open. `VendorNotificationsEzView` is deleted. The client list now uses the vendor's `ez-list-row` look (a deliberate small visual change).
+- Admin messages inbox, vendor messages and the client/vendor chat portal conversation lists are on `useServerList` (rows stay on screen while a realtime refresh reloads them). Inline `style`, `neutral-*` and raw `ez-card`/`ez-badge` markup in `features/{chat,notifications}` and `features/admin/{chat,messages}` are replaced by `Card`, `Badge` and design tokens.
+- Left because owned by platform-owner: `HelpWidget`, `HelpAssistantThread` and `portalTheme.ts` (`features/help`, `components/`), and `AdminShell`'s unread badge, which still calls the `limit: 200` wrapper `fetchAdminSupportConversations` (kept in `lib/adminMessagesApi.ts` for it; delete both together). The admin Compose-tab badge in `AdminMessagesPageContent` now counts the first page of threads only.
+
 **Admin console screens, platform-owned part** (PR "Rebuild audit: admin screens on the design system and server lists").
 - `OWNERS.md` gives platform-owner only admin blog, dashboard, report-bug, settings, layout and components. Blog list is now on `useServerList`; `fetchAdminBlogPosts` (the `limit: 200` wrapper, no callers) is deleted. Cards, buttons, badges and the success banner in those folders use `Card`, `Button`/`ButtonLink`, `Badge`, `Banner`; the last inline `style` and `neutral-*` classes are gone.
 - Two-server comparison (seeded 40 posts, pages 1 and 2, desktop and 390px) and dashboard, report-bug, settings and editor screenshots against main: at most 0.012% mismatching pixels.

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { Card, CardHeader } from "@/components/ui/Card";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import {
@@ -164,23 +165,24 @@ export function AdminMessagesComposeView() {
         <p className="text-sm font-medium text-primary">{success}</p>
       ) : null}
 
-      <section
-        className={`relative ez-card ${resultsOpen && mode === "selected" ? "z-10 overflow-visible" : "overflow-hidden"}`}
+      <Card
+        as="section"
+        className={`relative ${resultsOpen && mode === "selected" ? "z-10 overflow-visible" : "overflow-hidden"}`}
       >
-        <div className="ez-card__head">
+        <CardHeader>
           <h2 className="ez-h3">Recipients</h2>
           <p className="ez-small">
             Choose specific users
             {canBroadcastMessages ? " or broadcast to a whole audience" : ""}.
           </p>
-        </div>
+        </CardHeader>
 
-        <div className="divide-y divide-neutral-100 border-t border-neutral-100">
+        <div className="divide-y divide-line border-t border-line">
           <fieldset className="px-5 py-4 sm:px-6">
             <legend className="sr-only">Recipient mode</legend>
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
               {recipientModes.map(([value, label]) => (
-                <label key={value} className="inline-flex items-center gap-2 text-neutral-700">
+                <label key={value} className="inline-flex items-center gap-2 text-ink-2">
                   <input
                     type="radio"
                     name="recipient-mode"
@@ -192,7 +194,7 @@ export function AdminMessagesComposeView() {
               ))}
             </div>
             {!canBroadcastMessages ? (
-              <p className="mt-3 text-xs leading-relaxed text-neutral-500">
+              <p className="mt-3 text-xs leading-relaxed text-ink-3">
                 Platform-wide broadcasts require a super admin. You can still message selected
                 users from directory search.
               </p>
@@ -205,7 +207,7 @@ export function AdminMessagesComposeView() {
                 <ul className="flex flex-wrap gap-2">
                   {selected.map((u) => (
                     <li key={u.user_id}>
-                      <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/10 py-1 pl-2.5 pr-1 text-sm text-neutral-900">
+                      <span className="inline-flex max-w-full items-center gap-1.5 rounded-lg border border-primary/20 bg-primary/10 py-1 pl-2.5 pr-1 text-sm text-ink">
                         <span className="min-w-0 truncate">{u.label}</span>
                         <span className="shrink-0 text-[10px] uppercase tracking-wide text-primary/70">
                           {u.kind}
@@ -225,7 +227,7 @@ export function AdminMessagesComposeView() {
               ) : null}
 
               <div ref={searchWrapRef} className="relative max-w-lg">
-                <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-neutral-400">
+                <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-ink-3">
                   <Search className="h-4 w-4" aria-hidden />
                 </div>
                 <input
@@ -247,22 +249,22 @@ export function AdminMessagesComposeView() {
                   <ul
                     id="admin-message-recipient-results"
                     role="listbox"
-                    className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-md"
+                    className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-line bg-white py-1 shadow-md"
                   >
                     {searching ? (
-                      <li className="px-3 py-2.5 text-sm text-neutral-500">Searching…</li>
+                      <li className="px-3 py-2.5 text-sm text-ink-3">Searching…</li>
                     ) : hits.length === 0 ? (
-                      <li className="px-3 py-2.5 text-sm text-neutral-500">No matching users.</li>
+                      <li className="px-3 py-2.5 text-sm text-ink-3">No matching users.</li>
                     ) : (
                       hits.map((u) => (
                         <li key={`${u.kind}-${u.user_id}`} role="option">
                           <button
                             type="button"
-                            className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-neutral-50"
+                            className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-surface-3"
                             onClick={() => addUser(u)}
                           >
-                            <span className="min-w-0 flex-1 truncate text-neutral-900">{u.label}</span>
-                            <span className="shrink-0 text-xs uppercase tracking-wide text-neutral-400">
+                            <span className="min-w-0 flex-1 truncate text-ink">{u.label}</span>
+                            <span className="shrink-0 text-xs uppercase tracking-wide text-ink-3">
                               {u.kind}
                             </span>
                           </button>
@@ -275,14 +277,14 @@ export function AdminMessagesComposeView() {
             </div>
           ) : null}
         </div>
-      </section>
+      </Card>
 
-      <section className="ez-card overflow-hidden">
+      <Card as="section" className="overflow-hidden">
         <div className="px-5 py-4 sm:px-6 sm:py-5">
           <h2 className="ez-h3">Message</h2>
-          <p className="mt-0.5 text-[13px] text-neutral-400">Sent as Eventtz support.</p>
+          <p className="mt-0.5 text-[13px] text-ink-3">Sent as Eventtz support.</p>
         </div>
-        <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
+        <div className="border-t border-line px-5 py-4 sm:px-6">
           <SupportMessageComposer
             key={composerKey}
             html={draft.html}
@@ -295,7 +297,7 @@ export function AdminMessagesComposeView() {
             minHeightClass="min-h-[10rem]"
           />
         </div>
-      </section>
+      </Card>
     </div>
   );
 }

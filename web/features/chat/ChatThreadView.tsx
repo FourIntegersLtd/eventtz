@@ -253,7 +253,7 @@ export function ChatThreadView({
         isDrawer ? "h-full min-h-0 flex-1" : pageThreadShell
       }`}
     >
-      <div className="flex min-w-0 shrink-0 flex-col gap-3 border-b border-neutral-100 px-5 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-5">
+      <div className="flex min-w-0 shrink-0 flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-5">
         {backHref && !isDrawer ? (
           <BackLink
             href={backHref}
@@ -273,10 +273,10 @@ export function ChatThreadView({
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="truncate font-heading text-lg font-semibold text-neutral-900">
+            <p className="truncate font-heading text-lg font-semibold text-ink">
               {peerName}
             </p>
-            <p className="mt-0.5 text-sm leading-snug text-neutral-500">{subtitle}</p>
+            <p className="mt-0.5 text-sm leading-snug text-ink-3">{subtitle}</p>
           </div>
         </div>
 
@@ -310,12 +310,12 @@ export function ChatThreadView({
       ) : null}
 
       <div
-        className={`scroll-pane flex min-h-0 flex-1 flex-col overflow-y-auto bg-gradient-to-b from-neutral-50/80 to-white px-5 py-5 sm:px-6 sm:py-6`}
+        className={`scroll-pane flex min-h-0 flex-1 flex-col overflow-y-auto bg-gradient-to-b from-surface-3 to-white px-5 py-5 sm:px-6 sm:py-6`}
       >
         {messages.length === 0 ? (
           <div className="m-auto flex max-w-xs flex-col items-center gap-3 text-center">
             <MessageSquare className={EMPTY_STATE_ICON_CLASS} strokeWidth={1.75} aria-hidden />
-            <p className="text-sm text-neutral-500">No messages yet. Send the first one below.</p>
+            <p className="text-sm text-ink-3">No messages yet. Send the first one below.</p>
           </div>
         ) : (
           <ul className="flex flex-col gap-3.5">
@@ -345,10 +345,10 @@ export function ChatThreadView({
                         <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary/80">
                           Custom quote
                         </span>
-                        <span className="mt-0.5 block truncate text-sm font-semibold text-neutral-900">
+                        <span className="mt-0.5 block truncate text-sm font-semibold text-ink">
                           {quote.event_name}
                         </span>
-                        <span className="mt-0.5 block text-sm text-neutral-600">
+                        <span className="mt-0.5 block text-sm text-ink-2">
                           {quote.total_label} · View details
                         </span>
                       </span>
@@ -369,7 +369,7 @@ export function ChatThreadView({
                 >
                   <div className={`${chatBubbleClass(mine)} sm:max-w-[70%]`}>
                     {!mine && m.sender_display_name ? (
-                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                         {m.sender_display_name}
                       </p>
                     ) : null}
@@ -392,7 +392,7 @@ export function ChatThreadView({
         <div ref={bottomRef} />
       </div>
 
-      <div className="shrink-0 border-t border-neutral-100 bg-white px-5 py-4 sm:px-6">
+      <div className="shrink-0 border-t border-line bg-white px-5 py-4 sm:px-6">
         <MessageComposer
           value={draft}
           onChange={setDraft}

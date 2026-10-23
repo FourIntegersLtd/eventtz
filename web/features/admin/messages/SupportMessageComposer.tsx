@@ -85,7 +85,7 @@ export function SupportMessageLengthCounter({ textLength }: { textLength: number
   return (
     <span
       className={`text-xs tabular-nums ${
-        textLength > MESSAGE_MAX_LEN ? "text-red-600" : "text-neutral-400"
+        textLength > MESSAGE_MAX_LEN ? "text-red-600" : "text-ink-3"
       }`}
     >
       {textLength}/{MESSAGE_MAX_LEN}

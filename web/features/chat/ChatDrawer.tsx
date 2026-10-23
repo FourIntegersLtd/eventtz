@@ -106,7 +106,7 @@ export function ChatDrawer({
         />
       ) : (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-ink-2">
             Your first message opens a thread in Messages.
           </p>
           {error ? <LottieFailureInline message={error} /> : null}
