@@ -20,12 +20,15 @@ from app.features.staff.schemas import AdminAuditLogDetailResponse, AdminAuditLo
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+# The audit log keeps its frozen larger page cap (ADR 0011).
+AUDIT_LOG_MAX_PAGE = 500
+
 
 @router.get("/audit-log", response_model=AdminAuditLogResponse, responses=error_responses(*ROLE_ERRORS))
 async def list_audit_log(
     session: SessionDep,
     principal: CurrentStaff,
-    page: Annotated[PageParams, Depends(page_params(max_limit=500))],
+    page: Annotated[PageParams, Depends(page_params(max_limit=AUDIT_LOG_MAX_PAGE))],
     category: str = Query(
         "all",
         description="all | bookings | clients | vendors | disputes | reviews | chat | financials | team",

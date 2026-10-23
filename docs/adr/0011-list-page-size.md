@@ -16,9 +16,10 @@ Source: commit `c21acdf` (portal lists), `docs/plans/rebuild-audit-2026-10-22.md
 - **Pagination fields are additive.** A list response that now pages gains `total`, `offset` and
   `limit` next to its frozen keys. No frozen key was renamed or removed. The vendor payout history
   also gained `paid_out_last_30_days_gbp` / `_label` for the payments screen header.
-- **Kept maxima.** Three routes keep a frozen larger or smaller cap through
-  `page_params(max_limit=...)`: audit log 500, vendor reviews 100, admin referral signups
-  (`MAX_SIGNUPS_PAGE`). Everything else caps at 200.
+- **Kept maxima.** Two routes keep a frozen cap through `page_params(max_limit=...)`: audit log 500,
+  vendor reviews 100. Everything else caps at 200. Not on the kernel, by their frozen contracts: the
+  public blog list, admin insights, and the chat message pages take their own `limit` (and no `offset`
+  except insights' `category_offset`).
 - **Default changes.** The audit log and the admin reviews list defaulted to 100 rows; they now
   default to 25. The web sends an explicit `limit=100` to both, so the screens are unchanged.
 - **Served in SQL.** Vendor payout history and admin daily financials used to load every row and

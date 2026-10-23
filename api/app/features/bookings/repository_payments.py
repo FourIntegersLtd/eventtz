@@ -104,7 +104,9 @@ async def payout_ledger_sums(
                 func.coalesce(func.sum(_SNAPSHOT_AMOUNT).filter(_IS_RELEASED), 0),
                 func.coalesce(func.sum(_SNAPSHOT_AMOUNT).filter(_IS_RELEASED, since <= _PAID_OUT_AT), 0),
                 func.coalesce(func.sum(_SNAPSHOT_AMOUNT).filter(not_(_IS_RELEASED)), 0),
-                func.count().filter(not_(_IS_RELEASED)),
+                func.count().filter(
+                    not_(_IS_RELEASED), or_(_IS_SHARE, BookingRequest.vendor_amount_gbp.is_not(None))
+                ),
             ).where(ledger)
         )
     ).one()

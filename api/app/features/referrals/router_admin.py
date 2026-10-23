@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Annotated
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.pagination import PageDep, PageParams, page_params
+from app.core.pagination import PageDep
 from app.features.referrals import service_partners
 from app.features.referrals.errors import (
     DisplayNameEmpty,
@@ -32,10 +30,6 @@ from app.features.referrals.schemas import (
 )
 
 router = APIRouter(prefix="/admin/referrals", tags=["admin", "referrals"])
-
-
-# The largest sign-up page staff can ask for.
-MAX_SIGNUPS_PAGE = 200
 
 
 @router.get("/partners", response_model=ReferralPartnerListResponse, responses=error_responses(*ROLE_ERRORS))
@@ -84,7 +78,7 @@ async def list_signups(
     session: SessionDep,
     principal: CurrentStaff,
     partner_id: str,
-    page: Annotated[PageParams, Depends(page_params(max_limit=MAX_SIGNUPS_PAGE))],
+    page: PageDep,
     shoutout: ShoutoutFilter = "all",
 ) -> ReferralSignupListResponse:
     """One page of the vendors a partner brought in, newest first, optionally by shout-out state."""
