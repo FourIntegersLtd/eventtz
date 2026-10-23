@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { Bell, Calendar, Check, MessageCircle, Shield, Wallet } from "lucide-react";
+import {
+  Bell,
+  Calendar,
+  CalendarClock,
+  Check,
+  MessageCircle,
+  Shield,
+  ShieldAlert,
+  Wallet,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -23,7 +32,8 @@ import {
   fetchVendorBookingNotificationsUnreadCount,
   markAllVendorBookingNotificationsRead,
 } from "@/lib/vendorNotificationsApi";
-import { formatDate } from "@/lib/dateFormat";
+import { SkeletonListRows } from "@/components/ui/Skeleton";
+import { formatDate, formatDateTime } from "@/lib/dateFormat";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { useServerList } from "@/lib/useServerList";
 
@@ -106,6 +116,46 @@ function NotificationRow({ item }: { item: NotificationFeedItem }) {
   );
 }
 
+const CLIENT_KIND_ICON: Record<NotificationFeedItem["kind"], typeof Bell> = {
+  booking_update: CalendarClock,
+  dispute_update: ShieldAlert,
+  chat_unread_summary: MessageCircle,
+};
+
+/** One row of the client feed, with the client page's original card-list look. */
+function ClientNotificationRow({ item }: { item: NotificationFeedItem }) {
+  const Icon = CLIENT_KIND_ICON[item.kind] ?? Bell;
+  const content = (
+    <div className="flex items-start gap-3">
+      <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" strokeWidth={2} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-ink">{item.title}</p>
+        {item.body ? <p className="mt-0.5 line-clamp-2 text-sm text-ink-3">{item.body}</p> : null}
+        <p className="mt-1 text-xs text-ink-3">{formatDateTime(item.created_at)}</p>
+      </div>
+      {item.unread ? (
+        <span className="mt-1.5 h-2 w-2 flex-none rounded-full bg-primary" aria-label="Unread" />
+      ) : null}
+    </div>
+  );
+  return (
+    <li className="border-b border-line last:border-b-0">
+      {item.href ? (
+        <Link
+          href={item.href}
+          className="block min-h-11 px-4 py-3.5 transition duration-150 ease-out hover:bg-surface-3 active:bg-surface-3"
+        >
+          {content}
+        </Link>
+      ) : (
+        <div className="px-4 py-3">{content}</div>
+      )}
+    </li>
+  );
+}
+
 /**
  * Notification history for one portal, the destination behind the bell's "View all".
  * Client: opening the page marks booking notices read (the client page supplies its own header).
@@ -164,6 +214,43 @@ export function NotificationsPageView({ portal }: NotificationsPageViewProps) {
   };
 
   const error = list.error ?? markError;
+
+  if (!isVendor) {
+    return (
+      <div className="w-full min-w-0 max-w-3xl">
+        {error ? <LottieFailureInline message={error} className="mb-3" /> : null}
+        <div className="rounded-2xl border border-line bg-white">
+          {list.loading && list.items.length === 0 ? (
+            <div className="p-3">
+              <SkeletonListRows rows={5} />
+            </div>
+          ) : list.items.length === 0 ? (
+            <EmptyState className="border-0" lottie="allCaughtUp" title="You're all caught up" />
+          ) : (
+            <>
+              <ul>
+                {list.items.map((item, index) => (
+                  <ClientNotificationRow
+                    key={`${item.notification_id ?? item.booking_id ?? index}-${index}`}
+                    item={item}
+                  />
+                ))}
+              </ul>
+              <TablePagination
+                offset={list.offset}
+                limit={list.limit}
+                total={list.total}
+                pageRowCount={list.items.length}
+                loading={list.loading}
+                onPrevious={list.goPrevious}
+                onNext={list.goNext}
+              />
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="ez-stack ez-stack--lg">
