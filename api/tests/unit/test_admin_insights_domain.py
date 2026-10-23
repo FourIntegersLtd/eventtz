@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.core.time import uk_today
 from app.features.admin_insights import domain
 
 
@@ -18,7 +19,7 @@ def test_date_range_is_ascending_and_ends_today() -> None:
     """A 3-day window is three consecutive dates, the last one being today."""
     days = domain.date_range(3)
     assert len(days) == 3
-    assert days[-1] == domain.today_utc().isoformat()
+    assert days[-1] == uk_today().isoformat()
     assert days == sorted(days)
 
 

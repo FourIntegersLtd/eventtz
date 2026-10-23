@@ -7,6 +7,7 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
+from app.core.time import uk_today
 from app.features.bookings import domain_portal_dashboard as dashboard_domain
 from app.features.bookings.schemas import (
     ClientBookingListItem,
@@ -32,6 +33,7 @@ async def _notification_preview(
 
 async def client_dashboard(session: AsyncSession, client: Principal) -> ClientDashboardResponse:
     """Everything the client home screen needs without loading full booking lists in the browser."""
+    today = uk_today()
     active = await client_bookings(
         session, client.id, group="active", status=None, payment_status=None, exclude_payment_status=None
     )
@@ -44,12 +46,12 @@ async def client_dashboard(session: AsyncSession, client: Principal) -> ClientDa
     awaiting_client = sum(
         1 for booking in active if booking.booking_status == "pending" and booking.initiator == "vendor"
     )
-    upcoming_accepted = dashboard_domain.accepted_upcoming(active)
-    by_date_raw = dashboard_domain.bookings_by_date(upcoming_accepted)
+    upcoming_accepted = dashboard_domain.accepted_upcoming(active, today=today)
+    by_date_raw = dashboard_domain.bookings_by_date(upcoming_accepted, today=today)
     bookings_by_date: dict[str, list[ClientBookingListItem]] = {
         day: [booking for booking in rows] for day, rows in by_date_raw.items()
     }
-    next_booking = dashboard_domain.pick_next_upcoming(active)
+    next_booking = dashboard_domain.pick_next_upcoming(active, today=today)
     agenda = dashboard_domain.upcoming_agenda(upcoming_accepted, limit=5)
     needs_review = [booking for booking in completed if not booking.has_review]
     preview = await _notification_preview(session, client, portal="client")
@@ -69,12 +71,13 @@ async def client_dashboard(session: AsyncSession, client: Principal) -> ClientDa
 
 async def vendor_dashboard(session: AsyncSession, vendor: Principal) -> VendorDashboardResponse:
     """Everything the vendor home screen needs without loading full booking lists in the browser."""
+    today = uk_today()
     active = await vendor_bookings(
         session, vendor.id, group="active", status=None, payment_status=None, exclude_payment_status=None
     )
     pending = [booking for booking in active if booking.booking_status == "pending"]
-    upcoming_accepted = dashboard_domain.accepted_upcoming(active)
-    by_date_raw = dashboard_domain.bookings_by_date(upcoming_accepted)
+    upcoming_accepted = dashboard_domain.accepted_upcoming(active, today=today)
+    by_date_raw = dashboard_domain.bookings_by_date(upcoming_accepted, today=today)
     bookings_by_date: dict[str, list[VendorBookingListItem]] = {
         day: [booking for booking in rows] for day, rows in by_date_raw.items()
     }

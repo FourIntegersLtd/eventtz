@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, date, datetime
+from datetime import datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
 from app.core.ports import Mailer, Storage
+from app.core.time import uk_today
 from app.features.identity import service as identity
 from app.features.notifications import service as notifications
 from app.features.vendors import repository
@@ -28,14 +29,9 @@ from app.features.vendors.rows import VendorRow
 from app.features.vendors.schemas import VendorInsuranceState, VendorProfilePutBody, VendorProfileState
 
 
-def _today() -> date:
-    """The UTC date: insurance runs by whole days."""
-    return datetime.now(UTC).date()
-
-
-def insurance_state(vendor: VendorRow, *, today: date | None = None) -> VendorInsuranceState:
-    """The vendor's cover as staff see it."""
-    day = today or _today()
+def insurance_state(vendor: VendorRow, *, now: datetime | None = None) -> VendorInsuranceState:
+    """The vendor's cover as staff see it; insurance runs by whole London days (`now` is the test clock)."""
+    day = uk_today(now)
     raw_certificate = vendor.payload.get("indemnityCertNamePersisted")
     certificate_url = raw_certificate.strip() or None if isinstance(raw_certificate, str) else None
     return VendorInsuranceState(

@@ -11,11 +11,12 @@ from __future__ import annotations
 import csv
 import io
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
+from app.core.time import uk_today
 from app.features.bookings import repository_admin, service_pricing
 from app.features.bookings.domain_financials import (
     CSV_HEADER,
@@ -126,12 +127,14 @@ class _DailyPenceTotals:
     vendor_pence: int = field(default=0)
 
 
-def _daily_window(date_from: str | None, date_to: str | None) -> tuple[date, date]:
+def _daily_window(
+    date_from: str | None, date_to: str | None, now: datetime | None = None
+) -> tuple[date, date]:
     """First and last day of the daily table (default: the 30 days up to today, capped at 366 days).
 
     Mirrors the baseline's `_financials_chart_range`.
     """
-    today = datetime.now(UTC).date()
+    today = uk_today(now)
     start = date_from and date_from[:10]
     end = date_to and date_to[:10]
     # Default window is the 30 days up to today (29 days back), baseline parity.

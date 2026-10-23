@@ -14,6 +14,6 @@ def uk_date(moment: datetime) -> date:
     return moment.astimezone(HOME_TIMEZONE).date()
 
 
-def uk_today() -> date:
-    """Today's London calendar date."""
-    return uk_date(datetime.now(UTC))
+def uk_today(now: datetime | None = None) -> date:
+    """Today's London calendar date; `now` is the clock tests set (an aware instant), default the real one."""
+    return uk_date(now or datetime.now(UTC))

@@ -17,7 +17,7 @@ missing (a plan written before that field existed).
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -25,6 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
 from app.core.ports import ChatMessage, LanguageModel
+from app.core.time import uk_today
 from app.features.marketplace import service_search
 from app.features.planner import domain, repository
 from app.features.planner.errors import (
@@ -504,9 +505,12 @@ async def archive_plan(session: AsyncSession, client_user_id: str, plan_id: str)
 
 
 async def ensure_client_event_for_plan(
-    session: AsyncSession, client_user_id: str, plan_id: str
+    session: AsyncSession, client_user_id: str, plan_id: str, now: datetime | None = None
 ) -> EnsureEventResponse:
-    """Turn a plan into a real client event, reusing one already linked instead of duplicating it."""
+    """Turn a plan into a real client event, reusing one already linked instead of duplicating it.
+
+    A new event starts dated today in London (`now` is the test clock).
+    """
     plan = await repository.get_plan(session, client_user_id, plan_id)
     if plan is None:
         raise PlanNotFound
@@ -528,7 +532,7 @@ async def ensure_client_event_for_plan(
         session,
         client_user_id=client_user_id,
         title=plan.title,
-        event_date=date.today(),
+        event_date=uk_today(now),
         event_end_date=None,
         event_address=location,
         event_postcode=None,

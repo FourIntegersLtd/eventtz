@@ -11,8 +11,10 @@ live in modules outside that public surface.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
+
+from app.core.time import uk_today
 
 #: `booking_requests.payment_status` values where Eventtz has actually collected
 #: money from the client (mirrors `backend/app/features/admin/dashboard_queries.py`).
@@ -27,14 +29,9 @@ ALLOWED_METRICS_DAYS = frozenset({7, 30, 60, 90})
 SUPPORT_ATTENTION_SCAN_LIMIT = 300
 
 
-def today_utc() -> date:
-    """The current UTC calendar date, as a single seam tests can lean on if needed."""
-    return datetime.now(UTC).date()
-
-
-def date_range(days: int) -> list[str]:
-    """`days` consecutive `YYYY-MM-DD` strings, ascending, ending today (UTC inclusive)."""
-    end = today_utc()
+def date_range(days: int, now: datetime | None = None) -> list[str]:
+    """`days` consecutive `YYYY-MM-DD` strings, ascending, ending today (London, inclusive)."""
+    end = uk_today(now)
     start = end - timedelta(days=days - 1)
     out: list[str] = []
     cursor = start
@@ -111,14 +108,14 @@ def build_signup_buckets(days: list[str], rows: list[dict[str, Any]]) -> list[di
     return [{"date": day, "clients": clients[day], "vendors": vendors[day]} for day in days]
 
 
-def _event_is_over(row: dict[str, Any]) -> bool:
-    """True once the booking's last event day has finished (UTC calendar date)."""
+def _event_is_over(row: dict[str, Any], now: datetime | None = None) -> bool:
+    """True once the booking's last event day has finished (London calendar date)."""
     raw = row.get("event_end_date") or row.get("event_date")
     day = day_key(raw)
     if not day:
         return False
     try:
-        return date.fromisoformat(day) < today_utc()
+        return date.fromisoformat(day) < uk_today(now)
     except ValueError:
         return False
 

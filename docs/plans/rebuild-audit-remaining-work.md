@@ -74,12 +74,18 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Open questions and follow-ups from Phase 4
 
-- **Only the portal dashboard uses London "today" so far.** Six sites still use UTC and disagree with it between
-  00:00 and 01:00 BST: `vendors/service_moderation.py:600` (insurance expiry), `vendors/service_listing.py:39`
-  (listing visibility), `vendors/service_profile.py:33`, `bookings/service_admin_financials.py:124`,
-  `marketplace/service_analytics.py:22`, `admin_insights/domain.py:32`. Each belongs to a different owner, so
-  move them to `core.time.uk_today()` as follow-ups. The dashboard service also calls the clock once per helper;
-  compute `uk_today()` once and pass `today=` to all three, then make it required.
+- **Done (PR "UK calendar day for every business date").** Every `date.today()` / `datetime.now(UTC).date()` in
+  `api/app` now goes through `core.time.uk_today()`: the six sites above plus `bookings/schemas.py`,
+  `bookings/service_date_change.py`, `planner/service_plans.py` and `admin_insights/service.py`. The portal
+  dashboard computes `uk_today()` once and `today=` is required. Services take an optional `now` (the test clock).
+  `tests/guards/test_dates_use_uk_calendar_day.py` bans the direct forms.
+- **Still UTC, follow-ups.** (1) The guard misses `.astimezone(UTC).date()` and a clock stored in a variable:
+  `bookings/domain_cancellation.py:107` (`days_before_event`, sets the refund tier, money-owner, needs a golden check),
+  `bookings/domain_maintenance.py:141` (`tomorrow_utc`, reminder job) and `bookings/domain_policy.py:86` count UTC days.
+  (2) The admin charts label days in London but query bounds and bucketing are still UTC days
+  (`admin_insights/repository.py` `_day_bounds`, `domain.day_key`, `service_admin_financials` `paid_at[:10]`), so a
+  booking at 00:30 BST lands under the previous bar. Move bounds to London `[start, end)` instants and bucket on
+  `uk_date(timestamp)`; amounts do not change.
 
 ### Decision for you: should a client shown as "Client" be searchable by vendors?
 
