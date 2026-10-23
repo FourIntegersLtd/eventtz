@@ -278,3 +278,17 @@ For local testing without Docker:
   two-server page 1/2 comparison: identical except the two intended tiles. eslint 122 errors vs 126 on main.
   Follow-ups from review: give `useServerList` a `meta` field for the three side-channel `fetchPage` captures; render the
   client payments toolbar outside `PaymentsListSection` so a failed load can still change the filter.
+
+- **Done (PR "Rebuild audit: vendors screens on the design system and server lists").** Vendor onboarding, profile,
+  dashboard, analytics, co-pilot, vendor directory and admin vendor screens use the ui blocks and tokens (no
+  `style={{}}`, `neutral-*` or raw palette classes left, except dynamic widths and the status dot colour). `Card` now
+  forwards `data-*` and `id`. The admin vendors list is on `useServerList` (server paging, 25), with bulk selection
+  keyed to page + filters. This also fixes a main race: the old hook fired an unfiltered fetch then the filtered one
+  with no cancellation, so page 1 could show unfiltered rows. design-diff V01-V15, V28: statuses and percentages
+  identical to main (V01-V07 and V04b fail on both; V11 times out on both). Seeded two-server comparison of the admin
+  list (60 pending vendors): page 1 and 2 at 1280px identical, page 2 at 390px identical, page 1 at 390px differs only
+  because main showed the stale unfiltered rows. eslint 120 errors vs 121 on main. No api change.
+  Left: `features/settings/VendorSettingsEzView` is access-owner's; raw `ez-kpi` in `VendorAnalyticsEzView` (StatTile hint
+  is `ez-small`, the tile uses `ez-caption`); custom banners in `AdminVendorSubmissionActions` and
+  `VendorMarketplaceStatusBanner`; `AdminVendorDetailView` pagehead (truncating h1); `GrowthScoreRing` raw stroke
+  colours; unused imports in `vendorDetailsShared.tsx`; `useAdminVendors` nudge actions could share one helper.

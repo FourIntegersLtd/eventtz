@@ -81,7 +81,7 @@ export function PortfolioVideoPlayer({
   return (
     <div
       ref={wrapRef}
-      className={`group relative w-full overflow-hidden bg-neutral-950 md:inline-flex md:w-auto ${className}`.trim()}
+      className={`group relative w-full overflow-hidden bg-ink md:inline-flex md:w-auto ${className}`.trim()}
     >
       <video
         ref={videoRef}
@@ -110,7 +110,7 @@ export function PortfolioVideoPlayer({
         aria-label={onOpen ? `Open ${label} fullscreen` : playing ? `Pause ${label}` : `Play ${label}`}
       >
         {showPlayOverlay ? (
-          <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-primary shadow-sm ring-1 ring-neutral-100 transition duration-300 group-hover:scale-[1.04]">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white text-primary shadow-sm ring-1 ring-line transition duration-300 group-hover:scale-[1.04]">
             <Play className="ml-0.5 h-4 w-4 fill-current" aria-hidden />
           </span>
         ) : null}

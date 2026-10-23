@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
@@ -11,6 +12,7 @@ import {
   type AdminVendorRow,
 } from "@/lib/adminVendorsApi";
 import { formatDate } from "@/lib/dateFormat";
+import { Card } from "@/components/ui/Card";
 
 type Props = { vendor: AdminVendorRow };
 
@@ -60,30 +62,29 @@ export function VendorConsequencesSection({ vendor }: Props) {
   };
 
   return (
-    <section className="ez-card overflow-hidden">
-      <div className="ez-card__head">
+    <Card as="section" className="overflow-hidden">
+      <Card.Header>
         <div className="min-w-0">
           <h2 className="ez-h3">Cancellations and consequences</h2>
           <p className="ez-small mt-1">
             Cancellations in the last 180 days:{" "}
-            <strong className="font-semibold text-neutral-800">
+            <strong className="font-semibold text-ink">
               {vendor.vendor_cancellation_count ?? 0}
             </strong>
             {vendor.cancellation_review_flag ? (
-              <span className="ml-2 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
+              <span className="ml-2 inline-flex rounded-full bg-warning-soft px-2 py-0.5 text-[11px] font-semibold text-warning">
                 Review
               </span>
             ) : null}
             . Private to staff.
           </p>
         </div>
-      </div>
+      </Card.Header>
 
-      <div className="ez-card__body">
+      <Card.Body>
         {pausedUntil ? (
-          <div className="ez-banner ez-banner--warning mb-4">
-            <div className="ez-banner__body">
-              <p className="text-sm text-neutral-800">
+          <Banner tone="warning" className="mb-4">
+              <p className="text-sm text-ink">
                 Listing paused until{" "}
                 {formatDate(new Date(pausedUntil), "dayMonthYear")}
                 . It returns on its own after that.
@@ -102,8 +103,7 @@ export function VendorConsequencesSection({ vendor }: Props) {
               >
                 End pause early
               </Button>
-            </div>
-          </div>
+            </Banner>
         ) : null}
 
         <form
@@ -166,11 +166,11 @@ export function VendorConsequencesSection({ vendor }: Props) {
           </div>
         </form>
 
-        <p className="ez-small mt-4 max-w-xl text-neutral-500">
-          To permanently ban a vendor, use <strong className="font-medium text-neutral-700">Marketplace status</strong>{" "}
+        <p className="ez-small mt-4 max-w-xl text-ink-3">
+          To permanently ban a vendor, use <strong className="font-medium text-ink-2">Marketplace status</strong>{" "}
           above. Pauses are temporary and lift automatically.
         </p>
-      </div>
-    </section>
+      </Card.Body>
+    </Card>
   );
 }

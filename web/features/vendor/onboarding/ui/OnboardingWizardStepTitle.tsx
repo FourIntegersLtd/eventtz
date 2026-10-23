@@ -20,10 +20,10 @@ export function OnboardingWizardStepTitle({
   const lead = "lead" in copy ? copy.lead : undefined;
 
   return (
-    <header className="mb-8 space-y-2 border-b border-neutral-100 pb-6">
+    <header className="mb-8 space-y-2 border-b border-line pb-6">
       {lead ? <p className="text-base font-semibold text-primary">{lead}</p> : null}
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h2 className="font-heading text-2xl font-semibold leading-snug text-neutral-900 sm:text-3xl">
+        <h2 className="font-heading text-2xl font-semibold leading-snug text-ink sm:text-3xl">
           {copy.headline}
         </h2>
         {onOpenStepInfo ? (
@@ -35,7 +35,7 @@ export function OnboardingWizardStepTitle({
         ) : null}
       </div>
       {copy.subtext ? (
-        <p className="max-w-2xl text-sm leading-relaxed text-neutral-600">{copy.subtext}</p>
+        <p className="max-w-2xl text-sm leading-relaxed text-ink-2">{copy.subtext}</p>
       ) : null}
     </header>
   );

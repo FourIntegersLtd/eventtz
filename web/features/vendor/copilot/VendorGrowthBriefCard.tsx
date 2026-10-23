@@ -16,12 +16,12 @@ function ActionButton({ action }: { action: CopilotAction }) {
   return (
     <Link
       href={href}
-      className="flex w-full items-start gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left transition hover:border-primary/30 hover:bg-primary/[0.02]"
+      className="flex w-full items-start gap-3 rounded-xl border border-line bg-white px-4 py-3 text-left transition hover:border-primary/30 hover:bg-primary/[0.02]"
     >
       <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-neutral-900">{action.title}</p>
-        <p className="mt-0.5 text-xs leading-relaxed text-neutral-600">{action.rationale}</p>
+        <p className="text-sm font-semibold text-ink">{action.title}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-ink-2">{action.rationale}</p>
       </div>
     </Link>
   );
@@ -44,7 +44,7 @@ export function VendorGrowthBriefCard({ onOpenCopilot }: Props) {
       <div className={`${CARD_SURFACE} ${CARD_PADDING}`}>
         <div className="flex flex-col items-center py-4">
           <LottieIllustration asset="aiThinking" size="feature" ariaLabel="Loading growth brief" />
-          <p className="mt-2 text-sm text-neutral-600">Preparing your growth brief…</p>
+          <p className="mt-2 text-sm text-ink-2">Preparing your growth brief…</p>
         </div>
       </div>
     );
@@ -53,7 +53,7 @@ export function VendorGrowthBriefCard({ onOpenCopilot }: Props) {
   if (error || !brief) {
     return (
       <div className={`${CARD_SURFACE} ${CARD_PADDING}`}>
-        <p className="text-sm text-neutral-600">
+        <p className="text-sm text-ink-2">
           {error ?? "Growth brief unavailable."}
         </p>
       </div>
@@ -72,12 +72,12 @@ export function VendorGrowthBriefCard({ onOpenCopilot }: Props) {
               ) : (
                 <TrendingUp className="h-4 w-4 text-primary" aria-hidden />
               )}
-              <p className="text-sm font-semibold text-neutral-900">Today&apos;s focus</p>
+              <p className="text-sm font-semibold text-ink">Today&apos;s focus</p>
               {revalidating ? (
-                <span className="text-xs font-medium text-neutral-500">Updating…</span>
+                <span className="text-xs font-medium text-ink-3">Updating…</span>
               ) : null}
             </div>
-            <p className="mt-1 text-sm text-neutral-700">{brief.greeting}</p>
+            <p className="mt-1 text-sm text-ink-2">{brief.greeting}</p>
             {onOpenCopilot ? (
               <button
                 type="button"
@@ -93,13 +93,13 @@ export function VendorGrowthBriefCard({ onOpenCopilot }: Props) {
 
       <div className="space-y-4 px-5 py-4 sm:px-6">
         <div
-          className={`text-sm leading-relaxed text-neutral-700 ${helpMarkdownProseClassName}`}
+          className={`text-sm leading-relaxed text-ink-2 ${helpMarkdownProseClassName}`}
           dangerouslySetInnerHTML={{ __html: summaryHtml }}
         />
 
         {brief.suggested_actions.length > 0 ? (
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">
               Suggested actions
             </p>
             {brief.suggested_actions.map((action, i) => (
@@ -109,14 +109,14 @@ export function VendorGrowthBriefCard({ onOpenCopilot }: Props) {
         ) : null}
 
         {brief.demand_insights.length > 0 ? (
-          <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+          <div className="rounded-xl border border-line bg-surface-3 px-4 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">
               Market insight
             </p>
             {brief.demand_insights.slice(0, 1).map((insight, i) => (
               <div key={i} className="mt-2">
-                <p className="text-sm font-semibold text-neutral-900">{insight.headline}</p>
-                <p className="mt-1 text-xs leading-relaxed text-neutral-600">{insight.detail}</p>
+                <p className="text-sm font-semibold text-ink">{insight.headline}</p>
+                <p className="mt-1 text-xs leading-relaxed text-ink-2">{insight.detail}</p>
               </div>
             ))}
           </div>

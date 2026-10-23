@@ -12,6 +12,8 @@ import {
 import { uploadedFileDisplayName } from "../../../../lib/vendorOnboarding/uploadedFileDisplayName";
 import { Checkbox } from "../../../../components/ui/Checkbox";
 import { TextField } from "../../../../components/ui/TextField";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 
 export type StepAdditionalInfoProps = {
   data: VendorOnboardingData;
@@ -81,25 +83,26 @@ function DocumentRow({
           event.target.value = "";
         }}
       />
-      {hasUpload ? <span className="ez-badge ez-badge--success">Uploaded</span> : null}
-      <button
-        className={`ez-btn ${hasUpload ? "ez-btn--ghost" : "ez-btn--secondary"} ez-btn--sm`}
+      {hasUpload ? <Badge tone="success">Uploaded</Badge> : null}
+      <Button
+        variant={hasUpload ? "ghost" : "secondary"}
+        size="sm"
         type="button"
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
       >
         {hasUpload ? null : <Upload size={18} strokeWidth={1.75} aria-hidden />}
         {uploading ? "Uploading…" : hasUpload ? "Replace" : "Upload document"}
-      </button>
+      </Button>
       {hasUpload && onRemove ? (
-        <button
-          className="ez-btn ez-btn--ghost ez-btn--sm"
+        <Button
+          variant="ghost"
+          size="sm"
           type="button"
           data-design-extra="doc-remove"
-          onClick={onRemove}
-        >
+          onClick={onRemove}>
           Remove
-        </button>
+        </Button>
       ) : null}
     </div>
   );
@@ -180,17 +183,17 @@ export function StepAdditionalInfo({
         </div>
         {nextExtraPlatform ? (
           <div>
-            <button
-              className="ez-btn ez-btn--ghost ez-btn--sm"
+            <Button
+              variant="ghost"
+              size="sm"
               type="button"
               onClick={() =>
                 update({
                   socialLinks: [...data.socialLinks, createVendorSocialLink(nextExtraPlatform)],
                 })
-              }
-            >
+              }>
               Add {labelFor(nextExtraPlatform)}
-            </button>
+            </Button>
           </div>
         ) : null}
       </div>
@@ -279,14 +282,14 @@ export function StepAdditionalInfo({
                 {uploadedFileDisplayName(url, data.uploadedFileLabels, "Document")}
               </span>
             </div>
-            <span className="ez-badge ez-badge--success">Uploaded</span>
-            <button
-              className="ez-btn ez-btn--ghost ez-btn--sm"
+            <Badge tone="success">Uploaded</Badge>
+            <Button
+              variant="ghost"
+              size="sm"
               type="button"
-              onClick={() => onRemoveOtherDoc(url)}
-            >
+              onClick={() => onRemoveOtherDoc(url)}>
               Remove
-            </button>
+            </Button>
           </div>
         ))}
       </div>

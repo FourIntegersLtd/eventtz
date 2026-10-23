@@ -70,7 +70,7 @@ function ReviewSection({
   const editButton = readOnly ? null : (
     <button
       type="button"
-      className="shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-50 hover:text-neutral-800"
+      className="shrink-0 inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink-3 transition hover:bg-surface-3 hover:text-ink"
       onClick={() => onNavigateToStep(step)}
       aria-label={`Edit ${title}`}
     >
@@ -81,8 +81,8 @@ function ReviewSection({
   if (readOnly) {
     return (
       <section className="space-y-2">
-        <h3 className="text-sm font-semibold text-neutral-900">{title}</h3>
-        <div className="overflow-hidden rounded-xl border border-neutral-100 bg-white">
+        <h3 className="text-sm font-semibold text-ink">{title}</h3>
+        <div className="overflow-hidden rounded-xl border border-line bg-white">
           {children}
         </div>
       </section>
@@ -91,25 +91,25 @@ function ReviewSection({
 
   if (isLiveEdit) {
     return (
-      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <section className="overflow-hidden rounded-2xl border border-line bg-white">
         <div className="flex items-center justify-between gap-3 px-5 py-4 sm:px-6 sm:py-5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+          <h2 className="text-[15px] font-semibold tracking-tight text-ink">
             {title}
           </h2>
           {editButton}
         </div>
-        <div className="border-t border-neutral-100">{children}</div>
+        <div className="border-t border-line">{children}</div>
       </section>
     );
   }
 
   return (
-    <section className="overflow-hidden rounded-xl border border-neutral-100">
+    <section className="overflow-hidden rounded-xl border border-line">
       <div className="flex items-center justify-between gap-3 px-4 py-3.5">
-        <h3 className="text-sm font-medium text-neutral-900">{title}</h3>
+        <h3 className="text-sm font-medium text-ink">{title}</h3>
         {editButton}
       </div>
-      <div className="border-t border-neutral-100">{children}</div>
+      <div className="border-t border-line">{children}</div>
     </section>
   );
 }
@@ -125,8 +125,8 @@ function FieldList({
     <dl
       className={
         compact
-          ? "divide-y divide-neutral-100 [&_[data-review-field]]:px-4 [&_[data-review-field]]:py-3"
-          : "divide-y divide-neutral-100"
+          ? "divide-y divide-line [&_[data-review-field]]:px-4 [&_[data-review-field]]:py-3"
+          : "divide-y divide-line"
       }
     >
       {children}
@@ -195,10 +195,10 @@ export function StepReview({
 
   const bioBlock = readOnly ? (
     <div className="space-y-3">
-      <p className="min-h-[60px] whitespace-pre-wrap text-sm leading-relaxed text-neutral-800">
+      <p className="min-h-[60px] whitespace-pre-wrap text-sm leading-relaxed text-ink">
         {data.aiBioDraft.trim() || "-"}
       </p>
-      <p className="text-right text-xs text-neutral-400">
+      <p className="text-right text-xs text-ink-3">
         {wordCount}/{BIO_MAX_WORDS} words
       </p>
     </div>
@@ -213,7 +213,7 @@ export function StepReview({
         onClear={() => update({ aiBioDraft: "" })}
       />
       <p
-        className={`text-right text-xs ${overLimit ? "text-red-600" : "text-neutral-400"}`}
+        className={`text-right text-xs ${overLimit ? "text-danger" : "text-ink-3"}`}
       >
         {wordCount}/{BIO_MAX_WORDS} words
       </p>
@@ -322,37 +322,37 @@ export function StepReview({
             </>
           ) : null}
         </FieldList>
-        <div className="border-t border-neutral-100">
-          <p className="px-5 pt-4 text-[13px] font-medium text-neutral-500 sm:px-6">
+        <div className="border-t border-line">
+          <p className="px-5 pt-4 text-[13px] font-medium text-ink-3 sm:px-6">
             Packages
           </p>
           {readOnly || hasPackages ? (
             configuredPackages.length > 0 ? (
-            <ul className="divide-y divide-neutral-100">
+            <ul className="divide-y divide-line">
               {configuredPackages.map((p) => {
                 const priceLabel = formatReviewPackagePrice(p);
                 const quantityBounds = formatReviewPackageQuantityBounds(p);
                 return (
                 <li
                   key={p.id}
-                  className="px-5 py-3.5 text-sm text-neutral-700 sm:px-6"
+                  className="px-5 py-3.5 text-sm text-ink-2 sm:px-6"
                 >
-                  <span className="font-medium text-neutral-900">
+                  <span className="font-medium text-ink">
                     {p.title.trim() || "Untitled package"}
                   </span>
                   {priceLabel ? (
-                    <span className="text-neutral-600"> - {priceLabel}</span>
+                    <span className="text-ink-2"> - {priceLabel}</span>
                   ) : null}
                   {quantityBounds ? (
-                    <span className="text-neutral-500"> · {quantityBounds}</span>
+                    <span className="text-ink-3"> · {quantityBounds}</span>
                   ) : null}
                   {p.duration.trim() ? (
-                    <span className="text-neutral-500"> · {p.duration}</span>
+                    <span className="text-ink-3"> · {p.duration}</span>
                   ) : null}
                   {p.details.trim() ? (
-                    <p className="mt-0.5 text-xs text-neutral-500">{p.details}</p>
+                    <p className="mt-0.5 text-xs text-ink-3">{p.details}</p>
                   ) : null}
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <p className="mt-1 text-xs text-ink-3">
                     Travel:{" "}
                     {packageTravelPolicyLabel(
                       data,
@@ -364,19 +364,19 @@ export function StepReview({
               })}
             </ul>
             ) : (
-              <p className="px-5 py-3.5 text-sm text-neutral-500 sm:px-6">
+              <p className="px-5 py-3.5 text-sm text-ink-3 sm:px-6">
                 No packages added
               </p>
             )
           ) : (
-            <p className="px-5 py-3.5 text-sm text-neutral-500 sm:px-6">
+            <p className="px-5 py-3.5 text-sm text-ink-3 sm:px-6">
               No packages added
             </p>
           )}
         </div>
         {(readOnly && data.offerDiscounts) || (!readOnly && data.offerDiscounts) ? (
-          <div className="space-y-1 border-t border-neutral-100 px-5 py-3.5 text-sm text-neutral-700 sm:px-6">
-            <p className="font-medium text-neutral-900">Discounts</p>
+          <div className="space-y-1 border-t border-line px-5 py-3.5 text-sm text-ink-2 sm:px-6">
+            <p className="font-medium text-ink">Discounts</p>
             {discountLines.map((line) => (
               <p key={line}>{line}</p>
             ))}
@@ -462,7 +462,7 @@ export function StepReview({
             ) : null}
           </FieldList>
           {persistedPortfolioUrls.length > 0 ? (
-            <div className="border-t border-neutral-100 px-5 py-4 sm:px-6">
+            <div className="border-t border-line px-5 py-4 sm:px-6">
               <VendorPortfolioThumbGrid urls={persistedPortfolioUrls} />
             </div>
           ) : null}
@@ -610,7 +610,7 @@ export function StepReview({
         {profilePhotoBlock}
         <div>
           <label className="ez-label">Public bio</label>
-          <p className="mb-2 text-xs text-neutral-500">
+          <p className="mb-2 text-xs text-ink-3">
             Short bio for your public profile.
           </p>
           {bioBlock}
@@ -625,45 +625,45 @@ export function StepReview({
     return (
       <div className="space-y-6">
         <header>
-          <h2 className="font-heading text-xl font-semibold tracking-tight text-neutral-900">
+          <h2 className="font-heading text-xl font-semibold tracking-tight text-ink">
             Review
           </h2>
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="mt-1 text-sm text-ink-3">
             Check your listing, then edit a section or save.
           </p>
         </header>
 
-        <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <section className="overflow-hidden rounded-2xl border border-line bg-white">
           <div className="px-5 py-4 sm:px-6 sm:py-5">
-            <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+            <h2 className="text-[15px] font-semibold tracking-tight text-ink">
               Profile photo
             </h2>
-            <p className="mt-0.5 text-[13px] text-neutral-400">
+            <p className="mt-0.5 text-[13px] text-ink-3">
               Shown first on your public profile.
             </p>
           </div>
-          <div className="border-t border-neutral-100 px-5 py-6 sm:px-6">
+          <div className="border-t border-line px-5 py-6 sm:px-6">
             {profilePhotoBlock}
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <section className="overflow-hidden rounded-2xl border border-line bg-white">
           <div className="px-5 py-4 sm:px-6 sm:py-5">
-            <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+            <h2 className="text-[15px] font-semibold tracking-tight text-ink">
               Public bio
             </h2>
-            <p className="mt-0.5 text-[13px] text-neutral-400">
+            <p className="mt-0.5 text-[13px] text-ink-3">
               Short bio for your public profile.
             </p>
           </div>
-          <div className="border-t border-neutral-100 px-5 py-5 sm:px-6">
+          <div className="border-t border-line px-5 py-5 sm:px-6">
             {bioBlock}
           </div>
         </section>
 
         {reviewSections}
 
-        <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-5 sm:px-6">
+        <section className="overflow-hidden rounded-2xl border border-line bg-white px-5 py-5 sm:px-6">
           {confirmations}
         </section>
       </div>
@@ -678,7 +678,7 @@ export function StepReview({
         {profilePhotoBlock}
         <div>
           <label className="ez-label">Public bio</label>
-          <p className="mb-2 text-xs text-neutral-500">Short bio for your public profile.</p>
+          <p className="mb-2 text-xs text-ink-3">Short bio for your public profile.</p>
           {bioBlock}
         </div>
       </div>

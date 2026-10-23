@@ -30,6 +30,11 @@ import { displayServicesOffered } from "@/lib/vendorBrowseLabels";
 import { isConfiguredPackage } from "@/lib/vendorOnboarding/packageQuality";
 import { isPerUnitPricing } from "@/lib/packagePricing";
 import { formatGbp } from "@/lib/money";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Card } from "@/components/ui/Card";
+import { Banner } from "@/components/ui/Banner";
 
 const INLINE_ICON = { display: "inline", verticalAlign: "baseline" } as const;
 
@@ -95,26 +100,25 @@ export function VendorProfileEditorView({
           title="Your profile"
           description="Edit one section, then save."
           actions={
-            <Link className="ez-btn ez-btn--ghost" href="/vendor/profile">
+            <ButtonLink variant="ghost" href="/vendor/profile">
               Back to overview
-            </Link>
+            </ButtonLink>
           }
         />
-        <div className="ez-card">
-          <div className="ez-card__body vendor-setup">{sectionEditor}</div>
-          <div className="ez-card__foot">
-            <Link
-              className="ez-btn ez-btn--ghost"
-              href={previousSection ? profileSectionHref(previousSection.slug) : "/vendor/profile"}
-              style={{ marginRight: "auto" }}
-            >
+        <Card>
+          <Card.Body className="vendor-setup">{sectionEditor}</Card.Body>
+          <Card.Footer>
+            <ButtonLink
+              variant="ghost"
+              className="mr-auto"
+              href={previousSection ? profileSectionHref(previousSection.slug) : "/vendor/profile"}>
               Back
-            </Link>
-            <button className="ez-btn ez-btn--primary" type="button" disabled={saving} onClick={onSave}>
+            </ButtonLink>
+            <Button type="button" disabled={saving} onClick={onSave}>
               {saving ? "Saving…" : "Save changes"}
-            </button>
-          </div>
-        </div>
+            </Button>
+          </Card.Footer>
+        </Card>
       </div>
     );
   }
@@ -127,35 +131,32 @@ export function VendorProfileEditorView({
         description="This is what clients see on Eventtz."
         actions={
           <>
-            <Link className="ez-btn ez-btn--secondary" href={publicHref} target="_blank" rel="noreferrer">
+            <ButtonLink variant="secondary" href={publicHref} target="_blank" rel="noreferrer">
               <Eye size={18} strokeWidth={1.75} aria-hidden style={INLINE_ICON} />
               View public page
-            </Link>
-            <button className="ez-btn ez-btn--primary" type="button" disabled={saving} onClick={onSave}>
+            </ButtonLink>
+            <Button type="button" disabled={saving} onClick={onSave}>
               {saving ? "Saving…" : "Save changes"}
-            </button>
+            </Button>
           </>
         }
       />
 
-      <div className="ez-banner ez-banner--success">
-        <CircleCheck size={20} strokeWidth={1.75} aria-hidden />
-        <div className="ez-banner__body">
-          <div className="ez-banner__title">Your profile is live</div>
-          <p className="ez-small" style={{ color: "inherit" }}>
-            {listingVisible
-              ? "Clients can find you in search. Edits to prices or photos may be reviewed before they show."
-              : "Complete payout setup or listing requirements to appear in search."}
-          </p>
-        </div>
-        {listingVisible ? null : (
-          <div className="ez-banner__actions">
-            <Link className="ez-btn ez-btn--primary" href="/vendor/payments?tab=account">
-              Set up payouts
-            </Link>
-          </div>
-        )}
-      </div>
+      <Banner
+        tone="success"
+        icon={<CircleCheck size={20} strokeWidth={1.75} aria-hidden />}
+        title="Your profile is live"
+        action={
+          listingVisible ? null : (
+            <ButtonLink href="/vendor/payments?tab=account">Set up payouts</ButtonLink>
+          )
+        }>
+        <p className="ez-small text-inherit">
+          {listingVisible
+            ? "Clients can find you in search. Edits to prices or photos may be reviewed before they show."
+            : "Complete payout setup or listing requirements to appear in search."}
+        </p>
+      </Banner>
 
       <div className="ez-tabs" role="tablist">
         <Link
@@ -177,12 +178,12 @@ export function VendorProfileEditorView({
       ) : (
         <div className="ez-split">
           <div className="ez-split__main ez-stack ez-stack--lg">
-            <div className="ez-card">
-              <div className="ez-card__head">
+            <Card>
+              <Card.Header>
                 <span className="ez-h3">Profile sections</span>
-                <span className="ez-badge ez-badge--success">{completion}% complete</span>
-              </div>
-              <div className="ez-card__body">
+                <Badge tone="success">{completion}% complete</Badge>
+              </Card.Header>
+              <Card.Body>
                 {hubRows.map((row) => (
                   <div className="ez-list-row" key={row.slug}>
                     <span className="ez-icon-tile">{SECTION_ICONS[row.step]}</span>
@@ -191,23 +192,23 @@ export function VendorProfileEditorView({
                       <span className="ez-small">{row.summary}</span>
                     </div>
                     <span className={row.badge.className}>{row.badge.label}</span>
-                    <Link
-                      className="ez-btn ez-btn--secondary ez-btn--sm"
-                      href={profileSectionHref(row.slug)}
-                    >
+                    <ButtonLink
+                      variant="secondary"
+                      size="sm"
+                      href={profileSectionHref(row.slug)}>
                       <Pencil size={16} strokeWidth={1.75} aria-hidden style={INLINE_ICON} />
                       Edit
-                    </Link>
+                    </ButtonLink>
                   </div>
                 ))}
-              </div>
-            </div>
+              </Card.Body>
+            </Card>
 
-            <div className="ez-card">
-              <div className="ez-card__head">
+            <Card>
+              <Card.Header>
                 <span className="ez-h3">Quick edit: about your business</span>
-              </div>
-              <div className="ez-card__body">
+              </Card.Header>
+              <Card.Body>
                 <div className="ez-field">
                   <label className="ez-label" htmlFor="vendor-profile-bio">Description</label>
                   <textarea
@@ -219,28 +220,28 @@ export function VendorProfileEditorView({
                   />
                   <span className="ez-help">{data.aiBioDraft.length} of 600 characters</span>
                 </div>
-              </div>
-              <div className="ez-card__foot">
-                <button className="ez-btn ez-btn--primary" type="button" disabled={saving} onClick={onSave}>
+              </Card.Body>
+              <Card.Footer>
+                <Button type="button" disabled={saving} onClick={onSave}>
                   {saving ? "Saving…" : "Save description"}
-                </button>
-              </div>
-            </div>
+                </Button>
+              </Card.Footer>
+            </Card>
           </div>
 
           <div className="ez-split__aside ez-stack ez-stack--lg">
-            <div className="ez-card">
-              <div className="ez-card__head">
+            <Card>
+              <Card.Header>
                 <span className="ez-h3">How clients see you</span>
-              </div>
-              <div className="ez-card__body">
+              </Card.Header>
+              <Card.Body>
                 <div className="ez-vcard">
                   <div className="ez-vcard__media">
                     {data.profileImageUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element -- vendor-uploaded URL
-                      <img src={data.profileImageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <img src={data.profileImageUrl} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="ez-media-ph" style={{ height: "100%" }}>
+                      <div className="ez-media-ph h-full">
                         <Image size={40} strokeWidth={1.75} aria-hidden />
                       </div>
                     )}
@@ -264,8 +265,8 @@ export function VendorProfileEditorView({
                     </div>
                   ) : null}
                 </div>
-              </div>
-            </div>
+              </Card.Body>
+            </Card>
           </div>
         </div>
       )}

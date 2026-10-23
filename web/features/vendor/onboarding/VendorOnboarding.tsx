@@ -183,7 +183,7 @@ export function VendorOnboarding() {
 
   if (loadStatus === "error") {
     return (
-      <div className={`mx-auto w-full max-w-3xl ${CARD_SURFACE} p-5 text-center text-sm text-red-800 ring-red-200/50`}>
+      <div className={`mx-auto w-full max-w-3xl ${CARD_SURFACE} p-5 text-center text-sm text-danger ring-danger-line/50`}>
         We couldn&apos;t load your saved profile. Refresh the page or try again in a few minutes.
       </div>
     );
@@ -191,11 +191,11 @@ export function VendorOnboarding() {
 
   if (accessDenied) {
     return (
-      <div className="mx-auto w-full max-w-3xl space-y-4 rounded-2xl bg-amber-50 p-6 text-sm text-amber-950 shadow-sm ring-1 ring-amber-200/50">
-        <p className="font-heading text-lg font-semibold text-amber-950">
+      <div className="mx-auto w-full max-w-3xl space-y-4 rounded-2xl bg-warning-soft p-6 text-sm text-warning shadow-sm ring-1 ring-warning-line/50">
+        <p className="font-heading text-lg font-semibold text-warning">
           We couldn&apos;t open your vendor profile
         </p>
-        <p className="leading-relaxed text-amber-900/95">{accessDeniedMessage}</p>
+        <p className="leading-relaxed text-warning/95">{accessDeniedMessage}</p>
         <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
           <button
             type="button"
@@ -211,7 +211,7 @@ export function VendorOnboarding() {
           </button>
           <Link
             href="/register?type=vendor"
-            className="inline-flex items-center justify-center rounded-lg border border-amber-300 bg-white px-4 py-2.5 text-sm font-medium text-amber-950 hover:bg-amber-100/80"
+            className="inline-flex items-center justify-center rounded-lg border border-warning-line bg-white px-4 py-2.5 text-sm font-medium text-warning hover:bg-warning-soft/80"
           >
             Create a vendor account
           </Link>
@@ -239,11 +239,11 @@ export function VendorOnboarding() {
 
   return (
     <div
-      className={`w-full ${isLiveEdit ? "text-neutral-900 max-w-6xl" : ""}`}
+      className={`w-full ${isLiveEdit ? "text-ink max-w-6xl" : ""}`}
     >
       {isWalkthrough && (
-        <div className="mb-6 rounded-2xl bg-primary/5 p-4 text-sm text-neutral-800 shadow-sm ring-1 ring-primary/15">
-          <strong className="font-semibold text-neutral-900">Preview mode</strong>
+        <div className="mb-6 rounded-2xl bg-primary/5 p-4 text-sm text-ink shadow-sm ring-1 ring-primary/15">
+          <strong className="font-semibold text-ink">Preview mode</strong>
           {" - "}
           Changes save, but your profile won&apos;t be resubmitted.{" "}
           <Link
@@ -255,7 +255,7 @@ export function VendorOnboarding() {
         </div>
       )}
       {lockedPendingReview && step !== ONBOARDING_STEP.submitted && (
-        <div className="mb-8 rounded-2xl bg-amber-50 p-5 text-sm text-amber-950 shadow-sm ring-1 ring-amber-200/50">
+        <div className="mb-8 rounded-2xl bg-warning-soft p-5 text-sm text-warning shadow-sm ring-1 ring-warning-line/50">
           <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
             <LottieIllustration asset="pendingReview" size="status" className="shrink-0" />
             <div className="min-w-0">
@@ -291,7 +291,7 @@ export function VendorOnboarding() {
         }
       >
         {formError ? (
-          <p className="whitespace-pre-line text-sm text-neutral-700">{formError}</p>
+          <p className="whitespace-pre-line text-sm text-ink-2">{formError}</p>
         ) : null}
       </Modal>
 

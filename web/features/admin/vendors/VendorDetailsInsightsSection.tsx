@@ -53,10 +53,10 @@ function MetricRow({
   return (
     <div className="flex items-start justify-between gap-4 py-4 first:pt-0 last:pb-0">
       <div className="min-w-0">
-        <p className="text-[13px] text-neutral-500">{label}</p>
-        {sub ? <div className="mt-1.5 text-xs leading-relaxed text-neutral-500">{sub}</div> : null}
+        <p className="text-[13px] text-ink-3">{label}</p>
+        {sub ? <div className="mt-1.5 text-xs leading-relaxed text-ink-3">{sub}</div> : null}
       </div>
-      <div className="shrink-0 text-right text-sm font-semibold tabular-nums text-neutral-900">
+      <div className="shrink-0 text-right text-sm font-semibold tabular-nums text-ink">
         {value}
       </div>
     </div>
@@ -84,7 +84,7 @@ export function VendorDetailsInsightsSection({
     return insightsError ? (
       <VendorPanelSection title="Insights" description="Marketplace activity and reputation">
         <VendorPanelCard>
-          <p className="text-sm text-amber-900">{insightsError}</p>
+          <p className="text-sm text-warning">{insightsError}</p>
         </VendorPanelCard>
       </VendorPanelSection>
     ) : null;
@@ -95,7 +95,7 @@ export function VendorDetailsInsightsSection({
       {insightsError ? (
         <VendorPanelSection title="Notice" description="Some stats may be incomplete">
           <VendorPanelCard>
-            <p className="text-sm text-amber-900">{insightsError}</p>
+            <p className="text-sm text-warning">{insightsError}</p>
           </VendorPanelCard>
         </VendorPanelSection>
       ) : null}
@@ -107,7 +107,7 @@ export function VendorDetailsInsightsSection({
             description="Ratings, bookings, and onboarding progress"
           >
             <VendorPanelCard>
-              <div className="divide-y divide-neutral-100">
+              <div className="divide-y divide-line">
                 <MetricRow
                   label="Avg. rating"
                   value={

@@ -32,14 +32,14 @@ export function OnboardingQuestionLayout({
       ) : null}
       {headline ? (
         <AnimatedStepItem index={idx++}>
-          <h2 className="font-heading text-2xl font-semibold leading-snug text-neutral-900 sm:text-[1.625rem]">
+          <h2 className="font-heading text-2xl font-semibold leading-snug text-ink sm:text-[1.625rem]">
             {headline}
           </h2>
         </AnimatedStepItem>
       ) : null}
       {subtext ? (
         <AnimatedStepItem index={idx++}>
-          <p className="text-sm leading-relaxed text-neutral-600">{subtext}</p>
+          <p className="text-sm leading-relaxed text-ink-2">{subtext}</p>
         </AnimatedStepItem>
       ) : null}
       {children ? (
@@ -47,7 +47,7 @@ export function OnboardingQuestionLayout({
       ) : null}
       {supporting ? (
         <AnimatedStepItem index={idx++}>
-          <p className="text-xs leading-relaxed text-neutral-500">{supporting}</p>
+          <p className="text-xs leading-relaxed text-ink-3">{supporting}</p>
         </AnimatedStepItem>
       ) : null}
     </div>
@@ -69,11 +69,11 @@ export function OnboardingSubQuestion({
   return (
     <div className="space-y-4">
       <AnimatedStepItem index={indexOffset}>
-        <h3 className="font-heading text-lg font-semibold text-neutral-900">{headline}</h3>
+        <h3 className="font-heading text-lg font-semibold text-ink">{headline}</h3>
       </AnimatedStepItem>
       {subtext ? (
         <AnimatedStepItem index={indexOffset + 1}>
-          <p className="text-sm text-neutral-600">{subtext}</p>
+          <p className="text-sm text-ink-2">{subtext}</p>
         </AnimatedStepItem>
       ) : null}
       <AnimatedStepItem index={indexOffset + (subtext ? 2 : 1)}>{children}</AnimatedStepItem>

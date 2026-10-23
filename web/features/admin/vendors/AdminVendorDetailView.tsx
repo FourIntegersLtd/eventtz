@@ -96,7 +96,7 @@ export function AdminVendorDetailView({ userId }: { userId: string }) {
       {backLink}
       {error ? <AdminErrorBanner message={error} /> : null}
 
-      <div className="ez-pagehead" style={{ marginBottom: 0 }}>
+      <div className="ez-pagehead mb-0">
         <div className="ez-pagehead__text">
           <h1 className="ez-h1 truncate">{businessName}</h1>
           {vendor.email ? <p className="ez-small truncate">{vendor.email}</p> : null}

@@ -25,7 +25,7 @@ function PricingOptionDetails({ description }: { description: string }) {
   if (!description) return null;
 
   return (
-    <p className="text-[13px] leading-relaxed text-neutral-600">{description}</p>
+    <p className="text-[13px] leading-relaxed text-ink-2">{description}</p>
   );
 }
 
@@ -62,20 +62,20 @@ export function BrowsePricingOptionCard({
           type="checkbox"
           checked={selected}
           onChange={onToggleSelect}
-          className="mt-1 h-4 w-4 shrink-0 rounded border-neutral-300 text-primary focus:ring-primary/30"
+          className="mt-1 h-4 w-4 shrink-0 rounded border-line-strong text-primary focus:ring-primary/30"
           aria-label={`Include ${opt.heading}`}
         />
       ) : null}
       <div className="min-w-0 flex-1 space-y-2.5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-          <p className="min-w-0 flex-1 text-sm font-semibold leading-snug text-neutral-900">
+          <p className="min-w-0 flex-1 text-sm font-semibold leading-snug text-ink">
             {opt.heading}
           </p>
-          <p className="shrink-0 text-left text-sm font-semibold tabular-nums text-neutral-900 sm:text-right">
+          <p className="shrink-0 text-left text-sm font-semibold tabular-nums text-ink sm:text-right">
             {opt.priceDisplay != null ? (
               <span className="inline-flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 sm:justify-end">
                 {opt.compareAtDisplay ? (
-                  <span className="text-xs font-normal text-neutral-400 line-through">
+                  <span className="text-xs font-normal text-ink-3 line-through">
                     £{opt.compareAtDisplay}
                     {opt.priceSuffix ? ` ${opt.priceSuffix}` : ""}
                   </span>
@@ -83,14 +83,14 @@ export function BrowsePricingOptionCard({
                 <span>
                   £{opt.priceDisplay}
                   {opt.priceSuffix ? (
-                    <span className="ml-1 text-xs font-medium text-neutral-500">
+                    <span className="ml-1 text-xs font-medium text-ink-3">
                       {opt.priceSuffix}
                     </span>
                   ) : null}
                 </span>
               </span>
             ) : (
-              <span className="font-medium text-neutral-500">Quote</span>
+              <span className="font-medium text-ink-3">Quote</span>
             )}
           </p>
         </div>
@@ -105,11 +105,11 @@ export function BrowsePricingOptionCard({
               aria-label={`Quantity for ${opt.heading}`}
             />
             {quantity > 0 && lineTotal != null ? (
-              <p className="text-xs tabular-nums text-neutral-600">
+              <p className="text-xs tabular-nums text-ink-2">
                 {quantity} × £{opt.priceDisplay} = {formatGbp(lineTotal)}
               </p>
             ) : (
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs text-ink-3">
                 {opt.minQuantity > 1 ? `Min ${opt.minQuantity}` : "Choose a quantity"}
               </p>
             )}
@@ -118,28 +118,28 @@ export function BrowsePricingOptionCard({
 
         {opt.discountBadge ? (
           <p>
-            <span className="inline-flex rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800 ring-1 ring-inset ring-emerald-200/70">
+            <span className="inline-flex rounded-full bg-success-soft px-2.5 py-0.5 text-[11px] font-semibold text-success ring-1 ring-inset ring-success-line/70">
               {opt.discountBadge}
             </span>
           </p>
         ) : null}
 
         {opt.timelineLine ? (
-          <p className="flex items-center gap-1.5 text-xs text-neutral-500">
-            <Clock className="h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+          <p className="flex items-center gap-1.5 text-xs text-ink-3">
+            <Clock className="h-3.5 w-3.5 shrink-0 text-ink-3" aria-hidden />
             {opt.timelineLine}
           </p>
         ) : null}
 
         {packageTravelLine ? (
-          <p className="flex items-start gap-1.5 text-xs leading-snug text-neutral-600">
-            <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-neutral-400" aria-hidden />
+          <p className="flex items-start gap-1.5 text-xs leading-snug text-ink-2">
+            <Truck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ink-3" aria-hidden />
             {packageTravelLine}
           </p>
         ) : null}
 
         {showPromoLines ? (
-          <ul className="space-y-1 text-xs text-neutral-600">
+          <ul className="space-y-1 text-xs text-ink-2">
             {opt.promoLines.map((line) => (
               <li key={line}>{line}</li>
             ))}
@@ -173,7 +173,7 @@ export function BrowsePricingOptionCard({
                   <div className="mt-2.5 space-y-2">
                     <PricingOptionDetails description={description} />
                     {showFeatureLines ? (
-                      <ul className="space-y-1 text-[13px] text-neutral-600">
+                      <ul className="space-y-1 text-[13px] text-ink-2">
                         {opt.featureLines.map((line) => (
                           <li key={line}>{line}</li>
                         ))}

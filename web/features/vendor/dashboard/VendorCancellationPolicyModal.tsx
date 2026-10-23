@@ -90,7 +90,7 @@ export function VendorCancellationPolicyModal({ policyChosen, loading }: VendorC
         </div>
       }
     >
-      <div className="space-y-5 text-sm leading-relaxed text-neutral-700">
+      <div className="space-y-5 text-sm leading-relaxed text-ink-2">
         <p>
           Good news: you now set the rules for what happens when a client cancels a paid booking.
           Until now every cancellation meant a full refund. From today you pick one of three
@@ -100,18 +100,18 @@ export function VendorCancellationPolicyModal({ policyChosen, loading }: VendorC
         <ul className="space-y-4">
           {PRESETS.map(({ icon: Icon, name, terms }) => (
             <li key={name} className="flex items-start gap-3">
-              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sky-50 text-sky-700">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-info-soft text-info">
                 <Icon className="h-5 w-5" aria-hidden />
               </span>
               <div>
-                <p className="font-semibold text-neutral-900">{name}</p>
-                <p className="mt-0.5 text-neutral-600">{terms}</p>
+                <p className="font-semibold text-ink">{name}</p>
+                <p className="mt-0.5 text-ink-2">{terms}</p>
               </div>
             </li>
           ))}
         </ul>
 
-        <div className="flex items-start gap-3 rounded-xl bg-emerald-50 px-4 py-3 text-emerald-900">
+        <div className="flex items-start gap-3 rounded-xl bg-success-soft px-4 py-3 text-success">
           <Banknote className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
           <p>
             Whatever the client doesn&apos;t get back is yours, and we pay it into your account
@@ -119,7 +119,7 @@ export function VendorCancellationPolicyModal({ policyChosen, loading }: VendorC
           </p>
         </div>
 
-        <p className="text-xs text-neutral-500">Until you pick, clients see Flexible.</p>
+        <p className="text-xs text-ink-3">Until you pick, clients see Flexible.</p>
       </div>
     </Modal>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { Info } from "lucide-react";
 import {
   CANCELLATION_POLICY_KEYS,
@@ -9,6 +10,7 @@ import {
   type CancellationPolicyKey,
 } from "@/features/bookings/cancellationPolicyCopy";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
+import { Badge } from "@/components/ui/Badge";
 
 type CancellationPolicyPickerProps = {
   data: VendorOnboardingData;
@@ -28,23 +30,17 @@ export function CancellationPolicyPicker({
     <div className="ez-stack">
       <div className="ez-between">
         <h3 className="ez-h3">Choose one</h3>
-        <span className="ez-badge">Shown on your profile</span>
+        <Badge>Shown on your profile</Badge>
       </div>
       <div
-        className="ez-hrow"
-        style={{
-          alignItems: "stretch",
-          flexWrap: "nowrap",
-          gap: 16,
-        }}
+        className="ez-hrow flex-nowrap items-stretch gap-4"
       >
         {CANCELLATION_POLICY_KEYS.map((policyKey: CancellationPolicyKey) => {
           const active = data.cancellationPolicy === policyKey;
           return (
             <label
               key={policyKey}
-              className={`ez-option${active ? " ez-option--active" : ""}`}
-              style={{ flex: "1 1 220px", minWidth: 0 }}
+              className={`ez-option min-w-0 flex-[1_1_220px]${active ? " ez-option--active" : ""}`}
             >
               <input
                 type="radio"
@@ -53,13 +49,13 @@ export function CancellationPolicyPicker({
                 checked={active}
                 onChange={() => update({ cancellationPolicy: policyKey })}
               />
-              <span className="ez-stack ez-stack--sm" style={{ flex: 1, minWidth: 0 }}>
+              <span className="ez-stack ez-stack--sm flex-1 min-w-0">
                 <span className="ez-strong">
                   {CANCELLATION_POLICY_LABELS[policyKey]}
                 </span>
                 <span className="ez-small">{CANCELLATION_POLICY_TAGLINES[policyKey]}</span>
-                <div className="ez-table-wrap" style={{ marginTop: 8 }}>
-                  <table className="ez-table" style={{ minWidth: 0, width: "100%" }}>
+                <div className="ez-table-wrap mt-2">
+                  <table className="ez-table min-w-0 w-full">
                     <tbody>
                       {CANCELLATION_POLICY_ONBOARDING_TIERS[policyKey].map((tier) => (
                         <tr key={tier.window}>
@@ -75,19 +71,16 @@ export function CancellationPolicyPicker({
           );
         })}
       </div>
-      <div className="ez-banner ez-banner--info">
-        <Info size={20} strokeWidth={1.75} aria-hidden />
-        <div className="ez-banner__body">
-          <div className="ez-banner__title">
-            Two rules apply to every policy
-          </div>
-          <p className="ez-small" style={{ color: "inherit" }}>
-            The Eventtz service fee is always refunded. A client who cancels
-            within 24 hours of paying, with the event at least 7 days away, gets
-            a full refund.
-          </p>
-        </div>
-      </div>
+      <Banner
+        tone="info"
+        icon={<Info size={20} strokeWidth={1.75} aria-hidden />}
+        title="Two rules apply to every policy">
+        <p className="ez-small text-inherit">
+          The Eventtz service fee is always refunded. A client who cancels
+          within 24 hours of paying, with the event at least 7 days away, gets
+          a full refund.
+        </p>
+      </Banner>
     </div>
   );
 }

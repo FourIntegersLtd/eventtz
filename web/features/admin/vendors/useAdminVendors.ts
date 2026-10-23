@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
+import { useCallback, useMemo, useState } from "react";
+import { serverListKey, useServerList } from "@/lib/useServerList";
+import { vendorQueueFilters, type VendorQueueTab } from "@/features/admin/vendors/adminVendorQueueStatus";
 import {
   fetchAdminVendors,
   type AdminVendorRow,
@@ -17,26 +18,74 @@ import {
   vendorNeedsPayoutSetup,
 } from "@/features/admin/vendors/adminVendorBulkEmail";
 
+/** What the queue tab and search box narrow the list to; sent to the api as query parameters. */
+type AdminVendorListFilters = {
+  approvalStatus: string | undefined;
+  profileStatus: string | undefined;
+  returnedForEdits: boolean | undefined;
+};
+
+/**
+ * The admin vendors list: a server-paged list (`useServerList`) narrowed by a queue tab and a search,
+ * plus the bulk selection and reminder emails that act on the rows of the current page.
+ */
 export function useAdminVendors() {
-  const [rows, setRows] = useState<AdminVendorRow[]>([]);
-  const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const [limit] = useState(DEFAULT_LIST_PAGE_SIZE);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [queueTab, setQueueTab] = useState<VendorQueueTab>("pending");
   const [search, setSearch] = useState("");
-  const [approvalStatus, setApprovalStatus] = useState("");
-  const [profileStatus, setProfileStatus] = useState("");
-  const [returnedForEdits, setReturnedForEdits] = useState<boolean | undefined>(undefined);
-  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [nudgeBusy, setNudgeBusy] = useState(false);
+  const [nudgeError, setNudgeError] = useState<string | null>(null);
+
+  const queueFilters = vendorQueueFilters(queueTab);
+  const filters: AdminVendorListFilters = {
+    approvalStatus: queueFilters.approvalStatus || undefined,
+    profileStatus: queueFilters.profileStatus || undefined,
+    returnedForEdits: queueFilters.returnedForEdits,
+  };
+
+  const list = useServerList<AdminVendorRow, AdminVendorListFilters>({
+    filters,
+    search,
+    errorMessage: "Could not load vendors.",
+    fetchPage: async ({ offset, limit, filters: active, search: text }) => {
+      const query: AdminVendorsQuery = {
+        offset,
+        limit,
+        q: text || undefined,
+        approval_status: active.approvalStatus,
+        status: active.profileStatus,
+        returned_for_edits: active.returnedForEdits,
+      };
+      const response = await fetchAdminVendors(query);
+      return { items: response.vendors, total: response.total };
+    },
+  });
+  const rows = list.items;
+
+  // The selection belongs to one page of one filter: moving to another page or filter clears it.
+  const pageKey = `${serverListKey(filters, search)}|${list.offset}`;
+  const [selection, setSelection] = useState<{ pageKey: string; ids: string[] }>({
+    pageKey,
+    ids: [],
+  });
+  const selectedUserIds = useMemo(
+    () => (selection.pageKey === pageKey ? selection.ids : []),
+    [selection, pageKey],
+  );
+  const setSelectedUserIds = useCallback(
+    (update: (previous: string[]) => string[]) =>
+      setSelection((previous) => ({
+        pageKey,
+        ids: update(previous.pageKey === pageKey ? previous.ids : []),
+      })),
+    [pageKey],
+  );
 
   const selectableUserIdsOnPage = useMemo(
-    () => rows.filter(vendorIsBulkEmailSelectable).map((r) => r.user_id),
+    () => rows.filter(vendorIsBulkEmailSelectable).map((row) => row.user_id),
     [rows],
   );
 
-  const rowByUserId = useMemo(() => new Map(rows.map((r) => [r.user_id, r])), [rows]);
+  const rowByUserId = useMemo(() => new Map(rows.map((row) => [row.user_id, row])), [rows]);
 
   const selectedDraftCount = useMemo(
     () =>
@@ -56,49 +105,21 @@ export function useAdminVendors() {
     [rowByUserId, selectedUserIds],
   );
 
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const q: AdminVendorsQuery = {
-        offset,
-        limit,
-        q: search.trim() || undefined,
-        approval_status: approvalStatus || undefined,
-        status: profileStatus || undefined,
-        returned_for_edits: returnedForEdits,
-      };
-      const res = await fetchAdminVendors(q);
-      setRows(res.vendors);
-      setTotal(res.total);
-      setSelectedUserIds((prev) =>
-        prev.filter((id) => res.vendors.some((r) => r.user_id === id)),
-      );
-    } catch {
-      setError("Could not load vendors.");
-    } finally {
-      setLoading(false);
-    }
-  }, [offset, limit, search, approvalStatus, profileStatus, returnedForEdits]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
   const toggleSelectedUserId = useCallback((userId: string, selected: boolean) => {
     setSelectedUserIds((prev) => {
       if (selected) return prev.includes(userId) ? prev : [...prev, userId];
       return prev.filter((id) => id !== userId);
     });
-  }, []);
+  }, [setSelectedUserIds]);
 
   const selectAllSelectableOnPage = useCallback(() => {
     setSelectedUserIds((prev) => [...new Set([...prev, ...selectableUserIdsOnPage])]);
-  }, [selectableUserIdsOnPage]);
+  }, [selectableUserIdsOnPage, setSelectedUserIds]);
 
   const clearSelectableOnPage = useCallback(() => {
     const selectableSet = new Set(selectableUserIdsOnPage);
     setSelectedUserIds((prev) => prev.filter((id) => !selectableSet.has(id)));
-  }, [selectableUserIdsOnPage]);
+  }, [selectableUserIdsOnPage, setSelectedUserIds]);
 
   const nudgeDraftVendors = useCallback(async (): Promise<
     | { kind: "result"; result: AdminVendorProfileNudgeResult }
@@ -107,19 +128,19 @@ export function useAdminVendors() {
   > => {
     if (selectedUserIds.length === 0) return null;
     setNudgeBusy(true);
-    setError(null);
+    setNudgeError(null);
     try {
       const result = await postAdminVendorProfileNudge(selectedUserIds);
-      setSelectedUserIds([]);
+      setSelectedUserIds(() => []);
       return { kind: "result", result };
     } catch (e) {
       const message = getApiErrorDetail(e) ?? "Could not send profile reminder emails.";
-      setError(message);
+      setNudgeError(message);
       return { kind: "error", message };
     } finally {
       setNudgeBusy(false);
     }
-  }, [selectedUserIds]);
+  }, [selectedUserIds, setSelectedUserIds]);
 
   const nudgePayoutVendors = useCallback(async (): Promise<
     | { kind: "result"; result: AdminVendorProfileNudgeResult }
@@ -128,36 +149,33 @@ export function useAdminVendors() {
   > => {
     if (selectedUserIds.length === 0) return null;
     setNudgeBusy(true);
-    setError(null);
+    setNudgeError(null);
     try {
       const result = await postAdminVendorPayoutNudge(selectedUserIds);
-      setSelectedUserIds([]);
+      setSelectedUserIds(() => []);
       return { kind: "result", result };
     } catch (e) {
       const message = getApiErrorDetail(e) ?? "Could not send payout reminder emails.";
-      setError(message);
+      setNudgeError(message);
       return { kind: "error", message };
     } finally {
       setNudgeBusy(false);
     }
-  }, [selectedUserIds]);
+  }, [selectedUserIds, setSelectedUserIds]);
 
   return {
     rows,
-    total,
-    offset,
-    limit,
-    setOffset,
-    loading,
-    error,
+    total: list.total,
+    offset: list.offset,
+    limit: list.limit,
+    goPrevious: list.goPrevious,
+    goNext: list.goNext,
+    loading: list.loading,
+    error: nudgeError ?? list.error,
     search,
     setSearch,
-    approvalStatus,
-    setApprovalStatus,
-    profileStatus,
-    setProfileStatus,
-    returnedForEdits,
-    setReturnedForEdits,
+    queueTab,
+    setQueueTab,
     selectedUserIds,
     selectableUserIdsOnPage,
     selectedDraftCount,
