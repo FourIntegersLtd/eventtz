@@ -33,6 +33,7 @@ async def list_own_reviews(
     )
     stats = await repository.visible_review_stats_for_vendor(session, vendor_user_id)
     five_star_count = await repository.visible_five_star_count_for_vendor(session, vendor_user_id)
+    with_photos_count = await repository.visible_photo_review_count_for_vendor(session, vendor_user_id)
     event_context = await repository.event_context_by_booking_id(
         session, [review.booking_request_id for review in reviews]
     )
@@ -60,6 +61,7 @@ async def list_own_reviews(
         average_rating=stats.average_rating,
         review_count=stats.review_count,
         five_star_count=five_star_count,
+        with_photos_count=with_photos_count,
         reviews=items,
         total=total,
         offset=offset,

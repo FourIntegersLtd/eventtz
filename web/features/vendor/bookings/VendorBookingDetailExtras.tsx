@@ -1,6 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import { Badge } from "@/components/ui/Badge";
+import { Banner } from "@/components/ui/Banner";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Card } from "@/components/ui/Card";
 import { BookingCompletionBanner } from "@/features/bookings/BookingCompletionBanner";
 import { VendorBookingTermsNotices } from "@/features/bookings/BookingTermsNotices";
 import { BookingPayoutPendingBanner } from "@/features/bookings/BookingPayoutPendingBanner";
@@ -35,31 +38,21 @@ export function VendorBookingDetailExtras({
   return (
     <>
       {detail.date_change_declined ? (
-        <div className="ez-banner ez-banner--warning">
-          <div className="ez-banner__body">
-            <div className="ez-banner__title">The client declined the date change</div>
-            <p className="ez-small" style={{ color: "inherit" }}>
-              The event stays on its original date. You can message them from this booking.
-            </p>
-          </div>
-        </div>
+        <Banner tone="warning" title="The client declined the date change">
+          The event stays on its original date. You can message them from this booking.
+        </Banner>
       ) : null}
 
       {detail.price_update_declined ? (
-        <div className="ez-banner ez-banner--warning">
-          <div className="ez-banner__body">
-            <div className="ez-banner__title">The client declined your new price</div>
-            <p className="ez-small" style={{ color: "inherit" }}>
-              The booking is still open at the original price. You can message them or send another price.
-            </p>
-          </div>
-        </div>
+        <Banner tone="warning" title="The client declined your new price">
+          The booking is still open at the original price. You can message them or send another price.
+        </Banner>
       ) : null}
 
       {detail.booking_status === "accepted" && detail.payment_status === "unpaid" ? (
-        <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4">
-          <p className="text-sm font-semibold text-neutral-900">Waiting on the client&apos;s payment</p>
-          <p className="mt-1 text-[13px] text-neutral-600">
+        <div className="rounded-2xl border border-line bg-surface-3 px-5 py-4">
+          <p className="text-sm font-semibold text-ink">Waiting on the client&apos;s payment</p>
+          <p className="mt-1 text-[13px] text-ink-2">
             You&apos;ll be able to confirm the event is complete once their payment goes through.
           </p>
         </div>
@@ -121,35 +114,24 @@ function CancellationOutcome({ detail }: { detail: VendorBookingDetail }) {
   return (
     <div className="ez-stack ez-stack--lg">
       {held ? (
-        <div className="ez-banner ez-banner--warning">
-          <div className="ez-banner__body">
-            <div className="ez-banner__title">Your share is held until payout setup is finished</div>
-            <p className="ez-small" style={{ color: "inherit" }}>
-              {vendorCancellationShareLine(shareLabel, detail.cancellation_payout_at)}
-            </p>
-          </div>
-          <div className="ez-banner__actions">
-            <Link className="ez-btn ez-btn--primary" href="/vendor/payments?tab=account">
-              Complete payout setup
-            </Link>
-          </div>
-        </div>
+        <Banner
+          tone="warning"
+          title="Your share is held until payout setup is finished"
+          action={<ButtonLink href="/vendor/payments?tab=account">Complete payout setup</ButtonLink>}
+        >
+          {vendorCancellationShareLine(shareLabel, detail.cancellation_payout_at)}
+        </Banner>
       ) : share > 0 ? (
-        <div className="ez-banner ez-banner--success">
-          <div className="ez-banner__body">
-            <div className="ez-banner__title">Cancellation payout</div>
-            <p className="ez-small" style={{ color: "inherit" }}>
-              {vendorCancellationShareLine(shareLabel, detail.cancellation_payout_at)}
-            </p>
-          </div>
-        </div>
+        <Banner tone="success" title="Cancellation payout">
+          {vendorCancellationShareLine(shareLabel, detail.cancellation_payout_at)}
+        </Banner>
       ) : null}
 
-      <div className="ez-card">
-        <div className="ez-card__head">
+      <Card>
+        <Card.Header>
           <span className="ez-h3">How the money was split</span>
-        </div>
-        <div className="ez-card__body">
+        </Card.Header>
+        <Card.Body>
           <div className="ez-lines">
             {detail.cancellation_refund_percent != null ? (
               <div className="ez-lines__row">
@@ -162,16 +144,16 @@ function CancellationOutcome({ detail }: { detail: VendorBookingDetail }) {
               <span>{share > 0 ? shareLabel : "£0.00"}</span>
             </div>
           </div>
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
 
       {tiers.length > 0 ? (
-        <div className="ez-card">
-          <div className="ez-card__head">
+        <Card>
+          <Card.Header>
             <span className="ez-h3">Your cancellation policy</span>
-            <span className="ez-badge ez-badge--neutral ez-badge--plain">{cancellationPolicyLabel(policy)}</span>
-          </div>
-          <div className="ez-card__body">
+            <Badge className="ez-badge--plain">{cancellationPolicyLabel(policy)}</Badge>
+          </Card.Header>
+          <Card.Body>
             <div className="ez-lines">
               {tiers.map((tier) => (
                 <div className="ez-lines__row" key={tier.window}>
@@ -180,8 +162,8 @@ function CancellationOutcome({ detail }: { detail: VendorBookingDetail }) {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
+          </Card.Body>
+        </Card>
       ) : null}
     </div>
   );

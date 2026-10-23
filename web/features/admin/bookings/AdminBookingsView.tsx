@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -148,9 +149,9 @@ export function AdminBookingsView() {
           lottie="searchNoResults"
           action={
             hasActiveFilters ? (
-              <button type="button" className="ez-btn ez-btn--secondary ez-btn--sm" onClick={clearFilters}>
+              <Button type="button" variant="secondary" size="sm" onClick={clearFilters}>
                 Clear filters
-              </button>
+              </Button>
             ) : undefined
           }
         />
@@ -164,11 +165,11 @@ export function AdminBookingsView() {
             rowClassName={(row) => supportRowClass(row.support)}
             columns={[
               { key: "ref", header: "Ref", kind: "strong", cell: (row) => bookingRef(row.id) },
-              { key: "event", header: "Event", className: "text-neutral-900", cell: (row) => row.event_name || "-" },
+              { key: "event", header: "Event", className: "text-ink", cell: (row) => row.event_name || "-" },
               {
                 key: "client",
                 header: "Client",
-                className: "max-w-[10rem] truncate text-neutral-700",
+                className: "max-w-[10rem] truncate text-ink-2",
                 cell: (row) => row.client_email ?? "-",
               },
               {
@@ -176,17 +177,17 @@ export function AdminBookingsView() {
                 header: "Vendor",
                 cell: (row) => (
                   <>
-                    <div className="font-medium text-neutral-800">{row.vendor_display_name}</div>
-                    {row.vendor_email ? <div className="text-xs text-neutral-500">{row.vendor_email}</div> : null}
+                    <div className="font-medium text-ink">{row.vendor_display_name}</div>
+                    {row.vendor_email ? <div className="text-xs text-ink-3">{row.vendor_email}</div> : null}
                   </>
                 ),
               },
-              { key: "date", header: "Event date", className: "text-neutral-700", cell: (row) => row.event_date || "-" },
+              { key: "date", header: "Event date", className: "text-ink-2", cell: (row) => row.event_date || "-" },
               {
                 key: "total",
                 header: "Total",
                 kind: "num",
-                className: "text-neutral-700",
+                className: "text-ink-2",
                 cell: (row) => row.client_total_label ?? "-",
               },
               {
@@ -205,9 +206,9 @@ export function AdminBookingsView() {
                 key: "support",
                 header: " ",
                 cell: (row) => (
-                  <Link href={`/admin/bookings/${row.id}`} className="ez-btn ez-btn--secondary ez-btn--sm">
+                  <ButtonLink href={`/admin/bookings/${row.id}`} variant="secondary" size="sm">
                     Support
-                  </Link>
+                  </ButtonLink>
                 ),
               },
             ]}

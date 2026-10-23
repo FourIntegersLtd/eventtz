@@ -129,6 +129,7 @@ async def test_vendor_reviews_list_pagination_fields(client: AsyncClient, make_a
     assert body["limit"] == 50
     assert isinstance(body["total"], int)
     assert isinstance(body.get("five_star_count"), int)
+    assert body["with_photos_count"] == 0
     assert len(body["reviews"]) <= 50
 
 

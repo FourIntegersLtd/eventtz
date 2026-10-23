@@ -10,7 +10,7 @@ export default function AdminReviewDetailPage() {
 
   return (
     <AdminConsolePage title="Review" showPageHead={false}>
-      {id ? <AdminReviewDetailView reviewId={id} /> : <p className="text-sm text-neutral-600">Invalid id.</p>}
+      {id ? <AdminReviewDetailView reviewId={id} /> : <p className="text-sm text-ink-2">Invalid id.</p>}
     </AdminConsolePage>
   );
 }

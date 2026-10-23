@@ -13,10 +13,10 @@ type PartyRowProps = {
 function PartyRow({ role, primary, secondary, isOpener }: PartyRowProps) {
   return (
     <div className="flex items-start gap-3 py-3 first:pt-0 last:pb-0">
-      <span className="w-12 shrink-0 pt-0.5 text-xs font-medium text-neutral-500">{role}</span>
+      <span className="w-12 shrink-0 pt-0.5 text-xs font-medium text-ink-3">{role}</span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-neutral-900">{primary ?? "-"}</p>
-        {secondary ? <p className="mt-0.5 text-xs text-neutral-500">{secondary}</p> : null}
+        <p className="text-sm font-medium text-ink">{primary ?? "-"}</p>
+        {secondary ? <p className="mt-0.5 text-xs text-ink-3">{secondary}</p> : null}
       </div>
       {isOpener ? (
         <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-800 ring-1 ring-amber-200/80">
@@ -36,7 +36,7 @@ export function DisputePartiesPanel({
 }) {
   return (
     <div>
-      <div className="divide-y divide-neutral-100">
+      <div className="divide-y divide-line">
         <PartyRow
           role="Client"
           primary={dispute.client_email}
@@ -50,7 +50,7 @@ export function DisputePartiesPanel({
         />
       </div>
       {actions ? (
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-neutral-100 pt-4">
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-line pt-4">
           {actions}
         </div>
       ) : null}
@@ -66,7 +66,7 @@ export function DisputeOpenedByCompact({ dispute }: { dispute: AdminDisputeCase 
       ? "text-sky-700"
       : role === "vendor"
         ? "text-primary"
-        : "text-neutral-600";
+        : "text-ink-2";
 
   const name =
     role === "client"
@@ -76,10 +76,10 @@ export function DisputeOpenedByCompact({ dispute }: { dispute: AdminDisputeCase 
         : dispute.opened_by_display_name ?? dispute.opened_by_email ?? "-";
 
   return (
-    <p className="text-sm text-neutral-700">
+    <p className="text-sm text-ink-2">
       <span className={`font-medium ${roleClass}`}>{roleLabel}</span>
-      <span className="text-neutral-400"> · </span>
-      <span className="text-neutral-800">{name}</span>
+      <span className="text-ink-3"> · </span>
+      <span className="text-ink">{name}</span>
     </p>
   );
 }
@@ -95,7 +95,7 @@ export function DisputePanelSection({
 }) {
   return (
     <section className={`space-y-3 ${className}`.trim()}>
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{label}</h3>
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-3">{label}</h3>
       {children}
     </section>
   );

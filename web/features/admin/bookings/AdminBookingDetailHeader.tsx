@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { BackLink } from "@/components/ui/BackLink";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import type { AdminBookingSupportMeta } from "@/lib/adminPlatformApi";
@@ -50,16 +50,16 @@ export function AdminBookingDetailHeader({
     <>
       <BackLink href="/admin/commerce?tab=bookings" label="Bookings" icon="chevron" tone="muted" />
 
-      <div className="ez-pagehead">
-        <div className="ez-pagehead__text">
-          <h1 className="ez-h1">Booking {refLabel}</h1>
-          <p className="ez-small">{createdCaption(createdAt, eventName)}</p>
-        </div>
-        <div className="ez-pagehead__actions">
-          <StatusBadge status={status} />
-          <PaymentStatusBadge status={paymentStatus} />
-        </div>
-      </div>
+      <PageHeader
+        title={`Booking ${refLabel}`}
+        description={createdCaption(createdAt, eventName)}
+        actions={
+          <>
+            <StatusBadge status={status} />
+            <PaymentStatusBadge status={paymentStatus} />
+          </>
+        }
+      />
 
       {(holdActive || support?.vendor_stripe_payouts_enabled === false) && (
         <p className="ez-small">

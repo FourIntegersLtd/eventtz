@@ -1,9 +1,13 @@
 "use client";
 
-import Link from "next/link";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useRealtimeRefresh } from "@/lib/realtimeHooks";
+import { useServerList } from "@/lib/useServerList";
 import { Shield } from "lucide-react";
+import { Banner } from "@/components/ui/Banner";
+import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -11,7 +15,6 @@ import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import {
   fetchParticipantDisputesPage,
   fetchVendorDispute,
-  PARTICIPANT_DISPUTES_PAGE_SIZE,
   type ParticipantDispute,
 } from "@/lib/bookingDisputesApi";
 import { TablePagination } from "@/components/ui/TablePagination";
@@ -42,30 +45,33 @@ type VendorDisputesEzViewProps = {
 /** Vendor disputes (design V26). Reply stays in messages; there is no separate dispute-reply API. */
 export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDisputesEzViewProps) {
   const router = useRouter();
-  const [rows, setRows] = useState<ParticipantDispute[] | null>(null);
   const [selected, setSelected] = useState<ParticipantDispute | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [offset, setOffset] = useState(0);
-  const [total, setTotal] = useState(0);
+  const [selectedError, setSelectedError] = useState<string | null>(null);
   const [openCount, setOpenCount] = useState(0);
 
-  useEffect(() => {
-    let cancelled = false;
-    void fetchParticipantDisputesPage("vendor", offset, PARTICIPANT_DISPUTES_PAGE_SIZE)
-      .then((page) => {
-        if (!cancelled) {
-          setRows(page.disputes);
-          setTotal(page.total);
-          setOpenCount(page.open_count ?? 0);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setError("Could not load disputes.");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [offset]);
+  const {
+    items: rows,
+    total,
+    offset,
+    limit,
+    loading,
+    error: listError,
+    goNext,
+    goPrevious,
+    reload,
+  } = useServerList<ParticipantDispute>({
+    filters: {},
+    errorMessage: "Could not load disputes.",
+    fetchPage: async ({ offset: pageOffset, limit: pageLimit }) => {
+      const page = await fetchParticipantDisputesPage("vendor", pageOffset, pageLimit);
+      setOpenCount(page.open_count ?? 0);
+      return { items: page.disputes, total: page.total };
+    },
+  });
+  const error = listError ?? selectedError;
+
+  // A dispute opened, answered or decided elsewhere refreshes this list; there is no polling.
+  useRealtimeRefresh("disputes:refresh", reload, [reload]);
 
   useEffect(() => {
     if (!selectedDisputeId) {
@@ -78,14 +84,14 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
         if (!cancelled) setSelected(row);
       })
       .catch(() => {
-        if (!cancelled) setError("Could not load this dispute.");
+        if (!cancelled) setSelectedError("Could not load this dispute.");
       });
     return () => {
       cancelled = true;
     };
   }, [selectedDisputeId]);
 
-  const active = selected ?? (rows ?? []).find((row) => row.status === "open") ?? null;
+  const active = selected ?? rows.find((row) => row.status === "open") ?? null;
 
   return (
     <div className="ez-stack ez-stack--lg">
@@ -96,22 +102,18 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
       />
 
       {openCount > 0 ? (
-        <div className="ez-banner ez-banner--danger">
-          <Shield size={20} strokeWidth={1.75} aria-hidden />
-          <div className="ez-banner__body">
-            <div className="ez-banner__title">
-              {openCount} dispute{openCount === 1 ? "" : "s"} need{openCount === 1 ? "s" : ""} your response
-            </div>
-            <p className="ez-small" style={{ color: "inherit" }}>
-              Reply in messages. Eventtz decides with the evidence both sides share.
-            </p>
-          </div>
-        </div>
+        <Banner
+          tone="danger"
+          icon={<Shield size={20} strokeWidth={1.75} aria-hidden />}
+          title={`${openCount} dispute${openCount === 1 ? "" : "s"} need${openCount === 1 ? "s" : ""} your response`}
+        >
+          Reply in messages. Eventtz decides with the evidence both sides share.
+        </Banner>
       ) : null}
 
       {error ? <LottieFailureInline message={error} /> : null}
 
-      {rows === null ? (
+      {loading && rows.length === 0 && !error ? (
         <LoadingState label="Loading disputes…" variant="inline" />
       ) : rows.length === 0 ? (
         <EmptyState
@@ -136,7 +138,7 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
                 <tr
                   key={row.id}
                   onClick={() => router.push(`/vendor/disputes/${row.id}`)}
-                  style={{ cursor: "pointer" }}
+                  className="cursor-pointer"
                 >
                   <td className="ez-td-strong">{row.id.slice(0, 8).toUpperCase()}</td>
                   <td>{participantDisputeBookingLabel(row)}</td>
@@ -151,30 +153,29 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
         </div>
       )}
 
-      {rows !== null && total > 0 ? (
+      {total > 0 ? (
         <TablePagination
           offset={offset}
-          limit={PARTICIPANT_DISPUTES_PAGE_SIZE}
+          limit={limit}
           total={total}
-          loading={rows === null}
-          onPrevious={() =>
-            setOffset((current) => Math.max(0, current - PARTICIPANT_DISPUTES_PAGE_SIZE))
-          }
-          onNext={() => setOffset((current) => current + PARTICIPANT_DISPUTES_PAGE_SIZE)}
+          pageRowCount={rows.length}
+          loading={loading}
+          onPrevious={goPrevious}
+          onNext={goNext}
         />
       ) : null}
 
       {active ? (
         <div className="ez-split">
           <div className="ez-split__main">
-            <div className="ez-card">
-              <div className="ez-card__head">
+            <Card>
+              <Card.Header>
                 <span className="ez-h3">
                   {active.counterparty_label || active.client_label || "Dispute"} · {participantDisputeBookingLabel(active)}
                 </span>
                 <Badge tone={disputeTone(active.status)}>{participantDisputeStatusLabel(active.status)}</Badge>
-              </div>
-              <div className="ez-card__body">
+              </Card.Header>
+              <Card.Body>
                 <div className="ez-stack ez-stack--sm">
                   <span className="ez-label">{active.opened_by_you ? "You said" : "Client says"}</span>
                   <p className="ez-body">{active.summary}</p>
@@ -185,27 +186,27 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
                     </>
                   ) : null}
                 </div>
-              </div>
+              </Card.Body>
               <div className="ez-card__foot">
                 {active.conversation_id ? (
-                  <Link className="ez-btn ez-btn--primary" href={`/vendor/messages/${active.conversation_id}`}>
+                  <ButtonLink href={`/vendor/messages/${active.conversation_id}`}>
                     <SendIcon />
                     Reply in messages
-                  </Link>
+                  </ButtonLink>
                 ) : (
-                  <Link className="ez-btn ez-btn--secondary" href={`/vendor/bookings/${active.booking_request_id}`}>
+                  <ButtonLink variant="secondary" href={`/vendor/bookings/${active.booking_request_id}`}>
                     Open booking
-                  </Link>
+                  </ButtonLink>
                 )}
               </div>
-            </div>
+            </Card>
           </div>
           <div className="ez-split__aside">
-            <div className="ez-card">
-              <div className="ez-card__head">
+            <Card>
+              <Card.Header>
                 <span className="ez-h3">What happens</span>
-              </div>
-              <div className="ez-card__body">
+              </Card.Header>
+              <Card.Body>
                 <div className="ez-timeline">
                   <div className="ez-tl-item ez-tl-item--done">
                     <span className="ez-tl-dot" />
@@ -229,8 +230,8 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </Card.Body>
+            </Card>
           </div>
         </div>
       ) : null}

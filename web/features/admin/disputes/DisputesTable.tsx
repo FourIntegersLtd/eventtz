@@ -99,7 +99,7 @@ export function DisputesTable({
                 <>
                   <ParticipantDisputeStatusBadge status={row.status} />
                   {row.status === "resolved" && row.resolution_action ? (
-                    <p className="mt-1 text-[11px] leading-snug text-neutral-500">
+                    <p className="mt-1 text-[11px] leading-snug text-ink-3">
                       {resolutionActionLabel(row.resolution_action)}
                     </p>
                   ) : null}
@@ -110,7 +110,7 @@ export function DisputesTable({
               key: "summary",
               header: "Summary",
               className: "min-w-[12rem] max-w-md align-top",
-              cell: (row) => <p className="line-clamp-2 text-sm text-neutral-900">{row.summary}</p>,
+              cell: (row) => <p className="line-clamp-2 text-sm text-ink">{row.summary}</p>,
             },
             {
               key: "booking",
@@ -129,7 +129,7 @@ export function DisputesTable({
             {
               key: "updated",
               header: "Updated",
-              className: "whitespace-nowrap align-top text-xs text-neutral-500",
+              className: "whitespace-nowrap align-top text-xs text-ink-3",
               cell: (row) => formatWhen(row.updated_at),
             },
             {
@@ -140,7 +140,7 @@ export function DisputesTable({
                 <button
                   type="button"
                   onClick={() => onManage(row)}
-                  className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-800 hover:bg-neutral-50"
+                  className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink hover:bg-surface-3"
                 >
                   Manage
                 </button>

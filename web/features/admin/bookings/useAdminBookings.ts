@@ -1,20 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
+import { useState } from "react";
+import { useServerList } from "@/lib/useServerList";
 import {
   fetchAdminBookings,
   type AdminBookingListItem,
   type AdminBookingsQuery,
 } from "@/lib/adminPlatformApi";
 
+/** The filters that narrow the admin bookings list; changing any of them returns to page 1. */
+type AdminBookingFilters = {
+  status: string;
+  dateFrom: string;
+  dateTo: string;
+  needsAttentionOnly: boolean;
+};
+
+/** State for the admin bookings list: server-paged rows plus the filter and search the screen edits. */
 export function useAdminBookings(initial?: Partial<AdminBookingsQuery>) {
-  const [rows, setRows] = useState<AdminBookingListItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const [limit] = useState(DEFAULT_LIST_PAGE_SIZE);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState(initial?.status ?? "");
   const [search, setSearch] = useState(initial?.search ?? "");
   const [dateFrom, setDateFrom] = useState(initial?.date_from ?? "");
@@ -23,40 +26,32 @@ export function useAdminBookings(initial?: Partial<AdminBookingsQuery>) {
     Boolean(initial?.needs_attention),
   );
 
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const q: AdminBookingsQuery = {
+  const list = useServerList<AdminBookingListItem, AdminBookingFilters>({
+    filters: { status, dateFrom, dateTo, needsAttentionOnly },
+    search,
+    errorMessage: "Could not load bookings.",
+    fetchPage: async ({ offset, limit, filters, search: searchText }) => {
+      const page = await fetchAdminBookings({
         offset,
         limit,
-        status: status || undefined,
-        search: search.trim() || undefined,
-        date_from: dateFrom || undefined,
-        date_to: dateTo || undefined,
-        needs_attention: needsAttentionOnly || undefined,
-      };
-      const res = await fetchAdminBookings(q);
-      setRows(res.bookings);
-      setTotal(res.total);
-    } catch {
-      setError("Could not load bookings.");
-    } finally {
-      setLoading(false);
-    }
-  }, [offset, limit, status, search, dateFrom, dateTo, needsAttentionOnly]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+        status: filters.status || undefined,
+        search: searchText || undefined,
+        date_from: filters.dateFrom || undefined,
+        date_to: filters.dateTo || undefined,
+        needs_attention: filters.needsAttentionOnly || undefined,
+      });
+      return { items: page.bookings, total: page.total };
+    },
+  });
 
   return {
-    rows,
-    total,
-    offset,
-    limit,
-    setOffset,
-    loading,
-    error,
+    rows: list.items,
+    total: list.total,
+    offset: list.offset,
+    limit: list.limit,
+    setOffset: list.setOffset,
+    loading: list.loading,
+    error: list.error,
     status,
     setStatus,
     search,
@@ -67,6 +62,6 @@ export function useAdminBookings(initial?: Partial<AdminBookingsQuery>) {
     setDateTo,
     needsAttentionOnly,
     setNeedsAttentionOnly,
-    reload: load,
+    reload: list.reload,
   };
 }

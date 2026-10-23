@@ -48,33 +48,33 @@ export function ClientFeeBreakdownSummary({
   return (
     <div className={className}>
       <div className={`space-y-2 ${rowText}`}>
-        <div className="flex justify-between gap-2 text-neutral-600">
+        <div className="flex justify-between gap-2 text-ink-2">
           <span>Vendor portion</span>
-          <span className="font-medium tabular-nums text-neutral-900">
+          <span className="font-medium tabular-nums text-ink">
             {breakdown.vendorPortionLabel}
           </span>
         </div>
         {showCondensedReferralFee ? (
-          <div className="flex justify-between gap-2 text-neutral-600">
+          <div className="flex justify-between gap-2 text-ink-2">
             <span>
               Eventtz fee
-              <span className="text-neutral-400">
+              <span className="text-ink-3">
                 {" "}
                 ({breakdown.feePercent}%, {referralOffLabel} referral off)
               </span>
             </span>
-            <span className="font-medium tabular-nums text-neutral-900">
+            <span className="font-medium tabular-nums text-ink">
               {breakdown.feeLabel}
             </span>
           </div>
         ) : showReferralRows ? (
           <>
-            <div className="flex justify-between gap-2 text-neutral-600">
+            <div className="flex justify-between gap-2 text-ink-2">
               <span>
                 Eventtz fee
-                <span className="text-neutral-400"> ({breakdown.feePercent}%)</span>
+                <span className="text-ink-3"> ({breakdown.feePercent}%)</span>
               </span>
-              <span className="font-medium tabular-nums text-neutral-500 line-through">
+              <span className="font-medium tabular-nums text-ink-3 line-through">
                 {breakdown.feeBeforeDiscountLabel}
               </span>
             </div>
@@ -82,20 +82,20 @@ export function ClientFeeBreakdownSummary({
               <span>Referral discount</span>
               <span className="font-medium tabular-nums">{breakdown.referralDiscountLabel}</span>
             </div>
-            <div className="flex justify-between gap-2 text-neutral-600">
+            <div className="flex justify-between gap-2 text-ink-2">
               <span>Eventtz fee due</span>
-              <span className="font-medium tabular-nums text-neutral-900">
+              <span className="font-medium tabular-nums text-ink">
                 {breakdown.feeLabel}
               </span>
             </div>
           </>
         ) : (
-          <div className="flex justify-between gap-2 text-neutral-600">
+          <div className="flex justify-between gap-2 text-ink-2">
             <span>
               Eventtz fee
-              <span className="text-neutral-400"> ({breakdown.feePercent}%)</span>
+              <span className="text-ink-3"> ({breakdown.feePercent}%)</span>
             </span>
-            <span className="font-medium tabular-nums text-neutral-900">
+            <span className="font-medium tabular-nums text-ink">
               {breakdown.feeLabel}
             </span>
           </div>
@@ -104,19 +104,19 @@ export function ClientFeeBreakdownSummary({
 
       {showTotal ? (
         <div
-          className={`flex items-center justify-between border-t border-neutral-200 pt-2 ${
+          className={`flex items-center justify-between border-t border-line pt-2 ${
             compact ? "mt-2" : "mt-3"
           } ${totalText}`}
         >
-          <span className="font-medium text-neutral-700">{totalHeading}</span>
-          <span className={`tabular-nums text-neutral-900 ${totalValue}`}>
+          <span className="font-medium text-ink-2">{totalHeading}</span>
+          <span className={`tabular-nums text-ink ${totalValue}`}>
             {breakdown.totalLabel}
           </span>
         </div>
       ) : null}
 
       {footnote ? (
-        <p className={`mt-2 text-xs text-neutral-500 ${compact ? "leading-snug" : ""}`}>
+        <p className={`mt-2 text-xs text-ink-3 ${compact ? "leading-snug" : ""}`}>
           {footnote}
         </p>
       ) : null}

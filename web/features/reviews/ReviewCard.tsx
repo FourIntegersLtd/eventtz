@@ -43,21 +43,21 @@ export function ReviewCard({
         {title}
       </Link>
     ) : (
-      <p className="font-medium text-neutral-900">{title}</p>
+      <p className="font-medium text-ink">{title}</p>
     );
 
   const padding = compact ? "px-5 py-4 sm:px-6" : "px-5 py-5 sm:px-6 sm:py-6";
   const shellClass =
     variant === "row"
       ? padding
-      : `rounded-xl border border-neutral-100 bg-white ${compact ? "p-4" : "p-5"}`;
+      : `rounded-xl border border-line bg-white ${compact ? "p-4" : "p-5"}`;
 
   return (
     <article className={shellClass}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           {titleNode}
-          {subtitle ? <p className="mt-0.5 text-xs text-neutral-500">{subtitle}</p> : null}
+          {subtitle ? <p className="mt-0.5 text-xs text-ink-3">{subtitle}</p> : null}
         </div>
         <StarRating rating={rating} size="sm" />
       </div>
@@ -69,7 +69,7 @@ export function ReviewCard({
       <ReviewPhotoGallery urls={imageUrls} />
 
       {createdAt || bookingHref ? (
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-500">
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-3">
           {createdAt ? <span>{formatReviewWhen(createdAt)}</span> : null}
           {bookingHref ? (
             <Link href={bookingHref} className="font-medium text-primary hover:underline">

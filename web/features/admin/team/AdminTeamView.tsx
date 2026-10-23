@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { UserPlus } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
@@ -13,7 +14,6 @@ import { AdminSuccessBanner } from "@/features/admin/components/AdminSuccessBann
 import { AdminCreateAdminModal } from "@/features/admin/team/AdminCreateAdminModal";
 import { AdminTeamMemberActionsMenu } from "@/features/admin/team/AdminTeamMemberActionsMenu";
 import {
-  ADMIN_TEAM_PAGE_SIZE,
   fetchAdminTeamPage,
   isSuperAdmin,
   patchAdminTeamMember,
@@ -21,6 +21,7 @@ import {
   deleteAdminTeamMember,
   type AdminTeamMember,
 } from "@/lib/adminTeamApi";
+import { useServerList } from "@/lib/useServerList";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { formControlClass } from "@/components/ui/tokens";
 import { TablePagination } from "@/components/ui/TablePagination";
@@ -41,36 +42,39 @@ function roleLabel(role: AdminTeamMember["admin_role"]): string {
 export function AdminTeamView() {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [members, setMembers] = useState<AdminTeamMember[]>([]);
-  const [rosterTotal, setRosterTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [rowBusy, setRowBusy] = useState<string | null>(null);
-  const [rosterOffset, setRosterOffset] = useState(0);
 
   const canManage = isSuperAdmin(user);
 
-  const load = useCallback(async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const page = await fetchAdminTeamPage(rosterOffset, ADMIN_TEAM_PAGE_SIZE);
-      setMembers(page.members);
-      setRosterTotal(page.total);
-    } catch {
-      setError("Could not load admin team.");
-    } finally {
-      setLoading(false);
-    }
-  }, [rosterOffset]);
+  const {
+    items: members,
+    total: rosterTotal,
+    offset: rosterOffset,
+    limit: rosterLimit,
+    loading,
+    error: loadError,
+    goNext,
+    goPrevious,
+    reload,
+  } = useServerList<AdminTeamMember, Record<string, never>>({
+    filters: {},
+    errorMessage: "Could not load admin team.",
+    fetchPage: async ({ offset, limit }) => {
+      const page = await fetchAdminTeamPage(offset, limit);
+      return { items: page.members, total: page.total };
+    },
+  });
+  const error = actionError ?? loadError;
+  /** Reloads the roster and clears the last action error, as a fresh load did before. */
+  const load = () => {
+    setActionError(null);
+    reload();
+  };
 
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  if (loading) {
+  if (loading && members.length === 0) {
     return <AdminLoadingState label="Loading team…" />;
   }
 
@@ -98,7 +102,7 @@ export function AdminTeamView() {
         onCreated={(message) => {
           setSuccessMessage(message);
           showToast({ title: "Admin created", description: message, tone: "success" });
-          void load();
+          load();
         }}
       />
 
@@ -114,12 +118,12 @@ export function AdminTeamView() {
             {
               key: "email",
               header: "Email",
-              className: "font-medium text-neutral-900",
+              className: "font-medium text-ink",
               cell: (m) => (
                 <>
                   {m.email ?? "-"}
                   {user?.id === m.user_id ? (
-                    <span className="ml-2 text-xs font-normal text-neutral-500">(you)</span>
+                    <span className="ml-2 text-xs font-normal text-ink-3">(you)</span>
                   ) : null}
                 </>
               ),
@@ -138,7 +142,7 @@ export function AdminTeamView() {
                       setRowBusy(m.user_id);
                       try {
                         await patchAdminTeamMember(m.user_id, { admin_role: next });
-                        await load();
+                        load();
                         showToast({
                           title: "Role updated",
                           description: roleLabel(next),
@@ -146,7 +150,7 @@ export function AdminTeamView() {
                         });
                       } catch (err: unknown) {
                         const message = getApiErrorDetail(err) ?? "Could not update role.";
-                        setError(message);
+                        setActionError(message);
                         showToast({ title: "Role update failed", description: message, tone: "error" });
                       } finally {
                         setRowBusy(null);
@@ -159,7 +163,7 @@ export function AdminTeamView() {
                     <option value="super_admin">Super admin</option>
                   </select>
                 ) : (
-                  <span className="text-sm text-neutral-800">{roleLabel(m.admin_role)}</span>
+                  <span className="text-sm text-ink">{roleLabel(m.admin_role)}</span>
                 ),
             },
             {
@@ -196,7 +200,7 @@ export function AdminTeamView() {
                         });
                       } catch (err: unknown) {
                         const message = getApiErrorDetail(err) ?? "Could not send reset link.";
-                        setError(message);
+                        setActionError(message);
                         showToast({ title: "Reset link failed", description: message, tone: "error" });
                       } finally {
                         setRowBusy(null);
@@ -208,14 +212,14 @@ export function AdminTeamView() {
                         await patchAdminTeamMember(m.user_id, {
                           account_suspended: !m.account_suspended,
                         });
-                        await load();
+                        load();
                         showToast({
                           title: m.account_suspended ? "Admin reactivated" : "Admin suspended",
                           tone: "success",
                         });
                       } catch (err: unknown) {
                         const message = getApiErrorDetail(err) ?? "Could not update status.";
-                        setError(message);
+                        setActionError(message);
                         showToast({ title: "Status update failed", description: message, tone: "error" });
                       } finally {
                         setRowBusy(null);
@@ -231,10 +235,10 @@ export function AdminTeamView() {
                           description: result.message,
                           tone: "success",
                         });
-                        await load();
+                        load();
                       } catch (err: unknown) {
                         const message = getApiErrorDetail(err) ?? "Could not delete admin.";
-                        setError(message);
+                        setActionError(message);
                         showToast({ title: "Delete failed", description: message, tone: "error" });
                       } finally {
                         setRowBusy(null);
@@ -242,7 +246,7 @@ export function AdminTeamView() {
                     }}
                         />
                       ) : (
-                        <span className="text-xs text-neutral-400">-</span>
+                        <span className="text-xs text-ink-3">-</span>
                       ),
                   },
                 ]
@@ -254,21 +258,21 @@ export function AdminTeamView() {
       {members.length > 0 ? (
         <TablePagination
           offset={rosterOffset}
-          limit={ADMIN_TEAM_PAGE_SIZE}
+          limit={rosterLimit}
           total={rosterTotal}
           pageRowCount={members.length}
-          onPrevious={() => setRosterOffset((current) => Math.max(0, current - ADMIN_TEAM_PAGE_SIZE))}
-          onNext={() => setRosterOffset((current) => current + ADMIN_TEAM_PAGE_SIZE)}
+          onPrevious={() => { setActionError(null); goPrevious(); }}
+          onNext={() => { setActionError(null); goNext(); }}
         />
       ) : null}
 
-      <section className="ez-card overflow-hidden">
-        <div className="ez-card__head">
+      <Card as="section" className="overflow-hidden">
+        <Card.Header>
           <h2 className="ez-h3">What each role can do</h2>
           <p className="ez-small">
             Grant Super admin only when someone needs platform settings, team management, or email health.
           </p>
-        </div>
+        </Card.Header>
         <DataTable
           embedded
           aria-label="What each role can do"
@@ -276,16 +280,16 @@ export function AdminTeamView() {
           rows={ROLE_CAPABILITY_ROWS}
           getRowKey={(row) => row.area}
           columns={[
-            { key: "area", header: "Area", className: "text-sm text-neutral-800", cell: (row) => row.area },
-            { key: "admin", header: "Admin", className: "text-sm text-neutral-700", cell: (row) => row.admin },
-            { key: "superAdmin", header: "Super admin", className: "text-sm text-neutral-700", cell: (row) => row.superAdmin },
+            { key: "area", header: "Area", className: "text-sm text-ink", cell: (row) => row.area },
+            { key: "admin", header: "Admin", className: "text-sm text-ink-2", cell: (row) => row.admin },
+            { key: "superAdmin", header: "Super admin", className: "text-sm text-ink-2", cell: (row) => row.superAdmin },
           ]}
         />
-        <p className="border-t border-neutral-100 px-5 py-4 text-sm text-neutral-600">
+        <p className="border-t border-line px-5 py-4 text-sm text-ink-2">
           Removing an admin keeps their history in the activity log. Sending a password reset link does
           not sign them out.
         </p>
-      </section>
+      </Card>
     </div>
   );
 }

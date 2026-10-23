@@ -30,12 +30,12 @@ export function MultiVendorPackagePicker({
   return (
     <div className="space-y-3">
       <div>
-        <p className="text-sm font-medium text-neutral-900">Packages</p>
-        <p className="mt-0.5 text-xs text-neutral-500">
+        <p className="text-sm font-medium text-ink">Packages</p>
+        <p className="mt-0.5 text-xs text-ink-3">
           Choose one package per vendor. For per-item rates, set how many you need.
         </p>
       </div>
-      <ul className="divide-y divide-neutral-100 rounded-xl border border-neutral-100 bg-neutral-50/50">
+      <ul className="divide-y divide-line rounded-xl border border-line bg-surface-3">
         {vendors.map((vendor) => {
           const options = pricingOptionsForVendor(vendor);
           const selectedId = selectedOptionByVendorId[vendor.user_id] ?? "";
@@ -43,18 +43,18 @@ export function MultiVendorPackagePicker({
           return (
             <li key={vendor.user_id} className="space-y-2 px-4 py-3">
               <div>
-                <p className="text-sm font-semibold text-neutral-900">
+                <p className="text-sm font-semibold text-ink">
                   {vendorDisplayName(vendor)}
                 </p>
                 {category ? (
-                  <p className="text-xs text-neutral-500">{category}</p>
+                  <p className="text-xs text-ink-3">{category}</p>
                 ) : null}
               </div>
               {options.length === 0 ? (
                 <p className="text-xs text-amber-800">No bookable packages listed.</p>
               ) : (
                 <>
-                  <label className="block text-xs font-medium text-neutral-600">
+                  <label className="block text-xs font-medium text-ink-2">
                     Package
                     <select
                       className={formControlClass("mt-1 rounded-xl")}
@@ -77,7 +77,7 @@ export function MultiVendorPackagePicker({
                       quantityByVendorId[vendor.user_id] ?? defaultQuantityForOption(selected);
                     return (
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-xs font-medium text-neutral-600">Quantity</p>
+                        <p className="text-xs font-medium text-ink-2">Quantity</p>
                         <QuantityStepper
                           value={qty}
                           min={selected.minQuantity}

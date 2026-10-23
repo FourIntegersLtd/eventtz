@@ -1,7 +1,9 @@
 "use client";
 
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { DescriptionList } from "@/components/ui/DescriptionList";
-import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
@@ -99,15 +101,11 @@ export function AdminReviewDetailView({ reviewId }: Props) {
       <BackLink href={backHref} label="Reviews" icon="chevron" tone="muted" />
       {actionError ? <AdminErrorBanner message={actionError} /> : null}
 
-      <div className="ez-pagehead">
-        <div className="ez-pagehead__text">
-          <h1 className="ez-h1">Review of {vendorName}</h1>
-          <p className="ez-small">
-            {review.rating} star{review.rating === 1 ? "" : "s"} · {review.client_email ?? "Client"}
-          </p>
-        </div>
-        {canModerateReviews ? (
-          <div className="ez-pagehead__actions">
+      <PageHeader
+        title={`Review of ${vendorName}`}
+        description={`${review.rating} star${review.rating === 1 ? "" : "s"} · ${review.client_email ?? "Client"}`}
+        actions={
+          canModerateReviews ? (
             <Button
               variant={review.hidden_at ? "primary" : "destructive"}
               size="sm"
@@ -116,18 +114,18 @@ export function AdminReviewDetailView({ reviewId }: Props) {
             >
               {review.hidden_at ? "Show publicly" : "Hide from profile"}
             </Button>
-          </div>
-        ) : null}
-      </div>
+          ) : null
+        }
+      />
 
       <div className="ez-split">
         <div className="ez-split__main ez-stack ez-stack--lg">
-          <section className="ez-card">
-            <div className="ez-card__head">
+          <Card as="section">
+            <Card.Header>
               <h2 className="ez-h3">Review</h2>
               <ReviewVisibilityBadge hidden={Boolean(review.hidden_at)} />
-            </div>
-            <div className="ez-card__body">
+            </Card.Header>
+            <Card.Body>
               <div className="ez-stack">
                 <StarRating rating={review.rating} size="md" />
                 <p className="ez-body whitespace-pre-wrap">{review.body || "-"}</p>
@@ -136,16 +134,16 @@ export function AdminReviewDetailView({ reviewId }: Props) {
                   for booking {adminBookingRef(review.booking_request_id)}
                 </p>
               </div>
-            </div>
-          </section>
+            </Card.Body>
+          </Card>
         </div>
 
         <div className="ez-split__aside ez-stack ez-stack--lg">
-          <section className="ez-card">
-            <div className="ez-card__head">
+          <Card as="section">
+            <Card.Header>
               <h2 className="ez-h3">Booking</h2>
-            </div>
-            <div className="ez-card__body">
+            </Card.Header>
+            <Card.Body>
               <DescriptionList
                 items={[
                   { label: "Event", value: review.booking_event_name ?? "-" },
@@ -156,19 +154,19 @@ export function AdminReviewDetailView({ reviewId }: Props) {
                   },
                 ]}
               />
-              <div className="ez-hrow" style={{ marginTop: "12px" }}>
-                <Link
+              <div className="ez-hrow mt-3">
+                <ButtonLink
                   href={`/admin/bookings/${review.booking_request_id}`}
-                  className="ez-btn ez-btn--secondary ez-btn--sm"
+                  variant="secondary" size="sm"
                 >
                   Open booking
-                </Link>
-                <Link href={backHref} className="ez-btn ez-btn--ghost ez-btn--sm">
+                </ButtonLink>
+                <ButtonLink href={backHref} variant="ghost" size="sm">
                   All vendor reviews
-                </Link>
+                </ButtonLink>
               </div>
-            </div>
-          </section>
+            </Card.Body>
+          </Card>
         </div>
       </div>
 

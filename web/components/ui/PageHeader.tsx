@@ -7,6 +7,8 @@ export type PageHeaderProps = {
   description?: string;
   /** Description type size: `small` (default, admin and client pages) or `body` (vendor portal pages). */
   descriptionSize?: "small" | "body";
+  /** Extra line under the description, e.g. a reference with a copy button (`ez-caption`). */
+  meta?: ReactNode;
   /** Right-aligned actions, usually Buttons. */
   actions?: ReactNode;
   className?: string;
@@ -18,6 +20,7 @@ export function PageHeader({
   title,
   description,
   descriptionSize = "small",
+  meta,
   actions,
   className = "",
 }: PageHeaderProps) {
@@ -27,6 +30,7 @@ export function PageHeader({
         {eyebrow ? <span className="ez-eyebrow">{eyebrow}</span> : null}
         <h1 className="ez-h1">{title}</h1>
         {description ? <p className={descriptionSize === "body" ? "ez-body" : "ez-small"}>{description}</p> : null}
+        {meta ? <p className="ez-caption">{meta}</p> : null}
       </div>
       {actions ? <div className="ez-pagehead__actions">{actions}</div> : null}
     </header>

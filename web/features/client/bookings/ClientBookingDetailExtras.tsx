@@ -94,7 +94,7 @@ export function ClientBookingDetailExtras({
               ? "border-amber-200 bg-amber-50 text-amber-950"
               : paymentSyncError
                 ? "border-red-200 bg-red-50 text-red-800"
-                : "border-emerald-100 bg-emerald-50/60 text-neutral-800"
+                : "border-emerald-100 bg-emerald-50/60 text-ink"
           }`}
         >
           {paymentBanner === "success" && !paymentSyncError ? (
@@ -164,20 +164,20 @@ export function ClientBookingDetailExtras({
       {paymentDue ? (
         <div
           ref={paymentBannerRef}
-          className="mt-4 overflow-hidden rounded-2xl border border-neutral-100 bg-white"
+          className="mt-4 overflow-hidden rounded-2xl border border-line bg-white"
         >
           <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-neutral-900">
+              <p className="text-sm font-semibold text-ink">
                 {PAYMENT_FLOW_COPY.paymentDueTitle}
               </p>
-              <p className="mt-1 text-[13px] text-neutral-600">
+              <p className="mt-1 text-[13px] text-ink-2">
                 {PAYMENT_FLOW_COPY.paymentDueSubtitle}
               </p>
-              <p className="mt-1 text-[13px] text-neutral-400">{PAYMENT_FLOW_COPY.beforePay}</p>
+              <p className="mt-1 text-[13px] text-ink-3">{PAYMENT_FLOW_COPY.beforePay}</p>
               {detail.cancellation_policy_label ? (
-                <details className="mt-2 text-[13px] text-neutral-600">
-                  <summary className="cursor-pointer font-medium text-neutral-700">
+                <details className="mt-2 text-[13px] text-ink-2">
+                  <summary className="cursor-pointer font-medium text-ink-2">
                     {PAYMENT_SAFETY_COPY.cancellationPolicyHeading(detail.cancellation_policy_label)}
                   </summary>
                   <ul className="mt-1 list-disc space-y-1 pl-5">

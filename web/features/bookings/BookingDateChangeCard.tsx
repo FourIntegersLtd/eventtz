@@ -112,48 +112,48 @@ export function BookingDateChangeCard({
       : `${otherLabel} asked to move the event to ${formatRange(proposed, dateChange.proposed_event_end_date)}`;
     const detail = `Currently ${formatRange(eventDate, eventEndDate)}. The price and your payment stay the same.`;
     const note = dateChange.date_change_note ? (
-      <p className="text-[13px] text-neutral-700">&ldquo;{dateChange.date_change_note}&rdquo;</p>
+      <p className="text-[13px] text-ink-2">&ldquo;{dateChange.date_change_note}&rdquo;</p>
     ) : null;
 
     if (requestPresentation === "modal") {
       return (
         <div className="ez-stack ez-stack--sm">
-          <p className="text-sm font-semibold text-neutral-900">{headline}</p>
-          <p className="text-[13px] text-neutral-600">{detail}</p>
+          <p className="text-sm font-semibold text-ink">{headline}</p>
+          <p className="text-[13px] text-ink-2">{detail}</p>
           {note}
           {byMe ? (
-            <button
+            <Button
               type="button"
-              className="ez-btn ez-btn--secondary ez-btn--block"
+              variant="secondary" className="ez-btn--block"
               disabled={busy !== null}
               onClick={() =>
                 void run("withdraw", () => withdrawDateChange(role, bookingId), "Request withdrawn")
               }
             >
               {busy === "withdraw" ? "Withdrawing…" : "Withdraw request"}
-            </button>
+            </Button>
           ) : (
             <>
-              <button
+              <Button
                 type="button"
-                className="ez-btn ez-btn--primary ez-btn--block"
+                className="ez-btn--block"
                 disabled={busy !== null}
                 onClick={() =>
                   void run("accept", () => respondToDateChange(role, bookingId, true), "New date agreed")
                 }
               >
                 {busy === "accept" ? "Accepting…" : "Accept new date"}
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="ez-btn ez-btn--secondary ez-btn--block"
+                variant="secondary" className="ez-btn--block"
                 disabled={busy !== null}
                 onClick={() =>
                   void run("decline", () => respondToDateChange(role, bookingId, false), "Date change declined")
                 }
               >
                 {busy === "decline" ? "Declining…" : "Decline"}
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -162,8 +162,8 @@ export function BookingDateChangeCard({
 
     return (
       <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 px-5 py-4">
-        <p className="text-[15px] font-semibold tracking-tight text-neutral-900">{headline}</p>
-        <p className="mt-1 text-[13px] text-neutral-600">{detail}</p>
+        <p className="text-[15px] font-semibold tracking-tight text-ink">{headline}</p>
+        <p className="mt-1 text-[13px] text-ink-2">{detail}</p>
         {note ? <div className="mt-2">{note}</div> : null}
         <div className="mt-3 flex flex-wrap gap-2">
           {byMe ? (
@@ -210,16 +210,16 @@ export function BookingDateChangeCard({
 
   const requestForm = (
     <>
-      <p className="text-[13px] text-neutral-600">
+      <p className="text-[13px] text-ink-2">
         The other side has to agree. Your price and payment stay the same.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="min-w-0 space-y-1.5">
-          <span className="block text-sm font-medium text-neutral-800">New date</span>
+          <span className="block text-sm font-medium text-ink">New date</span>
           <DateInput value={newDate} min={todayIsoDate()} onChange={(event) => setNewDate(event.target.value)} />
         </div>
         <div className="min-w-0 space-y-1.5">
-          <span className="block text-sm font-medium text-neutral-800">New end date (optional)</span>
+          <span className="block text-sm font-medium text-ink">New end date (optional)</span>
           <DateInput
             allowEmpty
             value={newEndDate}
@@ -255,9 +255,9 @@ export function BookingDateChangeCard({
   if (requestPresentation === "modal") {
     return (
       <>
-        <button type="button" className="ez-btn ez-btn--secondary ez-btn--block" onClick={() => setFormOpen(true)}>
+        <Button type="button" variant="secondary" className="ez-btn--block" onClick={() => setFormOpen(true)}>
           Request a date change
-        </button>
+        </Button>
         <Modal
           isOpen={formOpen}
           onClose={() => {
@@ -293,8 +293,8 @@ export function BookingDateChangeCard({
   }
 
   return (
-    <div className="rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4">
-      <p className="text-sm font-semibold text-neutral-900">Request a date change</p>
+    <div className="rounded-2xl border border-line bg-surface-3 px-5 py-4">
+      <p className="text-sm font-semibold text-ink">Request a date change</p>
       {requestForm}
       <div className="mt-3 flex flex-wrap gap-2">
         <Button size="sm" loading={busy === "request"} disabled={busy !== null || !newDate} onClick={sendRequest}>

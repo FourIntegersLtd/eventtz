@@ -91,11 +91,11 @@ export function AdminCreateAdminModal({ isOpen, onClose, onCreated }: AdminCreat
       <div className="ez-stack">
         {error ? <LottieFailureInline message={error} /> : null}
 
-        <div className="flex rounded-lg border border-neutral-200 p-1 text-sm">
+        <div className="flex rounded-lg border border-line p-1 text-sm">
           <button
             type="button"
             className={`flex-1 rounded-md px-3 py-2 font-medium transition ${
-              useInviteLink ? "bg-primary text-white" : "text-neutral-600 hover:bg-neutral-50"
+              useInviteLink ? "bg-primary text-white" : "text-ink-2 hover:bg-surface-2"
             }`}
             onClick={() => setUseInviteLink(true)}
           >
@@ -104,7 +104,7 @@ export function AdminCreateAdminModal({ isOpen, onClose, onCreated }: AdminCreat
           <button
             type="button"
             className={`flex-1 rounded-md px-3 py-2 font-medium transition ${
-              !useInviteLink ? "bg-primary text-white" : "text-neutral-600 hover:bg-neutral-50"
+              !useInviteLink ? "bg-primary text-white" : "text-ink-2 hover:bg-surface-2"
             }`}
             onClick={() => setUseInviteLink(false)}
           >
@@ -128,7 +128,7 @@ export function AdminCreateAdminModal({ isOpen, onClose, onCreated }: AdminCreat
         />
 
         {useInviteLink ? (
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-ink-2">
             We&apos;ll email a secure link so they can set their own password. No password is
             shared over email.
           </p>
