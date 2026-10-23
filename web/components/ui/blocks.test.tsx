@@ -2,6 +2,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -37,6 +39,12 @@ describe("ui building blocks emit canvas markup", () => {
       ),
     ).toBe(
       '<div role="alert" class="ez-banner ez-banner--danger"><div class="ez-banner__body"><span class="ez-banner__title">Payment failed</span><div>Card declined.</div></div><div class="ez-banner__actions"><a href="/pay">Retry</a></div></div>',
+    );
+  });
+
+  it("Banner plain is the untoned ez-banner", () => {
+    expect(renderToStaticMarkup(<Banner plain>Hi</Banner>)).toBe(
+      '<div role="status" class="ez-banner"><div class="ez-banner__body"><div>Hi</div></div></div>',
     );
   });
 
@@ -165,6 +173,21 @@ describe("ui building blocks emit canvas markup", () => {
     const markup = renderToStaticMarkup(<DescriptionRow layout="review" label="Email" value="a@b.co" />);
     expect(markup).toContain("data-review-field");
     expect(markup).toContain('<dd class="min-w-0 text-sm font-medium text-neutral-900 sm:text-right">a@b.co</dd>');
+  });
+
+  it("StatTile caption renders an ez-caption line", () => {
+    expect(renderToStaticMarkup(<StatTile label="A" value="1" caption="3 pending" />)).toContain(
+      '<span class="ez-caption">3 pending</span>',
+    );
+  });
+
+  it("Badge plain drops the dot and Button block goes full width", () => {
+    expect(renderToStaticMarkup(<Badge plain>Cover</Badge>)).toBe(
+      '<span class="ez-badge ez-badge--neutral ez-badge--plain shrink-0">Cover</span>',
+    );
+    expect(renderToStaticMarkup(<Button block>Go</Button>)).toContain("ez-btn--block");
+    expect(renderToStaticMarkup(<Button>Go</Button>)).not.toContain("ez-btn--block");
+    expect(renderToStaticMarkup(<ButtonLink href="/x" block>Go</ButtonLink>)).toContain("ez-btn--block");
   });
 
   it("StatTile compact is a bordered card, not an ez-kpi", () => {

@@ -23,6 +23,7 @@ import { BOOKING_SERVICE_FEE_PERCENT } from "@/lib/bookingServiceFee";
 import { isPerUnitPricing, parsePackageQuantity } from "@/lib/packagePricing";
 import { formatGbp, formatPence } from "@/lib/money";
 import { Badge } from "@/components/ui/Badge";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Card } from "@/components/ui/Card";
 
 type WizardAsideProps = {
@@ -87,12 +88,7 @@ function AccountAside() {
               </div>
             </div>
           </div>
-          <div className="ez-progress mt-3.5">
-            <div
-              className="ez-progress__bar"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+          <ProgressBar percent={progressPercent} className="mt-3.5" />
         </Card.Body>
       </Card>
     </div>
@@ -120,7 +116,7 @@ function BusinessAside({ data }: { data: VendorOnboardingData }) {
     <Card>
       <Card.Header>
         <span className="ez-h3">Live preview</span>
-        <Badge className="ez-badge--plain">
+        <Badge plain>
           How clients see you
         </Badge>
       </Card.Header>

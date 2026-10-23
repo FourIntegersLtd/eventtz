@@ -303,10 +303,15 @@ For local testing without Docker:
   identical to main (V01-V07 and V04b fail on both; V11 times out on both). Seeded two-server comparison of the admin
   list (60 pending vendors): page 1 and 2 at 1280px identical, page 2 at 390px identical, page 1 at 390px differs only
   because main showed the stale unfiltered rows. eslint 120 errors vs 121 on main. No api change.
-  Left: `features/settings/VendorSettingsEzView` is access-owner's; raw `ez-kpi` in `VendorAnalyticsEzView` (StatTile hint
-  is `ez-small`, the tile uses `ez-caption`); custom banners in `AdminVendorSubmissionActions` and
-  `VendorMarketplaceStatusBanner`; `AdminVendorDetailView` pagehead (truncating h1); `GrowthScoreRing` raw stroke
-  colours; unused imports in `vendorDetailsShared.tsx`; `useAdminVendors` nudge actions could share one helper.
+  Left: `features/settings/VendorSettingsEzView` is access-owner's; unused imports in `vendorDetailsShared.tsx`;
+  `useAdminVendors` nudge actions could share one helper.
+  **Follow-ups closed (PR "Vendors: design-system follow-ups").** All ten vendors-owned entries left `ALLOW_LISTED_FILES`
+  in `rawEzClassGuard.test.ts`: `VendorAnalyticsEzView` uses `StatTile` (new `caption` prop, `ez-caption`),
+  `AdminVendorSubmissionActions` a `Banner`, `VendorMarketplaceStatusBanner` a `Banner plain` (new, untoned) with a `Badge`,
+  `AdminVendorDetailView` a `PageHeader` (the h1 and email no longer truncate), `WizardAside` and `StepPortfolio` the
+  `ProgressBar`, and `Button`/`ButtonLink` gained `block`, `Badge` gained `plain`, so no screen writes `ez-btn--block` or
+  `ez-badge--plain`. `profileEditorSummaries` now returns a badge tone, rendered by `Badge`. `GrowthScoreRing` strokes use
+  `stroke-success|warning|danger` (token colours, a slightly different green/amber/red than emerald/amber/red-500).
 
 - **Done (PR "Rebuild audit: docs and guard", Phase 2 step 7).** One design rule, written in
   `components/README.md` "Design rule"; `UI-CONVENTIONS.md` and the design-diff README point to it (the design-diff

@@ -48,7 +48,7 @@ export function getButtonClassName({
   variant?: ButtonVariant;
   size?: ButtonSize;
   shape?: ButtonShape;
-  /** Full-width button (`ez-btn--block`). */
+  /** Full width of the container (`ez-btn--block`). */
   block?: boolean;
   className?: string;
 } = {}): string {

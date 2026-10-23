@@ -16,23 +16,13 @@ const RAW_EZ_CLASS = /(?<![\w-])ez-(?:btn|card|badge|banner|pagehead|kpi)(?![A-Z
 /** Files under `features/` and `app/` that still use a raw class, to be moved onto the blocks (plan: Phase 2.7 follow-ups). */
 const ALLOW_LISTED_FILES: string[] = [
   "features/admin/team/AdminTeamView.tsx",
-  "features/admin/vendors/AdminVendorDetailView.tsx",
-  "features/admin/vendors/AdminVendorSubmissionActions.tsx",
-  "features/admin/vendors/AdminVendorSubmissionChecklist.tsx",
-  "features/admin/vendors/AdminVendorSubmissionMediaRail.tsx",
-  "features/admin/vendors/VendorMarketplaceStatusBanner.tsx",
   "features/bookings/BookingDateChangeCard.tsx",
   "features/bookings/VendorBookingDetailEzPanel.tsx",
   "features/chat/VendorMessagesEzView.tsx",
   "features/client/planner/BudgetBreakdown.tsx",
   "features/disputes/VendorDisputesEzView.tsx",
-  "features/vendor/analytics/VendorAnalyticsEzView.tsx",
   "features/vendor/bookings/VendorBookingDetailExtras.tsx",
   "features/vendor/bookings/VendorBookingResponseFlow.tsx",
-  "features/vendor/onboarding/steps/StepPortfolio.tsx",
-  "features/vendor/onboarding/steps/submittedScreens.tsx",
-  "features/vendor/onboarding/ui/WizardAside.tsx",
-  "features/vendor/profile/profileEditorSummaries.ts",
 ];
 
 /** Lines of `source` that write a raw class, as 1-based line numbers. */

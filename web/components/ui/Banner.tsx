@@ -3,6 +3,8 @@ import type { Tone } from "@/lib/tone";
 
 export type BannerProps = {
   tone?: Tone;
+  /** The untoned canvas banner (`ez-banner` alone) for status rows that carry their own toned badge. */
+  plain?: boolean;
   /** Optional leading icon, e.g. a lucide icon (the canvas sizes it to 20px). */
   icon?: ReactNode;
   title?: string;
@@ -15,6 +17,7 @@ export type BannerProps = {
 /** Inline notice box (`ez-banner--<tone>`) that replaces hand-rolled amber and red alert boxes. */
 export function Banner({
   tone = "info",
+  plain = false,
   icon,
   title,
   action,
@@ -23,8 +26,8 @@ export function Banner({
 }: BannerProps) {
   return (
     <div
-      role={tone === "danger" ? "alert" : "status"}
-      className={`ez-banner ez-banner--${tone} ${className}`.trim()}
+      role={!plain && tone === "danger" ? "alert" : "status"}
+      className={`ez-banner${plain ? "" : ` ez-banner--${tone}`} ${className}`.trim()}
     >
       {icon}
       <div className="ez-banner__body">
