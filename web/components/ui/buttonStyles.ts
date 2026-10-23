@@ -42,11 +42,14 @@ export function getButtonClassName({
   variant = "primary",
   size = "md",
   shape = "default",
+  block = false,
   className = "",
 }: {
   variant?: ButtonVariant;
   size?: ButtonSize;
   shape?: ButtonShape;
+  /** Full-width button (`ez-btn--block`). */
+  block?: boolean;
   className?: string;
 } = {}): string {
   return [
@@ -56,6 +59,7 @@ export function getButtonClassName({
     BUTTON_SHAPE_CLASSES[shape],
     BUTTON_MOTION_PRESS,
     FOCUS_RING,
+    block ? "ez-btn--block" : "",
     className,
   ]
     .filter(Boolean)

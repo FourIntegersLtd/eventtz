@@ -128,6 +128,12 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `limit: 100`); the dispute 50 s poll is `useRealtimeRefresh("disputes:refresh")`. Seeded page 1/2 comparison
   against main matched on every list except vendor reviews, which had no paging on main. Skipped:
   `VendorBookingModal` (marketplace-owner's).
+- **Bookings design follow-ups (PR "Bookings screens: last raw ez-* classes onto the ui blocks").** Closed the
+  five bookings-owner entries of `ALLOW_LISTED_FILES` (`BookingDateChangeCard`, `VendorBookingDetailEzPanel`,
+  `VendorDisputesEzView`, `VendorBookingDetailExtras`, `VendorBookingResponseFlow`): `Button`/`ButtonLink` take
+  `block`, `Badge` takes `plain`, the dispute footer is `Card.Footer`. The date-change card's `amber-*` tint is now
+  `warning-line`/`warning-soft` (a slightly yellower cream, the one deliberate visual change) and `bg-white` is
+  `bg-surface`. Left: the same `className="ez-btn--block"` / `ez-badge--plain` in other owners' files.
 
 ## Open questions and follow-ups from Phase 4
 

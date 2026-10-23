@@ -11,6 +11,8 @@ export type ButtonLinkProps = Omit<ComponentProps<typeof Link>, "className"> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
   shape?: ButtonShape;
+  /** Full width (`ez-btn--block`). */
+  block?: boolean;
   className?: string;
 };
 
@@ -23,6 +25,7 @@ export function ButtonLink({
   variant = "primary",
   size = "md",
   shape = "default",
+  block = false,
   className = "",
   children,
   ...rest
@@ -30,7 +33,7 @@ export function ButtonLink({
   return (
     <Link
       href={href}
-      className={getButtonClassName({ variant, size, shape, className })}
+      className={getButtonClassName({ variant, size, shape, block, className })}
       {...rest}
     >
       {children}

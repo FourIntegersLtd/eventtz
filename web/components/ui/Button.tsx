@@ -16,6 +16,8 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   size?: ButtonSize;
   shape?: ButtonShape;
   loading?: boolean;
+  /** Full width (`ez-btn--block`). */
+  block?: boolean;
   /** Icon-only or icon+label leading element. */
   icon?: React.ReactNode;
 };
@@ -33,6 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     size = "md",
     shape = "default",
     loading = false,
+    block = false,
     icon,
     disabled,
     className = "",
@@ -46,7 +49,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       type={rest.type ?? "button"}
       disabled={disabled || loading}
-      className={getButtonClassName({ variant, size, shape, className })}
+      className={getButtonClassName({ variant, size, shape, block, className })}
       {...rest}
     >
       {loading ? (

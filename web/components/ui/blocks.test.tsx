@@ -1,6 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -25,6 +27,18 @@ describe("ui building blocks emit canvas markup", () => {
     expect(renderToStaticMarkup(<Badge tone="success">Paid</Badge>)).toBe(
       '<span class="ez-badge ez-badge--success shrink-0">Paid</span>',
     );
+  });
+
+  it("Badge plain drops the status dot", () => {
+    expect(renderToStaticMarkup(<Badge plain>Flexible</Badge>)).toBe(
+      '<span class="ez-badge ez-badge--neutral shrink-0 ez-badge--plain">Flexible</span>',
+    );
+  });
+
+  it("Button and ButtonLink block add the full-width modifier", () => {
+    expect(renderToStaticMarkup(<Button block>Go</Button>)).toContain("ez-btn--block");
+    expect(renderToStaticMarkup(<ButtonLink href="/x" block>Go</ButtonLink>)).toContain("ez-btn--block");
+    expect(renderToStaticMarkup(<Button>Go</Button>)).not.toContain("ez-btn--block");
   });
 
   it("Banner is an ez-banner with a body, title and actions", () => {
