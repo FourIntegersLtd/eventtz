@@ -173,7 +173,7 @@ export function getAuditCategory(action: string): AuditCategory {
 export function getAuditCategoryMeta(action: string): { label: string; badgeClassName: string } {
   const category = getAuditCategory(action);
   if (category === "all") {
-    return { label: "Other", badgeClassName: "bg-neutral-100 text-neutral-700" };
+    return { label: "Other", badgeClassName: "bg-surface-3 text-ink-2" };
   }
   return CATEGORY_META[category];
 }
