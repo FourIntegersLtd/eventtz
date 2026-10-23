@@ -6,14 +6,12 @@ super-admin-only (`CurrentSuperAdmin`).
 
 from __future__ import annotations
 
-from typing import Annotated
-
-from fastapi import APIRouter, Query
+from fastapi import APIRouter
 
 from app.core.auth import ROLE_ERRORS, CurrentStaff, CurrentSuperAdmin
 from app.core.db import SessionDep
-from app.core.errors import error_responses
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.errors import NoFieldsToUpdate, error_responses
+from app.core.pagination import PageDep
 from app.core.ports import MailerDependency
 from app.features.staff import service as staff
 from app.features.staff import service_team
@@ -25,7 +23,6 @@ from app.features.staff.errors import (
     CannotDemoteSelf,
     CannotSuspendSelf,
     InvalidEmailAddress,
-    NoFieldsToUpdate,
 )
 from app.features.staff.schemas import (
     AdminTeamDeleteResponse,
@@ -44,11 +41,10 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 async def list_team(
     session: SessionDep,
     principal: CurrentStaff,
-    offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=200)] = DEFAULT_LIST_LIMIT,
+    page: PageDep,
 ) -> AdminTeamListResponse:
     """Admin accounts for the team roster screen, oldest first."""
-    return await service_team.list_team(session, offset=offset, limit=limit)
+    return await service_team.list_team(session, offset=page.offset, limit=page.limit)
 
 
 @router.post(

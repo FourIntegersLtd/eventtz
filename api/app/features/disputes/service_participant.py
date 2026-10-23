@@ -7,6 +7,7 @@ from typing import Literal
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid
+from app.core.errors import InvalidBookingId
 from app.core.events import publish_after_commit, user_topic
 from app.core.logging import get_logger
 from app.core.ports import Mailer
@@ -16,7 +17,6 @@ from app.features.disputes.errors import (
     CannotOpenDispute,
     DisputeAlreadyOpen,
     DisputeNotFoundForParticipant,
-    InvalidBookingId,
     InvalidDisputeId,
 )
 from app.features.disputes.rows import DisputeBookingRow, DisputeRow

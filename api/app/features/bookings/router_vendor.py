@@ -7,8 +7,8 @@ from fastapi.responses import HTMLResponse
 
 from app.core.auth import ROLE_ERRORS, CurrentVendor
 from app.core.db import SessionDep
-from app.core.errors import error_responses
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.errors import InvalidBookingId, error_responses
+from app.core.pagination import PageDep
 from app.core.ports import MailerDependency, PaymentGatewayDependency
 from app.features.bookings import (
     errors,
@@ -44,7 +44,7 @@ router = APIRouter(prefix="/vendor", tags=["vendor"])
 
 _GROUP_QUERY = Query("active", description="Filter bucket: active, completed, closed, or all")
 _RECEIPT_ERRORS = (
-    errors.InvalidBookingId,
+    InvalidBookingId,
     errors.BookingNotFound,
     errors.ReceiptNotAvailable,
 )
@@ -98,6 +98,7 @@ async def get_vendor_dashboard(session: SessionDep, vendor: CurrentVendor) -> Ve
 async def list_vendor_bookings(
     session: SessionDep,
     vendor: CurrentVendor,
+    page: PageDep,
     group: str = _GROUP_QUERY,
     status: str | None = Query(None, description="Optional exact booking status, e.g. pending"),
     payment_status: str | None = Query(
@@ -112,8 +113,6 @@ async def list_vendor_bookings(
         description="Part of an event name or client name.",
     ),
     conversation_id: str | None = Query(None, description="Exact conversation id linked to the booking."),
-    offset: int = Query(0, ge=0),
-    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
 ) -> VendorBookingsListResponse:
     """The vendor's bookings in one bucket, most recently active first."""
     bookings, total = await service_queries.vendor_bookings_page(
@@ -125,10 +124,10 @@ async def list_vendor_bookings(
         exclude_payment_status=exclude_payment_status,
         search=search,
         conversation_id=conversation_id,
-        offset=offset,
-        limit=limit,
+        offset=page.offset,
+        limit=page.limit,
     )
-    return VendorBookingsListResponse(bookings=bookings, total=total, offset=offset, limit=limit)
+    return VendorBookingsListResponse(bookings=bookings, total=total, offset=page.offset, limit=page.limit)
 
 
 @router.put(
@@ -136,7 +135,7 @@ async def list_vendor_bookings(
     response_model=PutVendorBookingAdjustmentsResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.AdjustmentsNotOnVendorQuote,
         errors.AdjustmentsPendingOnly,
@@ -165,7 +164,7 @@ async def put_vendor_booking_adjustments(
     response_model=VendorBookingStatusResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.CancelOnlyAcceptedOrQuote,
         errors.ClientMustAcceptQuote,
@@ -200,7 +199,7 @@ async def patch_vendor_booking_status(
     response_model=ConfirmCompletionResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.CompleteOnlyAccepted,
         errors.CompleteNeedsPayment,
@@ -230,7 +229,7 @@ async def post_vendor_confirm_completion(
 @router.get(
     "/booking-requests/{booking_id}",
     response_model=VendorBookingDetailResponse,
-    responses=error_responses(*ROLE_ERRORS, errors.InvalidBookingId, errors.BookingNotFound),
+    responses=error_responses(*ROLE_ERRORS, InvalidBookingId, errors.BookingNotFound),
 )
 async def get_vendor_booking(
     session: SessionDep, vendor: CurrentVendor, booking_id: str
@@ -313,7 +312,7 @@ async def get_vendor_booking_payout_statement_html(
     response_model=VendorBookingDetailResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.DateChangeNotAllowed,
         errors.DateChangePending,
@@ -350,7 +349,7 @@ async def post_vendor_date_change(
     response_model=VendorBookingDetailResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.DateChangeNotAllowed,
         errors.NoDateChange,
@@ -380,7 +379,7 @@ async def post_vendor_date_change_respond(
     response_model=VendorBookingDetailResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.NoDateChange,
         errors.DateChangeNotYours,
@@ -402,7 +401,7 @@ async def post_vendor_date_change_withdraw(
     response_model=VendorBookingDetailResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.DepositClaimClosed,
         errors.DepositClaimInvalid,

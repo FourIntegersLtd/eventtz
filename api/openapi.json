@@ -2837,7 +2837,7 @@
         "description": "Response for `GET /admin/reviews`.",
         "properties": {
           "limit": {
-            "default": 100,
+            "default": 25,
             "title": "Limit",
             "type": "integer"
           },
@@ -11020,10 +11020,12 @@
         "description": "One page of a partner's sign-ups.",
         "properties": {
           "limit": {
+            "default": 25,
             "title": "Limit",
             "type": "integer"
           },
           "offset": {
+            "default": 0,
             "title": "Offset",
             "type": "integer"
           },
@@ -11043,16 +11045,14 @@
             "type": "boolean"
           },
           "total": {
+            "default": 0,
             "title": "Total",
             "type": "integer"
           }
         },
         "required": [
           "partner",
-          "signups",
-          "total",
-          "offset",
-          "limit"
+          "signups"
         ],
         "title": "ReferralSignupListResponse",
         "type": "object"
@@ -13846,6 +13846,18 @@
         "operationId": "list_audit_log_api_v1_admin_audit_log_get",
         "parameters": [
           {
+            "description": "all | bookings | clients | vendors | disputes | reviews | chat | financials | team",
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "description": "all | bookings | clients | vendors | disputes | reviews | chat | financials | team",
+              "title": "Category",
+              "type": "string"
+            }
+          },
+          {
             "in": "query",
             "name": "offset",
             "required": false,
@@ -13861,23 +13873,11 @@
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 100,
+              "default": 25,
               "maximum": 500,
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
-            }
-          },
-          {
-            "description": "all | bookings | clients | vendors | disputes | reviews | chat | financials | team",
-            "in": "query",
-            "name": "category",
-            "required": false,
-            "schema": {
-              "default": "all",
-              "description": "all | bookings | clients | vendors | disputes | reviews | chat | financials | team",
-              "title": "Category",
-              "type": "string"
             }
           }
         ],
@@ -14735,29 +14735,6 @@
         "parameters": [
           {
             "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 25,
-              "maximum": 200,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
             "name": "status",
             "required": false,
             "schema": {
@@ -14818,6 +14795,29 @@
                 }
               ],
               "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           }
         ],
@@ -16164,29 +16164,6 @@
         "parameters": [
           {
             "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 25,
-              "maximum": 200,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
             "name": "q",
             "required": false,
             "schema": {
@@ -16216,6 +16193,29 @@
                 }
               ],
               "title": "Suspended"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           }
         ],
@@ -18513,6 +18513,21 @@
           },
           {
             "in": "query",
+            "name": "shoutout",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "pending",
+                "completed"
+              ],
+              "title": "Shoutout",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "offset",
             "required": false,
             "schema": {
@@ -18532,21 +18547,6 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "shoutout",
-            "required": false,
-            "schema": {
-              "default": "all",
-              "enum": [
-                "all",
-                "pending",
-                "completed"
-              ],
-              "title": "Shoutout",
-              "type": "string"
             }
           }
         ],
@@ -18728,29 +18728,6 @@
         "parameters": [
           {
             "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 100,
-              "maximum": 200,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
             "name": "vendor_user_id",
             "required": false,
             "schema": {
@@ -18775,6 +18752,29 @@
               "description": "all, published, or hidden",
               "title": "Visibility",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           }
         ],
@@ -19487,29 +19487,6 @@
         "operationId": "list_vendors_api_v1_admin_vendors_get",
         "parameters": [
           {
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 25,
-              "maximum": 200,
-              "minimum": 1,
-              "title": "Limit",
-              "type": "integer"
-            }
-          },
-          {
             "description": "Part of an email or business name.",
             "in": "query",
             "name": "q",
@@ -19574,6 +19551,29 @@
                 }
               ],
               "title": "Returned For Edits"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           }
         ],
@@ -23586,7 +23586,7 @@
     },
     "/api/v1/client/booking-requests/{booking_id}/disputes": {
       "get": {
-        "description": "Disputes on this booking; an empty list if the client isn't a party to it.",
+        "description": "Disputes on this booking; an empty list if the caller isn't a party to it.",
         "operationId": "list_client_booking_disputes_api_v1_client_booking_requests__booking_id__disputes_get",
         "parameters": [
           {
@@ -23671,7 +23671,7 @@
         ]
       },
       "post": {
-        "description": "Open a dispute on one of the client's own bookings.",
+        "description": "Open a dispute on one of the caller's own bookings.",
         "operationId": "post_client_dispute_api_v1_client_booking_requests__booking_id__disputes_post",
         "parameters": [
           {
@@ -24492,7 +24492,7 @@
     },
     "/api/v1/client/disputes": {
       "get": {
-        "description": "Every dispute on a booking the client is party to, most recently opened first.",
+        "description": "Every dispute on a booking the caller is party to, most recently opened first.",
         "operationId": "list_client_disputes_api_v1_client_disputes_get",
         "parameters": [
           {
@@ -24580,7 +24580,7 @@
     },
     "/api/v1/client/disputes/{dispute_id}": {
       "get": {
-        "description": "One dispute, if the client is a party to its booking.",
+        "description": "One dispute, if the caller is a party to its booking.",
         "operationId": "get_client_dispute_api_v1_client_disputes__dispute_id__get",
         "parameters": [
           {
@@ -25451,7 +25451,7 @@
     },
     "/api/v1/client/notifications/bookings/unread-count": {
       "get": {
-        "description": "How many booking notices the client has not read.",
+        "description": "How many booking notices the caller has not read.",
         "operationId": "get_client_booking_notifications_unread_count_api_v1_client_notifications_bookings_unread_count_get",
         "responses": {
           "200": {
@@ -25504,7 +25504,7 @@
     },
     "/api/v1/client/notifications/bookings/{notification_id}/mark-read": {
       "post": {
-        "description": "Mark one notice read; `success` is false when it is not one of the client's.",
+        "description": "Mark one notice read; `success` is false when it is not one of the caller's.",
         "operationId": "post_client_booking_notification_mark_read_api_v1_client_notifications_bookings__notification_id__mark_read_post",
         "parameters": [
           {
@@ -25578,9 +25578,31 @@
     },
     "/api/v1/client/notifications/feed": {
       "get": {
-        "description": "The client's dashboard feed, newest first.",
+        "description": "The caller's dashboard feed, newest first.",
         "operationId": "get_client_notifications_feed_api_v1_client_notifications_feed_get",
         "parameters": [
+          {
+            "in": "query",
+            "name": "read_state",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "pattern": "^(all|unread)$",
+              "title": "Read State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "topic",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "pattern": "^(all|bookings|payments|messages)$",
+              "title": "Topic",
+              "type": "string"
+            }
+          },
           {
             "in": "query",
             "name": "offset",
@@ -25602,28 +25624,6 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "read_state",
-            "required": false,
-            "schema": {
-              "default": "all",
-              "pattern": "^(all|unread)$",
-              "title": "Read State",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "topic",
-            "required": false,
-            "schema": {
-              "default": "all",
-              "pattern": "^(all|bookings|payments|messages)$",
-              "title": "Topic",
-              "type": "string"
             }
           }
         ],
@@ -28740,7 +28740,7 @@
     },
     "/api/v1/vendor/booking-requests/{booking_id}/disputes": {
       "get": {
-        "description": "Disputes on this booking; an empty list if the vendor isn't a party to it.",
+        "description": "Disputes on this booking; an empty list if the caller isn't a party to it.",
         "operationId": "list_vendor_booking_disputes_api_v1_vendor_booking_requests__booking_id__disputes_get",
         "parameters": [
           {
@@ -28825,7 +28825,7 @@
         ]
       },
       "post": {
-        "description": "Open a dispute on one of the vendor's own bookings.",
+        "description": "Open a dispute on one of the caller's own bookings.",
         "operationId": "post_vendor_dispute_api_v1_vendor_booking_requests__booking_id__disputes_post",
         "parameters": [
           {
@@ -30028,7 +30028,7 @@
     },
     "/api/v1/vendor/disputes": {
       "get": {
-        "description": "Every dispute on a booking the vendor is party to, most recently opened first.",
+        "description": "Every dispute on a booking the caller is party to, most recently opened first.",
         "operationId": "list_vendor_disputes_api_v1_vendor_disputes_get",
         "parameters": [
           {
@@ -30116,7 +30116,7 @@
     },
     "/api/v1/vendor/disputes/{dispute_id}": {
       "get": {
-        "description": "One dispute, if the vendor is a party to its booking.",
+        "description": "One dispute, if the caller is a party to its booking.",
         "operationId": "get_vendor_dispute_api_v1_vendor_disputes__dispute_id__get",
         "parameters": [
           {
@@ -30269,7 +30269,7 @@
     },
     "/api/v1/vendor/notifications/bookings/unread-count": {
       "get": {
-        "description": "How many booking notices the vendor has not read.",
+        "description": "How many booking notices the caller has not read.",
         "operationId": "get_vendor_booking_notifications_unread_count_api_v1_vendor_notifications_bookings_unread_count_get",
         "responses": {
           "200": {
@@ -30322,7 +30322,7 @@
     },
     "/api/v1/vendor/notifications/bookings/{notification_id}/mark-read": {
       "post": {
-        "description": "Mark one notice read; `success` is false when it is not one of the vendor's.",
+        "description": "Mark one notice read; `success` is false when it is not one of the caller's.",
         "operationId": "post_vendor_booking_notification_mark_read_api_v1_vendor_notifications_bookings__notification_id__mark_read_post",
         "parameters": [
           {
@@ -30396,9 +30396,31 @@
     },
     "/api/v1/vendor/notifications/feed": {
       "get": {
-        "description": "The vendor's dashboard feed, newest first.",
+        "description": "The caller's dashboard feed, newest first.",
         "operationId": "get_vendor_notifications_feed_api_v1_vendor_notifications_feed_get",
         "parameters": [
+          {
+            "in": "query",
+            "name": "read_state",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "pattern": "^(all|unread)$",
+              "title": "Read State",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "topic",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "pattern": "^(all|bookings|payments|messages)$",
+              "title": "Topic",
+              "type": "string"
+            }
+          },
           {
             "in": "query",
             "name": "offset",
@@ -30420,28 +30442,6 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "read_state",
-            "required": false,
-            "schema": {
-              "default": "all",
-              "pattern": "^(all|unread)$",
-              "title": "Read State",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "topic",
-            "required": false,
-            "schema": {
-              "default": "all",
-              "pattern": "^(all|bookings|payments|messages)$",
-              "title": "Topic",
-              "type": "string"
             }
           }
         ],
@@ -32006,6 +32006,17 @@
           },
           {
             "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
             "name": "limit",
             "required": false,
             "schema": {
@@ -32013,17 +32024,6 @@
               "maximum": 200,
               "minimum": 1,
               "title": "Limit",
-              "type": "integer"
-            }
-          },
-          {
-            "in": "query",
-            "name": "offset",
-            "required": false,
-            "schema": {
-              "default": 0,
-              "minimum": 0,
-              "title": "Offset",
               "type": "integer"
             }
           }

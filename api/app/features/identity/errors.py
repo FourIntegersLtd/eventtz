@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from app.core.auth import SessionExpired
 from app.core.errors import Conflict, Forbidden, InvalidInput, RateLimited, Unauthenticated
 
 # --- sign-up --------------------------------------------------------------------------------------
@@ -62,11 +63,12 @@ class SuspendedAtSignIn(Forbidden):
     default_message = "This account is suspended. Contact a super admin if you need access."
 
 
-class DeletedAtSignIn(Unauthenticated):
-    """A closed account tried to sign in."""
-
-    code = "account_deleted"
-    default_message = "This account has been deleted. You can create a new account with the same email."
+# Sent with `AccountDeleted` / `SessionExpired` (core.auth owns those codes) where sign-in and the
+# refresh exchange word the refusal differently from a bad access token.
+DELETED_AT_SIGN_IN_MESSAGE = (
+    "This account has been deleted. You can create a new account with the same email."
+)
+REFRESH_EXPIRED_MESSAGE = "Your session has expired. Please sign in again."
 
 
 class EmailNotVerified(Forbidden):
@@ -78,14 +80,7 @@ class EmailNotVerified(Forbidden):
     )
 
 
-class RefreshExpired(Unauthenticated):
-    """No refresh token, or one that is unknown, revoked or past its 30 days."""
-
-    code = "session_expired"
-    default_message = "Your session has expired. Please sign in again."
-
-
-class RefreshTokenReused(RefreshExpired):
+class RefreshTokenReused(SessionExpired):
     """A refresh token that was already exchanged came back: someone else holds a copy.
 
     The whole sign-in (its chain) is revoked, and that revocation must be kept
@@ -93,6 +88,7 @@ class RefreshTokenReused(RefreshExpired):
     """
 
     code = "refresh_token_reused"
+    default_message = REFRESH_EXPIRED_MESSAGE
     persist_effects = True
 
 

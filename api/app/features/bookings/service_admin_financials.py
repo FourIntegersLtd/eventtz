@@ -11,7 +11,7 @@ from __future__ import annotations
 import csv
 import io
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -58,11 +58,23 @@ def _paid_at_iso(booking: BookingRow) -> str | None:
 
 
 async def _financials_rows(
-    session: AsyncSession, *, date_from: str | None, date_to: str | None
+    session: AsyncSession,
+    *,
+    date_from: str | None,
+    date_to: str | None,
+    only_days: tuple[date, date] | None = None,
 ) -> list[tuple[BookingRow, PaidBookingFinancials]]:
-    """Every paid booking in range, paired with its priced financials (breakdown recomputed fresh)."""
+    """Every paid booking in range, paired with its priced financials (breakdown recomputed fresh).
+
+    `only_days` (first day, last day) narrows the read to those UTC days, so the daily table
+    prices one page of days rather than every paid booking.
+    """
     bookings = await repository_admin.paid_bookings_for_financials(
-        session, date_from=date_from, date_to=date_to
+        session,
+        date_from=date_from,
+        date_to=date_to,
+        paid_on_or_after=only_days[0] if only_days else None,
+        paid_on_or_before=only_days[1] if only_days else None,
     )
     if not bookings:
         return []
@@ -114,12 +126,10 @@ class _DailyPenceTotals:
     vendor_pence: int = field(default=0)
 
 
-def _daily_buckets(
-    rows: list[tuple[BookingRow, PaidBookingFinancials]], *, date_from: str | None, date_to: str | None
-) -> list[AdminFinancialsDailyBucket]:
-    """Every day in range (default: the 30 days up to today, capped at 366 days), zero-filled.
+def _daily_window(date_from: str | None, date_to: str | None) -> tuple[date, date]:
+    """First and last day of the daily table (default: the 30 days up to today, capped at 366 days).
 
-    Mirrors the baseline's `_financials_chart_range`/`_iter_financials_days`.
+    Mirrors the baseline's `_financials_chart_range`.
     """
     today = datetime.now(UTC).date()
     start = date_from and date_from[:10]
@@ -131,10 +141,16 @@ def _daily_buckets(
         start_date, end_date = end_date, start_date
     if (end_date - start_date).days > 366:
         start_date = end_date - timedelta(days=366)
+    return start_date, end_date
 
+
+def _daily_buckets(
+    rows: list[tuple[BookingRow, PaidBookingFinancials]], *, first_day: date, last_day: date
+) -> list[AdminFinancialsDailyBucket]:
+    """Every day from `first_day` to `last_day`, zero-filled, with the paid bookings of each day."""
     buckets: dict[str, _DailyPenceTotals] = {}
-    day = start_date
-    while day <= end_date:
+    day = first_day
+    while day <= last_day:
         buckets[day.isoformat()] = _DailyPenceTotals(date=day.isoformat())
         day += timedelta(days=1)
 
@@ -169,11 +185,21 @@ async def financials_daily_page(
     offset: int,
     limit: int,
 ) -> AdminFinancialsDailyListResponse:
-    """One page of daily financial buckets for the admin table (charts use the full summary)."""
-    rows = await _financials_rows(session, date_from=date_from, date_to=date_to)
-    all_daily = _daily_buckets(rows, date_from=date_from, date_to=date_to)
-    total = len(all_daily)
-    page = all_daily[offset : offset + limit]
+    """One page of daily financial buckets for the admin table (charts use the full summary).
+
+    The days are a fixed calendar window, so the page's days are picked first and only the paid
+    bookings of those days are read and priced.
+    """
+    first_day, last_day = _daily_window(date_from, date_to)
+    total = (last_day - first_day).days + 1
+    if offset >= total:
+        return AdminFinancialsDailyListResponse(daily=[], total=total, offset=offset, limit=limit)
+    page_first = first_day + timedelta(days=offset)
+    page_last = min(last_day, page_first + timedelta(days=limit - 1))
+    rows = await _financials_rows(
+        session, date_from=date_from, date_to=date_to, only_days=(page_first, page_last)
+    )
+    page = _daily_buckets(rows, first_day=page_first, last_day=page_last)
     return AdminFinancialsDailyListResponse(daily=page, total=total, offset=offset, limit=limit)
 
 
@@ -183,6 +209,7 @@ async def financials_summary(
     """Totals for the admin financials screen, over an optional `paid_at` date range."""
     rows = await _financials_rows(session, date_from=date_from, date_to=date_to)
     summary = summarize([financials for _booking, financials in rows])
+    summary_first_day, summary_last_day = _daily_window(date_from, date_to)
     return AdminFinancialsSummary(
         period_from=date_from,
         period_to=date_to,
@@ -193,7 +220,7 @@ async def financials_summary(
         service_fee_percent=BOOKING_SERVICE_FEE_PERCENT,
         payout_released_gbp=gbp_from_pence(summary.payout_released_pence),
         held_in_platform_balance_gbp=gbp_from_pence(summary.held_in_platform_balance_pence),
-        daily=_daily_buckets(rows, date_from=date_from, date_to=date_to),
+        daily=_daily_buckets(rows, first_day=summary_first_day, last_day=summary_last_day),
     )
 
 

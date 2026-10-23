@@ -9,13 +9,14 @@ set of filters (date range, free-text search) and their own writes.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Any
 
 from sqlalchemy import Boolean, DateTime, Text, Uuid, column, exists, func, or_, select, table, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
+from app.core.pagination import LIKE_ESCAPE, contains_pattern, paged
 from app.features.bookings.domain_financials import PAID_PAYMENT_STATUSES
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.rows import BookingRow
@@ -111,7 +112,7 @@ def _list_conditions(
     if date_to:
         conditions.append(BookingRequest.created_at <= _as_datetime_bound(date_to))
     if search:
-        conditions.append(BookingRequest.event_name.ilike(f"%{search}%"))
+        conditions.append(BookingRequest.event_name.ilike(contains_pattern(search), escape=LIKE_ESCAPE))
     return conditions
 
 
@@ -127,16 +128,16 @@ async def list_admin_bookings(
 ) -> tuple[list[BookingRow], int]:
     """A page of bookings across every party, newest first, with the total matching count."""
     conditions = _list_conditions(status=status, date_from=date_from, date_to=date_to, search=search)
-    count_result = await session.execute(select(func.count()).select_from(BookingRequest).where(*conditions))
-    total = int(count_result.scalar_one())
-    result = await session.execute(
-        select(*_BOOKING_COLUMNS)
-        .where(*conditions)
-        .order_by(BookingRequest.created_at.desc())
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(*_BOOKING_COLUMNS).where(*conditions),
+        order_by=[BookingRequest.created_at.desc()],
+        tie_breaker=BookingRequest.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(BookingRequest).where(*conditions),
     )
-    return [BookingRow.model_validate(plain_row(found)) for found in result], total
+    return [BookingRow.model_validate(plain_row(found)) for found in found_rows], total
 
 
 async def get_admin_booking(session: AsyncSession, booking_id: str) -> BookingRow | None:
@@ -240,17 +241,31 @@ async def has_active_dispute(session: AsyncSession, booking_id: str) -> bool:
 
 
 async def paid_bookings_for_financials(
-    session: AsyncSession, *, date_from: str | None, date_to: str | None
+    session: AsyncSession,
+    *,
+    date_from: str | None,
+    date_to: str | None,
+    paid_on_or_after: date | None = None,
+    paid_on_or_before: date | None = None,
 ) -> list[BookingRow]:
     """Every paid booking (`domain_financials.PAID_PAYMENT_STATUSES`) whose `paid_at` falls in range.
 
-    Capped at 5000 rows, oldest first, matching the baseline's own cap.
+    `paid_on_or_after` / `paid_on_or_before` further narrow the range to whole UTC days (the daily
+    table asks for one page of days at a time). Capped at 5000 rows, oldest first, matching the
+    baseline's own cap.
     """
     conditions: list[Any] = [BookingRequest.payment_status.in_(PAID_PAYMENT_STATUSES)]
     if date_from:
         conditions.append(BookingRequest.paid_at >= _as_datetime_bound(date_from))
     if date_to:
         conditions.append(BookingRequest.paid_at <= _as_datetime_bound(date_to))
+    if paid_on_or_after:
+        conditions.append(BookingRequest.paid_at >= datetime.combine(paid_on_or_after, time.min, tzinfo=UTC))
+    if paid_on_or_before:
+        conditions.append(
+            BookingRequest.paid_at
+            < datetime.combine(paid_on_or_before + timedelta(days=1), time.min, tzinfo=UTC)
+        )
     result = await session.execute(
         select(*_BOOKING_COLUMNS).where(*conditions).order_by(BookingRequest.paid_at.asc()).limit(5000)
     )

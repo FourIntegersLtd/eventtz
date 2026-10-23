@@ -45,32 +45,63 @@ ALLOWED: dict[tuple[str, str], str] = {
 }
 
 
+# Column methods that filter on a value: `.in_()` and its negation, and the NULL tests.
+FILTER_METHODS = {"in_", "notin_", "not_in", "is_", "is_not", "isnot"}
+
+
 def hand_written_comparisons(path: Path) -> list[tuple[str, int]]:
-    """(enclosing function, line) of each comparison or `.in_()` on an `approval_status` attribute."""
+    """(enclosing function, line) of each hand-written test on `approval_status`.
+
+    Caught: `==`/`!=`/`in` comparisons, column filters (`.in_`, `.notin_`, `.is_`, `.is_not`),
+    `filter_by(approval_status=...)`, and the same comparisons on a dict row (`row["approval_status"]`,
+    `row.get("approval_status")`).
+    """
     found: list[tuple[str, int]] = []
 
-    def uses_attribute(node: ast.AST) -> bool:
-        """True when the expression reads `<something>.approval_status`."""
-        return any(isinstance(inner, ast.Attribute) and inner.attr == ATTRIBUTE for inner in ast.walk(node))
+    def names_attribute(node: ast.AST) -> bool:
+        """True when the expression reads `.approval_status` or the dict key of that name."""
+        for inner in ast.walk(node):
+            if isinstance(inner, ast.Attribute) and inner.attr == ATTRIBUTE:
+                return True
+            if isinstance(inner, ast.Subscript) and constant_text(inner.slice) == ATTRIBUTE:
+                return True
+            if (
+                isinstance(inner, ast.Call)
+                and isinstance(inner.func, ast.Attribute)
+                and inner.func.attr == "get"
+                and inner.args
+                and constant_text(inner.args[0]) == ATTRIBUTE
+            ):
+                return True
+        return False
+
+    def is_hand_written(node: ast.AST) -> bool:
+        """A comparison, a column filter, or `filter_by` that touches `approval_status`."""
+        if isinstance(node, ast.Compare):
+            return names_attribute(node)
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            if node.func.attr in FILTER_METHODS:
+                return names_attribute(node.func.value)
+            if node.func.attr == "filter_by":
+                return any(keyword.arg == ATTRIBUTE for keyword in node.keywords)
+        return False
 
     def visit(node: ast.AST, function: str) -> None:
         """Walk down, remembering the nearest enclosing function name."""
         if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             function = node.name
-        is_comparison = isinstance(node, ast.Compare) and uses_attribute(node)
-        is_in_filter = (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Attribute)
-            and node.func.attr == "in_"
-            and uses_attribute(node.func.value)
-        )
-        if isinstance(node, ast.Compare | ast.Call) and (is_comparison or is_in_filter):
-            found.append((function, node.lineno))
+        if is_hand_written(node):
+            found.append((function, getattr(node, "lineno", 0)))
         for child in ast.iter_child_nodes(node):
             visit(child, function)
 
     visit(parse(path), "<module>")
     return found
+
+
+def constant_text(node: ast.AST) -> str | None:
+    """The string a constant node holds, or None."""
+    return node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None
 
 
 def unlisted(path: Path) -> list[tuple[str, int]]:
@@ -107,7 +138,14 @@ def test_the_guard_would_catch_a_hand_written_filter(tmp_path: Path) -> None:
     planted.write_text(
         "def listed(query):\n    return query.where(Vendor.approval_status == 'approved')\n"
         "def many(query):\n    return query.where(Vendor.approval_status.in_(['approved']))\n"
-        "def fine(vendor):\n    return vendor.status == 'x'\n",
+        "def negated(query):\n    return query.where(Vendor.approval_status.notin_(['rejected']))\n"
+        "def nulls(query):\n    return query.where(Vendor.approval_status.is_(None))\n"
+        "def by_keyword(query):\n    return query.filter_by(approval_status='approved')\n"
+        "def dict_row(row):\n    return row['approval_status'] == 'approved'\n"
+        "def dict_get(row):\n    return row.get('approval_status') in ('approved',)\n"
+        "def fine(vendor):\n    return vendor.status == 'x'\n"
+        "def display(row):\n    return {'approval_status': row['approval_status']}\n",
         encoding="utf-8",
     )
-    assert unlisted(planted) == [("listed", 2), ("many", 4)]
+    flagged = [function for function, _ in unlisted(planted)]
+    assert flagged == ["listed", "many", "negated", "nulls", "by_keyword", "dict_row", "dict_get"]

@@ -347,16 +347,10 @@ async def payout_history(
     session: AsyncSession, vendor_user_id: str, *, offset: int = 0, limit: int = DEFAULT_LIST_LIMIT
 ) -> VendorPayoutHistoryResponse:
     """The vendor's payout ledger: their share only, never the client total."""
-    ledger = await service_payout_ledger.vendor_payout_ledger(session, vendor_user_id)
-    payouts = ledger.payouts
-    page = payouts[offset : offset + limit]
-    return VendorPayoutHistoryResponse(
-        **ledger.model_dump(exclude={"payouts"}),
-        payouts=page,
-        total=len(payouts),
-        offset=offset,
-        limit=limit,
+    ledger, total = await service_payout_ledger.vendor_payout_ledger(
+        session, vendor_user_id, offset=offset, limit=limit
     )
+    return VendorPayoutHistoryResponse(**ledger.model_dump(), total=total, offset=offset, limit=limit)
 
 
 # --- the webhook ---------------------------------------------------------------------------------------

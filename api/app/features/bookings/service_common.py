@@ -6,13 +6,13 @@ from __future__ import annotations
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid
+from app.core.errors import InvalidBookingId
 from app.core.events import publish_after_commit, user_topic
 from app.features.bookings import domain, repository
 from app.features.bookings.domain import BOOKING_CHANGED
 from app.features.bookings.errors import (
     CancelOnSupportHold,
     CancelOpenDispute,
-    InvalidBookingId,
     PayoutBlockedByDispute,
     PayoutOnSupportHold,
 )

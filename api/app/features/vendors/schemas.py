@@ -11,7 +11,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PagedResponse
 
 VendorProfileStatus = Literal["draft", "submitted", "complete"]
 VendorApprovalStatus = Literal["pending", "approved", "banned"]
@@ -111,14 +111,11 @@ class AdminVendorRow(BaseModel):
     insurance: VendorInsuranceState = Field(default_factory=VendorInsuranceState)
 
 
-class AdminVendorsListResponse(BaseModel):
+class AdminVendorsListResponse(PagedResponse):
     """One page of the staff vendor list and how many vendors match in total."""
 
     success: bool = True
     vendors: list[AdminVendorRow] = Field(default_factory=list)
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminVendorDetailResponse(BaseModel):

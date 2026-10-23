@@ -12,7 +12,7 @@ from fastapi import APIRouter, Query, Response
 from app.core.auth import ROLE_ERRORS, CurrentStaff, CurrentSuperAdmin
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PageDep
 from app.core.ports import PaymentGatewayDependency
 from app.features.bookings import service_admin, service_admin_financials
 from app.features.bookings.errors import (
@@ -51,8 +51,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 async def list_bookings(
     session: SessionDep,
     staff: CurrentStaff,
-    offset: int = Query(0, ge=0),
-    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
+    page: PageDep,
     status: str | None = Query(None),
     date_from: str | None = Query(None),
     date_to: str | None = Query(None),
@@ -61,14 +60,14 @@ async def list_bookings(
     """A page of every booking on the platform, with each row's support summary."""
     bookings, total = await service_admin.list_bookings(
         session,
-        offset=offset,
-        limit=limit,
+        offset=page.offset,
+        limit=page.limit,
         status=status,
         date_from=date_from,
         date_to=date_to,
         search=search,
     )
-    return AdminBookingsListResponse(bookings=bookings, total=total, offset=offset, limit=limit)
+    return AdminBookingsListResponse(bookings=bookings, total=total, offset=page.offset, limit=page.limit)
 
 
 @router.get(
@@ -162,14 +161,13 @@ async def financials_summary(
 async def financials_daily(
     session: SessionDep,
     staff: CurrentStaff,
+    page: PageDep,
     date_from: str | None = Query(None),
     date_to: str | None = Query(None),
-    offset: int = Query(0, ge=0),
-    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
 ) -> AdminFinancialsDailyListResponse:
     """One page of daily financial buckets for the admin table."""
     return await service_admin_financials.financials_daily_page(
-        session, date_from=date_from, date_to=date_to, offset=offset, limit=limit
+        session, date_from=date_from, date_to=date_to, offset=page.offset, limit=page.limit
     )
 
 

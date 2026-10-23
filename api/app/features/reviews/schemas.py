@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field, field_validator
 
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PagedResponse
 from app.features.reviews.domain import MAX_REVIEW_IMAGES, normalized_review_image_urls
 
 
@@ -87,7 +87,7 @@ class VendorOwnerReviewItem(BaseModel):
     booking_request_id: str
 
 
-class VendorOwnerReviewsResponse(BaseModel):
+class VendorOwnerReviewsResponse(PagedResponse):
     """Response for `GET /vendor/reviews`."""
 
     success: bool = True
@@ -95,9 +95,6 @@ class VendorOwnerReviewsResponse(BaseModel):
     review_count: int = 0
     five_star_count: int = 0
     reviews: list[VendorOwnerReviewItem] = Field(default_factory=list)
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminReviewRow(BaseModel):
@@ -118,14 +115,11 @@ class AdminReviewRow(BaseModel):
     booking_status: str | None = None
 
 
-class AdminReviewsListResponse(BaseModel):
+class AdminReviewsListResponse(PagedResponse):
     """Response for `GET /admin/reviews`."""
 
     success: bool = True
     reviews: list[AdminReviewRow] = Field(default_factory=list)
-    total: int = 0
-    offset: int = 0
-    limit: int = 100
 
 
 class AdminReviewDetailResponse(BaseModel):

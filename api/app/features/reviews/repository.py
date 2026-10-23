@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.db import as_uuid, plain_row
+from app.core.pagination import paged
 from app.features.reviews.models import BookingReview
 from app.features.reviews.rows import ReviewedBookingRow, ReviewRow, VendorReviewStatsRow
 
@@ -144,15 +145,16 @@ async def visible_reviews_for_vendor_page(
     if min_rating is not None:
         filters.append(BookingReview.rating >= min_rating)
     base = tuple(filters)
-    total = (await session.execute(select(func.count(BookingReview.id)).where(*base))).scalar_one()
-    result = await session.execute(
-        select(*_REVIEW_COLUMNS)
-        .where(*base)
-        .order_by(BookingReview.created_at.desc())
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(*_REVIEW_COLUMNS).where(*base),
+        order_by=[BookingReview.created_at.desc()],
+        tie_breaker=BookingReview.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count(BookingReview.id)).where(*base),
     )
-    return [_review_row(found) for found in result], int(total)
+    return [_review_row(found) for found in found_rows], total
 
 
 async def visible_five_star_count_for_vendor(session: AsyncSession, vendor_user_id: str) -> int:
@@ -207,15 +209,16 @@ async def all_reviews_for_admin(
         conditions.append(BookingReview.hidden_at.is_(None))
     elif visibility == "hidden":
         conditions.append(BookingReview.hidden_at.is_not(None))
-    total = (await session.execute(select(func.count(BookingReview.id)).where(*conditions))).scalar_one()
-    result = await session.execute(
-        select(*_REVIEW_COLUMNS)
-        .where(*conditions)
-        .order_by(BookingReview.created_at.desc())
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(*_REVIEW_COLUMNS).where(*conditions),
+        order_by=[BookingReview.created_at.desc()],
+        tie_breaker=BookingReview.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count(BookingReview.id)).where(*conditions),
     )
-    return [_review_row(found) for found in result], int(total)
+    return [_review_row(found) for found in found_rows], total
 
 
 async def review_for_admin(session: AsyncSession, review_id: str) -> ReviewRow | None:

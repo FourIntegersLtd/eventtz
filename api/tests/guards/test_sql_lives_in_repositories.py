@@ -55,8 +55,9 @@ QUERY_BUILDERS = {
 }
 # `app/` plus `scripts/`: a seed script that runs its own query is the same mistake in a quieter folder.
 SCANNED = [*python_files(), *python_files(SCRIPTS_ROOT)]
-# `jobs.py` writes the queue row inside the caller's transaction (ADR 0008).
-CORE_QUERY_HELPERS = {CORE_ROOT / "jobs.py"}
+# `jobs.py` writes the queue row inside the caller's transaction (ADR 0008). `pagination.py` runs
+# the count and the page for repositories, which hand it their already-built query (ADR 0011).
+CORE_QUERY_HELPERS = {CORE_ROOT / "jobs.py", CORE_ROOT / "pagination.py"}
 
 
 def is_repository(path: Path) -> bool:

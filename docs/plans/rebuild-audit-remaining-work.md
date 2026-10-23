@@ -29,6 +29,18 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 - **Freeze suite.** The fixes for the 9 acceptance tests that already failed on `main` ship with the
   Phase 1 PR.
 
+**Phase 3 (api half): one pagination kernel, merged twins, one error code each.**
+- **Pagination kernel.** `core/pagination.py` holds `PageParams`/`PageDep` (default 25), `PagedResponse`,
+  `paged()` (primary-key tie-breaker) and `escape_like()`. Every list router, schema and repository uses
+  it; `test_routers_use_page_params.py` guards it. Payout history and admin daily financials page in SQL.
+  ADR 0011 lists every route and the two default changes (audit log, admin reviews: 100 to 25).
+- **Twins merged.** `disputes/router_participant.py` and `notifications/router_portal.py` build the
+  client and vendor routes from one factory (operation ids unchanged); the bookings client and vendor
+  list rows share `_shared_list_fields`.
+- **Error codes.** `invalid_booking_id` and `no_fields_to_update` are one class each in `core/errors.py`;
+  `session_expired` and `account_deleted` reuse the `core/auth.py` classes with a message override.
+  `test_visibility_helpers_only` also catches `.notin_`, `.is_`, `filter_by` and dict-row access.
+
 **Phase 4: dead code and docs** (PR "Rebuild audit Phase 4", except `test_list_pagination.py`, which Phase 3 owns).
 - **Deleted web files with no importers (grep of every import form, then `npm run build`):**
   `BookingDetailPanel`, the three old help views, `lib/useMediaQuery.ts`, four planner widgets

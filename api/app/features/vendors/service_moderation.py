@@ -15,6 +15,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
+from app.core.pagination import contains_pattern
 from app.core.ports import Mailer, Storage
 from app.features.bookings import service_vendor_record
 from app.features.identity import service as identity
@@ -120,7 +121,7 @@ async def list_vendors(
     matching_ids: list[str] | None = None
     term = (search or "").strip()
     if term:
-        pattern = f"%{term}%"
+        pattern = contains_pattern(term)
         found_ids = set(
             await identity.vendor_ids_with_email_like(session, pattern, limit=repository.SEARCH_MATCH_LIMIT)
         )
