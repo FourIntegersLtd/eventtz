@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Calendar, ChevronDown, ChevronRight, Search, Send, Shield, Wallet } from "lucide-react";
-import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import { useToast } from "@/components/ui/Toast";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";

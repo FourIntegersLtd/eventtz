@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { fetchAdminAuditLog, type AdminAuditLogItem } from "@/lib/adminPlatformApi";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
 import type { EzFilterOption } from "@/components/ui/ezFilterTypes";

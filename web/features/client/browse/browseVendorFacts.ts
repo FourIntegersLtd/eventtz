@@ -4,7 +4,7 @@ import {
   describeCancellationPolicy,
   type CancellationPolicyTier,
 } from "@/features/bookings/cancellationPolicyCopy";
-import { RADIUS_OPTIONS, WEEKDAY_LABELS } from "@/features/vendor/onboarding/constants";
+import { RADIUS_OPTIONS, WEEKDAY_LABELS } from "@/lib/vendorOnboarding/constants";
 
 const TRAVEL_DELIVERY_LABELS: Record<string, string> = {
   fee_included: "Travel or delivery fee is included",

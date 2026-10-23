@@ -16,11 +16,13 @@ from pathlib import Path
 
 import pytest
 
-from tests.guards._scan import CORE_ROOT, attribute_names, python_files, rel
+from tests.guards._scan import CORE_ROOT, SCRIPTS_ROOT, attribute_names, python_files, rel
 
 # Ending or restarting the transaction is core's job alone.
 TRANSACTION_CONTROL = {"commit", "rollback", "transaction", "begin", "begin_nested"}
 SAVEPOINT = "begin_nested"
+# `app/` plus `scripts/`: scripts open `job_session()`, which commits when its block ends.
+SCANNED = [*python_files(), *python_files(SCRIPTS_ROOT)]
 ALLOWED = {CORE_ROOT / "db.py", CORE_ROOT / "jobs.py"}
 # `flush` only stages work inside the open transaction; a repository needs it for
 # generated ids. A service calling it is reaching into the unit of work.
@@ -43,7 +45,7 @@ def transaction_calls(path: Path) -> list[str]:
     return sorted(attribute_names(path) & banned)
 
 
-@pytest.mark.parametrize("path", [path for path in python_files() if not is_exempt(path)], ids=rel)
+@pytest.mark.parametrize("path", [path for path in SCANNED if not is_exempt(path)], ids=rel)
 def test_only_core_db_controls_transactions(path: Path) -> None:
     bad = transaction_calls(path)
     assert not bad, (
@@ -53,7 +55,7 @@ def test_only_core_db_controls_transactions(path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "path", [path for path in python_files() if not is_exempt(path) and not is_repository(path)], ids=rel
+    "path", [path for path in SCANNED if not is_exempt(path) and not is_repository(path)], ids=rel
 )
 def test_only_repositories_flush(path: Path) -> None:
     assert FLUSH not in attribute_names(path), (
@@ -77,3 +79,7 @@ def test_a_repository_may_open_a_savepoint_but_not_commit(tmp_path: Path) -> Non
         encoding="utf-8",
     )
     assert transaction_calls(repository) == ["commit"]
+
+
+def test_scripts_are_scanned_for_commits() -> None:
+    assert "seed_local_admins.py" in {path.name for path in SCANNED}

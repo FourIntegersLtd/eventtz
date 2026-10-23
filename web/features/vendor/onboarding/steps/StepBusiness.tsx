@@ -6,13 +6,13 @@ import {
   EVENT_TYPE_OPTIONS,
   BUSINESS_STEP_SERVICE_CHIPS,
   VENDOR_WAITLIST_URL,
-} from "../constants";
+} from "../../../../lib/vendorOnboarding/constants";
 import { STEP_COPY } from "../onboardingCopy";
-import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
+import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
 import { checkBusinessNameAvailable } from "@/lib/vendorProfileApi";
 import { Modal } from "@/components/ui/Modal";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
-import { EzChip, EzTextField } from "./ez-form";
+import { EzChip, EzTextField } from "../../../../components/ui/ez-form";
 
 export type StepBusinessProps = {
   data: VendorOnboardingData;

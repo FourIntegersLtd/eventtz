@@ -10,6 +10,8 @@ APP_ROOT = PROJECT_ROOT / "app"
 FEATURES_ROOT = APP_ROOT / "features"
 CORE_ROOT = APP_ROOT / "core"
 TESTS_ROOT = PROJECT_ROOT / "tests"
+# Operator scripts (seeds, one-off sends) run against real databases; held to the same data-access rules.
+SCRIPTS_ROOT = PROJECT_ROOT / "scripts"
 # The repo-root freeze suite; held to the same naming and documentation rules as tests/.
 ACCEPTANCE_ROOT = PROJECT_ROOT.parent / "acceptance"
 

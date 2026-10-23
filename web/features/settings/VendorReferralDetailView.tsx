@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
-import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import { formatEventDate } from "@/lib/dateFormat";
 import { formatBookingMoneyLabel } from "@/lib/bookingServiceFee";
 import { isHttpStatus } from "@/lib/api-errors";

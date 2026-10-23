@@ -9,8 +9,8 @@ import { fetchVendorProfile, type VendorProfileResponse } from "@/lib/vendorProf
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Button } from "@/components/ui/Button";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
-import type { AdminPeriodDays } from "@/features/admin/commerce/commercePeriod";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
+import type { AdminPeriodDays } from "@/lib/commercePeriod";
 import { VendorAnalyticsEzView } from "@/features/vendor/analytics/VendorAnalyticsEzView";
 
 export function VendorAnalyticsView() {

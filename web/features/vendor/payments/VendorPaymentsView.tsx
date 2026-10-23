@@ -13,7 +13,7 @@ import {
   useVendorPayoutsReady,
 } from "@/features/vendor/payments/useVendorPayoutsReady";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import { fetchVendorDashboard } from "@/lib/portalDashboardApi";
 import { formatEventDate } from "@/lib/dateFormat";
 import { formatMoney } from "@/lib/markets";

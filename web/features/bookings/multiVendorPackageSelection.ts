@@ -1,7 +1,7 @@
 import {
   buildBrowsePricingOptions,
   type BrowsePricingOption,
-} from "@/features/client/browse/vendorBrowseDetailModel";
+} from "@/lib/vendorBrowseDetailModel";
 import type { ExploreVendorSearchRow } from "@/lib/clientExploreApi";
 
 export function vendorDisplayName(vendor: ExploreVendorSearchRow): string {

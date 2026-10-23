@@ -21,7 +21,7 @@ import {
   vendorBrowseCategoryLabel,
 } from "@/features/client/browse/VendorBrowseBreadcrumb";
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
-import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
+import { buildBrowsePricingOptions } from "@/lib/vendorBrowseDetailModel";
 import { useExploreVendor } from "@/features/client/browse/useExploreVendor";
 import {
   buildMarketplaceSearchUrl,

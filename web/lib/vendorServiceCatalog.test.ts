@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { PACKAGE_EXAMPLES_BY_SERVICE } from "@/features/vendor/onboarding/packageExamples";
-import { SERVICES_REQUIRING_PACKAGES } from "@/features/vendor/onboarding/packageQuality";
+import { PACKAGE_EXAMPLES_BY_SERVICE } from "@/lib/vendorOnboarding/packageExamples";
+import { SERVICES_REQUIRING_PACKAGES } from "@/lib/vendorOnboarding/packageQuality";
 import { VENDOR_SERVICE_OPTIONS } from "@/lib/vendorServiceCatalog";
 import { marketplaceStateFromSearchParams } from "@/lib/marketplaceSearchParams";
 

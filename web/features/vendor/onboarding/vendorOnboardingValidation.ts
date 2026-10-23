@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ONBOARDING_STEP } from "./onboardingProgress";
+import { ONBOARDING_STEP } from "../../../lib/vendorOnboarding/onboardingProgress";
 import {
   MAX_DISCOUNT_PCT,
   MAX_MONEY_GBP,
@@ -8,8 +8,8 @@ import {
   MIN_MAX_BOOKINGS_PER_DAY,
   MIN_MONEY_GBP,
   MIN_PORTFOLIO_IMAGES,
-} from "@/features/vendor/onboarding/constants";
-import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
+} from "@/lib/vendorOnboarding/constants";
+import type { VendorOnboardingData } from "@/lib/vendorOnboarding/types";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 import { phoneRequiredSchema } from "@/lib/validation/phone";
 import {
@@ -19,7 +19,7 @@ import {
   packageValidationErrors,
   requiresAtLeastOnePackage,
   servicesRequiringPackages,
-} from "@/features/vendor/onboarding/packageQuality";
+} from "@/lib/vendorOnboarding/packageQuality";
 import { CANCELLATION_POLICY_KEYS } from "@/features/bookings/cancellationPolicyCopy";
 import { parseMoneyNumber } from "@/lib/vendorDiscountDisplay";
 import {

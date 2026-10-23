@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { LoadingState } from "@/components/ui/LoadingState";
-import { ClientEzPageHead } from "@/features/client/ui/ClientEzPageHead";
+import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
 import { HelpHubView } from "@/features/help/HelpHubView";
 import { parseHelpHubTab } from "@/lib/helpHub";
 

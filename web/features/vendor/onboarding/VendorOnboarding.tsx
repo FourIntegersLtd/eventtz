@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ONBOARDING_STEP } from "./onboardingProgress";
+import { ONBOARDING_STEP } from "../../../lib/vendorOnboarding/onboardingProgress";
 import { useEffect, useState } from "react";
 import { portalCard } from "@/components/portal-shell/portalTheme";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -11,7 +11,7 @@ import {
   MIN_PORTFOLIO_IMAGES,
   profileSectionFromParam,
   profileSectionHref,
-} from "./constants";
+} from "../../../lib/vendorOnboarding/constants";
 import { portfolioApprovalBlockedCopy } from "./onboardingCopy";
 import { OnboardingStepContent } from "./OnboardingStepContent";
 import { draftSavedLabel } from "./draftSavedLabel";

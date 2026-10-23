@@ -4,7 +4,7 @@ import { Package } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { packageExamplesForServices } from "../packageExamples";
+import { packageExamplesForServices } from "../../../../lib/vendorOnboarding/packageExamples";
 
 type Props = {
   servicesOffered: string[];

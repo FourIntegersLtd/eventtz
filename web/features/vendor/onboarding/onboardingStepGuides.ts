@@ -1,6 +1,6 @@
-import { MIN_PORTFOLIO_IMAGES } from "./constants";
-import { ONBOARDING_FORM_STEP_COUNT } from "./onboardingProgress";
-import { packageExamplesForServices } from "./packageExamples";
+import { MIN_PORTFOLIO_IMAGES } from "../../../lib/vendorOnboarding/constants";
+import { ONBOARDING_FORM_STEP_COUNT } from "../../../lib/vendorOnboarding/onboardingProgress";
+import { packageExamplesForServices } from "../../../lib/vendorOnboarding/packageExamples";
 import { vendorServiceOnboardingGuideSections } from "@/lib/vendorServiceCatalog";
 
 export type OnboardingStepGuide = {

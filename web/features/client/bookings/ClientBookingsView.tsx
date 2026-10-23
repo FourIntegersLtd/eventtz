@@ -8,7 +8,7 @@ import { BookingDisputeSection } from "@/features/bookings/BookingDisputeSection
 import { ClientBookingsEzList } from "@/features/client/bookings/ClientBookingsEzList";
 import { ClientMyBookingsHub } from "@/features/client/bookings/ClientMyBookingsHub";
 import { BOOKING_EMPTY_LIST_TITLE } from "@/features/bookings/bookingListConstants";
-import { VendorBookingDetailEzPanel } from "@/features/vendor/bookings/VendorBookingDetailEzPanel";
+import { VendorBookingDetailEzPanel } from "@/features/bookings/VendorBookingDetailEzPanel";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";

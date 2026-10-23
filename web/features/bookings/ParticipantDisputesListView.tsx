@@ -21,7 +21,7 @@ import {
 } from "@/lib/participantDisputeEnrichment";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import type { PortalRole } from "@/lib/portalRole";
 
 type Props = {
   role: PortalRole;

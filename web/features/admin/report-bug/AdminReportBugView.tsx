@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/components/ui/Toast";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { submitAdminContact } from "@/lib/contactApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";

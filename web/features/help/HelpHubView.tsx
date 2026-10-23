@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import type { PortalRole } from "@/lib/portalRole";
 import { ContactFormView } from "@/features/contact/ContactFormView";
 import { ChatPortalView } from "@/features/chat/ChatPortalView";
 import {

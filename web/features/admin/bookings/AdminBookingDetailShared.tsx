@@ -54,7 +54,7 @@ export function ExpandableId({ value, label }: { value: unknown; label: string }
         <code
           style={{
             fontSize: "13px",
-            background: "var(--ez-surface-3, #f4f2f7)",
+            background: "var(--ez-surface-3)",
             padding: "2px 8px",
             borderRadius: "6px",
           }}

@@ -6,7 +6,7 @@ import type { RefinementCtx } from "zod";
 import {
   MAX_MONEY_GBP as ONBOARDING_MAX_MONEY_GBP,
   MIN_MONEY_GBP as ONBOARDING_MIN_MONEY_GBP,
-} from "@/features/vendor/onboarding/constants";
+} from "@/lib/vendorOnboarding/constants";
 
 /** Re-export for callers that import limits from validation/money. */
 export const MIN_MONEY_GBP = ONBOARDING_MIN_MONEY_GBP;

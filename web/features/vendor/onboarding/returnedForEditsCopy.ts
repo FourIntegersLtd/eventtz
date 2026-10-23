@@ -1,4 +1,4 @@
-import type { VendorStatusCheckFeedback } from "./types";
+import type { VendorStatusCheckFeedback } from "../../../lib/vendorOnboarding/types";
 
 export const RETURNED_FOR_EDITS_TITLE = "Profile returned for edits";
 

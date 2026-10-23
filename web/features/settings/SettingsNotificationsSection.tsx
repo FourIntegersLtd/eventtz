@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Bell, ChevronRight } from "lucide-react";
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import type { PortalRole } from "@/lib/portalRole";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { SettingsSection } from "./SettingsSection";
 

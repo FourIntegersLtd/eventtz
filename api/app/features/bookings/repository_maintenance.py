@@ -13,6 +13,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncSessionTransaction
 
 from app.core.db import as_uuid, plain_row
+from app.features.bookings.errors import UnknownReminderColumn
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.repository import BOOKING_COLUMNS
 from app.features.bookings.rows import BookingRow, EnquiryReminderRow, SilentEnquiryRow
@@ -103,7 +104,7 @@ async def stamp_enquiry_reminders(session: AsyncSession, booking_id: str, stamp_
     """Record that these enquiry reminders were sent (or skipped for a vendor who left) just now."""
     unknown_columns = set(stamp_columns) - _REMINDER_STAMP_COLUMNS
     if unknown_columns:
-        raise ValueError(f"not an enquiry reminder column: {sorted(unknown_columns)}")
+        raise UnknownReminderColumn(f"not an enquiry reminder column: {sorted(unknown_columns)}")
     if not stamp_columns:
         return
     await session.execute(

@@ -1,5 +1,5 @@
 import { STEP_COPY } from "../onboardingCopy";
-import { ONBOARDING_FORM_STEP_COUNT } from "../onboardingProgress";
+import { ONBOARDING_FORM_STEP_COUNT } from "../../../../lib/vendorOnboarding/onboardingProgress";
 import { OnboardingStepInfoTrigger } from "./OnboardingStepInfoModal";
 
 type OnboardingWizardStepTitleProps = {

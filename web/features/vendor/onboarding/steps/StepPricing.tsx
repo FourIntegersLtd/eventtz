@@ -5,18 +5,18 @@ import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import {
   packageIncludedPlaceholder,
   packageNamePlaceholder,
-} from "../packageExamples";
-import { packageFieldErrors } from "../packageQuality";
+} from "../../../../lib/vendorOnboarding/packageExamples";
+import { packageFieldErrors } from "../../../../lib/vendorOnboarding/packageQuality";
 import {
   createVendorPackage,
   type VendorOnboardingData,
   type VendorOnboardingUpdate,
   type VendorPackageItem,
-} from "../types";
+} from "../../../../lib/vendorOnboarding/types";
 import { VendorListingOptimizerPanel } from "@/features/vendor/copilot/VendorListingOptimizerPanel";
 import { PackageExamplesModal } from "../ui/PackageExamplesModal";
 import { consumeCoachScrollTarget } from "../packageCoachApply";
-import { EzCheck, EzTextField } from "./ez-form";
+import { EzCheck, EzTextField } from "../../../../components/ui/ez-form";
 import { singleGbpAmountFieldError } from "@/lib/validation/money";
 import {
   damageDepositError,
@@ -274,7 +274,7 @@ export function StepPricing({
               className="ez-card ez-card--flat"
               style={
                 isHighlighted
-                  ? { borderColor: "#34d399", scrollMarginTop: 16 }
+                  ? { borderColor: "var(--ez-success-ring)", scrollMarginTop: 16 }
                   : { scrollMarginTop: 16 }
               }
             >

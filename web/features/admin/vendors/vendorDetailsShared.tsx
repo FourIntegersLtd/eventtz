@@ -25,7 +25,7 @@ import { StatusBadge } from "@/components/badges/StatusBadge";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import type { BookingStatus } from "@/lib/domain-types";
 import { getBookingStatusMeta } from "@/lib/domain-types";
-import { AdminDonutChart } from "@/features/admin/components/AdminDonutChart";
+import { EzDonutChart } from "@/components/charts/EzDonutChart";
 import { portfolioImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
 import {
   formatMoneyLabel,
@@ -100,18 +100,18 @@ const BOOKING_STATUS_ORDER: BookingStatus[] = [
 ];
 
 const BOOKING_STATUS_CHART_COLOR: Record<BookingStatus, string> = {
-  pending: "#fbbf24",
-  accepted: "#10b981",
-  completed: "#3b82f6",
-  declined: "#a3a3a3",
-  cancelled: "#d4d4d4",
-  disputed: "#f43f5e",
+  pending: "var(--ez-status-pending)",
+  accepted: "var(--ez-status-accepted)",
+  completed: "var(--ez-status-completed)",
+  declined: "var(--ez-status-declined)",
+  cancelled: "var(--ez-status-cancelled)",
+  disputed: "var(--ez-status-disputed)",
 };
 
 function bookingStatusColor(status: string): string {
   return status in BOOKING_STATUS_CHART_COLOR
     ? BOOKING_STATUS_CHART_COLOR[status as BookingStatus]
-    : "#737373";
+    : "var(--ez-status-other)";
 }
 
 function bookingStatusEntries(byStatus: Record<string, number>) {
@@ -141,7 +141,7 @@ export function BookingStatusBreakdown({ byStatus }: { byStatus: Record<string, 
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="h-[180px] w-40 shrink-0">
-        <AdminDonutChart
+        <EzDonutChart
           data={entries.map(({ status, count }) => ({
             name: getBookingStatusMeta(status).label,
             value: count,

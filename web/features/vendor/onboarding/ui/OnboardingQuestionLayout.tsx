@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { AnimatedStepItem } from "./AnimatedStepItem";
+import { AnimatedStepItem } from "../../../../components/ui/AnimatedStepItem";
 
 type Props = {
   lead?: string;

@@ -6,7 +6,7 @@ export type MarketplaceCategoryBar = { label: string; value: number };
 export {
   ADMIN_PERIOD_OPTIONS as MARKETPLACE_PERIOD_OPTIONS,
   type AdminPeriodDays as MarketplacePeriodDays,
-} from "@/features/admin/commerce/commercePeriod";
+} from "@/lib/commercePeriod";
 
 /** Chart series from monthly enquiry counts (empty analytics → empty series). */
 export function toMarketplaceDemandSeries(

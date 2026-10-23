@@ -287,8 +287,8 @@ export const WHY_EVENTTZ_PILLARS: LandingValuePillar[] = [
     description:
       "See the full price before you pay. If something goes wrong, we hold payment until it's sorted",
     Icon: ShieldCheck,
-    iconBg: "bg-violet-100",
-    iconColor: "text-violet-600",
+    iconBg: "bg-primary-soft",
+    iconColor: "text-primary",
   },
 ];
 

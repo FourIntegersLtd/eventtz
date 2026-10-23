@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import { formatAxisDate } from "./chartUtils";
 
-type AdminAreaChartProps = {
+type EzAreaChartProps = {
   data: { date: string; value: number }[];
   valueLabel?: string;
 };
@@ -21,7 +21,8 @@ function formatGbp(value: number): string {
   return `£${value.toLocaleString("en-GB", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
-export function AdminAreaChart({ data, valueLabel = "Value" }: AdminAreaChartProps) {
+/** Single-series area chart over dates (e.g. revenue per day), drawn in the `--ez-chart-1` token. */
+export function EzAreaChart({ data, valueLabel = "Value" }: EzAreaChartProps) {
   const fillId = useId().replace(/:/g, "");
   const chartData = data.map((d) => ({
     ...d,
@@ -33,24 +34,24 @@ export function AdminAreaChart({ data, valueLabel = "Value" }: AdminAreaChartPro
       <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -8, bottom: 0 }}>
         <defs>
           <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--color-primary, #3e1964)" stopOpacity={0.22} />
-            <stop offset="100%" stopColor="var(--color-primary, #3e1964)" stopOpacity={0.02} />
+            <stop offset="0%" stopColor="var(--ez-chart-1)" stopOpacity={0.22} />
+            <stop offset="100%" stopColor="var(--ez-chart-1)" stopOpacity={0.02} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e5e5" />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--ez-line)" />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 10, fill: "#737373" }}
+          tick={{ fontSize: 10, fill: "var(--ez-ink-3)" }}
           interval="preserveStartEnd"
           minTickGap={24}
         />
         <YAxis
-          tick={{ fontSize: 10, fill: "#737373" }}
+          tick={{ fontSize: 10, fill: "var(--ez-ink-3)" }}
           width={40}
           tickFormatter={(v) => (v >= 1000 ? `£${Math.round(v / 1000)}k` : `£${v}`)}
         />
         <Tooltip
-          contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e5e5" }}
+          contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--ez-line)" }}
           formatter={(value) => [formatGbp(Number(value ?? 0)), valueLabel]}
           labelFormatter={(_, payload) => {
             const row = payload?.[0]?.payload as { date?: string } | undefined;
@@ -60,7 +61,7 @@ export function AdminAreaChart({ data, valueLabel = "Value" }: AdminAreaChartPro
         <Area
           type="monotone"
           dataKey="value"
-          stroke="var(--color-primary, #3e1964)"
+          stroke="var(--ez-chart-1)"
           strokeWidth={2}
           fill={`url(#${fillId})`}
         />

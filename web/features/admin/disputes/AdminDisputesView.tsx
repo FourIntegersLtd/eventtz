@@ -7,7 +7,7 @@ import {
   type AdminDisputeCase,
 } from "@/lib/adminPlatformApi";
 import { TablePagination } from "@/components/ui/TablePagination";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { DisputeActionPanel } from "./DisputeActionPanel";
 import { DisputeResolveModal } from "./DisputeResolveModal";

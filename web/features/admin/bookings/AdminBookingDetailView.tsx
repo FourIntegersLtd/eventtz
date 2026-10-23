@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { useAdminBookingDetail } from "@/features/admin/bookings/useAdminBookingDetail";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";

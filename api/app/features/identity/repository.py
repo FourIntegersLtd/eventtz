@@ -172,6 +172,16 @@ async def user_ids_of_type_with_email_like(
     return [str(user_id) for user_id in result]
 
 
+async def open_emails_of_type(session: AsyncSession, *, user_type: str) -> list[str]:
+    """Emails of every open (not closed) account of `user_type` that has one, sorted."""
+    result = await session.scalars(
+        select(User.email)
+        .where(User.user_type == user_type, User.deleted_at.is_(None), User.email.is_not(None))
+        .order_by(User.email)
+    )
+    return [email for email in result if email]
+
+
 async def open_user_ids_of_type(
     session: AsyncSession, *, user_type: str, include_suspended: bool
 ) -> list[str]:

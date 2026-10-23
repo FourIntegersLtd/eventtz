@@ -2,9 +2,16 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 
-const COLORS = ["#f59e0b", "#10b981", "#0ea5e9", "#ef4444", "#94a3b8"];
+/** Series colours: the design-language chart tokens (see design/canvas/project/eventtz.css). */
+const COLORS = [
+  "var(--ez-chart-1)",
+  "var(--ez-chart-2)",
+  "var(--ez-chart-3)",
+  "var(--ez-chart-4)",
+  "var(--ez-chart-5)",
+];
 
-type AdminDonutChartProps = {
+type EzDonutChartProps = {
   data: { name: string; value: number; color?: string }[];
   /** Override the center label (defaults to sum of values). */
   centerLabel?: string;
@@ -13,12 +20,13 @@ type AdminDonutChartProps = {
   height?: number;
 };
 
-export function AdminDonutChart({
+/** Donut with a centre total; slices cycle through the `--ez-chart-1..5` tokens unless a slice sets `color`. */
+export function EzDonutChart({
   data,
   centerLabel,
   valueFormatter,
   height = 220,
-}: AdminDonutChartProps) {
+}: EzDonutChartProps) {
   const filtered = data.filter((d) => d.value > 0);
   const total = filtered.reduce((s, d) => s + d.value, 0);
   const center = centerLabel ?? (valueFormatter ? valueFormatter(total) : String(total));
@@ -43,13 +51,13 @@ export function AdminDonutChart({
               fill={
                 filtered.length
                   ? (entry.color ?? COLORS[i % COLORS.length])
-                  : "#e5e5e5"
+                  : "var(--ez-line)"
               }
             />
           ))}
         </Pie>
         <Tooltip
-          contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e5e5" }}
+          contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid var(--ez-line)" }}
           formatter={(value, name) => [
             valueFormatter ? valueFormatter(Number(value ?? 0)) : (value ?? 0),
             name,
@@ -60,7 +68,8 @@ export function AdminDonutChart({
           y="50%"
           textAnchor="middle"
           dominantBaseline="middle"
-          className="fill-neutral-900 text-sm font-semibold"
+          className="text-sm font-semibold"
+          style={{ fill: "var(--ez-ink)" }}
         >
           {center}
         </text>

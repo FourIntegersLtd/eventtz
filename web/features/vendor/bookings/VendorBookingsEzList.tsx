@@ -5,7 +5,7 @@ import type { BookingListRowViewModel } from "@/features/bookings/bookingViewMod
 import type { BookingListTab } from "@/features/bookings/BookingListPanel";
 import { vendorBookingDetailHref } from "@/features/vendor/bookings/vendorBookingViewModel";
 import { TablePagination } from "@/components/ui/TablePagination";
-import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import { EzClearableInput } from "@/components/ui/EzClearableInput";
 

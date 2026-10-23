@@ -1,11 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { VendorOnboardingData, VendorOnboardingUpdate, VendorStatusCheckFeedback } from "./types";
+import type { VendorOnboardingData, VendorOnboardingUpdate, VendorStatusCheckFeedback } from "../../../lib/vendorOnboarding/types";
 import type { VendorApprovalStatus } from "@/lib/domain-types";
 import type { PortfolioImageQualityRow } from "./useVendorOnboardingController";
 import { OnboardingWizardStepTitle } from "./ui/OnboardingWizardStepTitle";
-import { ONBOARDING_FORM_STEP_COUNT, ONBOARDING_STEP } from "./onboardingProgress";
+import { ONBOARDING_FORM_STEP_COUNT, ONBOARDING_STEP } from "../../../lib/vendorOnboarding/onboardingProgress";
 import {
   CancellationPolicyPicker,
   StepAccount,

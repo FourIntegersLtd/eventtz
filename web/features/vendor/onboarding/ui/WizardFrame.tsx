@@ -2,9 +2,9 @@
 
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
-import { STEP_LABELS } from "../constants";
+import { STEP_LABELS } from "../../../../lib/vendorOnboarding/constants";
 import { WIZARD_HEAD } from "../onboardingCopy";
-import { ONBOARDING_FORM_STEP_COUNT } from "../onboardingProgress";
+import { ONBOARDING_FORM_STEP_COUNT } from "../../../../lib/vendorOnboarding/onboardingProgress";
 
 /** Footer controls of the wizard card; the parent owns every handler and flag. */
 export type WizardFooterProps = {

@@ -19,6 +19,7 @@ import pytest
 
 from tests.guards._scan import (
     CORE_ROOT,
+    SCRIPTS_ROOT,
     attribute_names,
     imported_modules,
     names_imported_from,
@@ -52,6 +53,8 @@ QUERY_BUILDERS = {
     "table",
     "column",
 }
+# `app/` plus `scripts/`: a seed script that runs its own query is the same mistake in a quieter folder.
+SCANNED = [*python_files(), *python_files(SCRIPTS_ROOT)]
 # `jobs.py` writes the queue row inside the caller's transaction (ADR 0008).
 CORE_QUERY_HELPERS = {CORE_ROOT / "jobs.py"}
 
@@ -91,13 +94,13 @@ def model_imports(path: Path) -> list[str]:
     return sorted(found)
 
 
-@pytest.mark.parametrize("path", [path for path in python_files() if not may_query(path)], ids=rel)
+@pytest.mark.parametrize("path", [path for path in SCANNED if not may_query(path)], ids=rel)
 def test_no_sql_outside_repositories(path: Path) -> None:
     found = sql_literals(path)
     assert not found, f"{rel(path)} contains SQL: {found[0][:60]!r}. Move it into the slice's repository.py."
 
 
-@pytest.mark.parametrize("path", [path for path in python_files() if not may_query(path)], ids=rel)
+@pytest.mark.parametrize("path", [path for path in SCANNED if not may_query(path)], ids=rel)
 def test_no_orm_queries_outside_repositories(path: Path) -> None:
     found = orm_query_use(path)
     assert not found, (
@@ -106,7 +109,7 @@ def test_no_orm_queries_outside_repositories(path: Path) -> None:
     )
 
 
-@pytest.mark.parametrize("path", python_files(), ids=rel)
+@pytest.mark.parametrize("path", SCANNED, ids=rel)
 def test_only_a_slices_repository_imports_its_models(path: Path) -> None:
     found = model_imports(path)
     assert not found, f"{rel(path)} imports {found}; only the owning slice's repository.py may."
@@ -146,3 +149,8 @@ def test_the_guard_ignores_prose_and_a_service_that_calls_its_repository(tmp_pat
         encoding="utf-8",
     )
     assert (orm_query_use(service), sql_literals(service), model_imports(service)) == ([], [], [])
+
+
+def test_scripts_are_scanned_like_the_app() -> None:
+    scanned = {path.name for path in SCANNED}
+    assert {"seed_local_admins.py", "service.py"} <= scanned

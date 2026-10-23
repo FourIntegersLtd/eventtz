@@ -10,7 +10,7 @@ import {
   Shield,
   TriangleAlert,
 } from "lucide-react";
-import { ONBOARDING_STEP } from "../onboardingProgress";
+import { ONBOARDING_STEP } from "../../../../lib/vendorOnboarding/onboardingProgress";
 
 /** Inline svgs sit on the text baseline in the artboard; Tailwind preflight would make them block. */
 const INLINE_ICON_STYLE = { display: "inline", verticalAlign: "baseline" } as const;

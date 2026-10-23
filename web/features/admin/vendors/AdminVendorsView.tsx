@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useToast } from "@/components/ui/Toast";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
 import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
 import { TablePagination } from "@/components/ui/TablePagination";

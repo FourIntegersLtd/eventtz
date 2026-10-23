@@ -8,7 +8,7 @@ import { VendorApprovalStatusBadge } from "@/components/badges/VendorApprovalSta
 import { VendorPayoutStatusBadge } from "@/components/badges/VendorPayoutStatusBadge";
 import { VendorProfileStatusBadge } from "@/components/badges/VendorProfileStatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { fetchAdminVendorInsights, type AdminVendorInsights } from "@/lib/adminVendorsApi";
 import { VendorDetailsInsightsSection } from "./VendorDetailsInsightsSection";

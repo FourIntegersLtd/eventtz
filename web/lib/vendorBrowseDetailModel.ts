@@ -1,5 +1,5 @@
 import type { ExploreVendor } from "@/lib/clientExploreApi";
-import { displayServicesOffered } from "@/features/client/browse/browseLabels";
+import { displayServicesOffered } from "@/lib/vendorBrowseLabels";
 import {
   buildDiscountPromoLines,
   listPriceDisplay,

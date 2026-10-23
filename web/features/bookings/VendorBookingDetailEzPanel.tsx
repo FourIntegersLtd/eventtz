@@ -19,7 +19,7 @@ import { shortId } from "@/lib/shortId";
 import {
   vendorBookingTrackIndex,
   vendorBookingTrackLabels,
-} from "@/features/vendor/bookings/vendorBookingTrack";
+} from "@/features/bookings/vendorBookingTrack";
 
 function formatBookingLocation(
   postcode: string | null,

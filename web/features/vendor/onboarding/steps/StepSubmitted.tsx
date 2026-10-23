@@ -8,8 +8,8 @@ import { portfolioApprovalBlockedCopy } from "@/features/vendor/onboarding/onboa
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import type { VendorStatusCheckFeedback } from "../types";
-import { AnimatedStepItem } from "../ui/AnimatedStepItem";
+import type { VendorStatusCheckFeedback } from "../../../../lib/vendorOnboarding/types";
+import { AnimatedStepItem } from "../../../../components/ui/AnimatedStepItem";
 import { VendorProfilePhotoField } from "../VendorProfilePhotoField";
 import { SubmittedPendingScreen } from "./submittedScreens";
 

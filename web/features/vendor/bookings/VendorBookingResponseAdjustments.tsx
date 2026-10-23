@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
-import { inputClass, labelClass, ToggleChip } from "@/features/vendor/onboarding/steps/form-primitives";
+import { inputClass, labelClass, ToggleChip } from "@/components/ui/form-primitives";
 import { parseForm, vendorPriceAdjustmentsSchema } from "@/lib/validation";
 import {
   adjustmentLineKey,

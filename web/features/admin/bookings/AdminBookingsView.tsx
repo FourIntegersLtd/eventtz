@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
 import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
 import {

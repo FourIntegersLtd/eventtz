@@ -43,6 +43,19 @@
   --ez-chart-4: #b49bd3;
   --ez-chart-5: #9a93a6;
 
+  /* Booking-status fills for charts and legend dots (admin vendor breakdown). */
+  --ez-status-pending: #fbbf24;
+  --ez-status-accepted: #10b981;
+  --ez-status-completed: #3b82f6;
+  --ez-status-declined: #a3a3a3;
+  --ez-status-cancelled: #d4d4d4;
+  --ez-status-disputed: #f43f5e;
+  --ez-status-other: #737373;
+
+  /* Text on photos and dark overlays; emphasis ring for a highlighted package card. */
+  --ez-on-media: #fff;
+  --ez-success-ring: #34d399;
+
   /* Type */
   --ez-font-display: "Fraunces", Georgia, serif;
   --ez-font-body: "Plus Jakarta Sans", system-ui, sans-serif;

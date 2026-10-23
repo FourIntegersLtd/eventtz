@@ -35,7 +35,7 @@ poetry run python -m pytest -q -rs \
 make guards             # AST architecture guards
 make arch               # import-linter + alembic check (after a model or schema change)
 cd ../web && export PATH="$HOME/.nvm/versions/node/v22.22.3/bin:$PATH" && \
-  npx vitest run features/admin/commerce features/client/payments lib/bookingServiceFee.test.ts lib/validation/money.test.ts
+  npx vitest run lib/commercePeriod.test.ts features/client/payments lib/bookingServiceFee.test.ts lib/validation/money.test.ts
 ```
 
 479 passed, 0 skipped (api) and 31 passed (web) on 2026-10-18. The goldens are oracles from the

@@ -3,7 +3,7 @@
 import {
   ADMIN_PERIOD_OPTIONS,
   type AdminPeriodDays,
-} from "@/features/admin/commerce/commercePeriod";
+} from "@/lib/commercePeriod";
 import { EzPeriodFilterButton } from "@/components/ui/EzPeriodFilterButton";
 
 type AdminCommercePeriodFilterProps = {

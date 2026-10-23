@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SERVICE_OPTIONS, VENDOR_WAITLIST_URL } from "@/features/vendor/onboarding/constants";
+import { SERVICE_OPTIONS, VENDOR_WAITLIST_URL } from "@/lib/vendorOnboarding/constants";
 
 const OTHER_TOOLTIP =
   "We're expanding categories. Join the waitlist to hear when your vendor type goes live";

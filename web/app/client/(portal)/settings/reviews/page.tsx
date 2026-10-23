@@ -1,6 +1,6 @@
 "use client";
 
-import { ClientEzPageHead } from "@/features/client/ui/ClientEzPageHead";
+import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
 import { ClientOwnReviewsSection } from "@/features/client/reviews/ClientOwnReviewsSection";
 
 export default function ClientSettingsReviewsPage() {

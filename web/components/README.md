@@ -7,6 +7,7 @@ Reusable UI and cross-cutting chrome only. **Product screens and domain widgets 
 | Folder | Purpose |
 |--------|---------|
 | [`ui/`](ui/) | Generic primitives — Button, Modal, inputs, loading, motion, layout tokens |
+| [`charts/`](charts/) | recharts wrappers (`EzAreaChart`, `EzBarChart`, `EzDonutChart`, ...) coloured with `--ez-chart-*` tokens |
 | [`badges/`](badges/) | Domain-labeled status badges (booking, payment, vendor, dispute, admin) |
 | [`auth/`](auth/) | `AuthProvider`, `Require*`, auth page shell |
 | [`portal-shell/`](portal-shell/) | Client + vendor portal chrome (`PortalShell`, nav, theme, `PortalFillHeight`) |
@@ -26,13 +27,45 @@ Colours, shadows and radii come from the tokens in `app/globals.css`, surfaced b
 ## Dependency rules
 
 ```text
-app/        → features/, components/
-features/   → components/, lib/
-components/ → lib/ only   (never import from features/)
-lib/        → lib/ only   (never import from features/ or components/)
+app/        → features/, components/, lib/
+features/X  → components/, lib/, features/X (own area), and the shared feature modules below
+components/ → components/, lib/ only   (the shell allow-list below may also import features/)
+lib/        → lib/ only                (never components/, features/ or app/)
 ```
 
-**Product UI belongs in `features/`**, e.g. shared vendor listing presentation in [`features/vendors/display/`](../features/vendors/display/) (browse cards, portfolio gallery, pricing blocks).
+Enforced by ESLint (`no-restricted-imports`, configured in [`eslint.boundaries.mjs`](../eslint.boundaries.mjs),
+wired in `eslint.config.mjs`; `npm run lint` fails on a violation). `lib/eslintBoundaries.test.ts`
+lints virtual files with the real config, so a config edit that disables a rule fails `npm test`.
+A feature **area** is the first path segment under `features/` (`admin`, `client`, `vendor`, ...).
+
+**Shared feature modules** (any feature may import these; keep the list short):
+
+| Module | Why it is shared |
+|--------|------------------|
+| `features/bookings` | Booking view models, terms, pricing breakdown, quote and detail panels, used by client, vendor, admin, marketplace |
+| `features/vendors/display` | Vendor listing presentation (browse cards, portfolio, pricing blocks) |
+| `features/receipts` | Receipt actions and views |
+| `features/landing` | Public-site chrome (`LandingNav`, `LandingFooter`, `LandingSection`) used by blog, errors, marketplace |
+| `features/reviews` | Review cards and panels shown to client, vendor and admin |
+| `features/chat` | Chat drawer, thread and composer |
+| `features/dashboard` | Attention feed and calendar cards of the client and vendor dashboards |
+| `features/auth` | `authRouting` helpers |
+| `features/vendor/copilot` | AI co-pilot, hosted by the portal shell, help widget and chat |
+| `features/help/helpContent` | Static help copy, also read by the co-pilot |
+| `features/settings/ChangePasswordModal` | Used by the admin and portal settings screens |
+| `features/vendor/onboarding/serializeVendorPayload` | Vendor profile payload shape, used by admin review and settings |
+
+A few pages compose another area on purpose (`AREA_COMPOSES`): `landing` and `client` host
+`marketplace`, `settings` hosts `client/onboarding`, `help` hosts `contact`.
+
+**Shell allow-list** (`components/` files that may import `features/` widgets, never `app/`):
+`portal-shell/PortalShell`, `admin-shell/AdminShell`, `auth/RequireRole`,
+`compliances/CompliancePageShell`, `compliances/ComplianceReader`.
+
+**Where a shared piece goes instead of a feature import:** generic UI → `components/ui/` (or
+`components/charts/` for recharts wrappers, coloured by the `--ez-chart-1..5` tokens); constants,
+types and pure logic → `lib/` (for example `lib/vendorOnboarding/`, `lib/portalRole.ts`).
+Add a name to the shared list only for a real product module that several areas render.
 
 ## Shell wiring
 
@@ -42,7 +75,7 @@ lib/        → lib/ only   (never import from features/ or components/)
 | Vendor | `PortalShell` (`portal="vendor"`) | [`app/vendor/(portal)/layout.tsx`](../app/vendor/(portal)/layout.tsx) |
 | Admin | `AdminShell` via `AdminConsolePage` | Each [`app/admin/(portal)/`](../app/admin/(portal)/) page |
 
-Shells may compose feature widgets (e.g. `HelpWidget`, notification bell) — that is intentional cross-cutting chrome, not product logic.
+Shells may compose feature widgets (e.g. `HelpWidget`, notification bell) — that is intentional cross-cutting chrome, not product logic, and is why they are on the allow-list above.
 
 ## Theme tokens
 

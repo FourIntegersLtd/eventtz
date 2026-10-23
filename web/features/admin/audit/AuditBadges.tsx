@@ -46,7 +46,7 @@ function getEntityRingClass(entityType: string): string {
     case "user":
       return "bg-emerald-50 text-emerald-800 ring-emerald-200";
     case "vendor":
-      return "bg-violet-50 text-violet-800 ring-violet-200";
+      return "bg-primary-soft text-primary ring-primary-border";
     case "booking_review":
       return "bg-rose-50 text-rose-800 ring-rose-200";
     case "financials":

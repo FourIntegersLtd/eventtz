@@ -7,7 +7,7 @@ import {
   AdminDashboardView,
   adminDashboardTodayLine,
 } from "@/features/admin/dashboard/AdminDashboardView";
-import type { AdminPeriodDays } from "@/features/admin/commerce/commercePeriod";
+import type { AdminPeriodDays } from "@/lib/commercePeriod";
 
 export default function AdminDashboardPage() {
   const [period, setPeriod] = useState<AdminPeriodDays>(30);

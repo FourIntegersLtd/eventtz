@@ -7,7 +7,15 @@ the web keeps working, and each now has a stable code.
 
 from __future__ import annotations
 
-from app.core.errors import Conflict, InvalidInput, NotFound, Unavailable
+from app.core.errors import AppError, Conflict, InvalidInput, NotFound, Unavailable
+
+
+class UnknownReminderColumn(AppError):
+    """500: code asked to stamp a column that is not an enquiry-reminder timestamp (a programming error)."""
+
+    code = "unknown_reminder_column"
+    default_message = "Something went wrong"
+
 
 # --- ids and lookups -------------------------------------------------------------------------------
 

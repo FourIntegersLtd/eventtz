@@ -13,11 +13,11 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { Fragment, type ReactNode } from "react";
-import { MIN_PORTFOLIO_IMAGES } from "../constants";
-import { ONBOARDING_FORM_STEP_COUNT } from "../onboardingProgress";
-import { BUSINESS_STEP_SERVICE_CHIPS, RADIUS_OPTIONS, SERVICE_OPTIONS } from "../constants";
+import { MIN_PORTFOLIO_IMAGES } from "../../../../lib/vendorOnboarding/constants";
+import { ONBOARDING_FORM_STEP_COUNT } from "../../../../lib/vendorOnboarding/onboardingProgress";
+import { BUSINESS_STEP_SERVICE_CHIPS, RADIUS_OPTIONS, SERVICE_OPTIONS } from "../../../../lib/vendorOnboarding/constants";
 import { describeWorkingDays, reviewReadiness } from "../reviewSummary";
-import type { VendorOnboardingData } from "../types";
+import type { VendorOnboardingData } from "../../../../lib/vendorOnboarding/types";
 import { BOOKING_SERVICE_FEE_PERCENT } from "@/lib/bookingServiceFee";
 import { isPerUnitPricing, parsePackageQuantity } from "@/lib/packagePricing";
 

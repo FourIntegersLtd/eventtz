@@ -1,6 +1,6 @@
 /** Conversational copy for vendor onboarding steps. */
 
-import { MIN_PORTFOLIO_IMAGES } from "./constants";
+import { MIN_PORTFOLIO_IMAGES } from "../../../lib/vendorOnboarding/constants";
 
 export const STEP_COPY = {
   1: {

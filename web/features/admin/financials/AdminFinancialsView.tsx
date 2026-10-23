@@ -9,7 +9,7 @@ import {
   type AdminFinancialsDailyBucket,
   type AdminFinancialsSummary,
 } from "@/lib/adminFinancialsApi";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { AdminCommercePeriodFilter } from "@/features/admin/components/AdminCommercePeriodFilter";
@@ -26,7 +26,7 @@ import {
 import {
   commercePeriodRange,
   type CommercePeriodDays,
-} from "@/features/admin/commerce/commercePeriod";
+} from "@/lib/commercePeriod";
 import { TablePagination } from "@/components/ui/TablePagination";
 
 function formatGbp(value: number): string {

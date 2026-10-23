@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Store, User } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { fetchAdminChatMessages, type AdminChatMessageItem } from "@/lib/adminPlatformApi";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { adminCard } from "@/components/admin-shell/adminTheme";
 import { chatBubbleClass } from "@/lib/chatBubbleClasses";

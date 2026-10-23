@@ -5,7 +5,7 @@ import {
   fetchAdminDashboardMetrics,
   type AdminDashboardMetrics,
 } from "@/lib/adminPlatformApi";
-import type { AdminPeriodDays } from "@/features/admin/commerce/commercePeriod";
+import type { AdminPeriodDays } from "@/lib/commercePeriod";
 
 export function useAdminDashboardMetrics(period: AdminPeriodDays) {
   const [metrics, setMetrics] = useState<AdminDashboardMetrics | null>(null);

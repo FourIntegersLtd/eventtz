@@ -51,6 +51,7 @@ from app.features.notifications.domain_vendor_emails import (
     vendor_submitted_alert,
     vendor_warning_email,
 )
+from app.features.notifications.errors import UnsupportedWelcomeUserType
 from app.features.notifications.rendering import render_template
 
 log = get_logger(__name__)
@@ -360,7 +361,7 @@ def send_password_changed(mailer: Mailer, *, email: str, user_type: str | None =
 
 
 def render_welcome(*, email: str, user_type: str) -> OutgoingEmail:
-    """Render the welcome email for `email`. Raises `ValueError` for any `user_type` but the three below."""
+    """Render the welcome email for `email`; an unsupported `user_type` raises a coded error."""
     if user_type == "admin":
         return render_booking_notification(email, admin_welcome_email())
     if user_type == "vendor":
@@ -368,7 +369,7 @@ def render_welcome(*, email: str, user_type: str) -> OutgoingEmail:
     elif user_type == "client":
         welcome = welcome_email(email=email, user_type="client")
     else:
-        raise ValueError(f"unsupported welcome user_type: {user_type!r}")
+        raise UnsupportedWelcomeUserType(f"unsupported welcome user_type: {user_type!r}")
     context = welcome_context(welcome)
     return OutgoingEmail(
         to=(email,),

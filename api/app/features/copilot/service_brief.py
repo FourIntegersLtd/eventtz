@@ -203,17 +203,19 @@ async def _narrate(
             reply_model=_BriefNarration,
             purpose="vendor_copilot_brief",
         )
-        if not reply.greeting.strip() or not reply.summary_markdown.strip():
-            raise ValueError("empty narration")
-        return _BriefNarration(
-            greeting=reply.greeting.strip(),
-            summary_markdown=reply.summary_markdown.strip(),
-        )
     except Exception:
-        # Any failure here — the model being unavailable, refusing, or replying oddly —
-        # falls back to the deterministic copy: the brief never fails outright.
+        # Any failure here — the model being unavailable or refusing — falls back to the
+        # deterministic copy: the brief never fails outright.
         logger.warning("vendor_copilot brief: narration failed, using fallback business=%s", business_name)
         return _fallback_narration(business_name=business_name, score=score, actions=actions)
+    if not reply.greeting.strip() or not reply.summary_markdown.strip():
+        # The model replied oddly (blank text): same fallback.
+        logger.warning("vendor_copilot brief: narration failed, using fallback business=%s", business_name)
+        return _fallback_narration(business_name=business_name, score=score, actions=actions)
+    return _BriefNarration(
+        greeting=reply.greeting.strip(),
+        summary_markdown=reply.summary_markdown.strip(),
+    )
 
 
 async def build_daily_brief(

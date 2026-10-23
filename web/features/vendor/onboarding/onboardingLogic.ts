@@ -1,8 +1,8 @@
-import { EVENT_TYPE_OPTIONS } from "./constants";
-import type { VendorOnboardingData } from "./types";
+import { EVENT_TYPE_OPTIONS } from "../../../lib/vendorOnboarding/constants";
+import type { VendorOnboardingData } from "../../../lib/vendorOnboarding/types";
 import { marketLocationFallback } from "@/lib/markets";
-import { displayServicesOffered } from "@/features/client/browse/browseLabels";
-import { normalizePublicBioText } from "@/features/vendor/onboarding/reviewDisplayHelpers";
+import { displayServicesOffered } from "@/lib/vendorBrowseLabels";
+import { normalizePublicBioText } from "@/lib/vendorOnboarding/reviewDisplayHelpers";
 import { vendorOnboardingStepErrors } from "@/features/vendor/onboarding/vendorOnboardingValidation";
 
 const BIO_MAX_WORDS = 100;

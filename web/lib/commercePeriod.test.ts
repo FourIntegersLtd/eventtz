@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   commercePeriodRange,
   formatCommerceDateRange,
-} from "@/features/admin/commerce/commercePeriod";
+} from "@/lib/commercePeriod";
 
 describe("commercePeriod", () => {
   it("builds inclusive trailing windows", () => {

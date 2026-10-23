@@ -47,7 +47,7 @@ export function VendorPortfolioCover({
           ) : null}
         </>
       ) : (
-        <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#f4f0fa] via-white to-[#e9def9]">
+        <div className="flex h-full items-center justify-center bg-gradient-to-br from-primary-soft via-white to-primary-muted">
           <span className="font-heading text-2xl font-semibold text-neutral-300/90">
             {businessName.slice(0, 1).toUpperCase()}
           </span>

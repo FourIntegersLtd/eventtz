@@ -44,7 +44,7 @@ export function PayoutSetupRequiredModal({
         <div className="ez-modal__body ez-stack">
           <p className="ez-body">{payoutCopy}</p>
           <p className="ez-small">This usually takes 2-3 minutes.</p>
-          {error ? <p className="ez-small" style={{ color: "var(--ez-danger, #b42318)" }}>{error}</p> : null}
+          {error ? <p className="ez-small" style={{ color: "var(--ez-danger)" }}>{error}</p> : null}
         </div>
         <div className="ez-modal__foot">
           <button className="ez-btn ez-btn--ghost" type="button" onClick={onClose} disabled={connecting}>

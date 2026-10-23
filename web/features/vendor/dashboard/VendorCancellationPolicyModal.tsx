@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { CANCELLATION_POLICY_SECTION, profileSectionHref } from "@/features/vendor/onboarding/constants";
+import { CANCELLATION_POLICY_SECTION, profileSectionHref } from "@/lib/vendorOnboarding/constants";
 import { Modal } from "@/components/ui/Modal";
 
 type VendorCancellationPolicyModalProps = {

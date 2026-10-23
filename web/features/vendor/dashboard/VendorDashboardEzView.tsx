@@ -6,7 +6,7 @@ import { MessageCircle, Calendar, Wallet, Activity } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { copyToClipboard } from "@/lib/copyToClipboard";
 import type { VendorBookingListItem } from "@/lib/vendorBookingsApi";
-import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import type { VendorAnalytics } from "@/lib/vendorAnalyticsApi";
 import { vendorDashboardAnalyticsSlice } from "@/features/vendor/dashboard/vendorDashboardAnalytics";
 import {

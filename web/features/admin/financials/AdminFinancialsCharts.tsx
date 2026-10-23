@@ -1,11 +1,11 @@
 "use client";
 
 import { EmptyState } from "@/components/ui/EmptyState";
-import { AdminAreaChart } from "@/features/admin/components/AdminAreaChart";
-import { AdminBarChart } from "@/features/admin/components/AdminBarChart";
+import { EzAreaChart } from "@/components/charts/EzAreaChart";
+import { EzBarChart } from "@/components/charts/EzBarChart";
 import { AdminChartCard } from "@/features/admin/components/AdminChartCard";
 import { FINANCIALS_CHART_INFO } from "@/features/admin/components/adminChartInfoCopy";
-import { chartHasData } from "@/features/admin/components/chartUtils";
+import { chartHasData } from "@/components/charts/chartUtils";
 import type { AdminFinancialsSummary } from "@/lib/adminPlatformApi";
 
 type AdminFinancialsChartsProps = {
@@ -27,7 +27,7 @@ export function AdminFinancialsCharts({ summary }: AdminFinancialsChartsProps) {
         info={FINANCIALS_CHART_INFO.clientSpend}
       >
         {chartHasData(spendData.map((d) => d.value)) ? (
-          <AdminAreaChart data={spendData} valueLabel="Client spend (GBP)" />
+          <EzAreaChart data={spendData} valueLabel="Client spend (GBP)" />
         ) : (
           <EmptyState className="border-0 py-8" title="No client spend in this period" lottie="searchNoResults" />
         )}
@@ -42,7 +42,7 @@ export function AdminFinancialsCharts({ summary }: AdminFinancialsChartsProps) {
           <div className="min-w-0">
             <p className="mb-2 text-xs font-medium text-neutral-600">Platform fee</p>
             {hasFee ? (
-              <AdminAreaChart data={feeData} valueLabel="Platform fee (GBP)" />
+              <EzAreaChart data={feeData} valueLabel="Platform fee (GBP)" />
             ) : (
               <EmptyState className="border-0 py-8" title="No platform fees" lottie="searchNoResults" />
             )}
@@ -50,7 +50,7 @@ export function AdminFinancialsCharts({ summary }: AdminFinancialsChartsProps) {
           <div className="min-w-0">
             <p className="mb-2 text-xs font-medium text-neutral-600">Paid bookings</p>
             {hasCounts ? (
-              <AdminBarChart data={countData} valueLabel="Bookings" color="#0ea5e9" />
+              <EzBarChart data={countData} valueLabel="Bookings" color="var(--ez-chart-2)" />
             ) : (
               <EmptyState className="border-0 py-8" title="No paid bookings" lottie="searchNoResults" />
             )}

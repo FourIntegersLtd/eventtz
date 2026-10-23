@@ -14,6 +14,8 @@ import pytest
 
 from app.core.settings import Settings
 from app.features.bookings import domain_cancellation, domain_policy
+from app.features.pricing import domain as pricing_domain
+from app.features.referrals import domain as referrals_domain
 from app.features.vendors import domain_profile_form
 
 POLICY_FILE = Path(__file__).resolve().parents[3] / "web" / "lib" / "policyConstants.json"
@@ -69,6 +71,8 @@ def test_every_key_in_the_file_is_either_checked_here_or_listed_as_copy_only(pol
         "depositClaimDays",
         "vendorCancellationReviewCount",
         "vendorCancellationReviewDays",
+        "serviceFeePercent",
+        "referralFeeTiers",
     }
 
     assert set(policy) == checked_keys | COPY_ONLY_KEYS
@@ -118,3 +122,14 @@ def test_the_vendor_profile_limits_equal_the_file_and_the_booking_rules(policy: 
     assert policy["deliveryUpfrontPercentMax"] == domain_profile_form.DELIVERY_UPFRONT_PERCENT_MAX
     assert policy["deliveryDeadlineDaysMax"] == domain_profile_form.DELIVERY_DEADLINE_DAYS_MAX
     assert policy["depositMaxGbp"] == domain_profile_form.DEPOSIT_MAX_GBP
+
+
+def test_service_fee_percent_and_referral_tiers_equal_the_pricing_and_referral_domains(
+    policy: dict[str, Any],
+) -> None:
+    """The fee the web previews and the referral tiers it prints are the ones the API charges."""
+    assert policy["serviceFeePercent"] == pricing_domain.BOOKING_SERVICE_FEE_PERCENT == 5
+    assert policy["referralFeeTiers"] == [
+        {"minSpendGbp": tier.min_spend_gbp, "feeDiscountGbp": tier.fee_discount_gbp}
+        for tier in referrals_domain.FEE_TIERS
+    ]

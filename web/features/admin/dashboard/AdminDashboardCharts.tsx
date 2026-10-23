@@ -4,13 +4,13 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { AdminAreaChart } from "@/features/admin/components/AdminAreaChart";
-import { AdminDonutChart } from "@/features/admin/components/AdminDonutChart";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
-import { AdminGroupedBarChart } from "@/features/admin/components/AdminGroupedBarChart";
+import { EzAreaChart } from "@/components/charts/EzAreaChart";
+import { EzDonutChart } from "@/components/charts/EzDonutChart";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
+import { EzGroupedBarChart } from "@/components/charts/EzGroupedBarChart";
 import { AdminInfoHint } from "@/features/admin/components/AdminInfoHint";
 import { DASHBOARD_CHART_INFO } from "@/features/admin/components/adminChartInfoCopy";
-import { chartHasData } from "@/features/admin/components/chartUtils";
+import { chartHasData } from "@/components/charts/chartUtils";
 import type { AdminDashboardMetrics, AdminDashboardSummary } from "@/lib/adminPlatformApi";
 
 type AdminDashboardChartsProps = {
@@ -76,7 +76,7 @@ export function AdminDashboardCharts({ summary, metrics, loading, error }: Admin
             {loading ? (
               <ChartSkeleton />
             ) : chartHasData(signupData.flatMap((d) => [d.clients, d.vendors])) ? (
-              <AdminGroupedBarChart data={signupData} />
+              <EzGroupedBarChart data={signupData} />
             ) : (
               <EmptyState className="border-0 py-8" title="No signups in this period" lottie="searchNoResults" />
             )}
@@ -90,7 +90,7 @@ export function AdminDashboardCharts({ summary, metrics, loading, error }: Admin
             {pipelineTotal === 0 ? (
               <EmptyState className="border-0 py-8" title="No bookings yet" variant="bookings" />
             ) : (
-              <AdminDonutChart data={pipelineData} />
+              <EzDonutChart data={pipelineData} />
             )}
             {pipelineTotal > 0 ? (
               <div className="mt-3 border-t border-neutral-100 pt-3">
@@ -114,7 +114,7 @@ export function AdminDashboardCharts({ summary, metrics, loading, error }: Admin
           {loading ? (
             <ChartSkeleton />
           ) : chartHasData(gmvData.map((d) => d.value)) ? (
-            <AdminAreaChart data={gmvData} valueLabel="Gross booking value (GBP)" />
+            <EzAreaChart data={gmvData} valueLabel="Gross booking value (GBP)" />
           ) : (
             <EmptyState className="border-0 py-8" title="No paid volume in this period" lottie="searchNoResults" />
           )}
