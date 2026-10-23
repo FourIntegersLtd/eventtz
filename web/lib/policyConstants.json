@@ -32,5 +32,10 @@
   "liabilityCapMonthsOfFees": 12,
   "claimsTimeLimitMonths": 24,
   "unclaimedVendorShareMonths": 12,
-  "minimumAge": 18
+  "minimumAge": 18,
+  "serviceFeePercent": 5,
+  "referralFeeTiers": [
+    { "minSpendGbp": 600, "feeDiscountGbp": 15 },
+    { "minSpendGbp": 400, "feeDiscountGbp": 10 }
+  ]
 }

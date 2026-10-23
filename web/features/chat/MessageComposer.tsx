@@ -3,8 +3,8 @@
 import { useEffect, useRef } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { MESSAGE_MAX_LEN } from "@/lib/validation/supportMessage";
 
-export const MESSAGE_MAX_LEN = 5000;
 
 type MessageComposerProps = {
   value: string;

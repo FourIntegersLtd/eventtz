@@ -14,7 +14,7 @@ import {
   postAnalyzePortfolioImage,
 } from "@/lib/vendorOnboardingAiApi";
 import type { useToast } from "@/components/ui/Toast";
-import type { VendorOnboardingData } from "./types";
+import type { VendorOnboardingData } from "../../../lib/vendorOnboarding/types";
 
 export type PortfolioImageQualityRow = {
   ok: boolean;

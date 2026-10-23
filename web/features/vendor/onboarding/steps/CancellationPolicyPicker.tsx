@@ -8,7 +8,7 @@ import {
   CANCELLATION_POLICY_TAGLINES,
   type CancellationPolicyKey,
 } from "@/features/bookings/cancellationPolicyCopy";
-import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
+import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
 
 type CancellationPolicyPickerProps = {
   data: VendorOnboardingData;

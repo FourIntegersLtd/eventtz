@@ -1,11 +1,11 @@
 import { vendorCancellationPolicyLabel } from "@/features/bookings/cancellationPolicyCopy";
-import { MIN_PORTFOLIO_IMAGES, SOCIAL_PLATFORM_OPTIONS, WEEKDAY_LABELS } from "@/features/vendor/onboarding/constants";
+import { MIN_PORTFOLIO_IMAGES, SOCIAL_PLATFORM_OPTIONS, WEEKDAY_LABELS } from "@/lib/vendorOnboarding/constants";
 import {
   countCompletePackages,
   isCompletePackage,
   isConfiguredPackage,
   MIN_PACKAGE_DESCRIPTION_CHARS,
-} from "@/features/vendor/onboarding/packageQuality";
+} from "@/lib/vendorOnboarding/packageQuality";
 import {
   formatDiscountSummary,
   formatReviewBlockedDates,
@@ -13,8 +13,8 @@ import {
   formatReviewServices,
   hasAdditionalInfoContent,
   packageTravelPolicyLabel,
-} from "@/features/vendor/onboarding/reviewDisplayHelpers";
-import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
+} from "@/lib/vendorOnboarding/reviewDisplayHelpers";
+import type { VendorOnboardingData } from "@/lib/vendorOnboarding/types";
 import { getMarket } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
 import { portfolioImageUrlsFromPayload } from "@/lib/vendorPortfolioImages";
@@ -27,7 +27,7 @@ import {
   extractBrowsePricingSharedContext,
   type BrowsePricingOption,
   type BrowsePricingSharedContext,
-} from "@/features/client/browse/vendorBrowseDetailModel";
+} from "@/lib/vendorBrowseDetailModel";
 import { vendorDataToPayload } from "@/features/vendor/onboarding/serializeVendorPayload";
 import { vendorProfileUrl } from "@/lib/siteUrl";
 

@@ -65,7 +65,7 @@ export function DisputeOpenedByCompact({ dispute }: { dispute: AdminDisputeCase 
     role === "client"
       ? "text-sky-700"
       : role === "vendor"
-        ? "text-violet-700"
+        ? "text-primary"
         : "text-neutral-600";
 
   const name =

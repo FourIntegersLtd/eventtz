@@ -10,7 +10,7 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { ensurePlanClientEvent } from "@/lib/clientPlannerApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
-import { ClientEzPageHead } from "@/features/client/ui/ClientEzPageHead";
+import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
 import { BudgetBreakdown } from "./BudgetBreakdown";
 import { PlannerGeneratingState } from "./PlannerGeneratingState";
 import { PlannerPromptHero } from "./PlannerPromptHero";

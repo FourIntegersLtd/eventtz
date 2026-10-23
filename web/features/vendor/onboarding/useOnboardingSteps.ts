@@ -9,10 +9,10 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import type { useToast } from "@/components/ui/Toast";
 import { buildDraftBio, validateStep } from "./onboardingLogic";
-import { defaultProfileSectionForStep, profileSectionHref } from "./constants";
-import { ONBOARDING_STEP } from "./onboardingProgress";
+import { defaultProfileSectionForStep, profileSectionHref } from "../../../lib/vendorOnboarding/constants";
+import { ONBOARDING_STEP } from "../../../lib/vendorOnboarding/onboardingProgress";
 import { vendorDataToPayload } from "./serializeVendorPayload";
-import type { VendorOnboardingData } from "./types";
+import type { VendorOnboardingData } from "../../../lib/vendorOnboarding/types";
 import type { useOnboardingPersistence } from "./useOnboardingPersistence";
 import type { useOnboardingMedia } from "./useOnboardingMedia";
 

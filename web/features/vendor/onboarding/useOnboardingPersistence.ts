@@ -20,19 +20,19 @@ import {
   needsMorePortfolioPhotos as dataNeedsMorePortfolioPhotos,
   normalizePublicBioText,
   portfolioImageCountFromData,
-} from "./reviewDisplayHelpers";
+} from "../../../lib/vendorOnboarding/reviewDisplayHelpers";
 import {
   canApplyOnboardingFormUpdate,
   isReturnedForEdits,
   resolveOnboardingStepFromProfile,
-} from "./onboardingProgress";
+} from "../../../lib/vendorOnboarding/onboardingProgress";
 import { RETURNED_FOR_EDITS_FEEDBACK } from "./returnedForEditsCopy";
 import {
   mergePayloadIntoVendorData,
   normalizeVendorPayload,
   vendorDataToPayload,
 } from "./serializeVendorPayload";
-import { initialVendorOnboardingData, type VendorOnboardingData, type VendorStatusCheckFeedback } from "./types";
+import { initialVendorOnboardingData, type VendorOnboardingData, type VendorStatusCheckFeedback } from "../../../lib/vendorOnboarding/types";
 
 type UseOnboardingPersistenceOptions = {
   isWalkthrough: boolean;

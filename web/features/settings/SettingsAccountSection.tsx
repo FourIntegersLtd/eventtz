@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { TextField } from "@/components/ui/TextField";
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import type { PortalRole } from "@/lib/portalRole";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { updateClientOnboarding, getClientOnboarding } from "@/lib/clientOnboardingApi";
 import { parseForm, preferredNameFormSchema } from "@/lib/validation";

@@ -179,7 +179,12 @@ def test_vendor_payments_status_reflects_an_admin_listing_waiver(admin_db: Local
 
 
 def test_vendor_payments_history_is_empty_for_a_vendor_with_no_paid_bookings(admin_db: LocalDatabase) -> None:
-    """A vendor with no paid or released bookings gets the empty ledger shape."""
+    """A vendor with no paid or released bookings gets the empty ledger shape.
+
+    Post-freeze additive fields (c21acdf, ADR 0011): the vendor payments screen pages the ledger
+    on the server (`total`/`offset`/`limit`, default page 25) and shows `paid_out_last_30_days_*`.
+    The frozen keys and values are unchanged.
+    """
     account = seed_account(admin_db, unique_email("pay-history-empty"), "vendor")
     browser = sign_in(account)
     response = browser.get(f"{API}/vendor/payments/history")
@@ -191,6 +196,11 @@ def test_vendor_payments_history_is_empty_for_a_vendor_with_no_paid_bookings(adm
         "total_paid_out_label": "GBP 0",
         "total_awaiting_gbp": 0.0,
         "total_awaiting_label": "GBP 0",
+        "paid_out_last_30_days_gbp": 0.0,
+        "paid_out_last_30_days_label": "GBP 0",
+        "total": 0,
+        "offset": 0,
+        "limit": 25,
     }
 
 

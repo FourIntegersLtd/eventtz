@@ -13,7 +13,7 @@ import {
   storeCoachScrollTarget,
 } from "../packageCoachApply";
 import { vendorDataToPayload } from "../serializeVendorPayload";
-import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
+import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
 
 const PACKAGE_COACH_HASH_KEY = "eventtz-package-coach-hash";
 

@@ -6,16 +6,16 @@ import {
   MIN_PORTFOLIO_IMAGES,
   RADIUS_OPTIONS,
   PROFILE_SECTIONS,
-} from "@/features/vendor/onboarding/constants";
+} from "@/lib/vendorOnboarding/constants";
 import { describeWorkingDays } from "@/features/vendor/onboarding/reviewSummary";
 import {
   formatReviewEventTypes,
   formatReviewServices,
   portfolioImageCountFromData,
-} from "@/features/vendor/onboarding/reviewDisplayHelpers";
-import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
+} from "@/lib/vendorOnboarding/reviewDisplayHelpers";
+import type { VendorOnboardingData } from "@/lib/vendorOnboarding/types";
 import { vendorOnboardingStepErrors } from "@/features/vendor/onboarding/vendorOnboardingValidation";
-import { isConfiguredPackage } from "@/features/vendor/onboarding/packageQuality";
+import { isConfiguredPackage } from "@/lib/vendorOnboarding/packageQuality";
 
 export type ProfileHubSectionRow = {
   slug: (typeof PROFILE_SECTIONS)[number]["slug"];

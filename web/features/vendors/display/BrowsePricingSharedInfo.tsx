@@ -1,6 +1,6 @@
 "use client";
 
-import type { BrowsePricingSharedContext } from "@/features/client/browse/vendorBrowseDetailModel";
+import type { BrowsePricingSharedContext } from "@/lib/vendorBrowseDetailModel";
 
 type BrowsePricingSharedInfoProps = BrowsePricingSharedContext & {
   className?: string;

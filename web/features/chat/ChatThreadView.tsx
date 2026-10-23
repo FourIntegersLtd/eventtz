@@ -15,7 +15,7 @@ import { MotionStaggerItem } from "@/components/ui/MotionStaggerItem";
 import { EMPTY_STATE_ICON_CLASS } from "@/lib/emptyStateVariants";
 import { MessageComposer } from "@/features/chat/MessageComposer";
 import { isHtmlMessage, MessageBody } from "@/lib/renderMessageBody";
-import { VendorQuoteFormModal } from "@/features/vendor/quotes/VendorQuoteFormModal";
+import { VendorQuoteFormModal } from "@/features/bookings/VendorQuoteFormModal";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { CONVERSATION_LOAD_FAILED, SEND_MESSAGE_FAILED } from "@/lib/chat-messages";

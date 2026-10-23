@@ -14,7 +14,7 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { VendorApprovalStatusBadge } from "@/components/badges/VendorApprovalStatusBadge";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminSuccessBanner } from "@/features/admin/components/AdminSuccessBanner";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";

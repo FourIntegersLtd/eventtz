@@ -10,17 +10,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { ToastInput, ToastTone } from "@/lib/toastInput";
 import { RADIUS, SHADOW, TOUCH_TARGET, FOCUS_RING } from "@/components/ui/tokens";
-
-export type ToastTone = "success" | "error" | "neutral";
-
-export type ToastInput = {
-  title: string;
-  description?: string;
-  tone?: ToastTone;
-  /** Auto-dismiss after this many ms. Defaults to 4000. */
-  durationMs?: number;
-};
 
 type ToastItem = ToastInput & { id: number };
 

@@ -6,9 +6,9 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { VendorPortfolioCover } from "@/features/vendors/display/VendorPortfolioCover";
-import { buildBrowsePricingOptions } from "@/features/client/browse/vendorBrowseDetailModel";
+import { buildBrowsePricingOptions } from "@/lib/vendorBrowseDetailModel";
 import type { ExpandedSearchCard } from "@/features/marketplace/marketplaceSearchModel";
-import { SERVICE_OPTIONS } from "@/features/vendor/onboarding/constants";
+import { SERVICE_OPTIONS } from "@/lib/vendorOnboarding/constants";
 import { formatMoney, getMarket, marketLocationFallback } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
 import {

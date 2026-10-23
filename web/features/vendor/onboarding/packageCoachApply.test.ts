@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyPackageCoachSuggestions } from "./packageCoachApply";
-import type { VendorPackageItem } from "./types";
+import type { VendorPackageItem } from "../../../lib/vendorOnboarding/types";
 
 const basePkg = (overrides: Partial<VendorPackageItem> = {}): VendorPackageItem => ({
   id: "pkg-1",

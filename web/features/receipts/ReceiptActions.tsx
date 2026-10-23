@@ -25,7 +25,7 @@ export function ReceiptActions({ bookingId, documentType, compact = false }: Rec
     return (
       <Link
         href={href}
-        className="text-sm font-medium text-[#3e1964] hover:underline"
+        className="text-sm font-medium text-primary hover:underline"
         onClick={(e) => e.stopPropagation()}
       >
         {label}

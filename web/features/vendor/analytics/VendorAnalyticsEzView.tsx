@@ -3,13 +3,13 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import type { VendorAnalytics } from "@/lib/vendorAnalyticsApi";
-import type { AdminPeriodDays } from "@/features/admin/commerce/commercePeriod";
-import { AdminAreaChart } from "@/features/admin/components/AdminAreaChart";
-import { AdminBarChart } from "@/features/admin/components/AdminBarChart";
-import { AdminDonutChart } from "@/features/admin/components/AdminDonutChart";
-import { chartHasData } from "@/features/admin/components/chartUtils";
+import type { AdminPeriodDays } from "@/lib/commercePeriod";
+import { EzAreaChart } from "@/components/charts/EzAreaChart";
+import { EzBarChart } from "@/components/charts/EzBarChart";
+import { EzDonutChart } from "@/components/charts/EzDonutChart";
+import { chartHasData } from "@/components/charts/chartUtils";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import {
   formatVendorMoney,
   formatVendorPct,
@@ -84,7 +84,7 @@ export function VendorAnalyticsEzView({
         <div className="ez-stack ez-stack--lg">
           <ChartCard title="Enquiries over time" subtitle="New requests per month">
             {chartHasData(enquirySeries.map((point) => point.value)) ? (
-              <AdminBarChart data={enquirySeries} valueLabel="Enquiries" color="var(--color-primary, #3e1964)" />
+              <EzBarChart data={enquirySeries} valueLabel="Enquiries" color="var(--ez-chart-1)" />
             ) : (
               <EmptyState className="border-0" lottie="emptyCalendar" title="No enquiries in this period" />
             )}
@@ -96,14 +96,14 @@ export function VendorAnalyticsEzView({
             footerLabel="View bookings →"
           >
             {chartHasData(revenueSeries.map((point) => point.value)) ? (
-              <AdminAreaChart data={revenueSeries} valueLabel="Revenue" />
+              <EzAreaChart data={revenueSeries} valueLabel="Revenue" />
             ) : (
               <EmptyState className="border-0" variant="payments" title="No revenue in this period" />
             )}
           </ChartCard>
           <ChartCard title="Customer rating" subtitle="Average score out of 5">
             {chartHasData(ratingSeries.map((point) => point.value)) ? (
-              <AdminBarChart data={ratingSeries} valueLabel="Avg rating" color="#10b981" />
+              <EzBarChart data={ratingSeries} valueLabel="Avg rating" color="var(--ez-chart-3)" />
             ) : (
               <EmptyState className="border-0" lottie="reviews" title="No ratings yet" />
             )}
@@ -112,14 +112,14 @@ export function VendorAnalyticsEzView({
         <div className="ez-stack ez-stack--lg">
           <ChartCard title="Booking funnel" subtitle="From profile views to completed">
             {funnelTotal > 0 ? (
-              <AdminDonutChart data={funnel} />
+              <EzDonutChart data={funnel} />
             ) : (
               <EmptyState className="border-0" lottie="searchNoResults" title="No funnel activity yet" />
             )}
           </ChartCard>
           <ChartCard title="Response time" subtitle="Average reply time (hours)">
             {chartHasData(responseSeries.map((point) => point.value)) ? (
-              <AdminBarChart data={responseSeries} valueLabel="Hours" color="#f59e0b" />
+              <EzBarChart data={responseSeries} valueLabel="Hours" color="var(--ez-chart-2)" />
             ) : (
               <EmptyState className="border-0" lottie="pendingReview" title="No response data yet" />
             )}

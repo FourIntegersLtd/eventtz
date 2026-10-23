@@ -8,7 +8,7 @@ import {
   packageSpecificTravelLine,
   type BrowsePricingOption,
   type BrowsePricingSharedContext,
-} from "@/features/client/browse/vendorBrowseDetailModel";
+} from "@/lib/vendorBrowseDetailModel";
 import { VendorPanelCard, VendorPanelSection } from "./vendorDetailsPanel";
 import type { AdminSubmissionField } from "./adminVendorSubmissionReviewModel";
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.errors import BadGateway, Conflict, Forbidden, InvalidInput, NotFound, PayloadTooLarge
+from app.core.errors import AppError, BadGateway, Conflict, Forbidden, InvalidInput, NotFound, PayloadTooLarge
 
 # --- profile form -------------------------------------------------------------------------------
 
@@ -19,6 +19,13 @@ class BusinessNameTaken(Conflict):
 
     code = "business_name_taken"
     default_message = "This business name is already registered."
+
+
+class ProfileSaveFailed(AppError):
+    """500: the profile write succeeded but reading it back found no row (a bug or a concurrent delete)."""
+
+    code = "vendor_profile_save_failed"
+    default_message = "Your profile could not be saved. Please try again."
 
 
 # --- moderation ----------------------------------------------------------------------------------

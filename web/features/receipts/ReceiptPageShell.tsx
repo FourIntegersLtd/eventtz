@@ -106,7 +106,7 @@ export function ReceiptPageShell({
           title="Document unavailable"
           description={error}
           action={
-            <Link href={backHref} className="text-sm font-medium text-[#3e1964] hover:underline">
+            <Link href={backHref} className="text-sm font-medium text-primary hover:underline">
               Back to booking
             </Link>
           }

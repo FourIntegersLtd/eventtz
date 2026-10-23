@@ -13,7 +13,7 @@ import { SettingsShortcutsSection } from "@/features/settings/SettingsShortcutsS
 import { SettingsSignOutSection } from "@/features/settings/SettingsSignOutSection";
 import { SettingsTabs } from "@/features/settings/SettingsTabs";
 import { LoadingState } from "@/components/ui/LoadingState";
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import type { PortalRole } from "@/lib/portalRole";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 
 export type SettingsViewProps = {

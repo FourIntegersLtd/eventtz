@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   syncPerUnitPackageSelection,
 } from "@/features/client/browse/usePerUnitPackageSelection";
-import type { BrowsePricingOption } from "@/features/client/browse/vendorBrowseDetailModel";
-import { buildBookingLineItems } from "@/features/client/browse/vendorBrowseDetailModel";
+import type { BrowsePricingOption } from "@/lib/vendorBrowseDetailModel";
+import { buildBookingLineItems } from "@/lib/vendorBrowseDetailModel";
 
 const options: BrowsePricingOption[] = [
   {

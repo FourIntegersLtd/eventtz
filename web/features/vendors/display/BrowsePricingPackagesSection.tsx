@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import type { BrowsePricingOption } from "@/features/client/browse/vendorBrowseDetailModel";
+import type { BrowsePricingOption } from "@/lib/vendorBrowseDetailModel";
 
 type BrowsePricingPackagesSectionProps = {
   options: BrowsePricingOption[];

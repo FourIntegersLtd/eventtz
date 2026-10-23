@@ -2,7 +2,7 @@
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { BookingDisputeSection } from "@/features/bookings/BookingDisputeSection";
-import { VendorBookingDetailEzPanel } from "@/features/vendor/bookings/VendorBookingDetailEzPanel";
+import { VendorBookingDetailEzPanel } from "@/features/bookings/VendorBookingDetailEzPanel";
 import { BOOKING_EMPTY_LIST_TITLE } from "@/features/bookings/bookingListConstants";
 import { ChatDrawer } from "@/features/chat/ChatDrawer";
 import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";

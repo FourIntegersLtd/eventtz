@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import {
   emptySupportDraft,

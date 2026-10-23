@@ -15,7 +15,7 @@ import { BookingStatusBreakdown, QuickLinkRow } from "./vendorDetailsShared";
 import {
   onboardingStepLabel,
   ONBOARDING_STEP,
-} from "@/features/vendor/onboarding/onboardingProgress";
+} from "@/lib/vendorOnboarding/onboardingProgress";
 
 /** Human-readable onboarding step for staff (name, not only the stored number). */
 function formatAdminOnboardingStep(

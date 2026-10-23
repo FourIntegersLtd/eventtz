@@ -1,7 +1,7 @@
 "use client";
 
 import { RotatingTypewriterPlaceholder } from "@/components/ui/RotatingTypewriterPlaceholder";
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import type { PortalRole } from "@/lib/portalRole";
 import { contactMessagePlaceholderExamples } from "@/features/contact/contactMessagePlaceholders";
 
 type RotatingContactMessagePlaceholderProps = {

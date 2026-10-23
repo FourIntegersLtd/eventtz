@@ -67,7 +67,7 @@ describe("singleGbpAmountFieldSchema (Zod)", () => {
 
 describe("packageQuality completeness", () => {
   it("does not treat comma-separated prices as complete", async () => {
-    const { isCompletePackage } = await import("@/features/vendor/onboarding/packageQuality");
+    const { isCompletePackage } = await import("@/lib/vendorOnboarding/packageQuality");
     const longDetails =
       "Ten spring rolls, ten samosas, and five puff-puff with delivery included.";
     expect(
@@ -80,7 +80,7 @@ describe("packageQuality completeness", () => {
   });
 
   it("routes packageFieldErrors to the price field", async () => {
-    const { packageFieldErrors } = await import("@/features/vendor/onboarding/packageQuality");
+    const { packageFieldErrors } = await import("@/lib/vendorOnboarding/packageQuality");
     const errors = packageFieldErrors(
       { title: "Pack", price: "150;180", details: "x".repeat(40) },
       { strict: true },

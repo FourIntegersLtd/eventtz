@@ -5,10 +5,10 @@ import { Trash2, Upload, Video, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 import { filterLikelyImageUploadFiles } from "@/lib/imageUploadFile";
-import { MAX_PORTFOLIO_IMAGES, MIN_PORTFOLIO_IMAGES } from "../constants";
+import { MAX_PORTFOLIO_IMAGES, MIN_PORTFOLIO_IMAGES } from "../../../../lib/vendorOnboarding/constants";
 import type { PortfolioImageQualityRow } from "../useVendorOnboardingController";
-import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
-import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
+import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
+import { uploadedFileDisplayName } from "../../../../lib/vendorOnboarding/uploadedFileDisplayName";
 
 export type StepPortfolioProps = {
   data: VendorOnboardingData;
@@ -88,7 +88,7 @@ function PhotoTile({
             bottom: 0,
             padding: "4px 8px",
             background: "rgba(0,0,0,.55)",
-            color: "#fff",
+            color: "var(--ez-on-media)",
             borderRadius: "0 0 var(--ez-r-card) var(--ez-r-card)",
           }}
         >
@@ -156,7 +156,7 @@ function ProfilePhotoRow({
       {error ? (
         <span
           className="ez-help"
-          style={{ color: "var(--ez-danger, #b42318)" }}
+          style={{ color: "var(--ez-danger)" }}
         >
           {error}
         </span>

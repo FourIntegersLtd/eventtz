@@ -1,13 +1,13 @@
-/** Matches backend `BOOKING_SERVICE_FEE_PERCENT` and referral tiers. */
+import policy from "@/lib/policyConstants.json";
 
-export const BOOKING_SERVICE_FEE_PERCENT = 5;
+/** Both numbers come from `policyConstants.json`; `test_policy_constants.py` keeps them equal to the API. */
+export const BOOKING_SERVICE_FEE_PERCENT: number = policy.serviceFeePercent;
 
-export const REFERRAL_FEE_TIERS = [
-  { minSpendGbp: 600, feeDiscountGbp: 15 },
-  { minSpendGbp: 400, feeDiscountGbp: 10 },
-] as const;
+/** Best tier first, as the API lists them. */
+export const REFERRAL_FEE_TIERS: readonly { minSpendGbp: number; feeDiscountGbp: number }[] =
+  policy.referralFeeTiers;
 
-/** Lowest spend threshold for any referral tier (mirrors backend `tiers.py`). */
+/** Lowest spend threshold for any referral tier (derived from `policyConstants.json`, pinned to the api by `test_policy_constants.py`). */
 export const REFERRAL_LOWEST_TIER_SPEND_GBP = Math.min(
   ...REFERRAL_FEE_TIERS.map((tier) => tier.minSpendGbp),
 );

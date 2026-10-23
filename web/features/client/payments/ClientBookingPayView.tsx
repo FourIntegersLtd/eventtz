@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ClientEzPageHead } from "@/features/client/ui/ClientEzPageHead";
+import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
 import { useClientBookingPay } from "@/features/client/payments/useClientBookingPay";

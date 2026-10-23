@@ -1,7 +1,7 @@
-import { EVENT_TYPE_OPTIONS, MIN_PORTFOLIO_IMAGES } from "@/features/vendor/onboarding/constants";
-import type { PackageLike } from "@/features/vendor/onboarding/packageQuality";
-import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
-import { displayEventTypes, displayServicesOffered } from "@/features/client/browse/browseLabels";
+import { EVENT_TYPE_OPTIONS, MIN_PORTFOLIO_IMAGES } from "@/lib/vendorOnboarding/constants";
+import type { PackageLike } from "@/lib/vendorOnboarding/packageQuality";
+import type { VendorOnboardingData } from "@/lib/vendorOnboarding/types";
+import { displayEventTypes, displayServicesOffered } from "@/lib/vendorBrowseLabels";
 import { isPerUnitPricing, perUnitPriceSuffix } from "@/lib/packagePricing";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 

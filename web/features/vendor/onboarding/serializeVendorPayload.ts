@@ -1,5 +1,5 @@
 import { DEFAULT_COUNTRY_CODE, normalizeCountryCode } from "@/lib/markets";
-import { ONBOARDING_FLOW_VERSION } from "./onboardingProgress";
+import { ONBOARDING_FLOW_VERSION } from "../../../lib/vendorOnboarding/onboardingProgress";
 import { clampBioWords } from "./onboardingLogic";
 import type {
   DeliveryMode,
@@ -7,8 +7,8 @@ import type {
   VendorOnboardingData,
   VendorPackageItem,
   VendorSocialLink,
-} from "./types";
-import { createVendorPackage, createVendorSocialLink, initialVendorOnboardingData } from "./types";
+} from "../../../lib/vendorOnboarding/types";
+import { createVendorPackage, createVendorSocialLink, initialVendorOnboardingData } from "../../../lib/vendorOnboarding/types";
 import { parsePackagePricingMode } from "@/lib/packagePricing";
 import { savedUpfrontPercentForForm } from "@/features/bookings/bookingTerms";
 

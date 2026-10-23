@@ -9,7 +9,7 @@ import { AccountStatusBadge } from "@/components/badges/AccountStatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { patchClientSuspended, type AdminClientRow } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { adminFilterControlClass } from "@/features/admin/components/adminFilterControlClass";
 import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";

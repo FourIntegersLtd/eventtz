@@ -1,6 +1,6 @@
 "use client";
 
-import { ClientEzPageHead } from "@/features/client/ui/ClientEzPageHead";
+import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
 import { NotificationsPageView } from "@/features/notifications/NotificationsPageView";
 
 export default function ClientNotificationsPage() {

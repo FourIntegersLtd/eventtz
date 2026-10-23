@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { VendorMetricsStrip } from "@/features/vendors/display/VendorMetricsStrip";
 import type { ExploreVendor } from "@/lib/clientExploreApi";
-import { displayEventTypes, displayServicesOffered } from "./browseLabels";
+import { displayEventTypes, displayServicesOffered } from "../../../lib/vendorBrowseLabels";
 import { buildBrowseVendorProfileFacts } from "./browseVendorFacts";
 import { BrowseProfileFactRow } from "./BrowseProfileFactRow";
 import {
@@ -21,7 +21,7 @@ import {
   extractBrowsePricingSharedContext,
   formatBookingTotalGbp,
   packageSpecificTravelLine,
-} from "./vendorBrowseDetailModel";
+} from "../../../lib/vendorBrowseDetailModel";
 import { usePerUnitPackageSelection } from "./usePerUnitPackageSelection";
 import { VendorReviewsSection } from "./VendorReviewsSection";
 import { BrowsePricingOptionCard } from "@/features/vendors/display/BrowsePricingOptionCard";

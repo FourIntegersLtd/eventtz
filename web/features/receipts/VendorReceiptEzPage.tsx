@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Download } from "lucide-react";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
-import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import { fetchReceiptHtmlBlob, type PaymentReceipt } from "@/lib/receiptsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 

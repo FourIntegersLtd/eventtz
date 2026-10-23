@@ -1,5 +1,5 @@
 import type { PackageCoachPackageFeedback } from "@/lib/vendorOnboardingAiApi";
-import type { VendorPackageItem } from "./types";
+import type { VendorPackageItem } from "../../../lib/vendorOnboarding/types";
 
 export const COACH_SCROLL_PACKAGE_KEY = "eventtz-coach-scroll-package";
 export const COACH_HIGHLIGHT_PACKAGES_KEY = "eventtz-coach-highlight-packages";

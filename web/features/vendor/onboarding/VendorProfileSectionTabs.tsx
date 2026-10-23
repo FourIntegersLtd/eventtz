@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { PROFILE_SECTIONS, profileSectionHref, type ProfileSectionSlug } from "./constants";
+import { PROFILE_SECTIONS, profileSectionHref, type ProfileSectionSlug } from "../../../lib/vendorOnboarding/constants";
 
 type VendorProfileSectionTabsProps = {
   /** The open section, or `null` while the reviews page is open. */

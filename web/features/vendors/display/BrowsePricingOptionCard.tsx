@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronDown, CircleHelp, Clock, Truck } from "lucide-react";
-import type { BrowsePricingOption } from "@/features/client/browse/vendorBrowseDetailModel";
+import type { BrowsePricingOption } from "@/lib/vendorBrowseDetailModel";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { lineTotalGbp } from "@/lib/packagePricing";
 

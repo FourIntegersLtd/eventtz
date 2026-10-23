@@ -11,7 +11,7 @@ import {
   storeCoachScrollTarget,
 } from "@/features/vendor/onboarding/packageCoachApply";
 import { vendorDataToPayload } from "@/features/vendor/onboarding/serializeVendorPayload";
-import type { VendorOnboardingData, VendorOnboardingUpdate } from "@/features/vendor/onboarding/types";
+import type { VendorOnboardingData, VendorOnboardingUpdate } from "@/lib/vendorOnboarding/types";
 import { PackageCoachPanel } from "@/features/vendor/onboarding/ui/PackageCoachPanel";
 import type { PackageCoachResult } from "@/lib/vendorOnboardingAiApi";
 

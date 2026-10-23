@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { BackLink } from "@/components/ui/BackLink";
 import { fetchAdminAuditLogEntry, type AdminAuditLogItem } from "@/lib/adminPlatformApi";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import {
   auditEntityHref,

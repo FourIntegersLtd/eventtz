@@ -1,5 +1,5 @@
-import { uploadedFileDisplayName } from "@/features/vendor/onboarding/uploadedFileDisplayName";
-import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
+import { uploadedFileDisplayName } from "@/lib/vendorOnboarding/uploadedFileDisplayName";
+import type { VendorOnboardingData } from "@/lib/vendorOnboarding/types";
 
 export type SubmittedMediaFile = {
   url: string;

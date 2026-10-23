@@ -12,8 +12,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-
-export type PortalRole = "client" | "vendor";
+import type { PortalRole } from "@/lib/portalRole";
 
 export type PortalNavItem = {
   href: string;

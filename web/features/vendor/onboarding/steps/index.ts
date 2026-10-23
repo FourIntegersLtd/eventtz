@@ -8,4 +8,4 @@ export { StepPortfolio } from "./StepPortfolio";
 export { StepPricing } from "./StepPricing";
 export { StepReview } from "./StepReview";
 export { StepSubmitted } from "./StepSubmitted";
-export { inputClass, labelClass, ToggleChip } from "./form-primitives";
+export { inputClass, labelClass, ToggleChip } from "../../../../components/ui/form-primitives";

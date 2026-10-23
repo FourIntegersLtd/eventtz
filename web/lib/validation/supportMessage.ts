@@ -1,5 +1,7 @@
 import type { RefinementCtx } from "zod";
-import { MESSAGE_MAX_LEN } from "@/features/chat/MessageComposer";
+
+/** Longest chat or support message body, in visible characters (chat composer and support drafts). */
+export const MESSAGE_MAX_LEN = 5000;
 
 /** Shared visible-text length rules for admin Support / email-test rich message drafts. */
 export function refineSupportMessageTextLength(

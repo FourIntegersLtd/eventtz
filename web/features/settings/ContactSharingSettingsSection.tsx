@@ -11,8 +11,8 @@ import {
 import { parseForm, contactPhoneFormSchema } from "@/lib/validation";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
-import { inputClass, labelClass } from "@/features/vendor/onboarding/steps/form-primitives";
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import { inputClass, labelClass } from "@/components/ui/form-primitives";
+import type { PortalRole } from "@/lib/portalRole";
 import { SettingsSection } from "./SettingsSection";
 
 export type ContactSharingSettingsSectionProps = {

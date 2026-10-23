@@ -1,7 +1,7 @@
 "use client";
 
-import type { PortalRole } from "@/components/portal-shell/portalNav";
-import { ClientEzPageHead } from "@/features/client/ui/ClientEzPageHead";
+import type { PortalRole } from "@/lib/portalRole";
+import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
 import { ParticipantDisputesPortalView } from "@/features/disputes/ParticipantDisputesPortalView";
 
 type DisputesPortalPageProps = {

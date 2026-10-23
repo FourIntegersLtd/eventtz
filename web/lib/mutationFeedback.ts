@@ -1,4 +1,4 @@
-import type { ToastInput } from "@/components/ui/Toast";
+import type { ToastInput } from "@/lib/toastInput";
 import { DATE_CHANGE_ERROR_COPY } from "@/lib/bookingDateChangeApi";
 import {
   getApiErrorCode,

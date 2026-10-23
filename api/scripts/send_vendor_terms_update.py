@@ -23,12 +23,10 @@ import sys
 import time
 from pathlib import Path
 
-from sqlalchemy import select
-
 from app.adapters.resend_mailer import ResendMailer
 from app.core.db import dispose_engine, job_session
 from app.core.site import public_url
-from app.features.identity.models import User
+from app.features.identity import repository as identity_repository
 from app.features.notifications.domain_account_emails import TransactionalEmail
 from app.features.notifications.service import render_booking_notification
 
@@ -107,16 +105,7 @@ def build_email() -> TransactionalEmail:
 async def _vendor_recipients() -> list[str]:
     """Emails of every open vendor account."""
     async with job_session() as session:
-        result = await session.execute(
-            select(User.email)
-            .where(
-                User.user_type == "vendor",
-                User.deleted_at.is_(None),
-                User.email.is_not(None),
-            )
-            .order_by(User.email)
-        )
-        return [email for email in result.scalars() if email]
+        return await identity_repository.open_emails_of_type(session, user_type="vendor")
 
 
 def _send(recipients: list[str]) -> int:

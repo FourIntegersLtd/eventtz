@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { BlogRichTextEditor } from "@/features/admin/blog/BlogRichTextEditor";
 import {

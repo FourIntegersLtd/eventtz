@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
-import { EzCheck, EzTextField } from "./ez-form";
+import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
+import { EzCheck, EzTextField } from "../../../../components/ui/ez-form";
 import { isValidPhoneNumber } from "@/lib/validation/phone";
 
 export type StepAccountProps = {

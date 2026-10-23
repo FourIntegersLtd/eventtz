@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import type { BookingTermsFields } from "@/features/bookings/bookingTerms";
+import type { BookingTermsFields } from "@/lib/bookingTermsFields";
 import type {
   BookingInitiator,
   BookingPricingBreakdown,

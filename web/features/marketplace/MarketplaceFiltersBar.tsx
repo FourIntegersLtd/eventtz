@@ -1,9 +1,9 @@
 "use client";
 
 import { ArrowUpDown, ChevronDown, LocateFixed, SlidersHorizontal, X } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { Drawer } from "@/components/ui/Drawer";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -12,7 +12,7 @@ import {
   categoryChipLabel,
   MarketplaceCategoryFilterFields,
 } from "@/features/marketplace/MarketplaceCategoryFilterFields";
-import { LocationAutocompleteInput } from "@/features/vendor/onboarding/ui/LocationAutocompleteInput";
+import { LocationAutocompleteInput } from "@/components/ui/LocationAutocompleteInput";
 import type { MarketplaceSort } from "@/lib/clientExploreApi";
 import type { MarketplaceSearchState } from "@/lib/marketplaceSearchParams";
 import {
@@ -22,7 +22,6 @@ import {
   getMarket,
 } from "@/lib/markets";
 import { marketplaceBudgetSchema, parseForm } from "@/lib/validation";
-import { usePrefersReducedMotion } from "@/lib/usePrefersReducedMotion";
 
 const FILTER_BUTTON_CLASS =
   "inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full border px-3 text-sm font-medium transition sm:gap-2 sm:px-4 lg:w-auto";
@@ -91,7 +90,6 @@ export function MarketplaceFiltersBar({
   const [budgetError, setBudgetError] = useState<string | null>(null);
   const [sortSheetMounted, setSortSheetMounted] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
-  const reduceMotion = usePrefersReducedMotion();
 
   const market = getMarket(state.country);
   const currencySymbol = formatCurrencySymbol(market.currency);
@@ -294,38 +292,15 @@ export function MarketplaceFiltersBar({
 
       {sortSheetMounted
         ? createPortal(
-            <AnimatePresence initial={false}>
-              {sortOpen ? (
-                <div key="sort-sheet" className="fixed inset-0 z-[105] lg:hidden" role="presentation">
-                  <motion.button
-                    type="button"
-                    aria-label="Close sort options"
-                    initial={reduceMotion ? false : { opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={reduceMotion ? undefined : { opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute inset-0 bg-black/40"
-                    onClick={() => setSortOpen(false)}
-                  />
-                  <motion.div
-                    id="marketplace-sort-sheet"
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label="Sort by"
-                    initial={reduceMotion ? false : { y: "100%" }}
-                    animate={{ y: 0 }}
-                    exit={reduceMotion ? undefined : { y: "100%" }}
-                    transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute inset-x-0 bottom-0 rounded-t-2xl border-t border-line bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 shadow-2xl"
-                  >
-                    <h3 className="mb-2 font-heading text-base font-semibold text-ink">
-                      Sort by
-                    </h3>
-                    <div className="space-y-1">{sortOptionsList(selectSort)}</div>
-                  </motion.div>
-                </div>
-              ) : null}
-            </AnimatePresence>,
+            <BottomSheet
+              isOpen={sortOpen}
+              onClose={() => setSortOpen(false)}
+              title="Sort by"
+              closeLabel="Close sort options"
+              id="marketplace-sort-sheet"
+            >
+              <div className="space-y-1">{sortOptionsList(selectSort)}</div>
+            </BottomSheet>,
             document.body,
           )
         : null}

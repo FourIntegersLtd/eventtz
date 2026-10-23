@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Shield } from "lucide-react";
-import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";

@@ -3,8 +3,8 @@
 import { ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
 import { useState } from "react";
 import { isPastIsoDate } from "@/lib/eventDateValidation";
-import type { VendorOnboardingData, VendorOnboardingUpdate } from "../types";
-import { EzChip } from "./ez-form";
+import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
+import { EzChip } from "../../../../components/ui/ez-form";
 
 export type StepAvailabilityProps = {
   data: VendorOnboardingData;

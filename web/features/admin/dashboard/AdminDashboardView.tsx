@@ -4,12 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { AdminAttentionList, type AdminAttentionItem } from "@/features/admin/components/AdminAttentionList";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
 import { AdminDashboardCharts } from "@/features/admin/dashboard/AdminDashboardCharts";
 import { useAdminDashboard } from "@/features/admin/dashboard/useAdminDashboard";
 import { useAdminDashboardMetrics } from "@/features/admin/dashboard/useAdminDashboardMetrics";
-import { commercePeriodRange, type AdminPeriodDays } from "@/features/admin/commerce/commercePeriod";
+import { commercePeriodRange, type AdminPeriodDays } from "@/lib/commercePeriod";
 import { fetchAdminFinancials, type AdminFinancialsSummary } from "@/lib/adminPlatformApi";
 import { formatGbp } from "@/lib/vendorDiscountDisplay";
 

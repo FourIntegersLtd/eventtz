@@ -5,9 +5,9 @@ import { Pencil, Sparkles } from "lucide-react";
 import {
   SOCIAL_PLATFORM_OPTIONS,
   WEEKDAY_LABELS,
-} from "../constants";
+} from "../../../../lib/vendorOnboarding/constants";
 import { bioWordCount } from "../onboardingLogic";
-import { isConfiguredPackage } from "../packageQuality";
+import { isConfiguredPackage } from "../../../../lib/vendorOnboarding/packageQuality";
 import {
   formatDiscountSummary,
   formatReviewBlockedDates,
@@ -19,7 +19,7 @@ import {
   hasAdditionalInfoContent,
   hasPortfolioContent,
   packageTravelPolicyLabel,
-} from "../reviewDisplayHelpers";
+} from "../../../../lib/vendorOnboarding/reviewDisplayHelpers";
 import { getMarket } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
 import { VendorPortfolioThumbGrid } from "@/features/vendors/display/VendorPortfolioThumbGrid";
@@ -28,9 +28,9 @@ import type {
   TravelDeliveryPolicy,
   VendorOnboardingData,
   VendorOnboardingUpdate,
-} from "../types";
-import { ClearableTextarea, labelClass } from "./form-primitives";
-import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
+} from "../../../../lib/vendorOnboarding/types";
+import { ClearableTextarea, labelClass } from "../../../../components/ui/form-primitives";
+import { uploadedFileDisplayName } from "../../../../lib/vendorOnboarding/uploadedFileDisplayName";
 import { ReviewCards } from "./ReviewCards";
 import { vendorCancellationPolicyLabel } from "@/features/bookings/cancellationPolicyCopy";
 import { VendorProfilePhotoField } from "../VendorProfilePhotoField";

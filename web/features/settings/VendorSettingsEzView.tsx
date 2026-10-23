@@ -10,9 +10,9 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { Modal } from "@/components/ui/Modal";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
-import { EzCheck, EzTextField } from "@/features/vendor/onboarding/steps/ez-form";
-import { initialVendorOnboardingData, type VendorOnboardingData } from "@/features/vendor/onboarding/types";
+import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
+import { EzCheck, EzTextField } from "@/components/ui/ez-form";
+import { initialVendorOnboardingData, type VendorOnboardingData } from "@/lib/vendorOnboarding/types";
 import {
   mergePayloadIntoVendorData,
   normalizeVendorPayload,

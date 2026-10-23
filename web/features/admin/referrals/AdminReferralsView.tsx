@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AdminCreateReferralPartnerModal } from "@/features/admin/referrals/AdminCreateReferralPartnerModal";
 import { CopyReferralLinkButton } from "@/features/admin/referrals/CopyReferralLinkButton";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
 import { AdminSuccessBanner } from "@/features/admin/components/AdminSuccessBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";

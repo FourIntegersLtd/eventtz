@@ -7,12 +7,12 @@ import {
   type AdminMarketplaceAnalytics,
 } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminKpiCard } from "@/features/admin/components/AdminKpiCard";
 import { AdminChartCard } from "@/features/admin/components/AdminChartCard";
-import { AdminBarChart } from "@/features/admin/components/AdminBarChart";
-import { AdminDonutChart } from "@/features/admin/components/AdminDonutChart";
-import { AdminHorizontalBarChart } from "@/features/admin/components/AdminHorizontalBarChart";
+import { EzBarChart } from "@/components/charts/EzBarChart";
+import { EzDonutChart } from "@/components/charts/EzDonutChart";
+import { EzHorizontalBarChart } from "@/components/charts/EzHorizontalBarChart";
 import { AdminCommercePeriodFilter } from "@/features/admin/components/AdminCommercePeriodFilter";
 import { AdminInfoHint } from "@/features/admin/components/AdminInfoHint";
 import { MARKETPLACE_CHART_INFO } from "@/features/admin/components/adminChartInfoCopy";
@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/Button";
 import {
   commercePeriodRange,
   type CommercePeriodDays,
-} from "@/features/admin/commerce/commercePeriod";
+} from "@/lib/commercePeriod";
 import {
   formatMarketplaceMoney,
   formatMarketplacePct,
@@ -224,7 +224,7 @@ export function AdminMarketplaceAnalyticsView() {
             subtitle="Enquiries per month"
             info={MARKETPLACE_CHART_INFO.demand}
           >
-            <AdminBarChart data={demandSeries} valueLabel="Enquiries" />
+            <EzBarChart data={demandSeries} valueLabel="Enquiries" />
           </AdminChartCard>
           <AdminChartCard
             title="Bookings over time"
@@ -233,10 +233,10 @@ export function AdminMarketplaceAnalyticsView() {
             footerHref="/admin/commerce?tab=bookings"
             footerLabel="View bookings →"
           >
-            <AdminBarChart
+            <EzBarChart
               data={completedSeries}
               valueLabel="Completed"
-              color="#10b981"
+              color="var(--ez-chart-3)"
             />
           </AdminChartCard>
           <AdminChartCard
@@ -245,10 +245,10 @@ export function AdminMarketplaceAnalyticsView() {
             info={MARKETPLACE_CHART_INFO.category}
           >
             {categoryBars.length > 0 ? (
-              <AdminHorizontalBarChart
+              <EzHorizontalBarChart
                 data={categoryBars}
                 valueLabel="Enquiries"
-                color="var(--color-primary, #7c3aed)"
+                color="var(--ez-chart-1)"
               />
             ) : (
               <p className="flex h-[180px] items-center justify-center text-sm text-neutral-500">
@@ -265,7 +265,7 @@ export function AdminMarketplaceAnalyticsView() {
             info={MARKETPLACE_CHART_INFO.failures}
           >
             {failureDonut.length > 0 ? (
-              <AdminDonutChart data={failureDonut} />
+              <EzDonutChart data={failureDonut} />
             ) : (
               <p className="flex h-[180px] items-center justify-center text-sm text-neutral-500">
                 No failures recorded.

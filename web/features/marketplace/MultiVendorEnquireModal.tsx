@@ -23,7 +23,7 @@ import {
 import {
   MultiVendorPackagePicker,
 } from "@/features/bookings/MultiVendorPackagePicker";
-import { bookingQuantitiesPayload } from "@/features/client/browse/vendorBrowseDetailModel";
+import { bookingQuantitiesPayload } from "@/lib/vendorBrowseDetailModel";
 import { todayIsoDate } from "@/lib/eventDateValidation";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { clientBookingRequestSchema, parseForm } from "@/lib/validation";

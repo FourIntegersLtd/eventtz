@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { MapPin, Star } from "lucide-react";
 import type { PlannerVendorCard } from "@/lib/clientPlannerApi";
-import { SERVICE_OPTIONS } from "@/features/vendor/onboarding/constants";
+import { SERVICE_OPTIONS } from "@/lib/vendorOnboarding/constants";
 import { PLANNER_COPY } from "./plannerCopy";
 import { formatVendorPrice } from "./plannerModel";
 

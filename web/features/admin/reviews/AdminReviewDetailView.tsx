@@ -17,7 +17,7 @@ import {
   type AdminReviewRow,
 } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { AdminErrorBanner } from "@/features/admin/components/AdminErrorBanner";
+import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { adminBookingRef } from "@/features/admin/bookings/adminBookingRef";
 import {

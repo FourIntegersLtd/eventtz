@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight, CalendarDays, ShieldAlert, Star, Wallet, type LucideIcon } from "lucide-react";
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import type { PortalRole } from "@/lib/portalRole";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { SettingsSection } from "./SettingsSection";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SERVICE_OPTIONS } from "@/features/vendor/onboarding/constants";
+import { SERVICE_OPTIONS } from "@/lib/vendorOnboarding/constants";
 
 type VendorBrowseBreadcrumbProps = {
   browseHref: string;

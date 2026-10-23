@@ -2,15 +2,15 @@
 
 import { FileText, Upload } from "lucide-react";
 import { useRef } from "react";
-import { SOCIAL_PLATFORM_OPTIONS } from "../constants";
+import { SOCIAL_PLATFORM_OPTIONS } from "../../../../lib/vendorOnboarding/constants";
 import {
   createVendorSocialLink,
   type SocialPlatform,
   type VendorOnboardingData,
   type VendorOnboardingUpdate,
-} from "../types";
-import { uploadedFileDisplayName } from "../uploadedFileDisplayName";
-import { EzCheck, EzTextField } from "./ez-form";
+} from "../../../../lib/vendorOnboarding/types";
+import { uploadedFileDisplayName } from "../../../../lib/vendorOnboarding/uploadedFileDisplayName";
+import { EzCheck, EzTextField } from "../../../../components/ui/ez-form";
 
 export type StepAdditionalInfoProps = {
   data: VendorOnboardingData;

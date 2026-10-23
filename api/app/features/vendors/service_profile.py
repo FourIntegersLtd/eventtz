@@ -23,7 +23,7 @@ from app.features.vendors.domain_profile_form import (
     with_clamped_bio,
 )
 from app.features.vendors.domain_visibility import is_publicly_listable, listing_override_of, payouts_verified
-from app.features.vendors.errors import BusinessNameTaken
+from app.features.vendors.errors import BusinessNameTaken, ProfileSaveFailed
 from app.features.vendors.rows import VendorRow
 from app.features.vendors.schemas import VendorInsuranceState, VendorProfilePutBody, VendorProfileState
 
@@ -189,7 +189,7 @@ async def save_profile(
 
     saved = await repository.get_vendor(session, principal.id)
     if saved is None:
-        raise RuntimeError("vendor profile save returned no row")
+        raise ProfileSaveFailed()
     if status == "submitted" and previous_status != "submitted":
         raw_name = merged_form.get("businessName")
         await asyncio.to_thread(

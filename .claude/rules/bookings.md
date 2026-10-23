@@ -7,7 +7,6 @@ paths:
   - "web/app/admin/(portal)/{bookings,trust}/**"
   - "web/features/{bookings,disputes,reviews}/**"
   - "web/features/{client,vendor}/bookings/**"
-  - "web/features/vendor/quotes/**"
   - "web/features/admin/{bookings,disputes,reviews}/**"
 ---
 # Bookings: what to know

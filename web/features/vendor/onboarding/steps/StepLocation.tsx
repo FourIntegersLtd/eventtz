@@ -1,4 +1,4 @@
-import { LocationAutocompleteInput } from "@/features/vendor/onboarding/ui/LocationAutocompleteInput";
+import { LocationAutocompleteInput } from "@/components/ui/LocationAutocompleteInput";
 import { enabledMarkets, getMarket } from "@/lib/markets";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
 import { STEP_COPY } from "../onboardingCopy";
@@ -7,8 +7,8 @@ import type {
   TravelDeliveryPolicy,
   VendorOnboardingData,
   VendorOnboardingUpdate,
-} from "../types";
-import { EzChip, EzOption, EzTextField } from "./ez-form";
+} from "../../../../lib/vendorOnboarding/types";
+import { EzChip, EzOption, EzTextField } from "../../../../components/ui/ez-form";
 
 export type StepLocationProps = {
   data: VendorOnboardingData;

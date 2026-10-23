@@ -21,7 +21,7 @@ import {
   canOpenDisputeForBookingStatus,
 } from "@/lib/bookingDisputeHelpers";
 import { ParticipantDisputeStatusBadge } from "@/components/badges/ParticipantDisputeStatusBadge";
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import type { PortalRole } from "@/lib/portalRole";
 import { portalRoute } from "@/components/portal-shell/portalNav";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";

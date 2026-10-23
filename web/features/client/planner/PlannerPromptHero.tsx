@@ -1,7 +1,7 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import { ClientEzPageHead } from "@/features/client/ui/ClientEzPageHead";
+import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
 import {
   PLANNER_EVENT_TYPE_OPTIONS,
   type PlannerFormFields,

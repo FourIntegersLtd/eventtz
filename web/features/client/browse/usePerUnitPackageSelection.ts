@@ -5,7 +5,7 @@ import {
   buildBookingLineItems,
   type BrowsePricingOption,
   type BookingLineItem,
-} from "./vendorBrowseDetailModel";
+} from "../../../lib/vendorBrowseDetailModel";
 
 type UsePerUnitPackageSelectionArgs = {
   pricingOptions: BrowsePricingOption[];

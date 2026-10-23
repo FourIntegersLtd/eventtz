@@ -1,4 +1,4 @@
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import type { PortalRole } from "@/lib/portalRole";
 import type { ParticipantDispute } from "@/lib/bookingDisputesApi";
 
 type BookingPartySnapshot = {

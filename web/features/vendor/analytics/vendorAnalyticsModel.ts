@@ -1,5 +1,5 @@
 import type { VendorAnalytics } from "@/lib/vendorAnalyticsApi";
-import type { AdminPeriodDays } from "@/features/admin/commerce/commercePeriod";
+import type { AdminPeriodDays } from "@/lib/commercePeriod";
 
 export const VENDOR_ANALYTICS_PERIOD_OPTIONS: { value: AdminPeriodDays; label: string }[] = [
   { value: 7, label: "7 days" },

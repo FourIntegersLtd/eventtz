@@ -1,4 +1,4 @@
-import type { PortalRole } from "@/components/portal-shell/portalNav";
+import type { PortalRole } from "@/lib/portalRole";
 
 export const VENDOR_CONTACT_MESSAGE_EXAMPLES = [
   "I cannot upload photos or videos to my portfolio",

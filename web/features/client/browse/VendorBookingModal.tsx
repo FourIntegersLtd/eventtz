@@ -23,7 +23,7 @@ import { todayIsoDate } from "@/lib/eventDateValidation";
 import {
   type BrowsePricingOption,
   bookingQuantitiesPayload,
-} from "./vendorBrowseDetailModel";
+} from "../../../lib/vendorBrowseDetailModel";
 import { usePerUnitPackageSelection } from "./usePerUnitPackageSelection";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { lineTotalGbp } from "@/lib/packagePricing";

@@ -1,6 +1,6 @@
 "use client";
 
-import { ClientEzPageHead } from "@/features/client/ui/ClientEzPageHead";
+import { ClientEzPageHead } from "@/components/ui/ClientEzPageHead";
 import { ReceiptPageShell } from "@/features/receipts/ReceiptPageShell";
 import { fetchClientPaymentReceipt } from "@/lib/receiptsApi";
 

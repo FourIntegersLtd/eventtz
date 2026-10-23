@@ -21,13 +21,13 @@ import { NotificationBell } from "@/features/notifications/NotificationBell";
 import { HelpWidget } from "@/features/help/HelpWidget";
 import { VendorCopilotProvider } from "@/features/vendor/copilot/VendorCopilotContext";
 import { VendorCopilotWidget } from "@/features/vendor/copilot/VendorCopilotWidget";
+import type { PortalRole } from "@/lib/portalRole";
 import { TermsUpdateBanner } from "@/components/portal-shell/TermsUpdateBanner";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   isPortalNavActive,
   portalDashboardHref,
   portalNavItems,
-  type PortalRole,
 } from "@/components/portal-shell/portalNav";
 
 /**

@@ -15,19 +15,19 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { VendorReviewsEzView } from "@/features/reviews/VendorReviewsEzView";
-import { VendorEzPageHead } from "@/features/vendor/ui/VendorEzPageHead";
+import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import {
   PROFILE_SECTIONS,
   profileSectionHref,
   type ProfileSectionSlug,
-} from "@/features/vendor/onboarding/constants";
-import type { VendorOnboardingData } from "@/features/vendor/onboarding/types";
+} from "@/lib/vendorOnboarding/constants";
+import type { VendorOnboardingData } from "@/lib/vendorOnboarding/types";
 import {
   profileHubCompletionPercent,
   profileHubSectionRows,
 } from "@/features/vendor/profile/profileEditorSummaries";
-import { displayServicesOffered } from "@/features/client/browse/browseLabels";
-import { isConfiguredPackage } from "@/features/vendor/onboarding/packageQuality";
+import { displayServicesOffered } from "@/lib/vendorBrowseLabels";
+import { isConfiguredPackage } from "@/lib/vendorOnboarding/packageQuality";
 import { isPerUnitPricing } from "@/lib/packagePricing";
 
 const INLINE_ICON = { display: "inline", verticalAlign: "baseline" } as const;

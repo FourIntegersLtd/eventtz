@@ -10,16 +10,16 @@ import {
   type CancellationPolicyKey,
 } from "@/features/bookings/cancellationPolicyCopy";
 import { isPerUnitPricing } from "@/lib/packagePricing";
-import { RADIUS_OPTIONS, MIN_PORTFOLIO_IMAGES, SERVICE_OPTIONS, WEEKDAY_LABELS } from "./constants";
-import { ONBOARDING_STEP } from "./onboardingProgress";
-import { isConfiguredPackage } from "./packageQuality";
+import { RADIUS_OPTIONS, MIN_PORTFOLIO_IMAGES, SERVICE_OPTIONS, WEEKDAY_LABELS } from "../../../lib/vendorOnboarding/constants";
+import { ONBOARDING_STEP } from "../../../lib/vendorOnboarding/onboardingProgress";
+import { isConfiguredPackage } from "../../../lib/vendorOnboarding/packageQuality";
 import {
   formatReviewEventTypes,
   formatReviewDeliveryModes,
   portfolioImageCountFromData,
-} from "./reviewDisplayHelpers";
-import type { VendorOnboardingData } from "./types";
-import { uploadedFileDisplayName } from "./uploadedFileDisplayName";
+} from "../../../lib/vendorOnboarding/reviewDisplayHelpers";
+import type { VendorOnboardingData } from "../../../lib/vendorOnboarding/types";
+import { uploadedFileDisplayName } from "../../../lib/vendorOnboarding/uploadedFileDisplayName";
 import { vendorOnboardingStepErrors } from "./vendorOnboardingValidation";
 
 /** One label and value line inside a review card. */

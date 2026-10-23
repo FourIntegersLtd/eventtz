@@ -6,7 +6,7 @@ import {
 import {
   initialVendorOnboardingData,
   type VendorOnboardingData,
-} from "@/features/vendor/onboarding/types";
+} from "@/lib/vendorOnboarding/types";
 
 export function adminVendorToOnboardingData(
   vendor: AdminVendorRow,
