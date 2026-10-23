@@ -56,7 +56,9 @@ async def test_with_photos_count_covers_all_pages_not_just_the_returned_one(db_s
             db_session,
             client_user_id=client_id,
             booking_id=booking.id,
-            body=PostBookingReviewBody(rating=5, body="Lovely food and great service.", image_urls=image_urls),
+            body=PostBookingReviewBody(
+                rating=5, body="Lovely food and great service.", image_urls=image_urls
+            ),
         )
 
     assert await repository.visible_photo_review_count_for_vendor(db_session, vendor_id) == 2
