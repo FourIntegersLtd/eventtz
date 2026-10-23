@@ -12,7 +12,7 @@ Pick the **lowest level that can see your change**, run it, and report the comma
 | `core/`, guards, test support, admin_insights, content | Level 1 (`make ci`) |
 | A migration | Level 1 + Level 2 on a fresh DB; plus `reviewer` (opus) and `/security-review` |
 | A setting | Level 1; confirm it is in `settings.py` and `api/.env.example` |
-| Route added/changed | Level 1; `make openapi`, then hand-edit `web/lib/api-types.ts` |
+| Route added/changed | Level 1; `make openapi`, then `npm run api:types` (web) |
 | Shared web component, `web/lib`, layout, marketing page | Level 1 web + Level 3 on a screen that imports it |
 | Worker / jobs | Level 1 + Level 3 with `make worker` running |
 
@@ -61,4 +61,4 @@ the api is picked up by the worker log. Outside services are off locally.
 - Autogenerate misses constraints, triggers and index changes: read the revision by hand. Daily capacity is a Postgres trigger (migration 033, in `0002`).
 - Only the `api` service migrates; the worker has no pre-deploy command (`docs/runbooks/railway.md`).
 - Never weaken a guard or delete its meta-test to get green; `test_ownership` fails on any file matching no row or two rows.
-- `openapi.baseline.json` fails CI if a path disappears. `web/lib/api-types.ts` is hand-written.
+- `openapi.baseline.json` fails CI if a path disappears. `web/lib/api-schema.d.ts` is generated; `make ci` runs `test_openapi_fresh`.

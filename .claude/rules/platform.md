@@ -27,7 +27,7 @@ Owner: `platform-owner`. Proof: `verify-platform`. Review: `quality-reviewer` al
 - **Lists page through `core/pagination.py`** (ADR 0011): routers take `page: PageDep`, schemas extend `PagedResponse`, repositories call `paged()` (adds the primary key as the last sort key) and escape `ilike` terms with `contains_pattern(...)` plus `escape=LIKE_ESCAPE` (`test_routers_use_page_params`). That module has no `from __future__ import annotations`: FastAPI reads `max_limit` from the closure. A role-twin router is one factory (`participant_router`, `portal_router`), also without the future import.
 - **Schema change = an Alembic revision, reviewed by hand** after `make new-migration`. Only the `api` service migrates (pre-deploy `alembic upgrade head`); the `worker` never does (`docs/runbooks/railway.md`). `0002` is the old `backend/sql/` snapshot. New migrations against the hosted DB: ask first.
 - **New setting = `api/app/core/settings.py` + `api/.env.example`.** Never commit secrets or real customer data.
-- **`api/openapi.baseline.json` keeps every path and method** (`test_routes_match_baseline`). After API changes run `make openapi`, then hand-edit `web/lib/api-types.ts` (no generator script). **Never re-export `openapi.baseline.json` from api/**: it is the frozen old-backend export, pinned by sha256 (`test_the_baseline_file_is_the_frozen_export`). A new route goes in `ADDITIVE_OPERATIONS` / `ADDITIVE_PATH_PREFIXES` in `test_routes_match_baseline.py`.
+- **`api/openapi.baseline.json` keeps every path and method** (`test_routes_match_baseline`). After API changes run `make openapi`, then `npm run api:types` in `web/` and commit `web/lib/api-schema.d.ts` (`test_openapi_fresh`, CI `api:types:check`). **Never re-export `openapi.baseline.json` from api/**: it is the frozen old-backend export, pinned by sha256 (`test_the_baseline_file_is_the_frozen_export`). A new route goes in `ADDITIVE_OPERATIONS` / `ADDITIVE_PATH_PREFIXES` in `test_routes_match_baseline.py`.
 - **Schemas are not rows** (`test_schemas_are_not_rows`); tests use fakes, never `patch("app.…")` (`test_tests_use_fakes`).
 - **Every module, class and function has a docstring; no single-letter names** (`test_code_is_documented`, `test_names_are_descriptive`). No em dashes in user copy (`test_copy_has_no_em_dash`).
 - **Ownership**: every source file matches exactly one row of `.claude/OWNERS.md` (`test_ownership`); a new folder needs a row.
@@ -42,7 +42,7 @@ Owner: `platform-owner`. Proof: `verify-platform`. Review: `quality-reviewer` al
 ## What a failure looks like here
 - A migration that autogenerate produced unreviewed (dropped constraint, missed index or trigger), or applied by the worker service.
 - A feature import inside `core/`, or SQL/commit outside the allowed files, hidden behind a guard exemption.
-- A route removed or renamed so `openapi.baseline.json` no longer matches, or `api-types.ts` left stale after `make openapi`.
+- A route removed or renamed so `openapi.baseline.json` no longer matches, or `api-schema.d.ts` left stale after `make openapi`.
 - `openapi.baseline.json` regenerated from the new app, or a new route added without its allow-list entry: the parity guard then can never fail.
 - A setting read from the environment directly, or added without `.env.example`.
 - A shared web component or `lib/` change that breaks a screen owned by another area (check every importer).

@@ -52,6 +52,9 @@
           }
         },
         "required": [
+          "success",
+          "terms_accepted_at",
+          "terms_accepted_version",
           "terms_version"
         ],
         "title": "AcceptTermsResponse",
@@ -87,7 +90,8 @@
           }
         },
         "required": [
-          "message"
+          "message",
+          "success"
         ],
         "title": "AccountDeletionResponse",
         "type": "object"
@@ -105,8 +109,8 @@
           }
         },
         "required": [
-          "id",
-          "address"
+          "address",
+          "id"
         ],
         "title": "AddressAutocompleteItem",
         "type": "object"
@@ -132,6 +136,11 @@
             "type": "array"
           }
         },
+        "required": [
+          "provider_configured",
+          "success",
+          "suggestions"
+        ],
         "title": "AddressAutocompleteResponse",
         "type": "object"
       },
@@ -156,6 +165,11 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "addresses",
+          "provider_configured",
+          "success"
+        ],
         "title": "AddressFindResponse",
         "type": "object"
       },
@@ -210,8 +224,12 @@
           }
         },
         "required": [
+          "county",
+          "formatted_line",
+          "line_1",
           "postcode",
-          "formatted_line"
+          "success",
+          "town_or_city"
         ],
         "title": "AddressResolveResponse",
         "type": "object"
@@ -229,7 +247,8 @@
           }
         },
         "required": [
-          "entry"
+          "entry",
+          "success"
         ],
         "title": "AdminAuditLogDetailResponse",
         "type": "object"
@@ -307,9 +326,14 @@
           }
         },
         "required": [
-          "id",
           "action",
-          "entity_type"
+          "admin_email",
+          "admin_user_id",
+          "audit_event_details",
+          "created_at",
+          "entity_id",
+          "entity_type",
+          "id"
         ],
         "title": "AdminAuditLogItem",
         "type": "object"
@@ -336,7 +360,9 @@
           }
         },
         "required": [
-          "entries"
+          "entries",
+          "success",
+          "total"
         ],
         "title": "AdminAuditLogResponse",
         "type": "object"
@@ -909,14 +935,64 @@
           }
         },
         "required": [
-          "id",
-          "status",
-          "event_name",
-          "event_date",
-          "total_label",
-          "vendor_user_id",
+          "cancellation_payout_at",
+          "cancellation_policy",
+          "cancellation_refund_gbp",
+          "cancellation_refund_percent",
+          "cancellation_vendor_share_gbp",
+          "client_completion_confirmed_at",
+          "client_email",
           "client_user_id",
-          "support"
+          "created_at",
+          "damage_deposit_gbp",
+          "date_change_note",
+          "date_change_requested_at",
+          "date_change_requested_by",
+          "delivery_confirmed_at",
+          "delivery_deadline_days",
+          "delivery_due_at",
+          "deposit_claim_awarded_gbp",
+          "deposit_claim_gbp",
+          "deposit_claim_note",
+          "deposit_claim_resolved_at",
+          "deposit_claimed_at",
+          "deposit_refund_due_at",
+          "deposit_refunded_at",
+          "event_address",
+          "event_date",
+          "event_end_date",
+          "event_name",
+          "event_postcode",
+          "id",
+          "line_items",
+          "notes",
+          "paid_at",
+          "payment_amount_gbp",
+          "payment_due_at",
+          "payment_status",
+          "payout_released_at",
+          "payout_stage",
+          "payout_upfront_percent",
+          "platform_fee_gbp",
+          "proposed_event_date",
+          "proposed_event_end_date",
+          "report_window_hours",
+          "selected_option_ids",
+          "status",
+          "stripe_charge_id",
+          "stripe_checkout_session_id",
+          "stripe_payment_intent_id",
+          "stripe_transfer_id",
+          "support",
+          "total_label",
+          "upfront_amount_gbp",
+          "upfront_payout_at",
+          "vendor_adjustments",
+          "vendor_amount_gbp",
+          "vendor_completion_confirmed_at",
+          "vendor_display_name",
+          "vendor_email",
+          "vendor_user_id"
         ],
         "title": "AdminBookingDetail",
         "type": "object"
@@ -934,7 +1010,8 @@
           }
         },
         "required": [
-          "booking"
+          "booking",
+          "success"
         ],
         "title": "AdminBookingDetailResponse",
         "type": "object"
@@ -1035,10 +1112,18 @@
           }
         },
         "required": [
-          "id",
-          "status",
+          "client_email",
+          "client_total_label",
+          "created_at",
+          "event_date",
           "event_name",
-          "event_date"
+          "id",
+          "paid_at",
+          "payment_status",
+          "status",
+          "support",
+          "vendor_display_name",
+          "vendor_email"
         ],
         "title": "AdminBookingListItem",
         "type": "object"
@@ -1089,6 +1174,12 @@
             "title": "Primary Label"
           }
         },
+        "required": [
+          "max_severity",
+          "needs_attention_count",
+          "next_action",
+          "primary_label"
+        ],
         "title": "AdminBookingListSupportSummary",
         "type": "object"
       },
@@ -1114,8 +1205,8 @@
         },
         "required": [
           "code",
-          "severity",
-          "label"
+          "label",
+          "severity"
         ],
         "title": "AdminBookingNeedsAttentionFlag",
         "type": "object"
@@ -1164,6 +1255,13 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "needs_attention",
+          "next_action",
+          "open_dispute",
+          "support_hold",
+          "vendor_stripe_payouts_enabled"
+        ],
         "title": "AdminBookingSupportMeta",
         "type": "object"
       },
@@ -1199,7 +1297,11 @@
           }
         },
         "required": [
-          "bookings"
+          "bookings",
+          "limit",
+          "offset",
+          "success",
+          "total"
         ],
         "title": "AdminBookingsListResponse",
         "type": "object"
@@ -1279,9 +1381,10 @@
           }
         },
         "required": [
+          "body",
+          "created_at",
           "id",
-          "sender_user_id",
-          "body"
+          "sender_user_id"
         ],
         "title": "AdminChatMessageItem",
         "type": "object"
@@ -1327,6 +1430,10 @@
           }
         },
         "required": [
+          "account_suspended",
+          "booking_count",
+          "created_at",
+          "email",
           "user_id"
         ],
         "title": "AdminClientRow",
@@ -1378,7 +1485,11 @@
           }
         },
         "required": [
-          "clients"
+          "clients",
+          "limit",
+          "offset",
+          "success",
+          "total"
         ],
         "title": "AdminClientsListResponse",
         "type": "object"
@@ -1466,8 +1577,13 @@
           }
         },
         "required": [
+          "client_email",
+          "client_user_id",
           "conversation_id",
-          "messages"
+          "messages",
+          "success",
+          "vendor_display_name",
+          "vendor_user_id"
         ],
         "title": "AdminConversationMessagesResponse",
         "type": "object"
@@ -1512,7 +1628,12 @@
           }
         },
         "required": [
-          "period_days"
+          "bookings_created",
+          "bookings_paid",
+          "open_disputes_count",
+          "period_days",
+          "signups",
+          "success"
         ],
         "title": "AdminDashboardMetrics",
         "type": "object"
@@ -1536,7 +1657,9 @@
           }
         },
         "required": [
-          "date"
+          "clients",
+          "date",
+          "vendors"
         ],
         "title": "AdminDashboardSignupBucket",
         "type": "object"
@@ -1611,21 +1734,22 @@
           }
         },
         "required": [
-          "users_client",
-          "users_vendor",
-          "users_admin",
-          "vendors_pending",
-          "vendors_approved",
-          "vendors_banned",
-          "bookings_pending",
           "bookings_accepted",
+          "bookings_cancelled",
           "bookings_completed",
           "bookings_declined",
-          "bookings_cancelled",
-          "bookings_paid_count",
           "bookings_needing_support",
+          "bookings_paid_count",
+          "bookings_pending",
           "conversations_count",
-          "reviews_count"
+          "reviews_count",
+          "success",
+          "users_admin",
+          "users_client",
+          "users_vendor",
+          "vendors_approved",
+          "vendors_banned",
+          "vendors_pending"
         ],
         "title": "AdminDashboardSummary",
         "type": "object"
@@ -1649,7 +1773,9 @@
           }
         },
         "required": [
-          "date"
+          "count",
+          "date",
+          "gmv_gbp"
         ],
         "title": "AdminDashboardTimeBucket",
         "type": "object"
@@ -1671,6 +1797,7 @@
           }
         },
         "required": [
+          "success",
           "users"
         ],
         "title": "AdminDirectorySearchResponse",
@@ -1708,9 +1835,10 @@
           }
         },
         "required": [
-          "user_id",
+          "email",
+          "kind",
           "label",
-          "kind"
+          "user_id"
         ],
         "title": "AdminDirectoryUserRow",
         "type": "object"
@@ -1987,11 +2115,32 @@
           }
         },
         "required": [
-          "id",
+          "assigned_admin_email",
+          "assigned_admin_id",
           "booking_request_id",
+          "booking_status",
+          "client_email",
+          "client_resolution_note",
+          "conversation_id",
+          "created_at",
+          "event_date",
+          "event_name",
+          "id",
+          "internal_notes",
+          "opened_by_display_name",
+          "opened_by_email",
+          "opened_by_role",
           "opened_by_user_id",
+          "refund_amount_gbp",
+          "resolution_action",
+          "resolution_note",
+          "resolved_at",
           "status",
-          "summary"
+          "summary",
+          "updated_at",
+          "vendor_display_name",
+          "vendor_email",
+          "vendor_resolution_note"
         ],
         "title": "AdminDisputeCase",
         "type": "object"
@@ -2131,7 +2280,10 @@
           }
         },
         "required": [
-          "disputes"
+          "disputes",
+          "limit",
+          "offset",
+          "total"
         ],
         "title": "AdminDisputesListResponse",
         "type": "object"
@@ -2164,9 +2316,10 @@
           }
         },
         "required": [
+          "category",
+          "description",
           "id",
-          "label",
-          "category"
+          "label"
         ],
         "title": "AdminEmailTemplateRow",
         "type": "object"
@@ -2188,6 +2341,7 @@
           }
         },
         "required": [
+          "success",
           "templates"
         ],
         "title": "AdminEmailTemplatesListResponse",
@@ -2264,8 +2418,9 @@
           }
         },
         "required": [
-          "success",
-          "delivered"
+          "delivered",
+          "message",
+          "success"
         ],
         "title": "AdminEmailTestSendResponse",
         "type": "object"
@@ -2299,7 +2454,11 @@
           }
         },
         "required": [
-          "date"
+          "count",
+          "date",
+          "gmv_gbp",
+          "platform_fee_gbp",
+          "vendor_portion_gbp"
         ],
         "title": "AdminFinancialsDailyBucket",
         "type": "object"
@@ -2335,6 +2494,13 @@
             "type": "integer"
           }
         },
+        "required": [
+          "daily",
+          "limit",
+          "offset",
+          "success",
+          "total"
+        ],
         "title": "AdminFinancialsDailyListResponse",
         "type": "object"
       },
@@ -2416,6 +2582,20 @@
             "type": "number"
           }
         },
+        "required": [
+          "daily",
+          "disclaimer",
+          "gmv_gbp",
+          "held_in_platform_balance_gbp",
+          "paid_booking_count",
+          "payout_released_gbp",
+          "period_from",
+          "period_to",
+          "platform_fee_gbp",
+          "service_fee_percent",
+          "success",
+          "vendor_portion_gbp"
+        ],
         "title": "AdminFinancialsSummary",
         "type": "object"
       },
@@ -2518,8 +2698,21 @@
           }
         },
         "required": [
+          "by_category",
+          "by_category_chart",
+          "by_category_total",
+          "by_location",
+          "category_limit",
+          "category_offset",
+          "completed_by_month",
+          "enquiries_by_month",
+          "failure_reasons",
           "from_date",
-          "to_date"
+          "overview",
+          "recruitment_hints",
+          "success",
+          "to_date",
+          "top_vendors"
         ],
         "title": "AdminMarketplaceAnalyticsResponse",
         "type": "object"
@@ -2583,8 +2776,8 @@
           }
         },
         "required": [
-          "user_id",
-          "error"
+          "error",
+          "user_id"
         ],
         "title": "AdminMessageSendFailure",
         "type": "object"
@@ -2624,8 +2817,10 @@
           }
         },
         "required": [
+          "conversation_ids",
+          "failures",
           "sent",
-          "conversation_ids"
+          "success"
         ],
         "title": "AdminMessageSendResponse",
         "type": "object"
@@ -2679,6 +2874,9 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "success"
+        ],
         "title": "AdminPaymentFieldsPatchResponse",
         "type": "object"
       },
@@ -2712,7 +2910,8 @@
           }
         },
         "required": [
-          "review"
+          "review",
+          "success"
         ],
         "title": "AdminReviewDetailResponse",
         "type": "object"
@@ -2825,10 +3024,19 @@
           }
         },
         "required": [
-          "id",
+          "body",
+          "booking_event_date",
+          "booking_event_name",
           "booking_request_id",
-          "vendor_user_id",
-          "client_user_id"
+          "booking_status",
+          "client_email",
+          "client_user_id",
+          "created_at",
+          "hidden_at",
+          "id",
+          "rating",
+          "vendor_display_name",
+          "vendor_user_id"
         ],
         "title": "AdminReviewRow",
         "type": "object"
@@ -2864,6 +3072,13 @@
             "type": "integer"
           }
         },
+        "required": [
+          "limit",
+          "offset",
+          "reviews",
+          "success",
+          "total"
+        ],
         "title": "AdminReviewsListResponse",
         "type": "object"
       },
@@ -2880,7 +3095,8 @@
           }
         },
         "required": [
-          "conversation"
+          "conversation",
+          "success"
         ],
         "title": "AdminSupportConversationDetailResponse",
         "type": "object"
@@ -2939,10 +3155,14 @@
           }
         },
         "required": [
+          "created_at",
           "id",
-          "support_user_id",
+          "kind",
+          "last_message_at",
+          "peer_display_name",
           "peer_user_id",
-          "peer_display_name"
+          "support_user_id",
+          "unread_count"
         ],
         "title": "AdminSupportConversationRow",
         "type": "object"
@@ -2979,7 +3199,11 @@
           }
         },
         "required": [
-          "conversations"
+          "conversations",
+          "limit",
+          "offset",
+          "success",
+          "total"
         ],
         "title": "AdminSupportConversationsListResponse",
         "type": "object"
@@ -3007,6 +3231,9 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "success"
+        ],
         "title": "AdminSupportMarkReadResponse",
         "type": "object"
       },
@@ -3039,7 +3266,8 @@
           }
         },
         "required": [
-          "message"
+          "message",
+          "success"
         ],
         "title": "AdminSupportMessageCreateResponse",
         "type": "object"
@@ -3073,7 +3301,8 @@
           }
         },
         "required": [
-          "message"
+          "message",
+          "success"
         ],
         "title": "AdminSupportMessageEditResponse",
         "type": "object"
@@ -3118,9 +3347,11 @@
           }
         },
         "required": [
+          "body",
+          "created_at",
           "id",
-          "sender_user_id",
-          "body"
+          "metadata",
+          "sender_user_id"
         ],
         "title": "AdminSupportMessageRow",
         "type": "object"
@@ -3142,7 +3373,8 @@
           }
         },
         "required": [
-          "messages"
+          "messages",
+          "success"
         ],
         "title": "AdminSupportMessagesListResponse",
         "type": "object"
@@ -3196,8 +3428,12 @@
           }
         },
         "required": [
-          "user_id",
-          "message"
+          "deleted",
+          "demoted_to",
+          "email",
+          "message",
+          "success",
+          "user_id"
         ],
         "title": "AdminTeamDeleteResponse",
         "type": "object"
@@ -3272,9 +3508,13 @@
           }
         },
         "required": [
-          "user_id",
+          "admin_role",
+          "created",
           "email",
-          "message"
+          "invite_link_sent",
+          "message",
+          "success",
+          "user_id"
         ],
         "title": "AdminTeamInviteResponse",
         "type": "object"
@@ -3311,7 +3551,11 @@
           }
         },
         "required": [
-          "members"
+          "limit",
+          "members",
+          "offset",
+          "success",
+          "total"
         ],
         "title": "AdminTeamListResponse",
         "type": "object"
@@ -3361,6 +3605,10 @@
           }
         },
         "required": [
+          "account_suspended",
+          "admin_role",
+          "created_at",
+          "email",
           "user_id"
         ],
         "title": "AdminTeamMember",
@@ -3421,9 +3669,10 @@
           }
         },
         "required": [
-          "user_id",
           "email",
-          "message"
+          "message",
+          "success",
+          "user_id"
         ],
         "title": "AdminTeamSendResetLinkResponse",
         "type": "object"
@@ -3479,8 +3728,9 @@
           }
         },
         "required": [
-          "user_id",
-          "approval_status"
+          "approval_status",
+          "success",
+          "user_id"
         ],
         "title": "AdminVendorApprovalResponse",
         "type": "object"
@@ -3498,6 +3748,7 @@
           }
         },
         "required": [
+          "success",
           "vendor"
         ],
         "title": "AdminVendorDetailResponse",
@@ -3563,6 +3814,14 @@
           }
         },
         "required": [
+          "bookings_by_month",
+          "bookings_by_status",
+          "bookings_total",
+          "explore_path",
+          "open_disputes_on_bookings",
+          "review_average",
+          "review_count",
+          "success",
           "user_id"
         ],
         "title": "AdminVendorInsightsResponse",
@@ -3614,8 +3873,10 @@
           }
         },
         "required": [
-          "user_id",
-          "insurance"
+          "insurance",
+          "listing_visible",
+          "success",
+          "user_id"
         ],
         "title": "AdminVendorInsuranceResponse",
         "type": "object"
@@ -3682,6 +3943,10 @@
           }
         },
         "required": [
+          "display_order",
+          "hidden_image_urls",
+          "listing_cover_image_url",
+          "success",
           "user_id"
         ],
         "title": "AdminVendorListingMediaResponse",
@@ -3742,8 +4007,10 @@
           }
         },
         "required": [
-          "user_id",
-          "listing_override"
+          "listing_override",
+          "listing_visible",
+          "success",
+          "user_id"
         ],
         "title": "AdminVendorListingOverrideResponse",
         "type": "object"
@@ -3814,6 +4081,10 @@
           }
         },
         "required": [
+          "listing_pause_reason",
+          "listing_paused_until",
+          "listing_visible",
+          "success",
           "user_id"
         ],
         "title": "AdminVendorPauseResponse",
@@ -3870,8 +4141,8 @@
           }
         },
         "required": [
-          "user_id",
-          "error"
+          "error",
+          "user_id"
         ],
         "title": "AdminVendorProfileNudgeFailure",
         "type": "object"
@@ -3902,6 +4173,12 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "failures",
+          "sent",
+          "skipped",
+          "success"
+        ],
         "title": "AdminVendorProfileNudgeResponse",
         "type": "object"
       },
@@ -3951,6 +4228,11 @@
           }
         },
         "required": [
+          "restored_from_transfer_id",
+          "stripe_account_id",
+          "stripe_charges_enabled",
+          "stripe_payouts_enabled",
+          "success",
           "user_id"
         ],
         "title": "AdminVendorRestoreStripeConnectResponse",
@@ -4113,7 +4395,27 @@
           }
         },
         "required": [
-          "user_id"
+          "approval_status",
+          "cancellation_review_flag",
+          "created_at",
+          "current_step",
+          "email",
+          "id",
+          "insurance",
+          "listing_override",
+          "listing_override_reason",
+          "listing_pause_reason",
+          "listing_paused_until",
+          "listing_visible",
+          "onboarding_status",
+          "payouts_verified",
+          "profile_form_data",
+          "stripe_account_id",
+          "stripe_charges_enabled",
+          "stripe_payouts_enabled",
+          "updated_at",
+          "user_id",
+          "vendor_cancellation_count"
         ],
         "title": "AdminVendorRow",
         "type": "object"
@@ -4168,8 +4470,10 @@
           }
         },
         "required": [
-          "user_id",
-          "status"
+          "email_sent",
+          "status",
+          "success",
+          "user_id"
         ],
         "title": "AdminVendorUnsubmitResponse",
         "type": "object"
@@ -4209,8 +4513,9 @@
           }
         },
         "required": [
-          "user_id",
-          "email_sent"
+          "email_sent",
+          "success",
+          "user_id"
         ],
         "title": "AdminVendorWarnResponse",
         "type": "object"
@@ -4246,6 +4551,13 @@
             "type": "array"
           }
         },
+        "required": [
+          "limit",
+          "offset",
+          "success",
+          "total",
+          "vendors"
+        ],
         "title": "AdminVendorsListResponse",
         "type": "object"
       },
@@ -4309,7 +4621,8 @@
         },
         "required": [
           "plan_id",
-          "status"
+          "status",
+          "success"
         ],
         "title": "ArchivePlanResponse",
         "type": "object"
@@ -4339,6 +4652,7 @@
         },
         "required": [
           "access_token",
+          "expires_at",
           "refresh_token"
         ],
         "title": "AuthSession",
@@ -4461,7 +4775,19 @@
           }
         },
         "required": [
-          "id"
+          "account_suspended",
+          "admin_role",
+          "app_metadata",
+          "client_onboarding_completed",
+          "email",
+          "email_verified",
+          "id",
+          "preferred_name",
+          "terms_accepted_at",
+          "terms_accepted_version",
+          "terms_version",
+          "user_metadata",
+          "user_type"
         ],
         "title": "AuthUser",
         "type": "object"
@@ -4590,9 +4916,20 @@
           }
         },
         "required": [
+          "author_admin_user_id",
+          "author_name",
+          "body_html",
+          "body_json",
+          "cover_image_url",
+          "created_at",
+          "excerpt",
           "id",
+          "published_at",
           "slug",
-          "title"
+          "status",
+          "subtitle",
+          "title",
+          "updated_at"
         ],
         "title": "BlogPostAdminDetail",
         "type": "object"
@@ -4610,7 +4947,8 @@
           }
         },
         "required": [
-          "post"
+          "post",
+          "success"
         ],
         "title": "BlogPostAdminDetailResponse",
         "type": "object"
@@ -4673,6 +5011,9 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "success"
+        ],
         "title": "BlogPostDeleteResponse",
         "type": "object"
       },
@@ -4779,9 +5120,17 @@
           }
         },
         "required": [
+          "author_name",
+          "cover_image_url",
+          "created_at",
+          "excerpt",
           "id",
+          "published_at",
           "slug",
-          "title"
+          "status",
+          "subtitle",
+          "title",
+          "updated_at"
         ],
         "title": "BlogPostListItem",
         "type": "object"
@@ -4894,9 +5243,18 @@
           }
         },
         "required": [
+          "author_name",
+          "body_html",
+          "cover_image_url",
+          "created_at",
+          "excerpt",
           "id",
+          "published_at",
           "slug",
-          "title"
+          "status",
+          "subtitle",
+          "title",
+          "updated_at"
         ],
         "title": "BlogPostPublicDetail",
         "type": "object"
@@ -4914,7 +5272,8 @@
           }
         },
         "required": [
-          "post"
+          "post",
+          "success"
         ],
         "title": "BlogPostPublicDetailResponse",
         "type": "object"
@@ -5052,7 +5411,11 @@
           }
         },
         "required": [
-          "posts"
+          "limit",
+          "offset",
+          "posts",
+          "success",
+          "total"
         ],
         "title": "BlogPostsListResponse",
         "type": "object"
@@ -5113,7 +5476,8 @@
           }
         },
         "required": [
-          "checkout_url"
+          "checkout_url",
+          "success"
         ],
         "title": "BookingCheckoutResponse",
         "type": "object"
@@ -5151,7 +5515,8 @@
           }
         },
         "required": [
-          "payment_status"
+          "payment_status",
+          "success"
         ],
         "title": "BookingCheckoutSyncResponse",
         "type": "object"
@@ -5270,6 +5635,7 @@
           }
         },
         "required": [
+          "success",
           "unread_count"
         ],
         "title": "BookingNotificationsUnreadResponse",
@@ -5396,18 +5762,25 @@
           }
         },
         "required": [
-          "line_items_subtotal_gbp",
-          "vendor_adjustments",
           "adjustments_total_gbp",
-          "vendor_portion_gbp",
-          "service_fee_percent",
-          "service_fee_gbp",
           "client_total_gbp",
-          "has_pricing_tbc",
-          "vendor_portion_label",
-          "service_fee_label",
           "client_total_label",
-          "line_items_subtotal_label"
+          "has_pricing_tbc",
+          "line_items_subtotal_gbp",
+          "line_items_subtotal_label",
+          "referral_fee_applied",
+          "referral_fee_discount_gbp",
+          "referral_fee_discount_label",
+          "referral_tier_min_spend_gbp",
+          "service_fee_before_discount_gbp",
+          "service_fee_before_discount_label",
+          "service_fee_gbp",
+          "service_fee_label",
+          "service_fee_percent",
+          "vendor_adjustments",
+          "vendor_portion_gbp",
+          "vendor_portion_label",
+          "vendor_referral_code"
         ],
         "title": "BookingPricingBreakdown",
         "type": "object"
@@ -5459,7 +5832,11 @@
           }
         },
         "required": [
-          "booking_request_id"
+          "booking_request_id",
+          "booking_status",
+          "created_at",
+          "event_id",
+          "success"
         ],
         "title": "BookingRequestCreated",
         "type": "object"
@@ -5513,12 +5890,12 @@
           }
         },
         "required": [
+          "assumptions",
           "lines",
-          "total_estimated_gbp",
-          "remaining_budget_gbp",
-          "user_budget_gbp",
           "over_budget",
-          "assumptions"
+          "remaining_budget_gbp",
+          "total_estimated_gbp",
+          "user_budget_gbp"
         ],
         "title": "BudgetBreakdown",
         "type": "object"
@@ -5555,11 +5932,11 @@
           }
         },
         "required": [
-          "need_id",
-          "label",
-          "amount_gbp",
           "allocated_gbp",
-          "assumption"
+          "amount_gbp",
+          "assumption",
+          "label",
+          "need_id"
         ],
         "title": "BudgetLine",
         "type": "object"
@@ -5621,6 +5998,10 @@
           }
         },
         "required": [
+          "cooling_off_until",
+          "lines",
+          "next_tier_at",
+          "next_tier_percent",
           "percent",
           "refund_gbp",
           "refund_label"
@@ -5758,9 +6139,22 @@
           }
         },
         "required": [
+          "budget_gbp",
+          "cuisine_notes",
+          "currency_assumed_gbp",
+          "event_kind",
           "event_type",
+          "excluded_needs",
           "guest_count",
-          "raw_prompt"
+          "indoor_outdoor",
+          "location",
+          "music_notes",
+          "preferred_date",
+          "preferred_date_invalid",
+          "raw_prompt",
+          "related_locations",
+          "special_requirements",
+          "unsupported_categories_mentioned"
         ],
         "title": "CelebrationBrief",
         "type": "object"
@@ -5826,13 +6220,13 @@
           }
         },
         "required": [
-          "title",
-          "event_type",
-          "location",
-          "guest_count",
           "budget_gbp",
+          "event_type",
+          "guest_count",
+          "location",
           "preferred_date",
-          "summary"
+          "summary",
+          "title"
         ],
         "title": "CelebrationSummary",
         "type": "object"
@@ -5877,6 +6271,11 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "message",
+          "requires_sign_in",
+          "success"
+        ],
         "title": "ChangePasswordResponse",
         "type": "object"
       },
@@ -5894,6 +6293,7 @@
           }
         },
         "required": [
+          "success",
           "unread_count"
         ],
         "title": "ChatUnreadCountResponse",
@@ -6494,13 +6894,64 @@
         "required": [
           "booking_request_id",
           "booking_status",
-          "vendor_user_id",
-          "vendor_display_name",
-          "event_name",
+          "cancellation_policy",
+          "cancellation_policy_label",
+          "cancellation_policy_lines",
+          "cancellation_preview",
+          "cancellation_refund_gbp",
+          "cancellation_refund_percent",
+          "client_completion_confirmed_at",
+          "completion_waiting_on",
+          "conversation_id",
+          "counterparty_phone",
+          "created_at",
+          "damage_deposit_gbp",
+          "date_change_declined",
+          "date_change_note",
+          "date_change_requested_at",
+          "date_change_requested_by",
+          "delivery_confirmed_at",
+          "delivery_deadline_days",
+          "delivery_due_at",
+          "deposit_claim_awarded_gbp",
+          "deposit_claim_gbp",
+          "deposit_claim_note",
+          "deposit_claim_resolved_at",
+          "deposit_claimed_at",
+          "deposit_refund_due_at",
+          "deposit_refunded_at",
+          "event_address",
           "event_date",
-          "total_label",
+          "event_end_date",
+          "event_id",
+          "event_name",
+          "event_postcode",
+          "event_title",
+          "has_open_dispute",
+          "initial_client_total_label",
+          "initiator",
+          "line_items",
+          "notes",
+          "paid_at",
+          "payment_due_at",
+          "payment_status",
+          "payout_auto_release_at",
+          "payout_stage",
+          "payout_upfront_percent",
+          "pricing",
+          "proposed_event_date",
+          "proposed_event_end_date",
+          "report_window_hours",
+          "review",
           "selected_option_ids",
-          "line_items"
+          "total_label",
+          "upfront_amount_gbp",
+          "upfront_payout_at",
+          "vendor_adjustments",
+          "vendor_completion_confirmed_at",
+          "vendor_display_name",
+          "vendor_referral_code",
+          "vendor_user_id"
         ],
         "title": "ClientBookingDetail",
         "type": "object"
@@ -6518,7 +6969,8 @@
           }
         },
         "required": [
-          "booking"
+          "booking",
+          "success"
         ],
         "title": "ClientBookingDetailResponse",
         "type": "object"
@@ -6686,11 +7138,24 @@
         "required": [
           "booking_request_id",
           "booking_status",
-          "event_name",
+          "client_completion_confirmed_at",
+          "client_total_label",
+          "completion_waiting_on",
+          "conversation_id",
+          "created_at",
           "event_date",
+          "event_end_date",
+          "event_id",
+          "event_name",
+          "event_title",
+          "has_price_update",
+          "has_review",
+          "initiator",
+          "payment_status",
           "total_label",
-          "vendor_user_id",
-          "vendor_display_name"
+          "updated_at",
+          "vendor_display_name",
+          "vendor_user_id"
         ],
         "title": "ClientBookingListItem",
         "type": "object"
@@ -6769,7 +7234,11 @@
           }
         },
         "required": [
-          "bookings"
+          "bookings",
+          "limit",
+          "offset",
+          "success",
+          "total"
         ],
         "title": "ClientBookingsListResponse",
         "type": "object"
@@ -6847,6 +7316,19 @@
             "type": "array"
           }
         },
+        "required": [
+          "active_bookings",
+          "active_count",
+          "awaiting_client_count",
+          "awaiting_vendor_count",
+          "bookings_by_date",
+          "completed_count",
+          "needs_review",
+          "next_booking",
+          "notification_preview",
+          "success",
+          "upcoming_agenda"
+        ],
         "title": "ClientDashboardResponse",
         "type": "object"
       },
@@ -6916,16 +7398,16 @@
           }
         },
         "required": [
-          "id",
-          "title",
+          "active_booking_count",
+          "booking_count",
+          "created_at",
+          "event_address",
           "event_date",
           "event_end_date",
-          "event_address",
           "event_postcode",
+          "id",
           "status",
-          "booking_count",
-          "active_booking_count",
-          "created_at"
+          "title"
         ],
         "title": "ClientEventDetail",
         "type": "object"
@@ -6943,7 +7425,8 @@
           }
         },
         "required": [
-          "event"
+          "event",
+          "success"
         ],
         "title": "ClientEventDetailResponse",
         "type": "object"
@@ -6965,7 +7448,8 @@
           }
         },
         "required": [
-          "events"
+          "events",
+          "success"
         ],
         "title": "ClientEventListResponse",
         "type": "object"
@@ -7036,15 +7520,15 @@
           }
         },
         "required": [
-          "id",
-          "title",
+          "active_booking_count",
+          "booking_count",
+          "event_address",
           "event_date",
           "event_end_date",
-          "event_address",
           "event_postcode",
+          "id",
           "status",
-          "booking_count",
-          "active_booking_count",
+          "title",
           "updated_at"
         ],
         "title": "ClientEventSummary",
@@ -7080,6 +7564,10 @@
             "type": "array"
           }
         },
+        "required": [
+          "success",
+          "vendor_user_ids"
+        ],
         "title": "ClientFavoritesListResponse",
         "type": "object"
       },
@@ -7112,6 +7600,10 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "merged",
+          "success"
+        ],
         "title": "ClientFavoritesMergeResponse",
         "type": "object"
       },
@@ -7158,7 +7650,8 @@
           }
         },
         "required": [
-          "onboarding"
+          "onboarding",
+          "success"
         ],
         "title": "ClientOnboardingResponse",
         "type": "object"
@@ -7183,6 +7676,10 @@
             "title": "Preferred Name"
           }
         },
+        "required": [
+          "completed",
+          "preferred_name"
+        ],
         "title": "ClientOnboardingState",
         "type": "object"
       },
@@ -7244,10 +7741,15 @@
           }
         },
         "required": [
-          "id",
-          "rating",
           "body",
           "booking_request_id",
+          "created_at",
+          "event_date",
+          "event_name",
+          "id",
+          "image_urls",
+          "rating",
+          "vendor_display_name",
           "vendor_user_id"
         ],
         "title": "ClientOwnerReviewItem",
@@ -7274,6 +7776,11 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "review_count",
+          "reviews",
+          "success"
+        ],
         "title": "ClientOwnerReviewsResponse",
         "type": "object"
       },
@@ -7313,7 +7820,10 @@
           }
         },
         "required": [
+          "body",
+          "created_at",
           "id",
+          "image_urls",
           "rating"
         ],
         "title": "ClientReviewSummary",
@@ -7335,6 +7845,7 @@
           }
         },
         "required": [
+          "reasons",
           "score"
         ],
         "title": "Confidence",
@@ -7367,9 +7878,11 @@
           }
         },
         "required": [
+          "awaiting_other_party",
           "id",
+          "payment_status",
           "status",
-          "payment_status"
+          "success"
         ],
         "title": "ConfirmCompletionResponse",
         "type": "object"
@@ -7404,6 +7917,12 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "contact_phone",
+          "share_address",
+          "share_email",
+          "share_phone"
+        ],
         "title": "ContactSharingSettings",
         "type": "object"
       },
@@ -7472,7 +7991,8 @@
           }
         },
         "required": [
-          "settings"
+          "settings",
+          "success"
         ],
         "title": "ContactSharingSettingsResponse",
         "type": "object"
@@ -7513,6 +8033,9 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "success"
+        ],
         "title": "ContactSubmitResponse",
         "type": "object"
       },
@@ -7544,7 +8067,8 @@
           }
         },
         "required": [
-          "conversation"
+          "conversation",
+          "success"
         ],
         "title": "ConversationCreateResponse",
         "type": "object"
@@ -7562,7 +8086,8 @@
           }
         },
         "required": [
-          "conversation"
+          "conversation",
+          "success"
         ],
         "title": "ConversationDetailResponse",
         "type": "object"
@@ -7641,9 +8166,16 @@
           }
         },
         "required": [
+          "client_user_id",
+          "created_at",
           "id",
+          "kind",
+          "last_message_at",
+          "peer_display_name",
           "peer_user_id",
-          "peer_display_name"
+          "support_user_id",
+          "unread_count",
+          "vendor_user_id"
         ],
         "title": "ConversationRow",
         "type": "object"
@@ -7680,7 +8212,11 @@
           }
         },
         "required": [
-          "conversations"
+          "conversations",
+          "limit",
+          "offset",
+          "success",
+          "total"
         ],
         "title": "ConversationsListResponse",
         "type": "object"
@@ -7726,9 +8262,11 @@
           }
         },
         "required": [
+          "action_data",
           "action_type",
-          "title",
-          "rationale"
+          "href",
+          "rationale",
+          "title"
         ],
         "title": "CopilotAction",
         "type": "object"
@@ -7820,7 +8358,10 @@
           }
         },
         "required": [
-          "answer_markdown"
+          "answer_markdown",
+          "escalate_reason",
+          "escalate_to_human",
+          "suggested_actions"
         ],
         "title": "CopilotAskResponse",
         "type": "object"
@@ -7866,7 +8407,8 @@
           }
         },
         "required": [
-          "draft_message"
+          "draft_message",
+          "tips"
         ],
         "title": "CopilotDraftReplyResponse",
         "type": "object"
@@ -7905,6 +8447,11 @@
             "type": "string"
           }
         },
+        "required": [
+          "overall_ok",
+          "package_feedback",
+          "summary"
+        ],
         "title": "CopilotReviewPackagesResponse",
         "type": "object"
       },
@@ -8528,11 +9075,26 @@
           }
         },
         "required": [
-          "id",
+          "booking_lifecycle_status",
           "booking_request_id",
+          "client_label",
+          "conversation_id",
+          "counterparty_label",
+          "created_at",
+          "event_date",
+          "event_name",
+          "id",
+          "opened_by_display_name",
+          "opened_by_role",
           "opened_by_user_id",
+          "opened_by_you",
+          "payment_status",
+          "resolution_note",
+          "resolved_at",
           "status",
-          "summary"
+          "summary",
+          "updated_at",
+          "vendor_display_name"
         ],
         "title": "DisputePublic",
         "type": "object"
@@ -8569,7 +9131,11 @@
           }
         },
         "required": [
-          "disputes"
+          "disputes",
+          "limit",
+          "offset",
+          "open_count",
+          "total"
         ],
         "title": "DisputesListResponse",
         "type": "object"
@@ -8623,12 +9189,13 @@
           }
         },
         "required": [
-          "plan_id",
-          "event_id",
-          "title",
-          "event_date",
           "event_address",
-          "event_postcode"
+          "event_date",
+          "event_id",
+          "event_postcode",
+          "plan_id",
+          "success",
+          "title"
         ],
         "title": "EnsureEventResponse",
         "type": "object"
@@ -8646,8 +9213,8 @@
           }
         },
         "required": [
-          "detail",
-          "code"
+          "code",
+          "detail"
         ],
         "title": "ErrorResponse",
         "type": "object"
@@ -8693,7 +9260,10 @@
         },
         "required": [
           "id",
+          "keywords",
           "label",
+          "optional",
+          "rationale",
           "service_key"
         ],
         "title": "ExplorePlanNeed",
@@ -8733,6 +9303,9 @@
           }
         },
         "required": [
+          "event_types",
+          "intent_summary",
+          "needs",
           "title"
         ],
         "title": "ExploreSearchPlan",
@@ -8783,9 +9356,13 @@
           }
         },
         "required": [
-          "need_id",
           "label",
-          "service_key"
+          "need_id",
+          "optional",
+          "service_key",
+          "total_count",
+          "vendors",
+          "why"
         ],
         "title": "ExploreSearchSection",
         "type": "object"
@@ -8807,8 +9384,8 @@
           }
         },
         "required": [
-          "rating",
           "body_excerpt",
+          "rating",
           "reviewer_display"
         ],
         "title": "ExploreVendorFeaturedReview",
@@ -8905,8 +9482,17 @@
           }
         },
         "required": [
-          "user_id",
-          "approval_status"
+          "approval_status",
+          "avg_response_seconds",
+          "completed_bookings",
+          "conversion_rate",
+          "email",
+          "profile_form_data",
+          "review_average",
+          "review_count",
+          "status",
+          "updated_at",
+          "user_id"
         ],
         "title": "ExploreVendorRow",
         "type": "object"
@@ -8987,6 +9573,18 @@
             "type": "array"
           }
         },
+        "required": [
+          "has_exact",
+          "has_related",
+          "intent_summary",
+          "match_notice",
+          "plan",
+          "search_mode",
+          "sections",
+          "success",
+          "total_count",
+          "vendors"
+        ],
         "title": "ExploreVendorSearchResponse",
         "type": "object"
       },
@@ -9115,8 +9713,21 @@
           }
         },
         "required": [
-          "user_id",
-          "approval_status"
+          "approval_status",
+          "avg_response_seconds",
+          "completed_bookings",
+          "conversion_rate",
+          "email",
+          "featured_review",
+          "match_hint",
+          "match_tier",
+          "matched_services",
+          "profile_form_data",
+          "review_average",
+          "review_count",
+          "status",
+          "updated_at",
+          "user_id"
         ],
         "title": "ExploreVendorSearchRow",
         "type": "object"
@@ -9134,6 +9745,7 @@
           }
         },
         "required": [
+          "success",
           "vendor"
         ],
         "title": "ExploreVendorSingleResponse",
@@ -9155,6 +9767,10 @@
             "type": "array"
           }
         },
+        "required": [
+          "success",
+          "vendors"
+        ],
         "title": "ExploreVendorsResponse",
         "type": "object"
       },
@@ -9187,7 +9803,8 @@
           }
         },
         "required": [
-          "message"
+          "message",
+          "success"
         ],
         "title": "ForgotPasswordResponse",
         "type": "object"
@@ -9256,10 +9873,10 @@
           }
         },
         "required": [
-          "metric_key",
           "label",
-          "score",
           "max_score",
+          "metric_key",
+          "score",
           "status",
           "tip"
         ],
@@ -9294,6 +9911,9 @@
           }
         },
         "required": [
+          "levers",
+          "listing_visible",
+          "payouts_verified",
           "score"
         ],
         "title": "GrowthScoreResponse",
@@ -9385,14 +10005,18 @@
           }
         },
         "required": [
-          "id",
-          "slug",
-          "title",
-          "summary",
           "audience",
+          "body_md",
           "category_id",
+          "category_slug",
+          "category_title",
+          "id",
+          "related_articles",
+          "related_slugs",
+          "slug",
           "sort_order",
-          "body_md"
+          "summary",
+          "title"
         ],
         "title": "HelpArticleDetail",
         "type": "object"
@@ -9452,13 +10076,15 @@
           }
         },
         "required": [
-          "id",
-          "slug",
-          "title",
-          "summary",
           "audience",
           "category_id",
-          "sort_order"
+          "category_slug",
+          "category_title",
+          "id",
+          "slug",
+          "sort_order",
+          "summary",
+          "title"
         ],
         "title": "HelpArticleListItem",
         "type": "object"
@@ -9575,7 +10201,10 @@
           }
         },
         "required": [
-          "answer_markdown"
+          "answer_markdown",
+          "escalate_reason",
+          "escalate_to_human",
+          "related_article_slugs"
         ],
         "title": "HelpAskResponse",
         "type": "object"
@@ -9635,13 +10264,14 @@
           }
         },
         "required": [
-          "id",
-          "slug",
-          "title",
+          "article_count",
+          "audience",
           "description",
           "icon_key",
+          "id",
+          "slug",
           "sort_order",
-          "audience"
+          "title"
         ],
         "title": "HelpCategoryOut",
         "type": "object"
@@ -9698,6 +10328,9 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "success"
+        ],
         "title": "MarkReadResponse",
         "type": "object"
       },
@@ -9725,8 +10358,9 @@
           }
         },
         "required": [
+          "detail",
           "headline",
-          "detail"
+          "service_category"
         ],
         "title": "MarketDemandInsight",
         "type": "object"
@@ -9744,6 +10378,7 @@
           }
         },
         "required": [
+          "success",
           "user"
         ],
         "title": "MeResponse",
@@ -9787,7 +10422,8 @@
           }
         },
         "required": [
-          "message"
+          "message",
+          "success"
         ],
         "title": "MessageCreateResponse",
         "type": "object"
@@ -9843,9 +10479,12 @@
           }
         },
         "required": [
+          "body",
+          "created_at",
           "id",
-          "sender_user_id",
-          "body"
+          "metadata",
+          "sender_display_name",
+          "sender_user_id"
         ],
         "title": "MessageRow",
         "type": "object"
@@ -9867,7 +10506,8 @@
           }
         },
         "required": [
-          "messages"
+          "messages",
+          "success"
         ],
         "title": "MessagesListResponse",
         "type": "object"
@@ -9959,8 +10599,14 @@
           }
         },
         "required": [
+          "body",
+          "booking_id",
+          "created_at",
+          "href",
           "kind",
-          "title"
+          "notification_id",
+          "title",
+          "unread"
         ],
         "title": "NotificationFeedItem",
         "type": "object"
@@ -9997,7 +10643,11 @@
           }
         },
         "required": [
-          "items"
+          "items",
+          "limit",
+          "offset",
+          "success",
+          "total"
         ],
         "title": "NotificationFeedResponse",
         "type": "object"
@@ -10076,7 +10726,12 @@
           }
         },
         "required": [
-          "package_title"
+          "items",
+          "package_id",
+          "package_title",
+          "suggested_details",
+          "suggested_duration",
+          "suggested_title"
         ],
         "title": "PackageCoachPackageFeedback",
         "type": "object"
@@ -10121,9 +10776,11 @@
           }
         },
         "required": [
-          "severity",
           "code",
-          "message"
+          "message",
+          "package_id",
+          "package_title",
+          "severity"
         ],
         "title": "PackageCoachTip",
         "type": "object"
@@ -10298,14 +10955,26 @@
           }
         },
         "required": [
-          "document_type",
-          "receipt_number",
           "booking_request_id",
-          "event_name",
-          "event_date",
-          "payment_status",
           "counterparty_name",
-          "total_label"
+          "document_type",
+          "event_date",
+          "event_name",
+          "line_items",
+          "paid_at",
+          "payment_reference",
+          "payment_status",
+          "payout_released_at",
+          "platform_fee_label",
+          "receipt_number",
+          "service_fee_label",
+          "service_fee_percent",
+          "status_note",
+          "stripe_receipt_url",
+          "subtotal_label",
+          "total_label",
+          "transfer_reference",
+          "vendor_share_label"
         ],
         "title": "PaymentReceiptPayload",
         "type": "object"
@@ -10323,7 +10992,8 @@
           }
         },
         "required": [
-          "receipt"
+          "receipt",
+          "success"
         ],
         "title": "PaymentReceiptResponse",
         "type": "object"
@@ -10391,16 +11061,17 @@
           }
         },
         "required": [
-          "plan_id",
-          "status",
-          "client_event_id",
-          "celebration",
           "brief",
-          "confidence",
           "budget",
-          "recommendations",
-          "next_steps",
+          "celebration",
+          "client_event_id",
+          "confidence",
           "created_at",
+          "next_steps",
+          "plan_id",
+          "recommendations",
+          "status",
+          "success",
           "updated_at"
         ],
         "title": "PlanDetailResponse",
@@ -10457,13 +11128,13 @@
           }
         },
         "required": [
-          "plan_id",
-          "title",
+          "confidence_score",
+          "created_at",
           "event_type",
           "location",
-          "confidence_score",
+          "plan_id",
           "status",
-          "created_at",
+          "title",
           "updated_at"
         ],
         "title": "PlanListItem",
@@ -10486,7 +11157,8 @@
           }
         },
         "required": [
-          "plans"
+          "plans",
+          "success"
         ],
         "title": "PlanListResponse",
         "type": "object"
@@ -10562,12 +11234,14 @@
           }
         },
         "required": [
-          "need_id",
+          "alternatives",
+          "empty_reason",
+          "estimated_cost_gbp",
           "label",
-          "service_key",
+          "need_id",
           "optional",
           "primary",
-          "estimated_cost_gbp",
+          "service_key",
           "why_selected"
         ],
         "title": "PlanRecommendation",
@@ -10618,8 +11292,12 @@
           }
         },
         "required": [
-          "user_id",
-          "business_name"
+          "business_name",
+          "city",
+          "min_list_price_gbp",
+          "price_on_request",
+          "unavailable",
+          "user_id"
         ],
         "title": "PlannerVendorCard",
         "type": "object"
@@ -10636,6 +11314,9 @@
             "type": "array"
           }
         },
+        "required": [
+          "items"
+        ],
         "title": "PortalDashboardNotificationPreview",
         "type": "object"
       },
@@ -10682,7 +11363,8 @@
           }
         },
         "required": [
-          "review"
+          "review",
+          "success"
         ],
         "title": "PostBookingReviewResponse",
         "type": "object"
@@ -10716,10 +11398,10 @@
         },
         "required": [
           "bucket",
+          "fields",
           "path",
           "public_url",
-          "upload_url",
-          "fields"
+          "upload_url"
         ],
         "title": "PresignedUploadResponse",
         "type": "object"
@@ -10779,11 +11461,15 @@
           }
         },
         "required": [
-          "id",
-          "rating",
           "body",
-          "reviewer_display",
-          "event_name"
+          "booking_total_label",
+          "created_at",
+          "event_date",
+          "event_name",
+          "id",
+          "image_urls",
+          "rating",
+          "reviewer_display"
         ],
         "title": "PublicReviewItem",
         "type": "object"
@@ -10816,7 +11502,8 @@
           }
         },
         "required": [
-          "booking"
+          "booking",
+          "success"
         ],
         "title": "PutVendorBookingAdjustmentsResponse",
         "type": "object"
@@ -10834,8 +11521,8 @@
           }
         },
         "required": [
-          "label",
-          "amount_label"
+          "amount_label",
+          "label"
         ],
         "title": "ReceiptLineItem",
         "type": "object"
@@ -10853,8 +11540,8 @@
           }
         },
         "required": [
-          "min_spend_gbp",
-          "fee_discount_gbp"
+          "fee_discount_gbp",
+          "min_spend_gbp"
         ],
         "title": "ReferralFeeTier",
         "type": "object"
@@ -10891,7 +11578,11 @@
           }
         },
         "required": [
-          "partners"
+          "limit",
+          "offset",
+          "partners",
+          "success",
+          "total"
         ],
         "title": "ReferralPartnerListResponse",
         "type": "object"
@@ -10914,8 +11605,9 @@
           }
         },
         "required": [
+          "display_name",
           "slug",
-          "display_name"
+          "success"
         ],
         "title": "ReferralPartnerPublicResponse",
         "type": "object"
@@ -10933,7 +11625,8 @@
           }
         },
         "required": [
-          "partner"
+          "partner",
+          "success"
         ],
         "title": "ReferralPartnerResponse",
         "type": "object"
@@ -11008,10 +11701,15 @@
           }
         },
         "required": [
-          "id",
-          "slug",
+          "created_at",
           "display_name",
-          "referral_link"
+          "id",
+          "instagram_handle",
+          "is_active",
+          "notes",
+          "referral_link",
+          "slug",
+          "updated_at"
         ],
         "title": "ReferralPartnerRow",
         "type": "object"
@@ -11051,8 +11749,12 @@
           }
         },
         "required": [
+          "limit",
+          "offset",
           "partner",
-          "signups"
+          "signups",
+          "success",
+          "total"
         ],
         "title": "ReferralSignupListResponse",
         "type": "object"
@@ -11148,6 +11850,14 @@
           }
         },
         "required": [
+          "approval_status",
+          "attributed_at",
+          "business_name",
+          "email",
+          "explore_path",
+          "onboarding_status",
+          "shoutout_completed",
+          "shoutout_completed_at",
           "user_id"
         ],
         "title": "ReferralVendorSignupRow",
@@ -11187,8 +11897,9 @@
           }
         },
         "required": [
-          "user",
-          "session"
+          "session",
+          "success",
+          "user"
         ],
         "title": "RefreshSessionResponse",
         "type": "object"
@@ -11229,7 +11940,8 @@
         },
         "required": [
           "plan_id",
-          "recommendation"
+          "recommendation",
+          "success"
         ],
         "title": "ReplaceItemResponse",
         "type": "object"
@@ -11263,7 +11975,8 @@
           }
         },
         "required": [
-          "message"
+          "message",
+          "success"
         ],
         "title": "ResendVerificationResponse",
         "type": "object"
@@ -11305,8 +12018,9 @@
           }
         },
         "required": [
-          "user",
-          "session"
+          "session",
+          "success",
+          "user"
         ],
         "title": "ResetPasswordResponse",
         "type": "object"
@@ -11351,6 +12065,12 @@
             "type": "array"
           }
         },
+        "required": [
+          "overall_ok",
+          "package_feedback",
+          "summary",
+          "tips"
+        ],
         "title": "ReviewVendorPackagesResponse",
         "type": "object"
       },
@@ -11377,6 +12097,9 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "success"
+        ],
         "title": "ReviewVisibilityResponse",
         "type": "object"
       },
@@ -11417,8 +12140,9 @@
           }
         },
         "required": [
-          "user",
-          "session"
+          "session",
+          "success",
+          "user"
         ],
         "title": "SignInResponse",
         "type": "object"
@@ -11450,6 +12174,9 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "success"
+        ],
         "title": "SignOutResponse",
         "type": "object"
       },
@@ -11539,6 +12266,9 @@
           }
         },
         "required": [
+          "message",
+          "session",
+          "success",
           "user"
         ],
         "title": "SignupResponse",
@@ -11557,8 +12287,8 @@
           }
         },
         "required": [
-          "ticket",
-          "expires_in_seconds"
+          "expires_in_seconds",
+          "ticket"
         ],
         "title": "StreamTicketResponse",
         "type": "object"
@@ -11572,6 +12302,9 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "success"
+        ],
         "title": "StripeWebhookResponse",
         "type": "object"
       },
@@ -11610,9 +12343,11 @@
           }
         },
         "required": [
+          "body",
+          "created_at",
           "id",
-          "rating",
-          "body"
+          "image_urls",
+          "rating"
         ],
         "title": "SubmittedReview",
         "type": "object"
@@ -11626,6 +12361,9 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "success"
+        ],
         "title": "SuccessResponse",
         "type": "object"
       },
@@ -11816,10 +12554,10 @@
           }
         },
         "required": [
-          "id",
           "adjustment_category",
-          "label",
-          "amount_gbp"
+          "amount_gbp",
+          "id",
+          "label"
         ],
         "title": "VendorAdjustmentItem",
         "type": "object"
@@ -11880,6 +12618,16 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "enquiries_by_month",
+          "funnel",
+          "overview",
+          "period_days",
+          "rating_by_month",
+          "response_time_by_month",
+          "revenue_by_month",
+          "success"
+        ],
         "title": "VendorAnalyticsResponse",
         "type": "object"
       },
@@ -12458,11 +13206,61 @@
         "required": [
           "booking_request_id",
           "booking_status",
-          "event_name",
+          "cancellation_payout_at",
+          "cancellation_policy",
+          "cancellation_refund_percent",
+          "cancellation_vendor_share_gbp",
+          "client_completion_confirmed_at",
+          "client_display_name",
+          "client_email",
+          "client_user_id",
+          "completion_waiting_on",
+          "conversation_id",
+          "counterparty_phone",
+          "created_at",
+          "damage_deposit_gbp",
+          "date_change_declined",
+          "date_change_note",
+          "date_change_requested_at",
+          "date_change_requested_by",
+          "delivery_confirmed_at",
+          "delivery_deadline_days",
+          "delivery_due_at",
+          "deposit_claim_awarded_gbp",
+          "deposit_claim_gbp",
+          "deposit_claim_note",
+          "deposit_claim_resolved_at",
+          "deposit_claimed_at",
+          "deposit_refund_due_at",
+          "deposit_refunded_at",
+          "event_address",
           "event_date",
-          "total_label",
+          "event_end_date",
+          "event_name",
+          "event_postcode",
+          "has_open_dispute",
+          "initial_client_total_label",
+          "initiator",
+          "line_items",
+          "notes",
+          "paid_at",
+          "payment_due_at",
+          "payment_status",
+          "payout_auto_release_at",
+          "payout_stage",
+          "payout_upfront_percent",
+          "price_update_declined",
+          "pricing",
+          "proposed_event_date",
+          "proposed_event_end_date",
+          "report_window_hours",
+          "review",
           "selected_option_ids",
-          "line_items"
+          "total_label",
+          "upfront_amount_gbp",
+          "upfront_payout_at",
+          "vendor_adjustments",
+          "vendor_completion_confirmed_at"
         ],
         "title": "VendorBookingDetail",
         "type": "object"
@@ -12480,7 +13278,8 @@
           }
         },
         "required": [
-          "booking"
+          "booking",
+          "success"
         ],
         "title": "VendorBookingDetailResponse",
         "type": "object"
@@ -12667,9 +13466,24 @@
         "required": [
           "booking_request_id",
           "booking_status",
-          "event_name",
+          "client_display_name",
+          "client_email",
+          "client_total_label",
+          "completion_waiting_on",
+          "conversation_id",
+          "created_at",
           "event_date",
-          "total_label"
+          "event_end_date",
+          "event_id",
+          "event_name",
+          "event_title",
+          "has_price_update",
+          "initiator",
+          "payment_status",
+          "review",
+          "total_label",
+          "updated_at",
+          "vendor_completion_confirmed_at"
         ],
         "title": "VendorBookingListItem",
         "type": "object"
@@ -12734,7 +13548,10 @@
         },
         "required": [
           "booking_request_id",
-          "booking_status"
+          "booking_status",
+          "refund_gbp",
+          "refund_percent",
+          "success"
         ],
         "title": "VendorBookingStatusResponse",
         "type": "object"
@@ -12771,7 +13588,11 @@
           }
         },
         "required": [
-          "bookings"
+          "bookings",
+          "limit",
+          "offset",
+          "success",
+          "total"
         ],
         "title": "VendorBookingsListResponse",
         "type": "object"
@@ -12790,7 +13611,8 @@
           }
         },
         "required": [
-          "available"
+          "available",
+          "success"
         ],
         "title": "VendorBusinessNameAvailabilityResponse",
         "type": "object"
@@ -12836,7 +13658,12 @@
           }
         },
         "required": [
+          "enabled",
+          "has_referral_code",
+          "referral_code",
           "service_fee_percent",
+          "share_link",
+          "success",
           "tiers"
         ],
         "title": "VendorClientReferralResponse",
@@ -12889,11 +13716,14 @@
           }
         },
         "required": [
-          "greeting",
-          "summary_markdown",
-          "growth_score",
+          "context_fingerprint",
+          "demand_insights",
           "generated_at",
-          "context_fingerprint"
+          "greeting",
+          "growth_score",
+          "narration_cached",
+          "suggested_actions",
+          "summary_markdown"
         ],
         "title": "VendorCopilotBriefResponse",
         "type": "object"
@@ -12956,6 +13786,17 @@
             "type": "array"
           }
         },
+        "required": [
+          "active_bookings",
+          "active_bookings_count",
+          "bookings_by_date",
+          "held_payouts_count",
+          "needs_response",
+          "notification_preview",
+          "pending_bookings_count",
+          "success",
+          "upcoming_agenda"
+        ],
         "title": "VendorDashboardResponse",
         "type": "object"
       },
@@ -13034,6 +13875,14 @@
             "title": "Verified Certificate Url"
           }
         },
+        "required": [
+          "certificate_url",
+          "cover_gbp",
+          "expires_on",
+          "status",
+          "verified_at",
+          "verified_certificate_url"
+        ],
         "title": "VendorInsuranceState",
         "type": "object"
       },
@@ -13095,11 +13944,16 @@
           }
         },
         "required": [
-          "id",
-          "rating",
           "body",
-          "reviewer_display",
-          "booking_request_id"
+          "booking_request_id",
+          "booking_total_label",
+          "created_at",
+          "event_date",
+          "event_name",
+          "id",
+          "image_urls",
+          "rating",
+          "reviewer_display"
         ],
         "title": "VendorOwnerReviewItem",
         "type": "object"
@@ -13156,6 +14010,16 @@
             "type": "integer"
           }
         },
+        "required": [
+          "average_rating",
+          "five_star_count",
+          "limit",
+          "offset",
+          "review_count",
+          "reviews",
+          "success",
+          "total"
+        ],
         "title": "VendorOwnerReviewsResponse",
         "type": "object"
       },
@@ -13173,7 +14037,8 @@
           }
         },
         "required": [
-          "onboarding_url"
+          "onboarding_url",
+          "success"
         ],
         "title": "VendorPaymentsConnectResponse",
         "type": "object"
@@ -13218,6 +14083,14 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "can_accept_bookings",
+          "charges_enabled",
+          "payout_gate_waived",
+          "payouts_enabled",
+          "stripe_account_id",
+          "success"
+        ],
         "title": "VendorPaymentsStatusResponse",
         "type": "object"
       },
@@ -13282,6 +14155,19 @@
             "type": "string"
           }
         },
+        "required": [
+          "limit",
+          "offset",
+          "paid_out_last_30_days_gbp",
+          "paid_out_last_30_days_label",
+          "payouts",
+          "success",
+          "total",
+          "total_awaiting_gbp",
+          "total_awaiting_label",
+          "total_paid_out_gbp",
+          "total_paid_out_label"
+        ],
         "title": "VendorPayoutHistoryResponse",
         "type": "object"
       },
@@ -13348,10 +14234,14 @@
           }
         },
         "required": [
-          "booking_id",
-          "event_name",
           "amount_gbp",
           "amount_label",
+          "booking_id",
+          "client_display_name",
+          "event_date",
+          "event_name",
+          "kind",
+          "paid_out_at",
           "status"
         ],
         "title": "VendorPayoutRow",
@@ -13454,8 +14344,16 @@
           }
         },
         "required": [
+          "approval_status",
           "current_step",
-          "onboarding_status"
+          "insurance",
+          "listing_override",
+          "listing_visible",
+          "onboarding_status",
+          "payouts_verified",
+          "profile_form_data",
+          "success",
+          "updated_at"
         ],
         "title": "VendorProfileState",
         "type": "object"
@@ -13492,6 +14390,12 @@
             "type": "boolean"
           }
         },
+        "required": [
+          "average_rating",
+          "review_count",
+          "reviews",
+          "success"
+        ],
         "title": "VendorPublicReviewsResponse",
         "type": "object"
       },
@@ -13556,12 +14460,15 @@
         },
         "required": [
           "booking_request_id",
-          "event_name",
-          "event_date",
           "booking_status",
+          "client_display_name",
+          "created_at",
+          "event_date",
+          "event_name",
           "payment_status",
-          "vendor_portion_gbp",
-          "referral_fee_discount_gbp"
+          "referral_code",
+          "referral_fee_discount_gbp",
+          "vendor_portion_gbp"
         ],
         "title": "VendorReferralBookingRow",
         "type": "object"
@@ -13606,9 +14513,13 @@
           }
         },
         "required": [
-          "total_referral_bookings",
+          "bookings",
+          "limit",
+          "offset",
+          "success",
+          "total",
           "total_fee_savings_gbp",
-          "bookings"
+          "total_referral_bookings"
         ],
         "title": "VendorReferralBookingsResponse",
         "type": "object"
@@ -13669,9 +14580,15 @@
           }
         },
         "required": [
-          "valid",
+          "code_valid",
+          "qualified_discount_gbp",
+          "service_fee_before_discount_gbp",
+          "service_fee_gbp",
+          "service_fee_percent",
+          "success",
+          "tier_min_spend_gbp",
           "tiers",
-          "service_fee_percent"
+          "valid"
         ],
         "title": "VendorReferralPreviewResponse",
         "type": "object"
@@ -13718,7 +14635,8 @@
         },
         "required": [
           "referral_code",
-          "share_link"
+          "share_link",
+          "success"
         ],
         "title": "VendorReferralSetCodeResponse",
         "type": "object"
@@ -13764,9 +14682,11 @@
           }
         },
         "required": [
-          "id",
-          "rating",
           "body",
+          "created_at",
+          "id",
+          "image_urls",
+          "rating",
           "reviewer_display"
         ],
         "title": "VendorReviewSummary",
@@ -13821,7 +14741,10 @@
           }
         },
         "required": [
-          "message"
+          "message",
+          "session",
+          "success",
+          "user"
         ],
         "title": "VerifyEmailResponse",
         "type": "object"
