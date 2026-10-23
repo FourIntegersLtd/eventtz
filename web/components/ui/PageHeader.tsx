@@ -22,13 +22,13 @@ export function PageHeader({
   className = "",
 }: PageHeaderProps) {
   return (
-    <div className={`ez-pagehead ${className}`.trim()}>
+    <header className={`ez-pagehead ${className}`.trim()}>
       <div className="ez-pagehead__text">
         {eyebrow ? <span className="ez-eyebrow">{eyebrow}</span> : null}
         <h1 className="ez-h1">{title}</h1>
         {description ? <p className={descriptionSize === "body" ? "ez-body" : "ez-small"}>{description}</p> : null}
       </div>
       {actions ? <div className="ez-pagehead__actions">{actions}</div> : null}
-    </div>
+    </header>
   );
 }

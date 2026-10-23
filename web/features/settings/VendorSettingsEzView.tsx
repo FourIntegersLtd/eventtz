@@ -1,5 +1,6 @@
 "use client";
 
+import { StatTile } from "@/components/ui/StatTile";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -472,14 +473,8 @@ export function VendorSettingsEzView() {
               </div>
               <div className="ez-card__body">
                 <div className="ez-grid-2">
-                  <div className="ez-kpi">
-                    <span className="ez-kpi__label">Bookings</span>
-                    <span className="ez-kpi__value">{invited}</span>
-                  </div>
-                  <div className="ez-kpi">
-                    <span className="ez-kpi__label">Accepted</span>
-                    <span className="ez-kpi__value">{approved}</span>
-                  </div>
+                  <StatTile label="Bookings" value={invited} />
+                  <StatTile label="Accepted" value={approved} />
                 </div>
                 <div className="ez-table-wrap">
                   <table className="ez-table">
