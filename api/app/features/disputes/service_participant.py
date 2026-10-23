@@ -196,6 +196,7 @@ async def _to_public(
         counterparty_label = vendor_label
     elif viewer_role == "vendor":
         counterparty_label = client_label
+    conversation_id = dispute.conversation_id or (booking.conversation_id if booking else None)
     return DisputePublic(
         id=dispute.id,
         booking_request_id=dispute.booking_request_id,
@@ -215,7 +216,8 @@ async def _to_public(
         event_date=booking.event_date if booking else None,
         booking_lifecycle_status=booking.status if booking else None,
         payment_status=booking.payment_status if booking else None,
-        conversation_id=dispute.conversation_id or (booking.conversation_id if booking else None),
+        conversation_id=conversation_id,
+        chat_included_for_review=bool(conversation_id),
         opened_by_role=opened_by_role,
         opened_by_you=dispute.opened_by_user_id == viewer_user_id,
         opened_by_display_name=opened_by_display_name,

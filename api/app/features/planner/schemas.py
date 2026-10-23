@@ -73,6 +73,14 @@ class PlannerVendorCard(BaseModel):
     user_id: str
     business_name: str
     city: str | None = None
+    services: list[str] = Field(default_factory=list)
+    base_city: str | None = None
+    cover_image_url: str | None = None
+    review_average: float | None = None
+    review_count: int = 0
+    completed_bookings: int = 0
+    avg_response_seconds: float | None = None
+    conversion_rate: float | None = None
     min_list_price_gbp: float | None = None
     unavailable: bool = False
     price_on_request: bool = False
