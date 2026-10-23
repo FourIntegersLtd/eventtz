@@ -307,3 +307,13 @@ For local testing without Docker:
   is `ez-small`, the tile uses `ez-caption`); custom banners in `AdminVendorSubmissionActions` and
   `VendorMarketplaceStatusBanner`; `AdminVendorDetailView` pagehead (truncating h1); `GrowthScoreRing` raw stroke
   colours; unused imports in `vendorDetailsShared.tsx`; `useAdminVendors` nudge actions could share one helper.
+
+- **Done (PR "Rebuild audit: docs and guard", Phase 2 step 7).** One design rule, written in
+  `components/README.md` "Design rule"; `UI-CONVENTIONS.md` and the design-diff README point to it (the design-diff
+  README no longer says to copy `ez-` markup into screens). `eventtz.css` lost 10 classes nothing in `web/` references
+  (`ez-check--compact`, `ez-filter-bar__end`, `ez-filter-bar--end`, `ez-hero*`, `ez-search__label`, `ez-search__value`,
+  `ez-section--tint`, `ez-section--white`) and gained the used-but-missing `ez-table-row--active` (selected admin
+  client row). Classes only the canvas `.dc.html` artboards use were kept so the design-diff artboards render the same.
+  New guard `components/ui/rawEzClassGuard.test.ts` (meta-tests, stale-entry check) fails on raw
+  `ez-btn|card|badge|banner|pagehead|kpi` in `features/**` and `app/**`. Left: the 23 allow-listed files, to be moved onto the blocks and removed from `ALLOW_LISTED_FILES` in
+  `rawEzClassGuard.test.ts` (the list lives there).

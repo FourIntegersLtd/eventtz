@@ -12,9 +12,10 @@ A screen is therefore a transcription, not an interpretation.
 1. Open the artboard file, for example `design/canvas/project/P01-Login.dc.html`. The markup
    inside `<x-dc>` is the screen. The `Design notes` callout at the bottom is the spec (other
    states, components used); it is never built.
-2. Copy the markup into the page or feature component keeping every `ez-` class and every
-   inline `style` as written. Replace sample copy with props and data; replace `/_blob/<id>`
-   images with files in `public/` (and map the id in `screens.json` under `assets`).
+2. Read the markup as the spec and build the screen from the `components/ui` blocks that render those `ez-`
+   classes (the rule is in [`components/README.md` "Design rule"](../../components/README.md#design-rule)). Replace
+   sample copy with props and data; replace `/_blob/<id>` images with files in `public/` (and map the id in
+   `screens.json` under `assets`).
 3. Do not restyle with Tailwind utilities, do not "improve" spacing, do not rewrite copy.
    If a class is missing from `eventtz.css`, the canvas is wrong: fix it there first.
 4. Add the screen to `screens.json`: its artboard, route, size (`$preview` in the artboard),
