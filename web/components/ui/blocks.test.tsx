@@ -92,6 +92,12 @@ describe("ui building blocks emit canvas markup", () => {
     expect(renderToStaticMarkup(<StatTile label="A" value="1" href="/x" />)).toContain('<a class="ez-kpi ez-kpi--link" href="/x">');
   });
 
+  it("Checkbox passes required through to the input", () => {
+    expect(renderToStaticMarkup(<Checkbox checked={false} required onChange={() => {}}>Agree</Checkbox>)).toContain(
+      'required=""',
+    );
+  });
+
   it("Checkbox is an ez-check row and OptionCard marks the chosen option", () => {
     expect(renderToStaticMarkup(<Checkbox checked onChange={() => {}}>Remember me</Checkbox>)).toContain(
       '<span>Remember me</span>',

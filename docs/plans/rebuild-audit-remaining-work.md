@@ -103,6 +103,14 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `test_media_s3_storage.py` checks the signed `presigned_post` policy.
 - **UK "today":** new `core/time.py` (`uk_date`, `uk_today`, Europe/London); `domain_portal_dashboard.py` uses it
   (the old code used the server's local zone). `test_core_time.py` pins a BST midnight boundary.
+- **Done (PR "Rebuild audit: access screens on the design system and server lists").** Admin audit log, clients and
+  team lists run on `useServerList`; seeded two-server comparison (60 audit rows, 40 clients, 32 staff) of pages 1
+  and 2 at 1280 and 390px is pixel-identical to the base. Settings: the client and vendor pages now share
+  `SettingsCards.tsx` (13 unused `Settings*` files deleted; live helpers in `settingsHelpers.ts`; referrals tab is
+  `VendorReferralsTab.tsx` on `useServerList`). Raw `ez-card/btn/banner/dl`, inline `style` and `neutral-*` in the
+  touched admin, auth and settings files moved to ui blocks and tokens; register terms box is the `Checkbox`
+  block (new `required` prop). Deviations: the client close-account modal now uses the vendor layout, settings tabs
+  are buttons (not links), the empty referral list shows a sentence instead of an empty table.
 
 ## Open questions and follow-ups from Phase 4
 
