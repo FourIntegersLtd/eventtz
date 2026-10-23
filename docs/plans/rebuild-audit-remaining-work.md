@@ -86,12 +86,19 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Open questions and follow-ups from Phase 4
 
-- **Only the portal dashboard uses London "today" so far.** Six sites still use UTC and disagree with it between
-  00:00 and 01:00 BST: `vendors/service_moderation.py:600` (insurance expiry), `vendors/service_listing.py:39`
-  (listing visibility), `vendors/service_profile.py:33`, `bookings/service_admin_financials.py:124`,
-  `marketplace/service_analytics.py:22`, `admin_insights/domain.py:32`. Each belongs to a different owner, so
-  move them to `core.time.uk_today()` as follow-ups. The dashboard service also calls the clock once per helper;
-  compute `uk_today()` once and pass `today=` to all three, then make it required.
+- **Done (PR "UK calendar day for every business date").** Every `date.today()` / `datetime.now(UTC).date()` in
+  `api/app` now goes through `core.time.uk_today()`: the six sites above plus `bookings/schemas.py`,
+  `bookings/service_date_change.py`, `planner/service_plans.py` and `admin_insights/service.py`. The portal
+  dashboard computes `uk_today()` once and `today=` is required. Services take an optional `now` (the test clock).
+  `tests/guards/test_dates_use_uk_calendar_day.py` bans the direct forms.
+- **Also done in the same PR.** Admin chart bounds and bucketing (`admin_insights`), the financials daily table
+  and `paid_on_or_*` bounds, and the reminder job's "tomorrow" (`domain_maintenance.tomorrow_uk`) use London days.
+  The guard also bans `.astimezone(UTC).date()`.
+- **Still UTC, follow-ups.** (1) `bookings/domain_cancellation.py:107` (`days_before_event`) sets the refund tier:
+  money-owner moves it to `uk_date` with a golden check, then drops it from `UTC_DAY_ALLOWED_FILES` in the guard.
+  (2) The financials summary filters `date_from` / `date_to` (date-only strings) still mean midnight UTC
+  (`repository_admin._as_datetime_bound`, frozen by acceptance), so a 23:30 UTC payment on the day before `date_from`
+  is a London-day-of-`date_from` payment in the daily table but outside the summary total. Decide whether to freeze-break.
 
 ### Decision for you: should a client shown as "Client" be searchable by vendors?
 

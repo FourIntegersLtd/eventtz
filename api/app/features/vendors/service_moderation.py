@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import Principal
 from app.core.pagination import contains_pattern
 from app.core.ports import Mailer, Storage
+from app.core.time import uk_today
 from app.features.bookings import service_vendor_record
 from app.features.identity import service as identity
 from app.features.notifications import service as notifications
@@ -592,13 +593,17 @@ async def verify_insurance(
     *,
     expires_on: date,
     cover_gbp: int,
+    now: datetime | None = None,
 ) -> AdminVendorInsuranceResponse:
-    """Record the certificate now on the vendor's form as checked, with the expiry and cover staff read."""
+    """Record the certificate now on the vendor's form as checked, with the expiry and cover staff read.
+
+    Cover that ends today (London day) is already expired; `now` is the clock tests set.
+    """
     vendor = await _vendor_or_404(session, user_id)
     certificate_url = insurance_state(vendor).certificate_url
     if certificate_url is None:
         raise InsuranceCertificateMissing()
-    if expires_on <= datetime.now(UTC).date():
+    if expires_on <= uk_today(now):
         raise InsuranceAlreadyExpired()
     if cover_gbp < MIN_COVER_GBP:
         raise InsuranceCoverTooLow()

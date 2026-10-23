@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
 from app.core.pagination import LIKE_ESCAPE, contains_pattern, paged
+from app.core.time import HOME_TIMEZONE
 from app.features.bookings.domain_financials import PAID_PAYMENT_STATUSES
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.rows import BookingRow
@@ -250,7 +251,7 @@ async def paid_bookings_for_financials(
 ) -> list[BookingRow]:
     """Every paid booking (`domain_financials.PAID_PAYMENT_STATUSES`) whose `paid_at` falls in range.
 
-    `paid_on_or_after` / `paid_on_or_before` further narrow the range to whole UTC days (the daily
+    `paid_on_or_after` / `paid_on_or_before` further narrow the range to whole London days (the daily
     table asks for one page of days at a time). Capped at 5000 rows, oldest first, matching the
     baseline's own cap.
     """
@@ -260,11 +261,13 @@ async def paid_bookings_for_financials(
     if date_to:
         conditions.append(BookingRequest.paid_at <= _as_datetime_bound(date_to))
     if paid_on_or_after:
-        conditions.append(BookingRequest.paid_at >= datetime.combine(paid_on_or_after, time.min, tzinfo=UTC))
+        conditions.append(
+            BookingRequest.paid_at >= datetime.combine(paid_on_or_after, time.min, tzinfo=HOME_TIMEZONE)
+        )
     if paid_on_or_before:
         conditions.append(
             BookingRequest.paid_at
-            < datetime.combine(paid_on_or_before + timedelta(days=1), time.min, tzinfo=UTC)
+            < datetime.combine(paid_on_or_before + timedelta(days=1), time.min, tzinfo=HOME_TIMEZONE)
         )
     result = await session.execute(
         select(*_BOOKING_COLUMNS).where(*conditions).order_by(BookingRequest.paid_at.asc()).limit(5000)

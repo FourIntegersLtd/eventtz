@@ -10,7 +10,7 @@ rather than an ORM import, because only a table's own slice may import its
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import (
@@ -32,6 +32,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
 from app.core.pagination import LIKE_ESCAPE, contains_pattern
+from app.core.time import HOME_TIMEZONE
 
 #: `users.user_type` is a real Postgres enum, not text; a bound Text parameter
 #: cannot compare against it without an explicit cast (`operator does not exist:
@@ -111,9 +112,12 @@ _ACTIVE_DISPUTE_STATUSES = ("open", "under_review")
 
 
 def _day_bounds(day: str) -> tuple[datetime, datetime]:
-    """The UTC `[start, end)` instant range covered by one `YYYY-MM-DD` day."""
-    start = datetime.combine(date.fromisoformat(day), datetime.min.time(), tzinfo=UTC)
-    return start, start + timedelta(days=1)
+    """The `[start, end)` instant range of one London `YYYY-MM-DD` day (23 to 25 hours long)."""
+    first = date.fromisoformat(day)
+    return (
+        datetime.combine(first, datetime.min.time(), tzinfo=HOME_TIMEZONE),
+        datetime.combine(first + timedelta(days=1), datetime.min.time(), tzinfo=HOME_TIMEZONE),
+    )
 
 
 async def _count(session: AsyncSession, handle: Any, *conditions: Any) -> int:
