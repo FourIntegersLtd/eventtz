@@ -97,7 +97,7 @@ Shells may compose feature widgets (e.g. `HelpWidget`, notification bell) — th
 
 ## Theme tokens
 
-Colours, radii and shadows are `--ez-*` tokens in `design/canvas/project/eventtz.css` (loaded in the `components` layer), re-exported to Tailwind by `app/globals.css`. Blocks in `ui/` emit `ez-*` classes; card surfaces come from `CARD_SURFACE` / `CARD_PADDING` in [`ui/tokens.ts`](ui/tokens.ts). `portal-shell/portalTheme.ts` remains only for `BookingDetailPanel` and the help views, pending their migration.
+Colours, radii and shadows are `--ez-*` tokens in `design/canvas/project/eventtz.css` (loaded in the `components` layer), re-exported to Tailwind by `app/globals.css`. Blocks in `ui/` emit `ez-*` classes; card surfaces come from `CARD_SURFACE` / `CARD_PADDING` in [`ui/tokens.ts`](ui/tokens.ts).
 
 ## Adding a new component
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { nextOffset, previousOffset, resolveOffset, serverListKey } from "@/lib/useServerList";
+import { failedOutcome, nextOffset, previousOffset, resolveOffset, serverListKey } from "@/lib/useServerList";
 
 describe("server list paging", () => {
   it("advances a page of 25 through 60 rows and stops on the last page", () => {
@@ -38,5 +38,17 @@ describe("server list paging", () => {
 
   it("ignores surrounding spaces in the search text", () => {
     expect(serverListKey({ tab: "active" }, " ann ")).toBe(serverListKey({ tab: "active" }, "ann"));
+  });
+});
+
+describe("server list failed fetch", () => {
+  it("keeps the last good rows and total and surfaces the error", () => {
+    const lastGood = { requestKey: "a", items: ["row 1", "row 2"], total: 40, error: null };
+    expect(failedOutcome(lastGood, "b", "Could not load this list.")).toEqual({
+      requestKey: "b",
+      items: ["row 1", "row 2"],
+      total: 40,
+      error: "Could not load this list.",
+    });
   });
 });

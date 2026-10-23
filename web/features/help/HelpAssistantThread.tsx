@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
+import { CARD_PADDING, CARD_SURFACE } from "@/components/ui/tokens";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { ASSISTANT_UNAVAILABLE } from "@/lib/help-messages";
 import {
@@ -137,7 +137,7 @@ function HelpAssistantThreadInner({
         className={
           embedded
             ? "flex min-h-0 flex-1 flex-col overflow-hidden"
-            : `${portalCard} ${portalCardPadding} flex min-h-[28rem] flex-col`
+            : `${CARD_SURFACE} ${CARD_PADDING} flex min-h-[28rem] flex-col`
         }
       >
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-0.5 py-1">
