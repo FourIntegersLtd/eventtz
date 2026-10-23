@@ -46,7 +46,7 @@ make new-migration M=x  # autogenerate, then review by hand
 make dev                # uvicorn :8001
 make worker             # procrastinate worker
 make ci                 # lint + typecheck + arch (incl. alembic check) + tests
-make openapi            # regenerate openapi.json (then update web/lib/api-types.ts by hand)
+make openapi            # regenerate openapi.json (then `npm run api:types` in web/)
 
 # acceptance (from acceptance/): the freeze suite, black-box over HTTP
 make serve              # api/ on :8001 over its compose Postgres (leave running)
@@ -111,8 +111,11 @@ Traps in this machine's shell:
 - **Terms numbers live twice.** `web/lib/policyConstants.json` (copy) and the api constants/settings
   (`bookings/domain_policy.py`); `tests/unit/test_policy_constants.py` keeps them equal. Booking
   terms are snapshotted at checkout (ADR 0010).
-- **`web/lib/api-types.ts` is hand-written.** There is no `api:types` script; update it by hand
-  after `make openapi`.
+- **`web/lib/api-schema.d.ts` is generated** (`npm run api:types` in `web/`, from `api/openapi.json`).
+  After any API change run `make openapi`, then `npm run api:types`, and commit both; `test_openapi_fresh.py`
+  and `npm run api:types:check` (CI) fail on drift. `lib/*Api.ts` aliases `components["schemas"][...]`;
+  response schemas list every field as required (`app/openapi.py`), and fields the api types as free-form
+  dicts are narrowed by hand with `Omit<..> & {..}`. Not every `*Api.ts` is migrated yet.
 - **List screens paginate on the server.** Tables send `offset` / `limit` / filters as query params; home dashboards use `GET /client/dashboard` and `GET /vendor/dashboard`, not `booking-requests?limit=200` plus client-side `.filter`.
 - **Docker hung?** DB tests skip silently. Run them against the compose Postgres directly:
   create a fresh database and set `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5434/<name>`.

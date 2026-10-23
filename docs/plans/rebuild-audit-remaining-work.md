@@ -40,6 +40,11 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 - **Error codes.** `invalid_booking_id` and `no_fields_to_update` are one class each in `core/errors.py`;
   `session_expired` and `account_deleted` reuse the `core/auth.py` classes with a message override.
   `test_visibility_helpers_only` also catches `.notin_`, `.is_`, `filter_by` and dict-row access.
+- **Generated API types (Phase 3.6).** `npm run api:types` writes `web/lib/api-schema.d.ts` from `api/openapi.json`;
+  `npm run api:types:check` runs in `ci-web` and `test_openapi_fresh.py` keeps `openapi.json` fresh. Response
+  schemas mark every field required (`app/openapi.py`). Bookings (client and vendor), both dashboards,
+  vendor payments, `/auth/me` and explore now alias the generated schema; `lib/api-types.ts` is deleted.
+  Left: the other ~40 `lib/*Api.ts` files still hold hand-written types and move over as screens are touched.
 
 **Phase 4: dead code and docs** (PR "Rebuild audit Phase 4", except `test_list_pagination.py`, which Phase 3 owns).
 - **Deleted web files with no importers (grep of every import form, then `npm run build`):**
@@ -156,11 +161,6 @@ compared with `main`.
    - Delete the `limit: 200` wrappers.
    - Replace the dispute 50-second poll with realtime.
    - Remaining page-only KPIs: vendor "Next release" and admin referrals "Active creators".
-6. **Generated API types (ADR 0007).**
-   - Add `openapi-typescript` (dev dependency, approved), `npm run api:types` and a CI drift check.
-   - Add an api test that `openapi.json` is fresh.
-   - Migrate the `lib/*Api.ts` types, starting with bookings, dashboards and payments.
-   - Update the AGENTS.md trap about hand-written types.
 7. **Formatting.**
    - One `lib/money.ts` (`formatGbp`, `formatPence`, en-GB).
    - `lib/dateFormat.ts` is the only date formatter.

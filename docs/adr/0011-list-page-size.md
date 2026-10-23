@@ -51,5 +51,5 @@ All paths are under `/api/v1`.
   `GET /vendor/dashboard` are aggregates, not lists.
 
 ## Consequences
-- `web/lib/api-types.ts` and `web/lib/listPageSize.ts` carry the same default; change both together.
+- `web/lib/api-schema.d.ts (`npm run api:types`)` and `web/lib/listPageSize.ts` carry the same default; change both together.
 - A route that grows pagination later is listed here, not silently added.
