@@ -79,7 +79,7 @@ export function AdminDashboardView({ period }: AdminDashboardViewProps) {
         title: "Vendor approvals",
         subtitle: `${summary.vendors_pending} waiting for review`,
         badge: `${summary.vendors_pending} pending`,
-        href: "/admin/directory?tab=vendors",
+        href: "/admin/directory?tab=vendors&queue=pending",
         tone: "urgent",
       });
     }

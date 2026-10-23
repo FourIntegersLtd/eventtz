@@ -9,6 +9,11 @@ import type { VendorQueueTab } from "./adminVendorQueueStatus";
 
 export const VENDOR_QUEUE_FILTER_OPTIONS: EzFilterOption<VendorQueueTab>[] = [
   {
+    id: "all",
+    title: "All vendors",
+    subtitle: "Every vendor, whatever their status",
+  },
+  {
     id: "pending",
     title: "Pending review",
     subtitle: "Submitted profiles waiting for staff",

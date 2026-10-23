@@ -1,5 +1,8 @@
 "use client";
 
+import { Badge } from "@/components/ui/Badge";
+import { Banner } from "@/components/ui/Banner";
+import type { Tone } from "@/lib/tone";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { getVendorListingOverride, VENDOR_LISTING_OVERRIDE_META } from "@/lib/domain-types";
 
@@ -9,7 +12,7 @@ type Props = {
 
 function statusCopy(vendor: AdminVendorRow): {
   label: "Live" | "Hidden" | "Banned";
-  labelClass: string;
+  tone: Tone;
   headline: string;
   detail: string;
 } {
@@ -23,7 +26,7 @@ function statusCopy(vendor: AdminVendorRow): {
   if (banned) {
     return {
       label: "Banned",
-      labelClass: "text-danger bg-danger-soft ring-danger-line/80",
+      tone: "danger",
       headline: "Not on the marketplace",
       detail: "Banned vendors cannot appear in explore or use their portal.",
     };
@@ -31,7 +34,7 @@ function statusCopy(vendor: AdminVendorRow): {
   if (listingVisible) {
     return {
       label: "Live",
-      labelClass: "text-success bg-success-soft ring-success-line/80",
+      tone: "success",
       headline: "Clients can find and book this vendor",
       detail:
         override === "visible"
@@ -44,7 +47,7 @@ function statusCopy(vendor: AdminVendorRow): {
   if (!approved) {
     return {
       label: "Hidden",
-      labelClass: "text-warning bg-warning-soft ring-warning-line/80",
+      tone: "warning",
       headline: "Not visible to clients",
       detail: "Approve this vendor before they can go live.",
     };
@@ -52,7 +55,7 @@ function statusCopy(vendor: AdminVendorRow): {
   if (override === "hidden") {
     return {
       label: "Hidden",
-      labelClass: "text-warning bg-warning-soft ring-warning-line/80",
+      tone: "warning",
       headline: "Listing hidden by admin",
       detail: vendor.listing_override_reason ?? "The vendor account stays open.",
     };
@@ -60,7 +63,7 @@ function statusCopy(vendor: AdminVendorRow): {
   if (!payoutsVerified) {
     return {
       label: "Hidden",
-      labelClass: "text-warning bg-warning-soft ring-warning-line/80",
+      tone: "warning",
       headline: "Approved, waiting on Stripe",
       detail: vendor.stripe_account_id
         ? "Stripe hasn't verified payouts yet. They go live automatically once it does."
@@ -69,26 +72,19 @@ function statusCopy(vendor: AdminVendorRow): {
   }
   return {
     label: "Hidden",
-    labelClass: "text-warning bg-warning-soft ring-warning-line/80",
+    tone: "warning",
     headline: "Not visible to clients",
     detail: "Check approval and listing settings below.",
   };
 }
 
 export function VendorMarketplaceStatusBanner({ vendor }: Props) {
-  const { label, labelClass, headline, detail } = statusCopy(vendor);
+  const { label, tone, headline, detail } = statusCopy(vendor);
 
   return (
-    <div className="ez-banner flex items-start justify-between gap-4">
-      <div className="min-w-0">
-        <p className="font-medium text-ink">{headline}</p>
-        <p className="mt-0.5 text-sm leading-relaxed text-ink-2">{detail}</p>
-      </div>
-      <span
-        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${labelClass}`}
-      >
-        {label}
-      </span>
-    </div>
+    <Banner plain action={<Badge tone={tone}>{label}</Badge>}>
+      <p className="font-medium text-ink">{headline}</p>
+      <p className="mt-0.5 text-sm leading-relaxed text-ink-2">{detail}</p>
+    </Banner>
   );
 }

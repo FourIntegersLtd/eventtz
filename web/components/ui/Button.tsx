@@ -15,6 +15,8 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
   shape?: ButtonShape;
+  /** Full width of the container. */
+  block?: boolean;
   loading?: boolean;
   /** Icon-only or icon+label leading element. */
   icon?: React.ReactNode;
@@ -32,6 +34,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     variant = "primary",
     size = "md",
     shape = "default",
+    block = false,
     loading = false,
     icon,
     disabled,
@@ -46,7 +49,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       ref={ref}
       type={rest.type ?? "button"}
       disabled={disabled || loading}
-      className={getButtonClassName({ variant, size, shape, className })}
+      className={getButtonClassName({ variant, size, shape, block, className })}
       {...rest}
     >
       {loading ? (

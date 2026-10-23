@@ -15,6 +15,7 @@ vendor-insights zeros).
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from zoneinfo import ZoneInfo
 
 from support.database import LocalDatabase
 
@@ -170,7 +171,8 @@ def test_dashboard_metrics_prices_a_paid_booking_with_no_payment_amount_snapshot
     least that much once this booking is seeded.
     """
     before = as_staff.get(DASHBOARD_METRICS_URL, params={"days": 7}).json()
-    today = datetime.now(UTC).date().isoformat()
+    # The dashboard buckets by London calendar day; a UTC date is the wrong bucket from 23:00 UTC in summer.
+    today = datetime.now(ZoneInfo("Europe/London")).date().isoformat()
     before_gmv = next(day["gmv_gbp"] for day in before["bookings_paid"] if day["date"] == today)
 
     vendor = seed_account(admin_db, unique_email("dashboard-gmv-fallback-vendor"), "vendor")

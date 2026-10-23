@@ -13,6 +13,8 @@ export type StatTileProps = {
   deltaTone?: Tone;
   /** Quiet supporting line under the value (`ez-small`), for context rather than change. */
   hint?: string;
+  /** Quieter supporting line (`ez-caption`), for tiles whose canvas draws a caption rather than a hint. */
+  caption?: string;
   /** Makes the whole tile a link (`ez-kpi--link`). */
   href?: string;
   className?: string;
@@ -28,6 +30,7 @@ export function StatTile({
   delta,
   deltaTone = "neutral",
   hint,
+  caption,
   href,
   className = "",
   compact = false,
@@ -61,6 +64,7 @@ export function StatTile({
         </span>
       ) : null}
       {hint ? <span className="ez-small">{hint}</span> : null}
+      {caption ? <span className="ez-caption">{caption}</span> : null}
     </>
   );
 

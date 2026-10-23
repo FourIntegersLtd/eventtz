@@ -26,6 +26,11 @@ def listing_override_of(raw_override: str | None) -> ListingOverride:
     return "auto"
 
 
+def is_suspended(approval_status: str | None) -> bool:
+    """True for a vendor staff have banned (suspended)."""
+    return approval_status == "banned"
+
+
 def payouts_verified(*, stripe_account_id: str | None, charges_enabled: bool, payouts_enabled: bool) -> bool:
     """True when Stripe Connect can both charge and pay out for this vendor."""
     return bool(stripe_account_id) and charges_enabled and payouts_enabled

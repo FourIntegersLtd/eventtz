@@ -8,7 +8,7 @@ type AdminConsolePageProps = {
   title: string;
   description?: string;
   actions?: ReactNode;
-  /** When false, the in-page `ez-pagehead` is omitted (detail screens supply their own). */
+  /** When false, the in-page page header is omitted (detail screens supply their own). */
   showPageHead?: boolean;
   children: ReactNode;
 };

@@ -191,7 +191,7 @@ export function VendorProfileEditorView({
                       <span className="ez-strong">{row.title}</span>
                       <span className="ez-small">{row.summary}</span>
                     </div>
-                    <span className={row.badge.className}>{row.badge.label}</span>
+                    <Badge tone={row.badge.tone}>{row.badge.label}</Badge>
                     <ButtonLink
                       variant="secondary"
                       size="sm"

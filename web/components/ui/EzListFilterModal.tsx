@@ -48,7 +48,7 @@ export function EzListFilterModal({
         </div>
       }
     >
-      {description ? <p className="ez-small mb-5 text-neutral-600">{description}</p> : null}
+      {description ? <p className="ez-small mb-5 text-ink-2">{description}</p> : null}
       <div className="flex flex-col gap-6">{children}</div>
     </Modal>
   );

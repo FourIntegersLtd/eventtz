@@ -9,6 +9,7 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 - Client and vendor notifications are one `NotificationsPageView` (`portal` prop): the vendor keeps its header, topic `Tabs` and "Mark all as read"; the client page keeps its own header and still marks notices read on open. `VendorNotificationsEzView` is deleted. The client list now uses the vendor's `ez-list-row` look (a deliberate small visual change).
 - Admin messages inbox, vendor messages and the client/vendor chat portal conversation lists are on `useServerList` (rows stay on screen while a realtime refresh reloads them). Inline `style`, `neutral-*` and raw `ez-card`/`ez-badge` markup in `features/{chat,notifications}` and `features/admin/{chat,messages}` are replaced by `Card`, `Badge` and design tokens.
 - Left because owned by platform-owner: `HelpWidget`, `HelpAssistantThread` and `portalTheme.ts` (`features/help`, `components/`), and `AdminShell`'s unread badge, which still calls the `limit: 200` wrapper `fetchAdminSupportConversations` (kept in `lib/adminMessagesApi.ts` for it; delete both together). The admin Compose-tab badge in `AdminMessagesPageContent` now counts the first page of threads only.
+- **Follow-ups closed (PR "Comms: design-system follow-ups").** `VendorMessagesEzView` left `ALLOW_LISTED_FILES`: its "Assistant" badge wrote `ez-badge--gold` by hand, so `Badge` gained a `gold` tone (the canvas accent; same pixels; `.ez-badge--gold` is defined at `eventtz.css:307`). The other comms-owned files had no `neutral-*`, inline `style` or raw colours left.
 
 **Admin console screens, platform-owned part** (PR "Rebuild audit: admin screens on the design system and server lists").
 - `OWNERS.md` gives platform-owner only admin blog, dashboard, report-bug, settings, layout and components. Blog list is now on `useServerList`; `fetchAdminBlogPosts` (the `limit: 200` wrapper, no callers) is deleted. Cards, buttons, badges and the success banner in those folders use `Card`, `Button`/`ButtonLink`, `Badge`, `Banner`; the last inline `style` and `neutral-*` classes are gone.
@@ -89,9 +90,10 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   narrows a field); `lib/noHandWrittenApiShapes.test.ts` fails on a hand-written type named like a schema.
   Still hand-narrowed because the API types them as free-form dicts (candidates for pydantic models):
   vendor analytics (`overview`, `funnel`, `*_by_month`), admin marketplace analytics, chat `metadata`,
-  admin booking `booking` and `support.open_dispute`, admin vendor insights `bookings_by_month`, copilot
-  `package_feedback`, `profile_form_data`. Drift found: the planner vendor card and `chat_included_for_review`
-  on disputes are read by screens but not sent by the API; `message_role` on help/copilot history is sent
+  ~~admin booking `booking` and `support.open_dispute`~~ (typed), admin vendor insights `bookings_by_month`, copilot
+  `package_feedback`, `profile_form_data`. Drift found: the planner vendor card is read by screens but not sent by the API (~~`chat_included_for_review`~~
+  was already sent; the hand-narrowing is gone; `support.open_dispute` was always null and is now filled; the admin booking
+  screen read `pricing`, `review_vendor` and `client_total_label`, which the API never sends: those reads are removed); `message_role` on help/copilot history is sent
   while the schema shows its `role` alias; `addressApi.ts` is only partly aliased (module disabled).
 
 **Phase 4: dead code and docs** (PR "Rebuild audit Phase 4", except `test_list_pagination.py`, which Phase 3 owns).
@@ -121,6 +123,7 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   touched admin, auth and settings files moved to ui blocks and tokens; register terms box is the `Checkbox`
   block (new `required` prop); `Tabs` takes an optional per-tab `href` (settings tabs stay links). Deviation: the
   empty referral list shows a sentence instead of an empty table. The referrals "Accepted" tile uses the server `accepted_total` (money-owner follow-up).
+  Follow-up closed (access-owner, web only): `AdminTeamView` left `ALLOW_LISTED_FILES` (its `ez-pagehead__actions` wrapper held one button inside a `flex justify-end` row, so dropping it changes nothing); `neutral-*` in the audit detail page and audit category badge became `ink-2`/`surface-3`. `components/auth` and `TermsUpdateBanner` are platform-owner's. No design-diff screen renders team or audit.
 - **Bookings screens (PR "Rebuild audit: bookings screens on the design system and server lists").** Booking
   detail, quotes, date changes, disputes, reviews and the admin bookings/disputes/reviews screens use Card, Banner,
   Button, PageHeader (new optional `meta`) and tokens; no inline styles or `neutral-*` remain. Participant, vendor
@@ -128,6 +131,12 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `limit: 100`); the dispute 50 s poll is `useRealtimeRefresh("disputes:refresh")`. Seeded page 1/2 comparison
   against main matched on every list except vendor reviews, which had no paging on main. Skipped:
   `VendorBookingModal` (marketplace-owner's).
+- **Bookings design follow-ups (PR "Bookings screens: last raw ez-* classes onto the ui blocks").** Closed the
+  five bookings-owner entries of `ALLOW_LISTED_FILES` (`BookingDateChangeCard`, `VendorBookingDetailEzPanel`,
+  `VendorDisputesEzView`, `VendorBookingDetailExtras`, `VendorBookingResponseFlow`): `Button`/`ButtonLink` take
+  `block`, `Badge` takes `plain`, the dispute footer is `Card.Footer`. The date-change card's `amber-*` tint is now
+  `warning-line`/`warning-soft` (a slightly yellower cream, the one deliberate visual change) and `bg-white` is
+  `bg-surface`. Left: the same `className="ez-btn--block"` / `ez-badge--plain` in other owners' files.
 
 ## Open questions and follow-ups from Phase 4
 
@@ -307,10 +316,15 @@ For local testing without Docker:
   identical to main (V01-V07 and V04b fail on both; V11 times out on both). Seeded two-server comparison of the admin
   list (60 pending vendors): page 1 and 2 at 1280px identical, page 2 at 390px identical, page 1 at 390px differs only
   because main showed the stale unfiltered rows. eslint 120 errors vs 121 on main. No api change.
-  Left: `features/settings/VendorSettingsEzView` is access-owner's; raw `ez-kpi` in `VendorAnalyticsEzView` (StatTile hint
-  is `ez-small`, the tile uses `ez-caption`); custom banners in `AdminVendorSubmissionActions` and
-  `VendorMarketplaceStatusBanner`; `AdminVendorDetailView` pagehead (truncating h1); `GrowthScoreRing` raw stroke
-  colours; unused imports in `vendorDetailsShared.tsx`; `useAdminVendors` nudge actions could share one helper.
+  Left: `features/settings/VendorSettingsEzView` is access-owner's; unused imports in `vendorDetailsShared.tsx`;
+  `useAdminVendors` nudge actions could share one helper.
+  **Follow-ups closed (PR "Vendors: design-system follow-ups").** All ten vendors-owned entries left `ALLOW_LISTED_FILES`
+  in `rawEzClassGuard.test.ts`: `VendorAnalyticsEzView` uses `StatTile` (new `caption` prop, `ez-caption`),
+  `AdminVendorSubmissionActions` a `Banner`, `VendorMarketplaceStatusBanner` a `Banner plain` (new, untoned) with a `Badge`,
+  `AdminVendorDetailView` a `PageHeader` (the h1 and email no longer truncate), `WizardAside` and `StepPortfolio` the
+  `ProgressBar`, and `Button`/`ButtonLink` gained `block`, `Badge` gained `plain`, so no screen writes `ez-btn--block` or
+  `ez-badge--plain`. `profileEditorSummaries` now returns a badge tone, rendered by `Badge`. `GrowthScoreRing` strokes use
+  `stroke-success|warning|danger` (token colours, a slightly different green/amber/red than emerald/amber/red-500).
 
 - **Done (PR "Rebuild audit: docs and guard", Phase 2 step 7).** One design rule, written in
   `components/README.md` "Design rule"; `UI-CONVENTIONS.md` and the design-diff README point to it (the design-diff
@@ -321,3 +335,12 @@ For local testing without Docker:
   New guard `components/ui/rawEzClassGuard.test.ts` (meta-tests, stale-entry check) fails on raw
   `ez-btn|card|badge|banner|pagehead|kpi` in `features/**` and `app/**`. Left: the 23 allow-listed files, to be moved onto the blocks and removed from `ALLOW_LISTED_FILES` in
   `rawEzClassGuard.test.ts` (the list lives there).
+
+- **Done (PR "Platform design follow-ups").** The blog editor, `BlogRichTextEditor`, report-bug view, `AdminConsolePage`
+  and `VendorHelpEzView` are on the ui blocks and left `ALLOW_LISTED_FILES`; `Button`, `ButtonLink` and
+  `getButtonClassName` gained a tested `block` prop; the `Ez*` filter text moved from `neutral-600` to `ink-2`. design-diff
+  V30-Help: 0.43% on main and on the branch (the only screen in `screens.json` these files render). The api's four
+  `SessionExpired(REFRESH_EXPIRED_MESSAGE)` sites are one `refresh_expired()` factory, and
+  `lib/noHandWrittenApiShapes.test.ts` now also flags a copy of a schema under another name (same field names, 3 or more);
+  its seven existing hits in other owners' `*Api.ts` files sit in `KNOWN_RENAMED_COPIES` to be aliased and removed.
+  Raw `ez-*` left in 18 other allow-listed files, owned by other agents. eslint 103 errors, same as main.

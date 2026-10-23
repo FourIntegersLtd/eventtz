@@ -4119,6 +4119,20 @@ export interface components {
             severity: "critical" | "warning";
         };
         /**
+         * AdminBookingOpenDispute
+         * @description The dispute blocking a booking's payout, enough for the admin banner to link to it.
+         */
+        AdminBookingOpenDispute: {
+            /** Created At */
+            created_at: string | null;
+            /** Id */
+            id: string;
+            /** Status */
+            status: string;
+            /** Summary */
+            summary: string;
+        };
+        /**
          * AdminBookingSupportMeta
          * @description The admin detail screen's diagnostics block for one booking.
          */
@@ -4127,10 +4141,7 @@ export interface components {
             needs_attention: components["schemas"]["AdminBookingNeedsAttentionFlag"][];
             /** Next Action */
             next_action: string | null;
-            /** Open Dispute */
-            open_dispute: {
-                [key: string]: unknown;
-            } | null;
+            open_dispute: components["schemas"]["AdminBookingOpenDispute"] | null;
             /**
              * Support Hold
              * @default false

@@ -14,6 +14,11 @@ import {
   AdminVendorQueueFilterModal,
   vendorQueueTabLabel,
 } from "@/features/admin/vendors/AdminVendorQueueFilterModal";
+import {
+  DEFAULT_VENDOR_QUEUE_TAB,
+  vendorListEmptyCopy,
+  type VendorQueueTab,
+} from "@/features/admin/vendors/adminVendorQueueStatus";
 
 function nudgeToastSummary(result: AdminVendorProfileNudgeResult): string {
   const parts: string[] = [];
@@ -29,7 +34,8 @@ function nudgeToastSummary(result: AdminVendorProfileNudgeResult): string {
   return parts.length > 0 ? parts.join(", ") : "No emails sent";
 }
 
-export function AdminVendorsView() {
+/** The admin vendors list; `initialQueueTab` comes from the `queue` url parameter (dashboard links use it). */
+export function AdminVendorsView({ initialQueueTab }: { initialQueueTab: VendorQueueTab }) {
   const [filterOpen, setFilterOpen] = useState(false);
   const { showToast } = useToast();
   const {
@@ -54,7 +60,7 @@ export function AdminVendorsView() {
     nudgeDraftVendors,
     nudgePayoutVendors,
     nudgeBusy,
-  } = useAdminVendors();
+  } = useAdminVendors(initialQueueTab);
 
   const runProfileNudge = useCallback(async () => {
     const outcome = await nudgeDraftVendors();
@@ -77,7 +83,9 @@ export function AdminVendorsView() {
   }, [nudgePayoutVendors, showToast]);
 
   const activeFilterLabel = vendorQueueTabLabel(queueTab);
-  const activeFilterCount = queueTab !== "pending" ? 1 : 0;
+  const filtered = queueTab !== DEFAULT_VENDOR_QUEUE_TAB;
+  const activeFilterCount = filtered ? 1 : 0;
+  const emptyCopy = vendorListEmptyCopy(queueTab, activeFilterLabel, search);
 
   return (
     <div className="ez-stack ez-stack--lg">
@@ -90,16 +98,10 @@ export function AdminVendorsView() {
         searchAriaLabel="Search email or business"
         onOpenFilter={() => setFilterOpen(true)}
         activeFilterCount={activeFilterCount}
-        summary={
-          queueTab !== "pending"
-            ? {
-                label: activeFilterLabel,
-                onClear: () => {
-                  setQueueTab("pending");
-                },
-              }
-            : null
-        }
+        summary={{
+          label: activeFilterLabel,
+          onClear: filtered ? () => setQueueTab(DEFAULT_VENDOR_QUEUE_TAB) : undefined,
+        }}
       />
 
       <AdminVendorQueueFilterModal
@@ -121,7 +123,11 @@ export function AdminVendorsView() {
       {loading ? (
         <AdminLoadingState label="Loading vendors…" />
       ) : rows.length === 0 ? (
-        <EmptyState title="No vendors match your filters" lottie="searchNoResults" />
+        <EmptyState
+          title={emptyCopy.title}
+          description={emptyCopy.description}
+          lottie="searchNoResults"
+        />
       ) : (
         <>
           <AdminVendorsTable

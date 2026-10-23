@@ -40,7 +40,7 @@ function missingItems(groups: AdminSubmissionChecklistGroup[]): AdminSubmissionC
 
 type Props = {
   groups: AdminSubmissionChecklistGroup[];
-  /** When true, omit the outer heading (parent supplies `ez-card__head`). */
+  /** When true, omit the outer heading (parent supplies the card header). */
   embedded?: boolean;
 };
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { RotateCcw } from "lucide-react";
+import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
@@ -129,8 +130,8 @@ export function AdminVendorSubmissionActions({
 
   return (
     <>
-      <div className="ez-banner ez-banner--warning">
-        <div className="ez-banner__body flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <Banner tone="warning">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-warning">
               {missingCount > 0
@@ -158,7 +159,7 @@ export function AdminVendorSubmissionActions({
             {localError}
           </p>
         ) : null}
-      </div>
+      </Banner>
 
       <Modal
         isOpen={modalOpen}

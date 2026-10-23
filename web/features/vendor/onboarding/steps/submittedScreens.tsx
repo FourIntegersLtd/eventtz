@@ -101,16 +101,16 @@ export function SubmittedPendingScreen({
                   <Button
                     variant="secondary"
                     type="button"
-                    className="ez-btn--block"
+                    block
                     onClick={onViewProfileReview}>
                     <Eye size={18} strokeWidth={1.75} aria-hidden style={INLINE_ICON_STYLE} />
                     View my profile
                   </Button>
-                  <Button variant="ghost" type="button" className="ez-btn--block" onClick={onEditAnswers}>
+                  <Button variant="ghost" type="button" block onClick={onEditAnswers}>
                     <Pencil size={18} strokeWidth={1.75} aria-hidden style={INLINE_ICON_STYLE} />
                     Edit my answers
                   </Button>
-                  <ButtonLink variant="ghost" className="ez-btn--block" href="/vendor/help">
+                  <ButtonLink variant="ghost" block href="/vendor/help">
                     <BookOpen size={18} strokeWidth={1.75} aria-hidden style={INLINE_ICON_STYLE} />
                     Read the vendor guide
                   </ButtonLink>
@@ -212,7 +212,7 @@ export function ReturnedForEditsScreen({ reviewedAtLabel, onResubmit }: Returned
                 </span>
                 <ButtonLink
                   variant="ghost"
-                  className="ez-btn--block"
+                  block
                   href="/vendor/help">
                   <BookOpen size={18} strokeWidth={1.75} aria-hidden style={INLINE_ICON_STYLE} />
                   Open Help

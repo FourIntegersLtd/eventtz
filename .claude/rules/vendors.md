@@ -41,7 +41,7 @@ visibility, the listing override or pause, deletion, or anything staff-facing th
   `OPENAI_UNAVAILABLE` (the daily brief falls back to fixed text). The model sees only a safe subset of the profile (no phone or email). Copilot reads other slices only through their `service*` functions.
 - Every staff action is audit-logged. Closed accounts are tombstones: never restore one on upsert.
 - **Web:** `web/` is the copied old frontend: change a screen only to fix it (`web/UI-CONVENTIONS.md`).
-- **Web blocks:** use `Card`/`Banner`/`PageHeader`/`StatTile`/`Badge`/`Button`, never raw `ez-*` or `neutral-*`, `amber/red/emerald/sky-*` (use `text-warning`, `bg-danger-soft`, `border-success-line`). `StatTile` `hint` renders `ez-small`, not `ez-caption`, so a tile with a caption keeps its `ez-kpi` markup. `Card` forwards `data-*`/`id` (the design-diff probes need them). The admin vendors list is `useAdminVendors` over `useServerList`; the bulk selection is keyed to the page and filters and clears when either changes.
+- **Web blocks:** use `Card`/`Banner`/`PageHeader`/`StatTile`/`Badge`/`Button`, never raw `ez-*` or `neutral-*`, `amber/red/emerald/sky-*` (use `text-warning`, `bg-danger-soft`, `border-success-line`). `StatTile` `hint` renders `ez-small`; use `caption` for an `ez-caption` line. `Banner plain` is the untoned `ez-banner`, `Badge plain` drops the dot, `Button`/`ButtonLink` `block` is full width (never write `ez-btn--block`). `Card` forwards `data-*`/`id` (the design-diff probes need them). The admin vendors list is `useAdminVendors` over `useServerList`; the bulk selection is keyed to the page and filters and clears when either changes.
 
 ## What a failure looks like here
 - A public query that lists vendors by `approval_status` (or reimplements the payout gate) instead of the visibility helpers.
@@ -49,4 +49,6 @@ visibility, the listing override or pause, deletion, or anything staff-facing th
 - A price, discount or package option read from request input, or an incomplete package offered to clients.
 - Validation changed on one side only (api `payload_validation.py` vs web onboarding validation), so a step saves but fails on submit.
 - An image or document URL from outside the vendor's `users/{id}/` prefix stored in the payload.
+- The admin listing-photo editor sending a saved `listingDisplayOrder` / `listingHiddenImageUrls` URL the vendor has since removed or replaced: the api refuses it (`listing_media_url_invalid`), so the editor offers only current profile and portfolio photos (`adminListingMedia.test.ts`).
+- A staff bulk reminder (profile or payout nudge) emailing a suspended vendor or a closed account: `_nudge` skips them via `is_suspended` and `identity.closed_account_ids` (`test_vendor_bulk_nudges.py`).
 - An AI route that sends contact details to the model, or breaks the 503/fallback behaviour.

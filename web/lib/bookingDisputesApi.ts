@@ -1,18 +1,10 @@
 import type { components } from "@/lib/api-schema";
-import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type ParticipantRole = "client" | "vendor";
 
-/**
- * `chat_included_for_review` is read by the dispute panel but the API does not send it today
- * (candidate for the pydantic model).
- */
-export type ParticipantDispute = WithFields<
-  components["schemas"]["DisputePublic"],
-  { chat_included_for_review?: boolean }
->;
+export type ParticipantDispute = components["schemas"]["DisputePublic"];
 
 function participantDisputesPath(role: ParticipantRole, suffix: string): string {
   return `/api/v1/${role}/${suffix}`;

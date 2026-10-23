@@ -10,6 +10,7 @@ import { MAX_PORTFOLIO_IMAGES, MIN_PORTFOLIO_IMAGES } from "../../../../lib/vend
 import type { PortfolioImageQualityRow } from "../useVendorOnboardingController";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
 import { uploadedFileDisplayName } from "../../../../lib/vendorOnboarding/uploadedFileDisplayName";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { getButtonClassName } from "@/components/ui/buttonStyles";
@@ -60,7 +61,8 @@ function PhotoTile({
       {isCover ? (
         <Badge
           tone="brand"
-          className="ez-badge--plain absolute top-2 left-2">
+          plain
+          className="absolute top-2 left-2">
           Cover
         </Badge>
       ) : null}
@@ -314,12 +316,7 @@ export function StepPortfolio({
             {totalCount} of {MIN_PORTFOLIO_IMAGES} minimum added
           </Badge>
         </div>
-        <div className="ez-progress">
-          <div
-            className="ez-progress__bar"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
+        <ProgressBar percent={progressPercent} />
       </div>
 
       {data.portfolioWarnings.length > 0 ? (

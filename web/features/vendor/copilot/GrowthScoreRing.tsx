@@ -7,9 +7,9 @@ function scoreRingColor(score: number): string {
 }
 
 function scoreTrackColor(score: number): string {
-  if (score >= 75) return "stroke-emerald-500";
-  if (score >= 50) return "stroke-amber-500";
-  return "stroke-red-500";
+  if (score >= 75) return "stroke-success";
+  if (score >= 50) return "stroke-warning";
+  return "stroke-danger";
 }
 
 type Props = {

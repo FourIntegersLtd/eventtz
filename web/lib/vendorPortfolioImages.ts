@@ -48,7 +48,8 @@ function allowedListingMediaUrls(payload: Record<string, unknown>): Set<string> 
   return allowed;
 }
 
-function mergeUnique(
+/** `preferred` then `fallback`, keeping only `allowed` URLs not in `hidden`, first occurrence wins. */
+export function mergeUnique(
   preferred: string[],
   fallback: string[],
   allowed: Set<string>,
@@ -117,7 +118,10 @@ export function listingCoverImageUrlFromPayload(
   return publicListingImageUrlsFromPayload(payload)[0] ?? null;
 }
 
-/** Admin drag order including hidden URLs (editor, not public gallery). */
+/**
+ * Admin drag order including hidden URLs (editor, not public gallery), as saved. It may still name
+ * photos the vendor has since removed: filter it against `defaultListingDisplayOrder` before use.
+ */
 export function listingDisplayOrderFromPayload(
   payload: Record<string, unknown>,
 ): string[] {

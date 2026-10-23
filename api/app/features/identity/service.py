@@ -35,6 +35,11 @@ async def contact_emails(session: AsyncSession, user_ids: list[str]) -> dict[str
     }
 
 
+async def closed_account_ids(session: AsyncSession, user_ids: list[str]) -> set[str]:
+    """The ids among `user_ids` whose account is closed (a tombstone); unknown ids are left out."""
+    return {user.id for user in await repository.list_user_summaries(session, user_ids) if user.deleted_at}
+
+
 async def email_labels(session: AsyncSession, user_ids: list[str]) -> dict[str, str]:
     """Map each existing user id to the email staff screens show for them.
 

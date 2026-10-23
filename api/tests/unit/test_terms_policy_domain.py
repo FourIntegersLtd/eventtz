@@ -411,3 +411,27 @@ def test_a_split_delivery_deadline_crossing_the_clock_change_stays_on_london_mid
     booking = _booking(event_date="2030-03-29", payout_upfront_percent=50, delivery_deadline_days=3)
     assert domain_policy.event_over_at(booking) == datetime(2030, 3, 30, 0, 0, tzinfo=UTC)
     assert domain_policy.delivery_due_at(booking) == datetime(2030, 4, 1, 23, 0, tzinfo=UTC)
+
+
+def test_payment_deadline_is_real_hours_before_london_midnight_across_clock_changes() -> None:
+    """The 48h cut-off counts elapsed hours from London midnight, not wall-clock hours, in both directions."""
+    long_ago = datetime(2030, 1, 1, tzinfo=UTC)
+    far_deadline = 24 * 365 * 3
+    # Event 28 Oct 2030 starts 00:00 UTC (GMT); 48 real hours earlier is 26 Oct 00:00 UTC (01:00 BST).
+    assert domain_policy.payment_due_at(
+        accepted_at=long_ago, event_date=date(2030, 10, 28), deadline_hours=far_deadline
+    ) == datetime(2030, 10, 26, 0, 0, tzinfo=UTC)
+    # Event 1 Apr 2031 starts 31 Mar 23:00 UTC (BST); 48 real hours earlier is 29 Mar 23:00 UTC.
+    assert domain_policy.payment_due_at(
+        accepted_at=long_ago, event_date=date(2031, 4, 1), deadline_hours=far_deadline
+    ) == datetime(2031, 3, 29, 23, 0, tzinfo=UTC)
+
+
+def test_event_over_at_plus_days_lands_on_london_midnight_across_clock_changes() -> None:
+    """Whole London days are added before converting, so the window ends on London midnight either side."""
+    autumn = _booking(event_date="2030-10-26")
+    assert domain_policy.event_over_at(autumn) == datetime(2030, 10, 26, 23, 0, tzinfo=UTC)
+    assert domain_policy.event_over_at(autumn, plus_days=1) == datetime(2030, 10, 28, 0, 0, tzinfo=UTC)
+    spring = _booking(event_date="2031-03-29")
+    assert domain_policy.event_over_at(spring) == datetime(2031, 3, 30, 0, 0, tzinfo=UTC)
+    assert domain_policy.event_over_at(spring, plus_days=1) == datetime(2031, 3, 30, 23, 0, tzinfo=UTC)

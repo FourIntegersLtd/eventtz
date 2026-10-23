@@ -7,6 +7,7 @@ import { ChevronLeft, ExternalLink } from "lucide-react";
 import { VendorApprovalStatusBadge } from "@/components/badges/VendorApprovalStatusBadge";
 import { VendorPayoutStatusBadge } from "@/components/badges/VendorPayoutStatusBadge";
 import { VendorProfileStatusBadge } from "@/components/badges/VendorProfileStatusBadge";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
@@ -96,26 +97,27 @@ export function AdminVendorDetailView({ userId }: { userId: string }) {
       {backLink}
       {error ? <AdminErrorBanner message={error} /> : null}
 
-      <div className="ez-pagehead mb-0">
-        <div className="ez-pagehead__text">
-          <h1 className="ez-h1 truncate">{businessName}</h1>
-          {vendor.email ? <p className="ez-small truncate">{vendor.email}</p> : null}
-        </div>
-        <div className="ez-pagehead__actions flex flex-wrap items-center gap-2">
-          <VendorApprovalStatusBadge status={vendor.approval_status} />
-          <VendorProfileStatusBadge status={vendor.onboarding_status} />
-          <VendorPayoutStatusBadge verified={vendor.payouts_verified} />
-          <Link
-            href={insights?.explore_path ?? `/client/browse/${vendor.user_id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="ez-link inline-flex items-center gap-1.5 text-sm"
-          >
-            <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-            Public profile
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        className="mb-0"
+        title={businessName}
+        description={vendor.email || undefined}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <VendorApprovalStatusBadge status={vendor.approval_status} />
+            <VendorProfileStatusBadge status={vendor.onboarding_status} />
+            <VendorPayoutStatusBadge verified={vendor.payouts_verified} />
+            <Link
+              href={insights?.explore_path ?? `/client/browse/${vendor.user_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ez-link inline-flex items-center gap-1.5 text-sm"
+            >
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+              Public profile
+            </Link>
+          </div>
+        }
+      />
 
       <AdminSectionTabs
         tabs={VENDOR_DETAILS_TAB_CONFIG}

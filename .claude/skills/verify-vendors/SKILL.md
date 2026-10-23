@@ -27,11 +27,12 @@ poetry run python -m pytest -q -rs \
 make guards            # AST architecture guards (includes ownership)
 cd ../web && export PATH="$HOME/.nvm/versions/node/v22.22.3/bin:$PATH" \
   && npx vitest run features/vendor/dashboard features/vendor/onboarding lib/imageUploadFile.test.ts \
-     lib/vendorAccess.test.ts lib/vendorAvailability.test.ts lib/vendorPortfolioImages.test.ts lib/vendorServiceCatalog.test.ts
+     lib/vendorAccess.test.ts lib/vendorAvailability.test.ts lib/vendorPortfolioImages.test.ts lib/vendorServiceCatalog.test.ts \
+     features/admin/vendors/adminListingMedia.test.ts
 ```
 
 API: 215 passed, 0 skipped on 2026-10-18 (includes the uncommitted `test_vendors_admin_detail.py`).
-Web: 10 files, 49 passed on 2026-10-18. A change to a validation rule needs the matching web test
+Web: 10 files, 49 passed on 2026-10-18. 2026-10-23: API 221 passed, 0 skipped; web 10 files, 37 passed (with `adminListingMedia.test.ts`). A change to a validation rule needs the matching web test
 (`packageQuality.test.ts`, `onboardingProgress.test.ts`) in the same run. Goldens are byte-exact: never update a fixture to pass.
 A route or path change also needs `make parity`.
 
