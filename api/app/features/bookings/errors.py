@@ -82,6 +82,13 @@ class InvalidListGroup(InvalidInput):
     default_message = "Query parameter group must be active, completed, closed, or all."
 
 
+class InvalidPaymentStatusFilter(InvalidInput):
+    """The `payment_status` list filter names a value that is not a payment status."""
+
+    code = "booking_invalid_payment_status"
+    default_message = "Query parameter payment_status must be a comma-separated list of payment statuses."
+
+
 # --- creating a request or a quote -------------------------------------------------------------------
 
 

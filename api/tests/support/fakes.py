@@ -21,6 +21,7 @@ from app.core.ports import (
     PresignedPost,
     ReplyModel,
     StoredFile,
+    StoredObjectTooLarge,
     WebhookCall,
 )
 
@@ -134,6 +135,17 @@ class FakeStorage:
     def public_host(self) -> str:
         """The host of every URL `save` returns."""
         return FAKE_STORAGE_HOST
+
+    def read_object(self, key: str, *, max_bytes: int) -> tuple[bytes, str] | None:
+        """The latest saved object under `key`, None when absent; too large raises like the real port."""
+        if self.error is not None:
+            raise self.error
+        for saved_object in reversed(self.saved):
+            if saved_object.key == key:
+                if len(saved_object.body) > max_bytes:
+                    raise StoredObjectTooLarge(key)
+                return saved_object.body, saved_object.content_type
+        return None
 
     def delete_object(self, key: str) -> None:
         """Record the deleted key (or raise `delete_error`)."""

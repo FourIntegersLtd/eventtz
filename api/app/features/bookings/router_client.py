@@ -80,14 +80,17 @@ async def get_client_dashboard(session: SessionDep, client: CurrentClient) -> Cl
 @router.get(
     "/booking-requests",
     response_model=ClientBookingsListResponse,
-    responses=error_responses(*ROLE_ERRORS, errors.InvalidListGroup),
+    responses=error_responses(*ROLE_ERRORS, errors.InvalidListGroup, errors.InvalidPaymentStatusFilter),
 )
 async def list_client_bookings(
     session: SessionDep,
     client: CurrentClient,
     group: str = _GROUP_QUERY,
     status: str | None = Query(None, description="Optional exact booking status, e.g. pending"),
-    payment_status: str | None = Query(None, description="Optional exact payment_status"),
+    payment_status: str | None = Query(
+        None,
+        description="Optional payment_status; several as a comma-separated list, e.g. paid,payout_released",
+    ),
     exclude_payment_status: str | None = Query(
         None, description="Exclude this payment_status (e.g. unpaid for payment history)"
     ),

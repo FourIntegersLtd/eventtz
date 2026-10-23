@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useToast } from "@/components/ui/Toast";
-import { getApiErrorDetail } from "@/lib/api-errors";
+import { getApiErrorDetail, isPayoutSetupRequiredError } from "@/lib/api-errors";
 import {
   patchVendorBookingStatus,
   postVendorConfirmCompletion,
@@ -96,7 +96,7 @@ export function useVendorBookingActions({
             ? VENDOR_BOOKING_ERROR_COPY.acceptFailed
             : VENDOR_BOOKING_ERROR_COPY.declineFailed
         );
-        if (next === "accepted" && msg.toLowerCase().includes("payout setup")) {
+        if (next === "accepted" && isPayoutSetupRequiredError(caught)) {
           onAcceptBlockedByPayoutSetup();
           setActionError(null);
         } else {

@@ -45,7 +45,7 @@ async def _bookings_of(session: AsyncSession, user_id: str) -> list[BookingRow]:
             vendor_user_id=user_id if party == "vendor" else None,
             statuses=None,
             status=None,
-            payment_status=None,
+            payment_statuses=None,
             exclude_payment_status=None,
         )
         for booking in bookings:

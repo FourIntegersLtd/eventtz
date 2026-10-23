@@ -17,8 +17,9 @@ from app.core.ports import (
     LanguageModelFailed,
     LanguageModelRefused,
     LanguageModelUnavailable,
+    StorageDependency,
 )
-from app.features.vendors import service_ai
+from app.features.vendors import errors, service_ai
 
 router = APIRouter(prefix="/vendor/onboarding/ai", tags=["vendor-onboarding-ai"])
 
@@ -53,7 +54,7 @@ async def generate_bio(
     "/analyze-portfolio-image",
     response_model=service_ai.AnalyzePortfolioImageResponse,
     responses=error_responses(
-        *ROLE_ERRORS, service_ai.ImageRequired, service_ai.ImageContentTypeInvalid, *_AI_ERRORS
+        *ROLE_ERRORS, errors.ImageRequired, errors.ImageContentTypeInvalid, *_AI_ERRORS
     ),
 )
 async def analyze_portfolio_image(
@@ -75,9 +76,13 @@ async def analyze_portfolio_image(
     response_model=service_ai.AnalyzePortfolioImageResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        service_ai.ImageRequired,
-        service_ai.ImageContentTypeInvalid,
-        service_ai.ImageUrlInvalid,
+        errors.ImageRequired,
+        errors.ImageContentTypeInvalid,
+        errors.ImageUrlInvalid,
+        errors.ImageNotOwned,
+        errors.ImageTooLarge,
+        errors.ImageNotFound,
+        errors.ImageFetchFailed,
         *_AI_ERRORS,
     ),
 )
@@ -85,10 +90,12 @@ async def analyze_portfolio_image_url(
     principal: CurrentVendor,
     body: service_ai.AnalyzePortfolioImageUrlBody,
     language_model: LanguageModelDependency,
+    storage: StorageDependency,
 ) -> service_ai.AnalyzePortfolioImageResponse:
-    """QA a portfolio photo that was uploaded via presigned S3 (JSON body, no multipart)."""
-    del principal
-    return await service_ai.analyze_portfolio_image_from_url(body=body, language_model=language_model)
+    """QA a portfolio photo the caller uploaded via presigned S3 (JSON body, no multipart)."""
+    return await service_ai.analyze_portfolio_image_from_url(
+        principal=principal, body=body, storage=storage, language_model=language_model
+    )
 
 
 @router.post(

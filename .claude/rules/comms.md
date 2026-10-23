@@ -27,7 +27,8 @@ Owner: `comms-owner`. Proof: `verify-comms`. Review: `quality-reviewer` always.
 - **Threads**: only participants see or post; someone else's thread is 404 on GET, 403 on mark-read, 400 on send (pinned quirk). Clients may DM only publicly listed vendors (`vendors.service_listing`).
 - **Unread** is messages from others after the reader's cursor, using the database clock. Support user reads with `client_last_read_at`; all staff share `admin_last_read_at`.
 - **Staff messages** are sanitised HTML (`domain_sanitize`), 5000 visible and 15000 stored characters; every staff action writes a `chat.*` audit event. Only a super admin may broadcast; an admin edits only their own messages.
-- **Notifications**: marking another user's notice read is 200 `{"success": false}`; the feed caps at 20 booking notices, 10 disputes, 25 items. A support email never fails the send.
+- **Notifications**: marking another user's notice read is 200 `{"success": false}`; the feed has no caps: `repository_bookings.feed_lines` unions notices and disputes and filters, orders (time, id) and pages in SQL; the unread-chat summary is the last item, counted in `total`. A support email never fails the send.
+- **Feed topics follow the stored notice `kind`**, via `NOTICE_KIND_TOPICS` in `domain_feed.py`, never the copy's wording. A new kind needs a row there (`test_every_stored_notice_kind_has_a_deliberate_topic` fails otherwise). The `bookings` topic shows every notice and dispute (payments overlap, as in the baseline); `payments` is `kind IN PAYMENT_NOTICE_KINDS`.
 - `booking_requests` and `dispute_cases` are read through table handles in `repository_bookings.py`, not their models.
 
 ## What a failure looks like here
@@ -36,4 +37,6 @@ Owner: `comms-owner`. Proof: `verify-comms`. Review: `quality-reviewer` always.
 - A realtime event published before commit, with payload data, or renamed without the web hook; behaviour that only works on one replica.
 - A thread or notification of another user readable, markable or postable (wrong status code or no participant check).
 - Unread badge drift: cursor compared with the app clock instead of the database clock, or not refreshed after mark-read.
+- A feed filter or total applied after truncating to a page or cap in Python (older matches vanish, `total` stops at the cap): filter and page in SQL.
+- A feed filter or badge that matches English words in title/body, so editing copy changes who sees what.
 - Staff HTML stored unsanitised, or a staff action with no audit event.

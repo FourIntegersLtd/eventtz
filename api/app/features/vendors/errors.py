@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from app.core.errors import Conflict, Forbidden, InvalidInput, NotFound
+from app.core.errors import BadGateway, Conflict, Forbidden, InvalidInput, NotFound, PayloadTooLarge
 
 # --- profile form -------------------------------------------------------------------------------
 
@@ -99,3 +99,55 @@ class ListingMediaUrlInvalid(InvalidInput):
 
     code = "listing_media_url_invalid"
     default_message = "Listing media overrides must use the vendor profile photo or portfolio images."
+
+
+# --- onboarding AI: portfolio photo QA ---------------------------------------------------------------
+
+
+class ImageRequired(InvalidInput):
+    """The portfolio photo upload was empty."""
+
+    code = "vendor_onboarding_ai_image_required"
+    default_message = "Please choose an image to upload."
+
+
+class ImageContentTypeInvalid(InvalidInput):
+    """The upload's content type is not `image/*`."""
+
+    code = "vendor_onboarding_ai_image_content_type_invalid"
+    default_message = "Only image uploads are supported."
+
+
+class ImageUrlInvalid(InvalidInput):
+    """The image URL is missing or not hosted on our upload bucket."""
+
+    code = "vendor_onboarding_ai_image_url_invalid"
+    default_message = "Please upload the photo through Eventtz first."
+
+
+class ImageNotOwned(Forbidden):
+    """The image URL is in our bucket but not under the calling vendor's own upload folder."""
+
+    code = "vendor_onboarding_ai_image_not_owned"
+    default_message = "You can only analyse photos you uploaded yourself."
+
+
+class ImageTooLarge(PayloadTooLarge):
+    """The stored image is over the image upload limit, so it is not sent to the model."""
+
+    code = "vendor_onboarding_ai_image_too_large"
+    default_message = "That photo is too large to analyse."
+
+
+class ImageNotFound(NotFound):
+    """The image URL is one of the caller's own, but no such object is stored."""
+
+    code = "vendor_onboarding_ai_image_not_found"
+    default_message = "We could not find that photo. Please upload it again."
+
+
+class ImageFetchFailed(BadGateway):
+    """The uploaded image could not be read back from storage (missing, or storage is down)."""
+
+    code = "vendor_onboarding_ai_image_fetch_failed"
+    default_message = "We could not read that photo. Please upload it again."

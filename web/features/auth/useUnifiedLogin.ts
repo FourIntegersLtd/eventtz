@@ -3,9 +3,9 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { getApiErrorDetail } from "@/lib/api-errors";
-import { GENERIC_AUTH_ERROR, SESSION_VERIFY_FAILED, wrongAdminPortalMessage } from "@/lib/auth-messages";
+import { wrongAdminPortalMessage } from "@/lib/auth-messages";
 import { clearFieldError } from "@/lib/formHelpers";
+import { classifyLoginFailure } from "@/features/auth/loginFailure";
 import { isAdminLoginIntent, resolvePostAuthPath } from "@/features/auth/authRouting";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { loginSchema, parseForm } from "@/lib/validation";
@@ -44,16 +44,10 @@ export function useUnifiedLogin() {
       }
       router.push(resolvePostAuthPath(nextPath, signedInUser.user_type));
     } catch (err: unknown) {
-      const detail =
-        getApiErrorDetail(err) ??
-        (err instanceof Error && err.message.trim() ? err.message : GENERIC_AUTH_ERROR);
-      track(MixpanelEvents.login_failed, {
-        reason: detail === SESSION_VERIFY_FAILED ? "session_verify" : "credentials",
-      });
-      setError(detail);
-      if (/verify your email/i.test(detail)) {
-        setNeedsVerification(true);
-      }
+      const failure = classifyLoginFailure(err);
+      track(MixpanelEvents.login_failed, { reason: failure.reason });
+      setError(failure.message);
+      setNeedsVerification(failure.needsVerification);
     } finally {
       setSubmitting(false);
     }

@@ -36,13 +36,6 @@ Vendor screens re-seed the compose DB before each run (see
 ``api/scripts/seed_design_diff_vendor.py`` and ``vendor-fixture.json``). Sign-in uses
 ``design-diff-vendor@example.com`` / ``Design-Diff-Passw0rd!`` from ``screens.json``.
 
-Portal screens **V14–V31** often use ``?designStatic=1`` (and ``designFixture=v17`` … ``v31`` for
-booking and money flows). Fixture HTML is generated from the artboards:
-
-```bash
-node scripts/design-diff/extract-vendor-fixtures.mjs
-```
-
 If sign-in fails with “Too many attempts”, flush compose Redis: ``docker exec eventtz-api-redis-1 redis-cli FLUSHDB``.
 
 ```bash

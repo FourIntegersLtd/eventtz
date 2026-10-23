@@ -15,7 +15,7 @@ import {
 } from "@/features/vendor/dashboard/vendorDashboardCalendar";
 import type { VendorBookingsByDate } from "@/features/vendor/dashboard/useVendorDashboard";
 
-type VendorDashboardDesignStaticProps = {
+type VendorDashboardEzViewProps = {
   greetingName: string;
   pendingEnquiries: number;
   confirmedBookings: number;
@@ -28,7 +28,7 @@ type VendorDashboardDesignStaticProps = {
 };
 
 /** Vendor dashboard (design V14) with live API data. */
-export function VendorDashboardDesignStatic({
+export function VendorDashboardEzView({
   greetingName,
   pendingEnquiries,
   confirmedBookings,
@@ -37,7 +37,7 @@ export function VendorDashboardDesignStatic({
   bookingsByDate,
   publicProfileHref,
   onCalendarDaySelect,
-}: VendorDashboardDesignStaticProps) {
+}: VendorDashboardEzViewProps) {
   const { showToast } = useToast();
   const [profileCopied, setProfileCopied] = useState(false);
   const showEnquiryBanner = pendingEnquiries > 0;

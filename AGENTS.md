@@ -54,7 +54,7 @@ make test
 
 # web (from web/)
 npm run dev             # :3001
-npm test && npm run build  # web has no ci script; lint has 45 errors inherited from the old frontend/
+npm test && npm run build  # web has no ci script; lint has ~130 inherited errors (old frontend/ + React Compiler rules); compare against HEAD, add none
 ```
 
 Traps in this machine's shell:

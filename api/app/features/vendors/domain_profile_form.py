@@ -12,8 +12,10 @@ service reads from the `Storage` port so this module stays free of settings and 
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from app.features.vendors.domain_catalogue import (
     DEFAULT_COUNTRY_CODE,
@@ -155,14 +157,40 @@ def _clamp_money_text(raw: str) -> str:
     return f"{clamped:.2f}".rstrip("0").rstrip(".")
 
 
+class UploadOwnership(StrEnum):
+    """Whose upload a URL is, as far as one vendor may use it."""
+
+    OWN = "own"
+    FOREIGN_HOST = "foreign_host"
+    NOT_OWNED = "not_owned"
+
+
+@dataclass(frozen=True)
+class UploadCheck:
+    """The verdict on one upload URL and, for an own upload, its object key."""
+
+    ownership: UploadOwnership
+    key: str | None = None
+
+
+def check_upload_url(url: str, user_id: str, upload_host: str) -> UploadCheck:
+    """Decide, parsing once, whether `url` is an upload in our bucket under `users/<id>/`.
+
+    The decoded key must start with `users/<id>/` and contain no `..`, so the folder cannot just
+    appear later in the path. This is the one ownership rule: profile save and photo QA both use it.
+    """
+    parsed = urlparse(url.strip())
+    if parsed.scheme not in ("https", "http") or (parsed.netloc or "").lower() != upload_host.lower():
+        return UploadCheck(UploadOwnership.FOREIGN_HOST)
+    key = unquote(parsed.path.lstrip("/"))
+    if not key.startswith(f"users/{user_id}/") or ".." in key.split("/"):
+        return UploadCheck(UploadOwnership.NOT_OWNED)
+    return UploadCheck(UploadOwnership.OWN, key)
+
+
 def _is_own_upload(url: str, user_id: str, upload_host: str) -> bool:
-    """True for an http(s) URL in our bucket under this vendor's `/users/<id>/` folder."""
-    trimmed = url.strip()
-    if not trimmed.startswith(("https://", "http://")):
-        return False
-    if f"/users/{user_id}/" not in trimmed:
-        return False
-    return (urlparse(trimmed).netloc or "").lower() == upload_host.lower()
+    """True for an http(s) URL in our bucket under this vendor's `users/<id>/` folder."""
+    return check_upload_url(url, user_id, upload_host).ownership is UploadOwnership.OWN
 
 
 def _own_upload_list(raw: Any, user_id: str, upload_host: str) -> list[str]:

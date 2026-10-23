@@ -113,6 +113,12 @@ async def vendor_payout_ledger(session: AsyncSession, vendor_user_id: str) -> Ve
     )
 
 
+async def vendor_held_payout_count(session: AsyncSession, vendor_user_id: str) -> int:
+    """How many ledger rows are still awaiting payout; the same rows `total_awaiting_gbp` sums."""
+    ledger = await vendor_payout_ledger(session, vendor_user_id)
+    return sum(1 for payout in ledger.payouts if payout.status == "awaiting_payout")
+
+
 async def vendor_has_payout_history(session: AsyncSession, vendor_user_id: str) -> bool:
     """True once any of the vendor's bookings was paid out by Stripe Transfer.
 

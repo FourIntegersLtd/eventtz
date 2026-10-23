@@ -20,7 +20,7 @@ import { identifySentryUser, resetSentryUser } from "@/lib/sentryUser";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { useRealtimeSse } from "@/lib/useRealtimeSse";
 import { clearVendorCopilotBriefCache } from "@/lib/vendorCopilotApi";
-import { SESSION_VERIFY_FAILED } from "@/lib/auth-messages";
+import { SessionVerifyError } from "@/lib/auth-messages";
 
 type AuthContextValue = {
   user: AuthUser | null;
@@ -100,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return nextUser;
         } catch {
           setUser(null);
-          throw new Error(SESSION_VERIFY_FAILED);
+          throw new SessionVerifyError();
         }
       },
       signUp: async (email, password, userType = "client", referralCode, termsVersion) => {

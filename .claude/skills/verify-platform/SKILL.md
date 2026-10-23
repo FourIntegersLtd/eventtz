@@ -29,7 +29,7 @@ npm test && npm run build
 Platform's own test files: `tests/guards`, `tests/unit/test_{admin_insights_domain,content_domain,errors,health,openai_language_model,session_scope}.py`,
 `tests/repository/test_unique_writes.py`, `tests/golden/test_content_goldens.py`. Web `lib/` and
 `components/` tests run inside `npm test`. Not run on 2026-10-18 (documented only). GitHub Actions CI is broken:
-this local run is the only gate before pushing `main`. Web lint has 45 inherited errors: add none.
+this local run is the only gate before pushing `main`. Web lint has ~130 inherited errors: compare against HEAD and add none.
 
 ## Level 2: migrations and acceptance
 

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { useRouter } from "next/navigation";
 import { getApiErrorDetail, saveVendorProfile } from "@/lib/vendorProfileApi";
-import { isHttpStatus, mediaUploadErrorMessage } from "@/lib/api-errors";
+import { UploadSessionExpiredError, isHttpStatus, mediaUploadErrorMessage } from "@/lib/api-errors";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { vendorIsLiveApproved } from "@/lib/vendorAccess";
 import type { useToast } from "@/components/ui/Toast";
@@ -183,7 +183,7 @@ export function useOnboardingSteps({
           setData(dataToSave);
         } catch (e) {
           setFormError(
-            e instanceof Error && e.message === "Please sign in again, then retry your upload."
+            e instanceof UploadSessionExpiredError
               ? e.message
               : mediaUploadErrorMessage(e, "photo"),
           );

@@ -19,6 +19,8 @@ PAID = "paid"
 PAYOUT_RELEASED = "payout_released"
 REFUNDED = "refunded"
 PARTIALLY_REFUNDED = "partially_refunded"
+# Every value `booking_requests.payment_status` can hold; list filters refuse anything else.
+ALL_PAYMENT_STATUSES = ("unpaid", "pending", PAID, PAYOUT_RELEASED, REFUNDED, PARTIALLY_REFUNDED)
 # Statuses where checkout sync has nothing left to do.
 SETTLED_PAYMENT_STATUSES = (PAID, PAYOUT_RELEASED, REFUNDED, PARTIALLY_REFUNDED)
 # A checkout that lands in either of these was (or has already been) paid successfully.

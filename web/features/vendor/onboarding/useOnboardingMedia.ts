@@ -2,7 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { mediaUploadErrorMessage } from "@/lib/api-errors";
+import {
+  UPLOAD_SESSION_EXPIRED_MESSAGE,
+  UploadSessionExpiredError,
+  mediaUploadErrorMessage,
+} from "@/lib/api-errors";
 import { uploadFile, uploadImage } from "@/lib/mediaApi";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
 import {
@@ -208,7 +212,7 @@ export function useOnboardingMedia({
   const onUploadProfileImage = useCallback(
     async (file: File) => {
       if (!userId) {
-        setProfileImageError("Please sign in again, then retry your upload.");
+        setProfileImageError(UPLOAD_SESSION_EXPIRED_MESSAGE);
         return;
       }
       setUploadingProfileImage(true);
@@ -322,7 +326,7 @@ export function useOnboardingMedia({
         return workingData;
       }
       if (!userId) {
-        throw new Error("Please sign in again, then retry your upload.");
+        throw new UploadSessionExpiredError();
       }
       const uploaded = await Promise.all(
         workingData.portfolioFiles.map((f) => uploadImage(f)),

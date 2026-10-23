@@ -36,6 +36,7 @@ visibility, the listing override or pause, deletion, or anything staff-facing th
   are snapshotted at checkout (ADR 0010); `web/lib/policyConstants.json` must equal the api constants.
 - **Stripe Connect columns** are written only via `service_payouts.py` (payments slice calls it). Reads never call Stripe,
   except `GET /vendor/profile` with `refresh_payouts=True`. Hiding a listing never clears Connect columns.
+- **Reading a stored upload** (e.g. photo QA by URL) goes through `Storage.read_object` with a byte cap, and only for keys under the caller's `users/<id>/` (`own_upload_key`). Services never import `app.adapters` or `httpx` (guard `test_services_are_adapter_free.py`).
 - **Copilot / AI:** every model call goes through the `LanguageModel` port; no OpenAI key means 503
   `OPENAI_UNAVAILABLE` (the daily brief falls back to fixed text). The model sees only a safe subset of the profile (no phone or email). Copilot reads other slices only through their `service*` functions.
 - Every staff action is audit-logged. Closed accounts are tombstones: never restore one on upsert.

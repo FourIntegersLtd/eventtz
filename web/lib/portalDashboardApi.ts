@@ -21,6 +21,8 @@ export type VendorDashboardPayload = {
   success: boolean;
   active_bookings_count: number;
   pending_bookings_count: number;
+  /** Bookings behind the payments screen's held money (the payout ledger's awaiting rows). */
+  held_payouts_count: number;
   active_bookings: VendorBookingListItem[];
   needs_response: VendorBookingListItem[];
   upcoming_agenda: VendorBookingListItem[];

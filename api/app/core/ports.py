@@ -155,6 +155,14 @@ class PresignedPost:
     public_url: str
 
 
+class StoredObjectTooLarge(Exception):
+    """A stored object is bigger than the `max_bytes` the caller agreed to read."""
+
+
+class StorageError(Exception):
+    """Object storage failed (unreachable, denied, or an unexpected answer); not a missing object."""
+
+
 class Storage(Protocol):
     """Public file storage for user uploads (an S3 bucket in production)."""
 
@@ -168,6 +176,14 @@ class Storage(Protocol):
 
     def public_host(self) -> str:
         """The host every stored file's public URL starts with, so saved forms can keep only our uploads."""
+        ...
+
+    def read_object(self, key: str, *, max_bytes: int) -> tuple[bytes, str] | None:
+        """The bytes and content type stored under `key`, or None when there is no such object.
+
+        Raises `StoredObjectTooLarge` (without reading the body) over `max_bytes`, and
+        `StorageError` on any other failure.
+        """
         ...
 
     def delete_object(self, key: str) -> None:
