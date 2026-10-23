@@ -20,10 +20,21 @@ Reusable UI and cross-cutting chrome only. **Product screens and domain widgets 
 
 ## Design rule
 
-Use `Card`, `Button`, `Badge` and `Banner` (plus `Tabs`, `Chip`, `PageHeader`, `StatTile`, `Avatar`,
-`DescriptionList` (and `DescriptionRow` for rows inside a custom `dl`), `Stepper`) from `ui/` instead of hand-rolled card, button, pill or alert classes.
-Colours, shadows and radii come from the tokens in `app/globals.css`, surfaced by `ui/tokens.ts`
-(`TONE`, `SHADOW`, `RADIUS`, `FORM_CONTROL`). Preview everything at `/internal/ui-kit`.
+This is the one place the rule is written; `UI-CONVENTIONS.md` and `scripts/design-diff/README.md` point here.
+
+The canvas look stays: `design/canvas/project/eventtz.css` (the `--ez-*` tokens and `ez-*` classes) is the
+stylesheet, and `components/ui` blocks are the only code that renders it. Screens (`features/`, `app/`) compose the
+blocks: `Card`, `Button`, `Badge`, `Banner`, `Tabs`, `Chip`, `PageHeader`, `StatTile`, `Avatar`, `DescriptionList`
+(and `DescriptionRow` for rows inside a custom `dl`), `Stepper`. A screen does not write `ez-btn`, `ez-card`,
+`ez-badge`, `ez-banner`, `ez-pagehead` or `ez-kpi` classes (guarded), nor inline `style={{}}` or `neutral-*` classes (by review). Colours,
+shadows and radii come from the tokens in `app/globals.css`, surfaced by `ui/tokens.ts` (`TONE`, `SHADOW`, `RADIUS`,
+`FORM_CONTROL`). Preview everything at `/internal/ui-kit`.
+
+If a block lacks what the canvas draws, add it to the block (and to `eventtz.css` if the class is missing), not to the
+screen. `ui/rawEzClassGuard.test.ts` fails on a raw class in `features/**` and `app/**`; the files it still allows are
+listed there and only shrink (a stale entry fails). An `ez-*` class nothing in `web/` references (`.tsx`, `.ts`, `.css`,
+canvas `.dc.html`) is deleted from `eventtz.css`; the `ez-badge--*`, `ez-banner--*`, `ez-icon-tile--*` and `ez-role--*`
+families are built in template strings, so keep them whole.
 
 Other shared pieces: `StatTile` (`compact` for dense strips), `TextArea` (`hideLabel`), `EzFilterDateField` (date filter),
 `EzListFilterToolbar` (search and filters for any list) and `lib/useServerList.ts` (paged, filtered, searched

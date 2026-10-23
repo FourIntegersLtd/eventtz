@@ -5,10 +5,9 @@ Moved from the old architecture reference. Paths refer to the pre-rebuild layout
 
 ### Shared primitives, not hand-rolled classes
 
-Use `Card`, `Button`, `Badge` and `Banner` from `components/ui` instead of writing card, button, pill or
-alert classes by hand. Colour comes from the semantic tokens (`TONE`: neutral, brand, success, warning,
-danger, info); brand purple is for the main action only. Weights stop at 600, controls and labels use 500,
-inputs 400. `/internal/ui-kit` shows every primitive in every state.
+Screens use the `components/ui` blocks, not raw `ez-*` classes, inline styles or `neutral-*`: the full rule is
+[`components/README.md` "Design rule"](components/README.md#design-rule). Brand purple is for the main action only.
+Weights stop at 600, controls and labels use 500, inputs 400. `/internal/ui-kit` shows every block in every state.
 
 ### Action feedback (mutations)
 

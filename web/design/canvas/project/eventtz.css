@@ -208,7 +208,6 @@
 .ez-help { font-size: 13px; color: var(--ez-ink-3); }
 .ez-error-text { font-size: 13px; color: var(--ez-danger); font-weight: 500; display: flex; gap: 6px; align-items: center; }
 .ez-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--ez-ink-2); min-height: 44px; padding-top: 10px; }
-.ez-check--compact { min-height: 0; padding-top: 0; }
 .ez-check input { width: 18px; height: 18px; margin: 1px 0 0; accent-color: var(--ez-brand-700); flex: none; }
 .ez-option {
   display: flex; gap: 12px; align-items: flex-start; padding: 16px; border-radius: var(--ez-r-control);
@@ -454,13 +453,12 @@
 .ez-table th.ez-td-status,
 .ez-table td.ez-td-status { white-space: nowrap; }
 .ez-table td.ez-td-status > .ez-table__celllink { display: inline-flex; justify-content: flex-start; width: 100%; }
-.ez-filter-bar__end { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin-left: auto; }
-.ez-filter-bar--end { justify-content: flex-end; width: 100%; }
 .ez-list-row > .ez-list-row__status { flex-shrink: 0; }
 .ez-list { background: var(--ez-surface); border: 1px solid var(--ez-line); border-radius: var(--ez-r-card); overflow: hidden; }
 .ez-list-row { display: flex; align-items: center; gap: 14px; padding: 16px 20px; border-bottom: 1px solid var(--ez-line); min-width: 0; flex-wrap: wrap; }
 .ez-list-row:last-child { border-bottom: 0; }
 .ez-list-row--active { background: var(--ez-brand-50); box-shadow: inset 3px 0 0 var(--ez-brand-700); }
+.ez-table tr.ez-table-row--active td { background: var(--ez-brand-50); }
 .ez-list-row--unread { background: var(--ez-brand-50); }
 .ez-list-row__main { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .ez-list-row__main > .ez-strong,
@@ -559,23 +557,14 @@ button.ez-cal__day { padding: 0; }
 .ez-shell--admin .ez-table td { padding: 11px 16px; }
 
 /* ---------- Landing ---------- */
-.ez-hero { position: relative; overflow: hidden; background: var(--ez-brand-900); color: #fff; }
-.ez-hero__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.38; }
-.ez-hero__inner { position: relative; padding: 96px 0 104px; display: flex; flex-direction: column; gap: 24px; max-width: 760px; }
-.ez-hero .ez-display { color: #fff; font-size: 60px; }
 .ez-search { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; background: #fff; border-radius: var(--ez-r-card); box-shadow: var(--ez-shadow-3); }
 .ez-search__field { flex: 1 1 200px; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 14px; min-height: 52px; border-radius: var(--ez-r-control); }
 .ez-search__field + .ez-search__field { border-left: 1px solid var(--ez-line); }
-.ez-search__label { font-size: 12px; font-weight: 500; color: var(--ez-ink); }
-.ez-search__value { font-size: 14.5px; color: var(--ez-ink-3); }
 .ez-section { padding: 80px 0; }
-.ez-section--tint { background: var(--ez-brand-100); }
-.ez-section--white { background: var(--ez-surface); }
 
 /* ---------- Phone width ---------- */
 @media (max-width: 720px) {
   .ez-display { font-size: 34px; }
-  .ez-hero .ez-display { font-size: 40px; }
   .ez-h1 { font-size: 26px; }
   .ez-side { max-width: none; flex-basis: 100%; flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--ez-line); padding: 8px 12px; }
   .ez-side__brand, .ez-side__group, .ez-side__foot { display: none; }
