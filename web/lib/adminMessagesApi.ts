@@ -25,6 +25,12 @@ export async function sendAdminMessages(body: AdminMessageSendBody): Promise<Adm
 
 export const ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
+/** Fetch-everything wrapper still used by `components/admin-shell/AdminShell.tsx` (platform-owner's) for its unread badge. */
+export async function fetchAdminSupportConversations(): Promise<AdminSupportConversation[]> {
+  const page = await fetchAdminSupportConversationsPage(0, 200);
+  return page.conversations;
+}
+
 export async function fetchAdminSupportConversationsPage(
   offset = 0,
   limit = ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE,
@@ -43,11 +49,6 @@ export async function fetchAdminSupportConversationsPage(
     offset: data.offset ?? offset,
     limit: data.limit ?? limit,
   };
-}
-
-export async function fetchAdminSupportConversations(): Promise<AdminSupportConversation[]> {
-  const page = await fetchAdminSupportConversationsPage(0, 200);
-  return page.conversations;
 }
 
 export async function fetchAdminSupportMessages(

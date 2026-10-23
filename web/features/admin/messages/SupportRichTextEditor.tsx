@@ -59,7 +59,7 @@ function ToolbarButton({
         if (!disabled) onAction();
       }}
       className={`inline-flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
-        active ? "bg-primary/15 text-primary" : "text-neutral-600 hover:bg-neutral-100"
+        active ? "bg-primary/15 text-primary" : "text-ink-2 hover:bg-surface-3"
       }`}
     >
       {children}
@@ -105,7 +105,7 @@ export function SupportRichTextEditor({
     content: initialContent,
     editorProps: {
       attributes: {
-        class: `prose-message ${minHeightClass} max-w-none px-1 py-2 text-left text-base leading-relaxed text-neutral-900 outline-none focus:outline-none md:text-sm`,
+        class: `prose-message ${minHeightClass} max-w-none px-1 py-2 text-left text-base leading-relaxed text-ink outline-none focus:outline-none md:text-sm`,
       },
     },
     onCreate: ({ editor: ed }) => {
@@ -130,8 +130,8 @@ export function SupportRichTextEditor({
   if (!editor) return null;
 
   return (
-    <div className="ez-input ez-input--area min-h-[4rem] resize-y bg-neutral-50/80 p-0 text-left focus-within:bg-white [&_.ProseMirror]:min-h-[4rem] [&_.ProseMirror]:px-3 [&_.ProseMirror]:py-2">
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-100 px-2 py-1.5">
+    <div className="ez-input ez-input--area min-h-[4rem] resize-y bg-surface-3 p-0 text-left focus-within:bg-white [&_.ProseMirror]:min-h-[4rem] [&_.ProseMirror]:px-3 [&_.ProseMirror]:py-2">
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-line px-2 py-1.5">
         <ToolbarButton
           label="Bold"
           disabled={disabled}

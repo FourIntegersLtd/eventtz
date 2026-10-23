@@ -25,8 +25,10 @@ function MessagesTabs() {
 
   const refreshUnreadBadge = useCallback(async () => {
     try {
-      const list = await fetchAdminSupportConversations();
-      setInboxUnread(list.reduce((sum, c) => sum + (c.unread_count || 0), 0));
+      // No unread-count endpoint exists (the paged list's `total` counts threads, not unread
+      // messages), so sum over up to 200 threads as before.
+      const conversations = await fetchAdminSupportConversations();
+      setInboxUnread(conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0));
     } catch {
       /* badge is best-effort */
     }

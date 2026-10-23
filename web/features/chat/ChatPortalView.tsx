@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CARD_SURFACE } from "@/components/ui/tokens";
+import { useServerList } from "@/lib/useServerList";
 import {
-  CHAT_CONVERSATIONS_PAGE_SIZE,
   type ChatConversation,
   fetchConversationsPage,
 } from "@/lib/chatApi";
@@ -60,36 +59,23 @@ export function ChatPortalView({
   contactTabHref,
 }: ChatPortalViewProps) {
   const router = useRouter();
-  const [rows, setRows] = useState<ChatConversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [offset, setOffset] = useState(0);
-  const [total, setTotal] = useState(0);
+  const list = useServerList<ChatConversation>({
+    filters: {},
+    errorMessage: "Could not load messages.",
+    fetchPage: async ({ offset, limit }) => {
+      const page = await fetchConversationsPage(offset, limit);
+      return { items: page.conversations, total: page.total };
+    },
+  });
+  const rows = list.items;
+  const { total, error, reload } = list;
+  // Rows stay on screen while a refresh or the next page loads; only the first load shows the spinner.
+  const loading = list.loading && rows.length === 0;
 
   const base = helpMessagesPath(portal);
   const contactHref = contactTabHref ?? helpHubTabHref(portal, "contact");
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const page = await fetchConversationsPage(offset, CHAT_CONVERSATIONS_PAGE_SIZE);
-      setRows(page.conversations);
-      setTotal(page.total);
-    } catch {
-      setError("Could not load messages.");
-      setRows([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [offset]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  useRealtimeRefresh("chat:data_refresh", () => void load(), [portal, load]);
+  useRealtimeRefresh("chat:data_refresh", reload, [portal, reload]);
 
   return (
     <MasterDetailLayout
@@ -97,8 +83,8 @@ export function ChatPortalView({
       list={
         <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
           <div className={`flex h-full min-h-0 flex-1 flex-col overflow-hidden ${CARD_SURFACE}`}>
-            <div className="border-b border-neutral-100 px-5 py-4 sm:px-6">
-              <p className="text-sm font-semibold text-neutral-900">
+            <div className="border-b border-line px-5 py-4 sm:px-6">
+              <p className="text-sm font-semibold text-ink">
                 {loading
                   ? "Messages"
                   : `${total} conversation${total === 1 ? "" : "s"}`}
@@ -129,7 +115,7 @@ export function ChatPortalView({
                   }
                 />
               ) : (
-                <ul className="divide-y divide-neutral-100">
+                <ul className="divide-y divide-line">
                   {rows.map((c) => {
                     const unread = c.unread_count > 0;
                     const sel = selectedConversationId === c.id;
@@ -147,7 +133,7 @@ export function ChatPortalView({
                               ? "bg-primary/[0.05]"
                               : unread
                                 ? "bg-primary/[0.03] hover:bg-primary/[0.05]"
-                                : "hover:bg-neutral-50/90"
+                                : "hover:bg-surface-3"
                           }`}
                         >
                           {sel ? (
@@ -161,7 +147,7 @@ export function ChatPortalView({
                             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
                               unread || isSupport
                                 ? "bg-primary/15 text-primary"
-                                : "bg-neutral-100 text-neutral-600"
+                                : "bg-surface-3 text-ink-2"
                             }`}
                             aria-hidden
                           >
@@ -171,7 +157,7 @@ export function ChatPortalView({
                           <div className="min-w-0 flex-1">
                             <div className="flex items-baseline justify-between gap-3">
                               <p
-                                className={`min-w-0 truncate text-[15px] tracking-tight text-neutral-900 ${
+                                className={`min-w-0 truncate text-[15px] tracking-tight text-ink ${
                                   unread ? "font-semibold" : "font-medium"
                                 }`}
                               >
@@ -180,7 +166,7 @@ export function ChatPortalView({
                               {when ? (
                                 <p
                                   className={`shrink-0 text-[12px] tabular-nums ${
-                                    unread ? "font-medium text-primary" : "text-neutral-400"
+                                    unread ? "font-medium text-primary" : "text-ink-3"
                                   }`}
                                 >
                                   {when}
@@ -189,7 +175,7 @@ export function ChatPortalView({
                             </div>
                             <p
                               className={`mt-1.5 truncate text-sm ${
-                                unread ? "font-medium text-neutral-700" : "text-neutral-500"
+                                unread ? "font-medium text-ink-2" : "text-ink-3"
                               }`}
                             >
                               {unread
@@ -213,14 +199,15 @@ export function ChatPortalView({
                   })}
                 </ul>
               )}
-              {!loading && !error && total > CHAT_CONVERSATIONS_PAGE_SIZE ? (
+              {!loading && !error && total > list.limit ? (
                 <TablePagination
-                  offset={offset}
-                  limit={CHAT_CONVERSATIONS_PAGE_SIZE}
+                  offset={list.offset}
+                  limit={list.limit}
                   total={total}
                   pageRowCount={rows.length}
-                  onPrevious={() => setOffset(Math.max(0, offset - CHAT_CONVERSATIONS_PAGE_SIZE))}
-                  onNext={() => setOffset(offset + CHAT_CONVERSATIONS_PAGE_SIZE)}
+                  loading={list.loading}
+                  onPrevious={list.goPrevious}
+                  onNext={list.goNext}
                 />
               ) : null}
             </div>

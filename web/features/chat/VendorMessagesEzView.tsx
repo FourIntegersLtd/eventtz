@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/Badge";
+import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { useServerList } from "@/lib/useServerList";
 import { ChatThreadView } from "@/features/chat/ChatThreadView";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { TablePagination } from "@/components/ui/TablePagination";
 import {
-  CHAT_CONVERSATIONS_PAGE_SIZE,
   fetchConversationsPage,
   type ChatConversation,
 } from "@/lib/chatApi";
@@ -30,34 +32,20 @@ type VendorMessagesEzViewProps = {
 
 /** Vendor messages (design V20): conversation list beside the existing thread. */
 export function VendorMessagesEzView({ selectedConversationId }: VendorMessagesEzViewProps) {
-  const [rows, setRows] = useState<ChatConversation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [draftBookingId, setDraftBookingId] = useState<string | null>(null);
-  const [offset, setOffset] = useState(0);
-  const [total, setTotal] = useState(0);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const page = await fetchConversationsPage(offset, CHAT_CONVERSATIONS_PAGE_SIZE);
-      setRows(page.conversations);
-      setTotal(page.total);
-    } catch {
-      setError("Could not load messages.");
-      setRows([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [offset]);
+  const list = useServerList<ChatConversation>({
+    filters: {},
+    errorMessage: "Could not load messages.",
+    fetchPage: async ({ offset, limit }) => {
+      const page = await fetchConversationsPage(offset, limit);
+      return { items: page.conversations, total: page.total };
+    },
+  });
+  const rows = list.items;
+  const { reload } = list;
 
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  useRealtimeRefresh("chat:data_refresh", () => void load(), [load]);
+  useRealtimeRefresh("chat:data_refresh", reload, [reload]);
 
   useEffect(() => {
     if (!selectedConversationId) {
@@ -85,7 +73,7 @@ export function VendorMessagesEzView({ selectedConversationId }: VendorMessagesE
   const selected = rows.find((row) => row.id === selectedConversationId) ?? null;
 
   return (
-    <div className="ez-stack ez-stack--lg" style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+    <div className="ez-stack ez-stack--lg min-h-0 flex-1 overflow-auto">
       <PageHeader descriptionSize="body"
         eyebrow="Work"
         title="Messages"
@@ -95,8 +83,8 @@ export function VendorMessagesEzView({ selectedConversationId }: VendorMessagesE
       <div className="ez-split">
         <div className="ez-split__main">
           {selectedConversationId ? (
-            <div className="ez-card">
-              <div className="ez-card__head">
+            <Card>
+              <CardHeader>
                 <div className="ez-hrow">
                   <span className="ez-avatar">{initials(selected?.peer_display_name ?? "Client")}</span>
                   <div>
@@ -104,28 +92,28 @@ export function VendorMessagesEzView({ selectedConversationId }: VendorMessagesE
                     <div className="ez-caption">{selected?.kind === "support" ? "Eventtz Support" : "Client"}</div>
                   </div>
                 </div>
-              </div>
-              <div className="ez-card__body" style={{ minHeight: 420 }}>
+              </CardHeader>
+              <CardBody className="min-h-[420px]">
                 <ChatThreadView
                   portal="vendor"
                   conversationId={selectedConversationId}
                   backHref="/vendor/messages"
                   backLabel="All messages"
                 />
-              </div>
-            </div>
+              </CardBody>
+            </Card>
           ) : (
             <EmptyState title={rows.length === 0 ? "No conversations yet" : "Select a conversation"} variant="messages" />
           )}
         </div>
 
         <div className="ez-split__aside ez-stack ez-stack--lg">
-          <div className="ez-card">
-            <div className="ez-card__body">
-              {loading ? (
+          <Card>
+            <CardBody>
+              {list.loading && rows.length === 0 ? (
                 <LoadingState label="Loading conversations…" variant="inline" />
-              ) : error ? (
-                <LottieFailureInline message={error} />
+              ) : list.error ? (
+                <LottieFailureInline message={list.error} />
               ) : rows.length === 0 ? (
                 <EmptyState className="border-0" variant="messages" title="No conversations yet" />
               ) : (
@@ -147,34 +135,36 @@ export function VendorMessagesEzView({ selectedConversationId }: VendorMessagesE
                             : "Client conversation"}
                       </span>
                     </div>
-                    {row.unread_count > 0 ? <span className="ez-badge ez-badge--warning">{row.unread_count}</span> : null}
+                    {row.unread_count > 0 ? <Badge tone="warning">{row.unread_count}</Badge> : null}
                   </Link>
                 ))}
-                {total > CHAT_CONVERSATIONS_PAGE_SIZE ? (
+                {list.total > list.limit ? (
                   <TablePagination
-                    offset={offset}
-                    limit={CHAT_CONVERSATIONS_PAGE_SIZE}
-                    total={total}
+                    offset={list.offset}
+                    limit={list.limit}
+                    total={list.total}
                     pageRowCount={rows.length}
-                    onPrevious={() => setOffset(Math.max(0, offset - CHAT_CONVERSATIONS_PAGE_SIZE))}
-                    onNext={() => setOffset(offset + CHAT_CONVERSATIONS_PAGE_SIZE)}
+                    loading={list.loading}
+                    onPrevious={list.goPrevious}
+                    onNext={list.goNext}
                   />
                 ) : null}
                 </>
               )}
-            </div>
-          </div>
+            </CardBody>
+          </Card>
 
           {draftBookingId ? (
-            <div className="ez-card">
-              <div className="ez-card__head">
+            <Card>
+              <CardHeader>
                 <span className="ez-h3">Draft reply</span>
-                <span className="ez-badge ez-badge--gold">Assistant</span>
-              </div>
-              <div className="ez-card__body">
+                {/* The canvas has a gold badge tone that Badge's Tone type lacks; it follows brand in the css. */}
+                <Badge tone="brand" className="ez-badge--gold">Assistant</Badge>
+              </CardHeader>
+              <CardBody>
                 <VendorDraftReplyPanel bookingId={draftBookingId} />
-              </div>
-            </div>
+              </CardBody>
+            </Card>
           ) : null}
         </div>
       </div>
