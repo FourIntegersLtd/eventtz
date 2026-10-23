@@ -9,10 +9,13 @@ suspended, not deleted).
 
 from __future__ import annotations
 
+import json
+import os
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from functools import cache
+from pathlib import Path
 
 from argon2 import PasswordHasher
 
@@ -20,6 +23,25 @@ from support.database import LocalDatabase
 
 # One password for every seeded account; the local stack is throwaway.
 PASSWORD = "Acceptance-Passw0rd!"
+
+
+# The web copy of the policy numbers; `api/tests/unit/test_policy_constants.py` keeps its
+# `termsVersion` equal to the api's `terms_version` setting.
+POLICY_CONSTANTS = Path(__file__).resolve().parents[2] / "web" / "lib" / "policyConstants.json"
+
+
+@cache
+def current_terms_version() -> str:
+    """The Terms version the api under test requires users to have accepted.
+
+    Real accounts have accepted the current Terms (the gate, ADR 0010, answers 409 otherwise), so
+    seeded ones must too or every gated route fails for a reason the frozen tests are not about.
+    `ACCEPTANCE_TERMS_VERSION` overrides it for a server run with a different setting.
+    """
+    override = os.environ.get("ACCEPTANCE_TERMS_VERSION")
+    if override:
+        return override
+    return str(json.loads(POLICY_CONSTANTS.read_text())["termsVersion"])
 
 
 @dataclass(frozen=True)
@@ -71,7 +93,7 @@ def seed_account(
         "email_verified_at": now if verified else None,
         "account_suspended": suspended,
         "deleted_at": now if deleted else None,
-        "terms_accepted_version": "2026-11-01",
+        "terms_accepted_version": current_terms_version(),
         "terms_accepted_at": now,
     }
     user_id = _seed_api_login(admin_db, email)

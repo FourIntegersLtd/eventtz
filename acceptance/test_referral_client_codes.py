@@ -158,7 +158,11 @@ def test_vendor_routes_refuse_clients(as_client: httpx.Client, method: str, url:
 def test_vendor_without_a_profile_has_no_referral_programme(
     as_vendor: httpx.Client,
 ) -> None:
-    """No `vendors` row: nothing to show, nothing to set, and an empty bookings list."""
+    """No `vendors` row: nothing to show, nothing to set, and an empty bookings list.
+
+    Post-freeze additive fields (c21acdf, ADR 0011): the referral bookings table pages on the
+    server, so the list also carries `total`/`offset`/`limit` (default page 25).
+    """
     info = as_vendor.get(REFERRAL_URL)
     assert info.status_code == 404
     assert info.json()["detail"] == REFERRAL_NOT_FOUND
@@ -172,6 +176,9 @@ def test_vendor_without_a_profile_has_no_referral_programme(
         "total_referral_bookings": 0,
         "total_fee_savings_gbp": 0.0,
         "bookings": [],
+        "total": 0,
+        "offset": 0,
+        "limit": 25,
     }
 
 
