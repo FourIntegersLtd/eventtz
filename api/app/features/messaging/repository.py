@@ -16,6 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
+from app.core.pagination import paged
 from app.features.messaging.models import Conversation, Message
 from app.features.messaging.rows import StoredMessageRow, ThreadRow
 
@@ -156,11 +157,16 @@ async def threads_for_user_page(
     if kind in ("dm", "support"):
         clauses.append(Conversation.kind == kind)
     where = and_(*clauses)
-    total = (await session.execute(select(func.count()).select_from(Conversation).where(where))).scalar_one()
-    result = await session.execute(
-        select(*_THREAD_COLUMNS).where(where).order_by(*_RECENT_FIRST).offset(offset).limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(*_THREAD_COLUMNS).where(where),
+        order_by=_RECENT_FIRST[:-1],
+        tie_breaker=Conversation.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(Conversation).where(where),
     )
-    return [_thread(row) for row in result], int(total)
+    return [_thread(row) for row in found_rows], total
 
 
 async def support_threads(session: AsyncSession, *, limit: int) -> list[ThreadRow]:
@@ -173,14 +179,16 @@ async def support_threads_page(
     session: AsyncSession, *, offset: int, limit: int
 ) -> tuple[list[ThreadRow], int]:
     """One page of support threads plus total count."""
-    base = select(*_THREAD_COLUMNS).where(Conversation.kind == "support")
-    total = (
-        await session.execute(
-            select(func.count()).select_from(Conversation).where(Conversation.kind == "support")
-        )
-    ).scalar_one()
-    result = await session.execute(base.order_by(*_RECENT_FIRST).offset(offset).limit(limit))
-    return [_thread(row) for row in result], int(total)
+    found_rows, total = await paged(
+        session,
+        select(*_THREAD_COLUMNS).where(Conversation.kind == "support"),
+        order_by=_RECENT_FIRST[:-1],
+        tie_breaker=Conversation.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(Conversation).where(Conversation.kind == "support"),
+    )
+    return [_thread(row) for row in found_rows], total
 
 
 def _user_cursor(user_id: uuid.UUID) -> ColumnElement[Any]:

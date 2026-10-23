@@ -20,6 +20,7 @@ import { describeWorkingDays, reviewReadiness } from "../reviewSummary";
 import type { VendorOnboardingData } from "../../../../lib/vendorOnboarding/types";
 import { BOOKING_SERVICE_FEE_PERCENT } from "@/lib/bookingServiceFee";
 import { isPerUnitPricing, parsePackageQuantity } from "@/lib/packagePricing";
+import { formatGbp, formatPence } from "@/lib/money";
 
 type WizardAsideProps = {
   step: number;
@@ -100,7 +101,7 @@ function lowestPackagePrice(data: VendorOnboardingData): string | null {
   const prices = data.packages
     .map((item) => Number(item.price))
     .filter((price) => price > 0);
-  return prices.length > 0 ? `£${Math.min(...prices).toFixed(2)}` : null;
+  return prices.length > 0 ? formatGbp(Math.min(...prices), { decimals: 2, grouping: false }) : null;
 }
 
 /** Step 2: a live preview of how the listing card will read to clients. */
@@ -214,11 +215,6 @@ function LocationAside({ data }: { data: VendorOnboardingData }) {
 
 /** Guest count shown in the fee illustration when a per-item package sets no minimum. */
 const ILLUSTRATION_QUANTITY = 60;
-
-/** Formats integer pence as "£1,080.00". */
-function formatPence(pence: number): string {
-  return `£${(pence / 100).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
 
 /** Step 4: package tips, and what a client would pay for the first priced package. */
 function PricingAside({ data }: { data: VendorOnboardingData }) {

@@ -16,6 +16,7 @@ import {
 } from "@/lib/bookingDisputesApi";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { participantDisputeBookingLabel, participantDisputeStatusLabel } from "@/lib/bookingDisputeHelpers";
+import { formatDate } from "@/lib/dateFormat";
 
 function badgeClass(status: string): string {
   if (status === "open") return "ez-badge ez-badge--danger";
@@ -28,7 +29,7 @@ function whenLabel(iso: string | null): string {
   if (!iso) return "";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(date, "dayMonthYear");
 }
 
 type VendorDisputesEzViewProps = {

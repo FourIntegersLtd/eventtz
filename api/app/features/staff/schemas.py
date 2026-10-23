@@ -11,7 +11,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PagedResponse
 
 
 class SuccessResponse(BaseModel):
@@ -33,14 +33,11 @@ class AdminTeamMember(BaseModel):
     account_suspended: bool = False
 
 
-class AdminTeamListResponse(BaseModel):
+class AdminTeamListResponse(PagedResponse):
     """`GET /admin/team`."""
 
     success: bool = True
     members: list[AdminTeamMember]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminTeamInviteBody(BaseModel):
@@ -102,14 +99,11 @@ class AdminClientRow(BaseModel):
     booking_count: int = 0
 
 
-class AdminClientsListResponse(BaseModel):
+class AdminClientsListResponse(PagedResponse):
     """`GET /admin/clients`."""
 
     success: bool = True
     clients: list[AdminClientRow]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminClientSuspendedBody(BaseModel):

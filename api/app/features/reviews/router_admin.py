@@ -7,6 +7,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import PageDep
 from app.features.reviews import service_admin
 from app.features.reviews.errors import ReviewNotFound
 from app.features.reviews.schemas import (
@@ -27,16 +28,15 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 async def list_reviews(
     session: SessionDep,
     principal: CurrentStaff,
-    offset: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=200),
+    page: PageDep,
     vendor_user_id: str | None = Query(None),
     visibility: str = Query("all", description="all, published, or hidden"),
 ) -> AdminReviewsListResponse:
     """Every review, hidden ones included, optionally narrowed to one vendor."""
     return await service_admin.list_reviews(
         session,
-        offset=offset,
-        limit=limit,
+        offset=page.offset,
+        limit=page.limit,
         vendor_user_id=vendor_user_id,
         visibility=visibility,
     )

@@ -34,8 +34,7 @@ from app.features.content import router as content_router
 from app.features.content import router_admin as content_admin_router
 from app.features.copilot import router as copilot_router
 from app.features.disputes import router_admin as disputes_admin_router
-from app.features.disputes import router_client as disputes_client_router
-from app.features.disputes import router_vendor as disputes_vendor_router
+from app.features.disputes import router_participant as disputes_participant_router
 from app.features.identity import router as identity_router
 from app.features.identity import router_settings as identity_settings_router
 from app.features.identity import service_accounts as identity_accounts
@@ -45,8 +44,7 @@ from app.features.marketplace import router_vendor as marketplace_vendor_router
 from app.features.media import router as media_router
 from app.features.messaging import router as messaging_router
 from app.features.messaging import router_admin as messaging_admin_router
-from app.features.notifications import router_client as notifications_client_router
-from app.features.notifications import router_vendor as notifications_vendor_router
+from app.features.notifications import router_portal as notifications_portal_router
 from app.features.payments import router_admin as payments_admin_router
 from app.features.payments import router_vendor as payments_vendor_router
 from app.features.payments import router_webhooks as payments_webhooks_router
@@ -80,8 +78,8 @@ def _routers() -> list[APIRouter]:
         content_router.router,
         content_admin_router.router,
         copilot_router.router,
-        disputes_client_router.router,
-        disputes_vendor_router.router,
+        disputes_participant_router.client_router,
+        disputes_participant_router.vendor_router,
         disputes_admin_router.router,
         identity_router.router,
         identity_settings_router.router,
@@ -91,8 +89,8 @@ def _routers() -> list[APIRouter]:
         media_router.router,
         messaging_router.router,
         messaging_admin_router.router,
-        notifications_client_router.router,
-        notifications_vendor_router.router,
+        notifications_portal_router.client_router,
+        notifications_portal_router.vendor_router,
         payments_admin_router.router,
         payments_vendor_router.router,
         payments_webhooks_router.router,

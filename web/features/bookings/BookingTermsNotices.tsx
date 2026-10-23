@@ -16,7 +16,7 @@ import {
 import { postClientConfirmDelivery, type ClientBookingDetail } from "@/lib/clientBookingsApi";
 import { postVendorDepositClaim, type VendorBookingDetail } from "@/lib/vendorBookingsApi";
 import { withMutationFeedback } from "@/lib/mutationFeedback";
-import { formatGbp } from "@/lib/vendorDiscountDisplay";
+import { formatGbp } from "@/lib/money";
 
 function NoticeCard({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
@@ -66,7 +66,7 @@ export function ClientBookingTermsNotices({
         <NoticeCard title="Have your photos/video arrived?">
           <p>
             {detail.upfront_amount_gbp != null
-              ? `£${formatGbp(detail.upfront_amount_gbp)} has already been paid to the vendor. `
+              ? `${formatGbp(detail.upfront_amount_gbp)} has already been paid to the vendor. `
               : ""}
             Confirm once you have received them and the rest is released.
           </p>
@@ -148,7 +148,7 @@ export function VendorBookingTermsNotices({
       {canReportDeposit(detail) ? (
         <NoticeCard title="Report damage or missing items">
           <p>
-            You can keep up to £{formatGbp(deposit)} of the deposit if something was damaged or missing.
+            You can keep up to {formatGbp(deposit)} of the deposit if something was damaged or missing.
             Report it before the deposit is returned
             {detail.deposit_refund_due_at ? " on the date above" : ""}.
           </p>

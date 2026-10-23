@@ -21,6 +21,7 @@ from sqlalchemy.sql import Select
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.db import as_uuid, plain_row
+from app.core.pagination import paged
 from app.features.referrals.domain import ShoutoutFilter
 from app.features.referrals.models import ReferralAttribution, ReferralPartner
 from app.features.referrals.rows import (
@@ -89,12 +90,16 @@ async def list_partners_newest_first_page(
     session: AsyncSession, *, offset: int, limit: int
 ) -> tuple[list[PartnerRow], int]:
     """One page of partners plus total count."""
-    total = (await session.execute(select(func.count()).select_from(ReferralPartner))).scalar_one()
-    result = await session.execute(
-        select(*_PARTNER_COLUMNS).order_by(ReferralPartner.created_at.desc()).offset(offset).limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(*_PARTNER_COLUMNS),
+        order_by=[ReferralPartner.created_at.desc()],
+        tie_breaker=ReferralPartner.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(ReferralPartner),
     )
-    rows = [PartnerRow.model_validate(plain_row(row)) for row in result]
-    return rows, int(total)
+    return [PartnerRow.model_validate(plain_row(row)) for row in found_rows], total
 
 
 async def find_partner(session: AsyncSession, partner_id: str) -> PartnerRow | None:
@@ -188,15 +193,16 @@ async def list_attributions_page(
     if parsed_id is None:
         return [], 0
     filters = _attribution_filters(parsed_id, shoutout)
-    total = await session.scalar(select(func.count()).select_from(ReferralAttribution).where(*filters))
-    result = await session.execute(
-        select(*_ATTRIBUTION_COLUMNS)
-        .where(*filters)
-        .order_by(ReferralAttribution.attributed_at.desc())
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(*_ATTRIBUTION_COLUMNS).where(*filters),
+        order_by=[ReferralAttribution.attributed_at.desc()],
+        tie_breaker=ReferralAttribution.user_id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(ReferralAttribution).where(*filters),
     )
-    return [AttributionRow.model_validate(plain_row(row)) for row in result], int(total or 0)
+    return [AttributionRow.model_validate(plain_row(row)) for row in found_rows], total
 
 
 async def find_attribution(session: AsyncSession, user_id: str) -> AttributionRow | None:
@@ -372,19 +378,13 @@ async def list_referral_bookings_page(
     if parsed_id is None:
         return [], 0
     party_filter = _referral_bookings_where(parsed_id)
-    total = (
-        await session.execute(select(func.count()).select_from(_booking_requests).where(*party_filter))
-    ).scalar_one()
-    result = await session.execute(
-        _referral_bookings_select()
-        .where(*party_filter)
-        .order_by(
-            _booking_requests.c.updated_at.desc(),
-            _booking_requests.c.created_at.desc(),
-            _booking_requests.c.id.desc(),
-        )
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        _referral_bookings_select().where(*party_filter),
+        order_by=[_booking_requests.c.updated_at.desc(), _booking_requests.c.created_at.desc()],
+        tie_breaker=_booking_requests.c.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(_booking_requests).where(*party_filter),
     )
-    rows = [ReferralBookingRow.model_validate(plain_row(row)) for row in result]
-    return rows, int(total)
+    return [ReferralBookingRow.model_validate(plain_row(row)) for row in found_rows], total

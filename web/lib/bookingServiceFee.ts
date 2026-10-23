@@ -1,4 +1,5 @@
 import policy from "@/lib/policyConstants.json";
+import { formatGbp } from "./money";
 
 /** Both numbers come from `policyConstants.json`; `test_policy_constants.py` keeps them equal to the API. */
 export const BOOKING_SERVICE_FEE_PERCENT: number = policy.serviceFeePercent;
@@ -55,16 +56,6 @@ export type ClientFeeBreakdown = {
   referralApplied: boolean;
 };
 
-/** Friendly £ label for browse/modal estimates (matches breakdown row styling). */
-export function formatBookingMoneyLabel(amount: number): string {
-  const rounded = Math.round(amount * 100) / 100;
-  const formatted = rounded.toLocaleString("en-GB", {
-    minimumFractionDigits: rounded % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
-  return `£${formatted}`;
-}
-
 /**
  * Client-facing fee breakdown — mirrors backend `build_pricing_breakdown` rounding.
  * Returns null when vendor portion is invalid.
@@ -91,12 +82,12 @@ export function computeClientFeeBreakdown(input: {
     feeGbp: fee,
     totalGbp: total,
     feePercent: feePct,
-    vendorPortionLabel: formatBookingMoneyLabel(vendorPortion),
-    feeBeforeDiscountLabel: formatBookingMoneyLabel(feeBefore),
+    vendorPortionLabel: formatGbp(vendorPortion, { roundToPence: true }),
+    feeBeforeDiscountLabel: formatGbp(feeBefore, { roundToPence: true }),
     referralDiscountLabel:
-      discountApplied > 0 ? `-${formatBookingMoneyLabel(discountApplied).replace("£", "£")}` : null,
-    feeLabel: formatBookingMoneyLabel(fee),
-    totalLabel: formatBookingMoneyLabel(total),
+      discountApplied > 0 ? `-${formatGbp(discountApplied, { roundToPence: true })}` : null,
+    feeLabel: formatGbp(fee, { roundToPence: true }),
+    totalLabel: formatGbp(total, { roundToPence: true }),
     referralApplied: discountApplied > 0,
   };
 }

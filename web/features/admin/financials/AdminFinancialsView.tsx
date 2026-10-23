@@ -28,10 +28,7 @@ import {
   type CommercePeriodDays,
 } from "@/lib/commercePeriod";
 import { TablePagination } from "@/components/ui/TablePagination";
-
-function formatGbp(value: number): string {
-  return `£${value.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
+import { formatGbp } from "@/lib/money";
 
 type AdminFinancialsViewProps = {
   onRegisterPageActions?: (actions: ReactNode | null) => void;
@@ -120,22 +117,22 @@ export function AdminFinancialsView({ onRegisterPageActions }: AdminFinancialsVi
           <div className="ez-grid-4">
             <AdminKpiCard
               label="Gross merchandise value"
-              value={formatGbp(summary.gmv_gbp)}
+              value={formatGbp(summary.gmv_gbp, { decimals: 2 })}
               hint={`${summary.paid_booking_count} paid bookings`}
             />
             <AdminKpiCard
               label="Platform fees"
-              value={formatGbp(summary.platform_fee_gbp)}
+              value={formatGbp(summary.platform_fee_gbp, { decimals: 2 })}
               hint={`${summary.service_fee_percent}% service fee`}
             />
             <AdminKpiCard
               label="Payouts sent"
-              value={formatGbp(summary.payout_released_gbp)}
+              value={formatGbp(summary.payout_released_gbp, { decimals: 2 })}
               hint="Already transferred to vendors"
             />
             <AdminKpiCard
               label="Payouts held"
-              value={formatGbp(summary.held_in_platform_balance_gbp)}
+              value={formatGbp(summary.held_in_platform_balance_gbp, { decimals: 2 })}
               hint="Still with Eventtz"
             />
           </div>
@@ -162,13 +159,13 @@ export function AdminFinancialsView({ onRegisterPageActions }: AdminFinancialsVi
                         <AdminTableCell className="ez-td-strong">{bucket.date}</AdminTableCell>
                         <AdminTableCell className="ez-td-num tabular-nums">{bucket.count}</AdminTableCell>
                         <AdminTableCell className="ez-td-num tabular-nums">
-                          {formatGbp(bucket.gmv_gbp)}
+                          {formatGbp(bucket.gmv_gbp, { decimals: 2 })}
                         </AdminTableCell>
                         <AdminTableCell className="ez-td-num tabular-nums">
-                          {formatGbp(bucket.platform_fee_gbp)}
+                          {formatGbp(bucket.platform_fee_gbp, { decimals: 2 })}
                         </AdminTableCell>
                         <AdminTableCell className="ez-td-num tabular-nums">
-                          {formatGbp(bucket.vendor_portion_gbp)}
+                          {formatGbp(bucket.vendor_portion_gbp, { decimals: 2 })}
                         </AdminTableCell>
                       </AdminTableRow>
                     ))}

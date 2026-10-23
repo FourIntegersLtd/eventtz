@@ -758,7 +758,17 @@ async def test_vendor_dashboard_counts_held_payouts_like_the_ledger(
         event_date="2026-03-03",
     )
 
+    # A booking paid before amounts were snapshotted: priced in Python, still counted once.
+    await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        payment_status="paid",
+        vendor_amount_gbp=None,
+        event_date="2026-03-04",
+    )
+
     held = await client.get("/api/v1/vendor/dashboard", headers=headers)
     history = await client.get("/api/v1/vendor/payments/history", headers=headers)
-    assert held.json()["held_payouts_count"] == 2
-    assert [row["status"] for row in history.json()["payouts"]].count("awaiting_payout") == 2
+    assert held.json()["held_payouts_count"] == 3
+    assert [row["status"] for row in history.json()["payouts"]].count("awaiting_payout") == 3

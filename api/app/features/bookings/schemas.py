@@ -15,7 +15,7 @@ from typing import Any, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # A client referral code is at most this many digits (as in the referrals slice).
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PagedResponse
 
 # The admin console's booking view, re-exported so the recovery routes can answer with it
 # (a router imports only its slice's `schemas`).
@@ -319,14 +319,11 @@ class VendorBookingListItem(BaseModel):
     event_title: str | None = None
 
 
-class VendorBookingsListResponse(BaseModel):
+class VendorBookingsListResponse(PagedResponse):
     """The vendor's bookings, most recently active first."""
 
     success: bool = True
     bookings: list[VendorBookingListItem]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class VendorBookingDetail(BookingTermsFields):
@@ -440,14 +437,11 @@ class ClientBookingListItem(BaseModel):
     event_title: str | None = None
 
 
-class ClientBookingsListResponse(BaseModel):
+class ClientBookingsListResponse(PagedResponse):
     """The client's bookings, most recently active first."""
 
     success: bool = True
     bookings: list[ClientBookingListItem]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class CancellationPreview(BaseModel):

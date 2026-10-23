@@ -114,6 +114,9 @@ Traps in this machine's shell:
 - **`web/lib/api-types.ts` is hand-written.** There is no `api:types` script; update it by hand
   after `make openapi`.
 - **List screens paginate on the server.** Tables send `offset` / `limit` / filters as query params; home dashboards use `GET /client/dashboard` and `GET /vendor/dashboard`, not `booking-requests?limit=200` plus client-side `.filter`.
+- **Never copy `api/.env` into a worktree.** The one in the main checkout points at the hosted Supabase DB, so
+  migrations, seeders and uvicorn would run against live data. Use the compose Postgres (`make db-up`) with an
+  explicit local `DATABASE_URL` / `TEST_DATABASE_URL`, and never run anything against the hosted DB.
 - **Docker hung?** DB tests skip silently. Run them against the compose Postgres directly:
   create a fresh database and set `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5434/<name>`.
 

@@ -1,3 +1,5 @@
+import { formatDate } from "@/lib/dateFormat";
+
 /** Plain-language copy for booking confirmation dialogs and payment explainers. */
 
 export const BOOKING_CONFIRM_COPY = {
@@ -121,11 +123,7 @@ export function clientPaidCancelCopy(preview: CancelPreviewForCopy | null | unde
   if (preview.percent < 100) {
     const nextTier =
       preview.next_tier_at && preview.next_tier_percent != null
-        ? ` From ${new Date(preview.next_tier_at).toLocaleDateString("en-GB", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          })} you would get ${preview.next_tier_percent}% back.`
+        ? ` From ${formatDate(new Date(preview.next_tier_at), "dayLongMonthYear")} you would get ${preview.next_tier_percent}% back.`
         : "";
     return {
       ...base,
@@ -155,11 +153,7 @@ export function vendorCancellationShareLine(
   if (!payoutAt) {
     return `Your share from this cancellation: ${shareLabel}, held until your Stripe payout setup is complete.`;
   }
-  const sentOn = new Date(payoutAt).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const sentOn = formatDate(new Date(payoutAt), "dayLongMonthYear");
   return `Your share from this cancellation: ${shareLabel}, sent ${sentOn}.`;
 }
 
@@ -325,7 +319,7 @@ export function autoReleaseLine(
   const date = new Date(autoReleaseAt);
   const label = Number.isNaN(date.getTime())
     ? "soon"
-    : date.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" });
+    : formatDate(date, "longWeekdayDayLongMonth");
   return viewer === "client"
     ? `If we do not hear from you, we will pay your vendor automatically on ${label}, unless you have reported a problem. We are here if you need us.`
     : `If the client does not respond, you will be paid automatically on ${label} unless they have reported a problem.`;

@@ -4,6 +4,7 @@ import { CARD_SURFACE } from "@/components/ui/tokens";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { formatDate } from "@/lib/dateFormat";
 
 export type CalendarAgendaItem = {
   id: string;
@@ -16,13 +17,13 @@ export type CalendarAgendaItem = {
 export type CalendarBookingsByDate<TItem extends { booking_request_id: string }> = Record<string, TItem[]>;
 
 function labelMonth(d: Date): string {
-  return d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  return formatDate(d, "longMonthYear");
 }
 
 function labelShortDate(key: string): string {
   const d = new Date(`${key}T12:00:00`);
   if (Number.isNaN(d.getTime())) return key;
-  return d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+  return formatDate(d, "weekdayDayMonth");
 }
 
 function localDateKey(d: Date): string {

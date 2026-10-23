@@ -27,6 +27,7 @@ import {
   AdminTableHeaderCell,
   AdminTableRow,
 } from "@/features/admin/components/AdminTable";
+import { formatDate } from "@/lib/dateFormat";
 
 function clientInitials(email: string | null | undefined): string {
   const local = (email ?? "").split("@")[0] ?? "";
@@ -63,7 +64,7 @@ function joinedLabel(createdAt: string | null | undefined): string {
   if (!createdAt) return "-";
   const date = new Date(String(createdAt));
   if (Number.isNaN(date.getTime())) return String(createdAt).slice(0, 10);
-  return date.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+  return formatDate(date, "monthYear");
 }
 
 export function AdminClientsView() {

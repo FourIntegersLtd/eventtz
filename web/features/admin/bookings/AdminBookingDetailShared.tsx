@@ -6,6 +6,7 @@ import { AlertTriangle, ChevronRight, type LucideIcon } from "lucide-react";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { AdminBookingSupportMeta } from "@/lib/adminPlatformApi";
 import { shortId } from "./adminBookingDetailUtils";
+import { formatDate } from "@/lib/dateFormat";
 
 export function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -70,7 +71,7 @@ export function formatTs(v: unknown): React.ReactNode {
   if (v == null) return <span className="text-neutral-400">-</span>;
   const d = new Date(String(v));
   if (Number.isNaN(d.getTime())) return String(v);
-  return d.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+  return formatDate(d, "dateTimeMedium");
 }
 
 export type SupportAction = {

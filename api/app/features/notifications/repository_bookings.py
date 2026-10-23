@@ -29,6 +29,7 @@ from sqlalchemy import (
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
+from app.core.pagination import paged
 from app.features.notifications.domain_feed import TopicScope
 from app.features.notifications.models import BookingNotification
 from app.features.notifications.rows import BookingPartiesRow, FeedLineRow
@@ -162,8 +163,13 @@ async def feed_lines(
     if parsed_id is None or not (scope.notices or (scope.disputes and not unread_only)):
         return [], 0
     lines = _feed_union(parsed_id, scope, unread_only=unread_only)
-    total = await session.scalar(select(func.count()).select_from(lines))
-    result = await session.execute(
-        select(lines).order_by(lines.c.sort_at.desc(), lines.c.id.desc()).offset(offset).limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(lines),
+        order_by=[lines.c.sort_at.desc()],
+        tie_breaker=lines.c.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(lines),
     )
-    return [FeedLineRow.model_validate(plain_row(row)) for row in result], int(total or 0)
+    return [FeedLineRow.model_validate(plain_row(row)) for row in found_rows], total

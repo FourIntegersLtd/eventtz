@@ -11,6 +11,7 @@ import {
   buildRequestLifecycleTimeline,
 } from "./adminBookingLifecycle";
 import { DetailSection, ExpandableId, Field, formatTs } from "./AdminBookingDetailShared";
+import { formatGbp } from "@/lib/money";
 
 type Props = {
   booking: Record<string, unknown>;
@@ -100,7 +101,7 @@ export function AdminBookingDetailMainContent({
                 <span>{line.heading}</span>
                 <span>
                   {line.unit_price_gbp != null
-                    ? `£${line.unit_price_gbp.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    ? formatGbp(line.unit_price_gbp, { decimals: 2 })
                     : "TBC"}
                 </span>
               </div>

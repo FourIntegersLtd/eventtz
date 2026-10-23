@@ -1,5 +1,6 @@
 import type { VendorAnalytics } from "@/lib/vendorAnalyticsApi";
-import { formatMonthShort, formatVendorMoneyGbp, formatVendorResponseTime } from "@/features/vendor/analytics/vendorAnalyticsModel";
+import { formatMonthShort, formatVendorResponseTime } from "@/features/vendor/analytics/vendorAnalyticsModel";
+import { formatGbp } from "@/lib/money";
 
 export type DashboardRevenueBar = {
   label: string;
@@ -42,7 +43,7 @@ export function vendorDashboardAnalyticsSlice(
     const value = Number(row.revenue_gbp) || 0;
     return {
       label: formatMonthShort(String(row.month ?? "")),
-      valueLabel: formatVendorMoneyGbp(value),
+      valueLabel: formatGbp(value, { decimals: 2 }),
       heightPx: Math.round((value / max) * 150),
     };
   });
@@ -53,7 +54,7 @@ export function vendorDashboardAnalyticsSlice(
       : Number(analytics.overview.avg_response_seconds);
 
   return {
-    earnedThisMonthLabel: formatVendorMoneyGbp(earned),
+    earnedThisMonthLabel: formatGbp(earned, { decimals: 2 }),
     revenueBars,
     avgResponseLabel: formatVendorResponseTime(avgSeconds),
   };

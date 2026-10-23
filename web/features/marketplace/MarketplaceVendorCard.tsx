@@ -9,7 +9,8 @@ import { VendorPortfolioCover } from "@/features/vendors/display/VendorPortfolio
 import { buildBrowsePricingOptions } from "@/lib/vendorBrowseDetailModel";
 import type { ExpandedSearchCard } from "@/features/marketplace/marketplaceSearchModel";
 import { SERVICE_OPTIONS } from "@/lib/vendorOnboarding/constants";
-import { formatMoney, getMarket, marketLocationFallback } from "@/lib/markets";
+import { getMarket, marketLocationFallback } from "@/lib/markets";
+import { formatMoney } from "@/lib/money";
 import { radiusOptionsForMarket } from "@/lib/photonLocationAutocomplete";
 import {
   formatUsualReplyWithin,

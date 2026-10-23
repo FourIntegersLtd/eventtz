@@ -5,6 +5,7 @@ import { useState } from "react";
 import { isPastIsoDate } from "@/lib/eventDateValidation";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
 import { EzChip } from "../../../../components/ui/ez-form";
+import { formatDate } from "@/lib/dateFormat";
 
 export type StepAvailabilityProps = {
   data: VendorOnboardingData;
@@ -60,14 +61,7 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
       : new Date();
     return { year: anchor.getFullYear(), monthIndex: anchor.getMonth() };
   });
-  const monthLabel = new Date(
-    visibleMonth.year,
-    visibleMonth.monthIndex,
-    1,
-  ).toLocaleDateString("en-GB", {
-    month: "long",
-    year: "numeric",
-  });
+  const monthLabel = formatDate(new Date(visibleMonth.year, visibleMonth.monthIndex, 1), "longMonthYear");
 
   const toggleDay = (weekday: number) => {
     const selected = new Set(data.availableWeekdays);

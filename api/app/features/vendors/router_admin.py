@@ -10,7 +10,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PageDep
 from app.core.ports import ImmediateMailerDependency, MailerDependency, StorageDependency
 from app.features.vendors import service_moderation
 from app.features.vendors.errors import (
@@ -53,8 +53,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 async def list_vendors(
     session: SessionDep,
     principal: CurrentStaff,
-    offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=200)] = DEFAULT_LIST_LIMIT,
+    page: PageDep,
     search: Annotated[
         str | None, Query(alias="q", max_length=200, description="Part of an email or business name.")
     ] = None,
@@ -65,8 +64,8 @@ async def list_vendors(
     """Vendors, most recently updated first, searched and filtered."""
     return await service_moderation.list_vendors(
         session,
-        offset=offset,
-        limit=limit,
+        offset=page.offset,
+        limit=page.limit,
         search=search,
         approval_status=approval_status,
         status=status,

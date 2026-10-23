@@ -14,6 +14,7 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.pagination import DEFAULT_LIST_LIMIT
 from app.features.bookings import repository_payments
 from app.features.bookings.domain_payments import PAYOUT_RELEASED
 from app.features.bookings.rows import BookingRow
@@ -34,58 +35,64 @@ def _is_cancellation_share(booking: BookingRow) -> bool:
     return (booking.cancellation_vendor_share_gbp or 0.0) > 0
 
 
-def _newest_first_key(booking: BookingRow) -> str:
-    """Sort key: when the payout went out, else when the client paid, else when the booking was made."""
-    return str(
-        booking.payout_released_at
-        or booking.cancellation_payout_at
-        or booking.paid_at
-        or booking.created_at
-        or ""
+def _released_amount_and_time(booking: BookingRow) -> tuple[bool, float, str | None]:
+    """Whether this ledger row has been paid out, the vendor's amount for it, and when it was paid out."""
+    share = _is_cancellation_share(booking)
+    released = (
+        booking.cancellation_payout_at is not None if share else booking.payment_status == PAYOUT_RELEASED
     )
+    amount = (
+        round(float(booking.cancellation_vendor_share_gbp or 0.0), 2) if share else vendor_amount_for(booking)
+    )
+    paid_out_at = None
+    if released:
+        paid_out_at = booking.cancellation_payout_at if share else booking.payout_released_at
+    return released, amount, paid_out_at
 
 
-async def vendor_payout_ledger(session: AsyncSession, vendor_user_id: str) -> VendorPayoutLedger:
-    """Payout rows, newest first, with paid-out and awaiting totals."""
-    bookings = sorted(
-        await repository_payments.payout_ledger_bookings(session, vendor_user_id),
-        key=_newest_first_key,
-        reverse=True,
+def _paid_out_since(paid_out_at: str | None, cutoff: datetime) -> bool:
+    """True when the ISO `paid_out_at` is on or after `cutoff`; an unreadable stamp counts as not."""
+    if not paid_out_at:
+        return False
+    try:
+        paid_time = datetime.fromisoformat(str(paid_out_at).replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if paid_time.tzinfo is None:
+        paid_time = paid_time.replace(tzinfo=UTC)
+    return paid_time >= cutoff
+
+
+async def vendor_payout_ledger(
+    session: AsyncSession, vendor_user_id: str, *, offset: int = 0, limit: int = DEFAULT_LIST_LIMIT
+) -> tuple[VendorPayoutLedger, int]:
+    """One page of payout rows, newest first, with whole-ledger paid-out and awaiting totals.
+
+    Returns the ledger and how many rows it has in all. The page and the totals are computed in
+    the database; only bookings from before payment-time snapshots existed are priced here.
+    """
+    cutoff = datetime.now(tz=UTC) - timedelta(days=30)
+    sums = await repository_payments.payout_ledger_sums(session, vendor_user_id, since=cutoff)
+    paid_out_total = float(sums.paid_out)
+    paid_out_last_30_days = float(sums.paid_out_since)
+    awaiting_total = float(sums.awaiting)
+    for booking in sums.unsnapshotted:
+        released, amount, paid_out_at = _released_amount_and_time(booking)
+        if released:
+            paid_out_total += amount
+            if _paid_out_since(paid_out_at, cutoff):
+                paid_out_last_30_days += amount
+        else:
+            awaiting_total += amount
+    bookings, total = await repository_payments.payout_ledger_page(
+        session, vendor_user_id, offset=offset, limit=limit
     )
     client_names = await identity.client_display_names(
         session, sorted({booking.client_user_id for booking in bookings})
     )
     payouts: list[VendorPayoutRow] = []
-    paid_out_total = 0.0
-    paid_out_last_30_days = 0.0
-    awaiting_total = 0.0
-    cutoff = datetime.now(tz=UTC) - timedelta(days=30)
     for booking in bookings:
-        share = _is_cancellation_share(booking)
-        released = (
-            booking.cancellation_payout_at is not None if share else booking.payment_status == PAYOUT_RELEASED
-        )
-        amount = (
-            round(float(booking.cancellation_vendor_share_gbp or 0.0), 2)
-            if share
-            else vendor_amount_for(booking)
-        )
-        paid_out_at = None
-        if released:
-            paid_out_at = booking.cancellation_payout_at if share else booking.payout_released_at
-        if released:
-            paid_out_total += amount
-            if paid_out_at:
-                try:
-                    paid_time = datetime.fromisoformat(str(paid_out_at).replace("Z", "+00:00"))
-                    if paid_time.tzinfo is None:
-                        paid_time = paid_time.replace(tzinfo=UTC)
-                    if paid_time >= cutoff:
-                        paid_out_last_30_days += amount
-                except ValueError:
-                    pass
-        else:
-            awaiting_total += amount
+        released, amount, paid_out_at = _released_amount_and_time(booking)
         payouts.append(
             VendorPayoutRow(
                 booking_id=booking.id,
@@ -96,13 +103,13 @@ async def vendor_payout_ledger(session: AsyncSession, vendor_user_id: str) -> Ve
                 amount_label=pricing.format_gbp(amount),
                 status="paid_out" if released else "awaiting_payout",
                 paid_out_at=paid_out_at,
-                kind="cancellation_share" if share else "event_payout",
+                kind="cancellation_share" if _is_cancellation_share(booking) else "event_payout",
             )
         )
     paid_out_total = round(paid_out_total, 2)
     paid_out_last_30_days = round(paid_out_last_30_days, 2)
     awaiting_total = round(awaiting_total, 2)
-    return VendorPayoutLedger(
+    ledger = VendorPayoutLedger(
         payouts=payouts,
         total_paid_out_gbp=paid_out_total,
         total_paid_out_label=pricing.format_gbp(paid_out_total),
@@ -111,12 +118,17 @@ async def vendor_payout_ledger(session: AsyncSession, vendor_user_id: str) -> Ve
         total_awaiting_gbp=awaiting_total,
         total_awaiting_label=pricing.format_gbp(awaiting_total),
     )
+    return ledger, total
 
 
 async def vendor_held_payout_count(session: AsyncSession, vendor_user_id: str) -> int:
     """How many ledger rows are still awaiting payout; the same rows `total_awaiting_gbp` sums."""
-    ledger = await vendor_payout_ledger(session, vendor_user_id)
-    return sum(1 for payout in ledger.payouts if payout.status == "awaiting_payout")
+    sums = await repository_payments.payout_ledger_sums(
+        session, vendor_user_id, since=datetime.now(tz=UTC) - timedelta(days=30)
+    )
+    return sums.awaiting_count + sum(
+        1 for booking in sums.unsnapshotted if not _released_amount_and_time(booking)[0]
+    )
 
 
 async def vendor_has_payout_history(session: AsyncSession, vendor_user_id: str) -> bool:

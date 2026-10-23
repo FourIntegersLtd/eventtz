@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { formatGbp } from "./money";
 import {
   computeClientFeeBreakdown,
-  formatBookingMoneyLabel,
   referralDiscountForBookingPreview,
   referralDiscountForSpend,
 } from "@/lib/bookingServiceFee";
@@ -30,8 +30,8 @@ describe("bookingServiceFee", () => {
   });
 
   it("formats whole-pound amounts without trailing decimals", () => {
-    expect(formatBookingMoneyLabel(120)).toBe("£120");
-    expect(formatBookingMoneyLabel(13.7)).toBe("£13.70");
+    expect(formatGbp(120, { roundToPence: true })).toBe("£120");
+    expect(formatGbp(13.7, { roundToPence: true })).toBe("£13.70");
   });
 
   it("returns null for invalid vendor portion", () => {

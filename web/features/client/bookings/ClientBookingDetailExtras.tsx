@@ -2,7 +2,7 @@
 
 import type { RefObject } from "react";
 import { Button } from "@/components/ui/Button";
-import { formatGbp } from "@/lib/vendorDiscountDisplay";
+import { formatGbp } from "@/lib/money";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { resolveWasClientTotalLabel } from "@/features/bookings/bookingPriceLabels";
 import { BookingPriceUpdateBanner } from "@/features/bookings/BookingPriceUpdateBanner";
@@ -147,7 +147,7 @@ export function ClientBookingDetailExtras({
           detail.cancellation_refund_percent < 100 &&
           detail.cancellation_refund_gbp != null
             ? partialRefundBannerLine(
-                `£${formatGbp(detail.cancellation_refund_gbp)}`,
+                `${formatGbp(detail.cancellation_refund_gbp)}`,
                 detail.cancellation_refund_percent,
               )
             : PAYMENT_FLOW_COPY.cancelledRefunded}

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PagedResponse
 from app.features.bookings.schemas_payments import VendorPayoutLedger
 
 
@@ -35,13 +35,10 @@ class VendorPaymentsStatusResponse(ConnectState):
     payout_gate_waived: bool = False
 
 
-class VendorPayoutHistoryResponse(VendorPayoutLedger):
+class VendorPayoutHistoryResponse(VendorPayoutLedger, PagedResponse):
     """The vendor's payout ledger."""
 
     success: bool = True
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class StripeWebhookResponse(BaseModel):

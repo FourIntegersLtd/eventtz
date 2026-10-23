@@ -4,6 +4,7 @@ import { ChevronDown, CircleHelp, Clock, Truck } from "lucide-react";
 import type { BrowsePricingOption } from "@/lib/vendorBrowseDetailModel";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { lineTotalGbp } from "@/lib/packagePricing";
+import { formatGbp } from "@/lib/money";
 
 export type BrowsePricingOptionCardProps = {
   opt: BrowsePricingOption;
@@ -105,11 +106,7 @@ export function BrowsePricingOptionCard({
             />
             {quantity > 0 && lineTotal != null ? (
               <p className="text-xs tabular-nums text-neutral-600">
-                {quantity} × £{opt.priceDisplay} = £
-                {lineTotal.toLocaleString("en-GB", {
-                  minimumFractionDigits: lineTotal % 1 === 0 ? 0 : 2,
-                  maximumFractionDigits: 2,
-                })}
+                {quantity} × £{opt.priceDisplay} = {formatGbp(lineTotal)}
               </p>
             ) : (
               <p className="text-xs text-neutral-400">

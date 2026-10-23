@@ -16,7 +16,7 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import { fetchVendorDashboard } from "@/lib/portalDashboardApi";
 import { formatEventDate } from "@/lib/dateFormat";
-import { formatMoney } from "@/lib/markets";
+import { formatMoney } from "@/lib/money";
 import { TablePagination } from "@/components/ui/TablePagination";
 import {
   fetchVendorPayoutHistoryPage,

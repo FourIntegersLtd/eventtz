@@ -7,7 +7,7 @@ import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import { formatEventDate } from "@/lib/dateFormat";
-import { formatBookingMoneyLabel } from "@/lib/bookingServiceFee";
+import { formatGbp } from "@/lib/money";
 import { isHttpStatus } from "@/lib/api-errors";
 import {
   fetchVendorReferralBookings,
@@ -114,11 +114,11 @@ export function VendorReferralDetailView({ bookingId }: VendorReferralDetailView
             </div>
             <div className="ez-lines__row">
               <span>Your price</span>
-              <span>{formatBookingMoneyLabel(row.vendor_portion_gbp)}</span>
+              <span>{formatGbp(row.vendor_portion_gbp, { roundToPence: true })}</span>
             </div>
             <div className="ez-lines__total">
               <span>Client saved</span>
-              <span>{formatBookingMoneyLabel(row.referral_fee_discount_gbp)}</span>
+              <span>{formatGbp(row.referral_fee_discount_gbp, { roundToPence: true })}</span>
             </div>
           </div>
         </div>

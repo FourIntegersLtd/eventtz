@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.db import as_uuid, plain_row
+from app.core.pagination import LIKE_ESCAPE, contains_pattern, paged
 from app.features.content.models import BlogPost, ContactSubmission, HelpArticle, HelpCategory
 from app.features.content.rows import (
     BlogPostRow,
@@ -56,12 +57,12 @@ def _staff_post_filters(status: str | None, search: str | None) -> list[ColumnEl
         clauses.append(BlogPost.status == status.strip())
     needle = (search or "").strip()
     if needle:
-        pattern = f"%{needle}%"
+        pattern = contains_pattern(needle)
         clauses.append(
             or_(
-                BlogPost.title.ilike(pattern),
-                BlogPost.slug.ilike(pattern),
-                BlogPost.author_name.ilike(pattern),
+                BlogPost.title.ilike(pattern, escape=LIKE_ESCAPE),
+                BlogPost.slug.ilike(pattern, escape=LIKE_ESCAPE),
+                BlogPost.author_name.ilike(pattern, escape=LIKE_ESCAPE),
             )
         )
     return clauses
@@ -88,17 +89,19 @@ async def list_posts_newest_first_page(
     count_query = select(func.count()).select_from(BlogPost)
     if filters:
         count_query = count_query.where(*filters)
-    total = (await session.execute(count_query)).scalar_one()
     query = select(*_BLOG_LIST_COLUMNS)
     if filters:
         query = query.where(*filters)
-    result = await session.execute(
-        query.order_by(BlogPost.updated_at.desc(), BlogPost.created_at.desc(), BlogPost.id.desc())
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        query,
+        order_by=[BlogPost.updated_at.desc(), BlogPost.created_at.desc()],
+        tie_breaker=BlogPost.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=count_query,
     )
-    rows = [BlogPostRow.model_validate(plain_row(row)) for row in result]
-    return rows, int(total)
+    return [BlogPostRow.model_validate(plain_row(row)) for row in found_rows], total
 
 
 async def list_published_posts(session: AsyncSession, limit: int) -> list[BlogPostRow]:

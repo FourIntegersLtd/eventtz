@@ -51,6 +51,20 @@ class InvalidInput(AppError):
     default_message = "The request was not valid"
 
 
+class InvalidBookingId(InvalidInput):
+    """The booking id in the path is not a UUID, rejected before any lookup (bookings and disputes)."""
+
+    code = "invalid_booking_id"
+    default_message = "Invalid booking id."
+
+
+class NoFieldsToUpdate(InvalidInput):
+    """A PATCH body with every field left out; there is nothing to change."""
+
+    code = "no_fields_to_update"
+    default_message = "No fields to update"
+
+
 class Unauthenticated(AppError):
     """401: no valid session."""
 

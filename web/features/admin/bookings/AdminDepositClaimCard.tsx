@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/Toast";
 import { depositAwardError } from "@/features/bookings/bookingTerms";
 import { adminResolveDepositClaim } from "@/lib/adminBookingsApi";
 import { withMutationFeedback } from "@/lib/mutationFeedback";
-import { formatGbp } from "@/lib/vendorDiscountDisplay";
+import { formatGbp } from "@/lib/money";
 
 type Props = {
   bookingId: string;
@@ -39,7 +39,7 @@ export function AdminDepositClaimCard({ bookingId, booking, canDecide, onResolve
     setBusy(true);
     const ok = await withMutationFeedback(showToast, {
       successTitle: "Deposit claim decided",
-      successDescription: `Vendor awarded £${formatGbp(Number(award))}; the rest goes back to the client.`,
+      successDescription: `Vendor awarded ${formatGbp(Number(award))}; the rest goes back to the client.`,
       errorTitle: "Couldn't decide the claim",
       run: () => adminResolveDepositClaim(bookingId, Number(award)),
     });
@@ -51,12 +51,12 @@ export function AdminDepositClaimCard({ bookingId, booking, canDecide, onResolve
     <section className="ez-banner ez-banner--warning">
       <div className="ez-banner__body">
         <h2 className="ez-banner__title">Deposit claim</h2>
-        <p>Vendor is claiming £{formatGbp(claim)}.</p>
+        <p>Vendor is claiming {formatGbp(claim)}.</p>
         {note ? <p className="whitespace-pre-wrap">{note}</p> : null}
         {canDecide ? (
           <div className="ez-stack ez-stack--sm">
             <label className="block text-sm">
-              Award to vendor (£0 to £{formatGbp(claim)})
+              Award to vendor (£0 to {formatGbp(claim)})
               <input
                 type="text"
                 inputMode="decimal"

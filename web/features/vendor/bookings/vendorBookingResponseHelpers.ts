@@ -5,6 +5,7 @@ import {
   computeClientFeeBreakdown,
   referralDiscountForBookingPreview,
 } from "@/lib/bookingServiceFee";
+import { formatGbp } from "@/lib/money";
 
 export type AdjustmentDraftRow = {
   kind: "cost" | "discount";
@@ -21,12 +22,8 @@ export function friendlyMoneyLabel(label: string): string {
   return label;
 }
 
-export function formatGbp(amount: number): string {
-  const rounded = Math.round(amount * 100) / 100;
-  const s = rounded.toFixed(2);
-  const display = s.endsWith(".00") ? String(Math.round(rounded)) : s;
-  return `£${display}`;
-}
+/** How the vendor adjustment copy shows pounds: rounded to pence, no thousands separators ("£1234.50"). */
+const PLAIN_GBP = { roundToPence: true, grouping: false } as const;
 
 function draftAdjustmentsTotalGbp(drafts: AdjustmentDraftRow[]): number {
   return drafts.reduce((sum, row) => {
@@ -81,7 +78,7 @@ export function previewTotalDeltaGbp(
 }
 
 export function formatTotalDeltaLabel(delta: number): string {
-  const abs = formatGbp(Math.abs(delta));
+  const abs = formatGbp(Math.abs(delta), PLAIN_GBP);
   if (delta > 0) return `+${abs}`;
   if (delta < 0) return `−${abs}`;
   return abs;
@@ -102,13 +99,13 @@ export function adjustmentPreviewDeltaExplanation(
   if (vendorDelta > 0 && deltaGbp > 0) {
     const feeExtra = Math.round((deltaGbp - vendorDelta) * 100) / 100;
     if (feeExtra <= 0) return null;
-    return `${deltaLabel} for them: ${formatGbp(vendorDelta)} to you + ${formatGbp(feeExtra)} Eventtz fee (${feePct}%).`;
+    return `${deltaLabel} for them: ${formatGbp(vendorDelta, PLAIN_GBP)} to you + ${formatGbp(feeExtra, PLAIN_GBP)} Eventtz fee (${feePct}%).`;
   }
 
   if (vendorDelta < 0 && deltaGbp < 0) {
     const feeChange = Math.round((deltaGbp - vendorDelta) * 100) / 100;
     if (feeChange >= 0) return null;
-    return `${deltaLabel} for them: ${formatGbp(Math.abs(vendorDelta))} off your price and ${formatGbp(Math.abs(feeChange))} less Eventtz fee (${feePct}%).`;
+    return `${deltaLabel} for them: ${formatGbp(Math.abs(vendorDelta), PLAIN_GBP)} off your price and ${formatGbp(Math.abs(feeChange), PLAIN_GBP)} less Eventtz fee (${feePct}%).`;
   }
 
   return null;
@@ -170,7 +167,7 @@ export function hasSavedPriceUpdate(detail: VendorBookingDetail): boolean {
 }
 
 export function formatLineSummary(row: AdjustmentDraftRow): string {
-  const amount = formatGbp(Number.parseFloat(row.amount));
+  const amount = formatGbp(Number.parseFloat(row.amount), PLAIN_GBP);
   if (row.kind === "discount") return `Discount −${amount}`;
   return `${row.label || "Extra charge"} +${amount}`;
 }

@@ -17,6 +17,7 @@ import { MasterDetailLayout } from "@/features/bookings/MasterDetailLayout";
 import { ChatThreadView } from "@/features/chat/ChatThreadView";
 import { helpHubTabHref, helpMessagesPath } from "@/lib/helpHub";
 import Link from "next/link";
+import { formatDate } from "@/lib/dateFormat";
 
 type ChatPortalViewProps = {
   portal: "client" | "vendor";
@@ -44,9 +45,9 @@ function formatActivity(iso: string | null | undefined): string {
     d.getMonth() === now.getMonth() &&
     d.getDate() === now.getDate();
   if (sameDay) {
-    return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    return formatDate(d, "time");
   }
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return formatDate(d, "dayMonth");
 }
 
 /**

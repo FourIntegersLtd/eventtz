@@ -27,13 +27,6 @@ class BookingNotFound(NotFound):
     default_message = "Booking not found."
 
 
-class InvalidBookingId(InvalidInput):
-    """The booking id in the path is not a UUID."""
-
-    code = "invalid_booking_id"
-    default_message = "Invalid booking id."
-
-
 class ReceiptNotAvailable(NotFound):
     """The payment has not reached a state this receipt/record/statement may be read in yet.
 

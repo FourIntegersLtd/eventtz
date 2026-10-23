@@ -32,6 +32,7 @@ import {
   parsePackagePricingMode,
   type PackagePricingMode,
 } from "@/lib/packagePricing";
+import { formatGbp } from "@/lib/money";
 
 export type StepPricingProps = {
   data: VendorOnboardingData;
@@ -250,7 +251,7 @@ export function StepPricing({
               value={data.damageDepositGbp}
               onChange={(value) => update({ damageDepositGbp: value })}
               placeholder="e.g. 100"
-              help={`Clients get it back within ${policy.depositClaimDays} days after the event unless you report damage. Up to £${policy.depositMaxGbp.toLocaleString("en-GB")}.`}
+              help={`Clients get it back within ${policy.depositClaimDays} days after the event unless you report damage. Up to ${formatGbp(policy.depositMaxGbp)}.`}
               error={depositError}
             />
           </div>

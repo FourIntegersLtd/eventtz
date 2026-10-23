@@ -7,8 +7,8 @@ from fastapi.responses import HTMLResponse
 
 from app.core.auth import ROLE_ERRORS, CurrentClient
 from app.core.db import SessionDep
-from app.core.errors import Forbidden, error_responses
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.errors import Forbidden, InvalidBookingId, error_responses
+from app.core.pagination import PageDep
 from app.core.ports import (
     MailerDependency,
     PaymentGatewayDependency,
@@ -58,7 +58,7 @@ _CANCEL_ERRORS = (
     errors.RefundFailed,
 )
 _RECEIPT_ERRORS = (
-    errors.InvalidBookingId,
+    InvalidBookingId,
     errors.BookingNotFound,
     errors.ReceiptNotAvailable,
     errors.ReceiptStripeVerifyPaymentIntentMissing,
@@ -85,6 +85,7 @@ async def get_client_dashboard(session: SessionDep, client: CurrentClient) -> Cl
 async def list_client_bookings(
     session: SessionDep,
     client: CurrentClient,
+    page: PageDep,
     group: str = _GROUP_QUERY,
     status: str | None = Query(None, description="Optional exact booking status, e.g. pending"),
     payment_status: str | None = Query(
@@ -100,8 +101,6 @@ async def list_client_bookings(
         max_length=200,
         description="Part of an event name or vendor business name.",
     ),
-    offset: int = Query(0, ge=0),
-    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
 ) -> ClientBookingsListResponse:
     """The client's bookings in one bucket, most recently active first."""
     bookings, total = await service_queries.client_bookings_page(
@@ -112,16 +111,16 @@ async def list_client_bookings(
         payment_status=payment_status,
         exclude_payment_status=exclude_payment_status,
         search=search,
-        offset=offset,
-        limit=limit,
+        offset=page.offset,
+        limit=page.limit,
     )
-    return ClientBookingsListResponse(bookings=bookings, total=total, offset=offset, limit=limit)
+    return ClientBookingsListResponse(bookings=bookings, total=total, offset=page.offset, limit=page.limit)
 
 
 @router.get(
     "/booking-requests/{booking_id}",
     response_model=ClientBookingDetailResponse,
-    responses=error_responses(*ROLE_ERRORS, errors.InvalidBookingId, errors.BookingNotFound),
+    responses=error_responses(*ROLE_ERRORS, InvalidBookingId, errors.BookingNotFound),
 )
 async def get_client_booking(
     session: SessionDep, client: CurrentClient, booking_id: str
@@ -176,7 +175,7 @@ async def get_client_booking_receipt_html(
     response_model=VendorBookingStatusResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.RespondOnlyPending,
         errors.NothingToRespondTo,
@@ -206,7 +205,7 @@ async def patch_client_booking_status(
     response_model=VendorBookingStatusResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.CancelOnlyPendingOrAccepted,
         *_CANCEL_ERRORS,
@@ -230,7 +229,7 @@ async def post_cancel_client_booking(
     response_model=ClientBookingDetailResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.VenueAcceptedOnly,
         errors.BookingAlreadyPaid,
@@ -249,7 +248,7 @@ async def patch_client_booking_venue(
     response_model=BookingCheckoutResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.CheckoutBookingNotFound,
         errors.OnlyAcceptedCanBePaid,
         errors.CheckoutAlreadyPaid,
@@ -279,7 +278,7 @@ async def post_booking_checkout(
     response_model=BookingCheckoutSyncResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.CheckoutBookingNotFound,
         errors.BookingNoLongerPayable,
         errors.NoCheckoutSession,
@@ -316,7 +315,7 @@ async def post_booking_checkout_sync(
     response_model=ConfirmCompletionResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.CompleteOnlyAccepted,
         errors.CompleteNeedsPayment,
@@ -348,7 +347,7 @@ async def post_client_confirm_completion(
     response_model=ConfirmCompletionResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.DeliveryNotAwaited,
     ),
@@ -398,7 +397,7 @@ async def post_booking_request(
     response_model=ClientBookingDetailResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.DateChangeNotAllowed,
         errors.DateChangePending,
@@ -435,7 +434,7 @@ async def post_client_date_change(
     response_model=ClientBookingDetailResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.DateChangeNotAllowed,
         errors.NoDateChange,
@@ -465,7 +464,7 @@ async def post_client_date_change_respond(
     response_model=ClientBookingDetailResponse,
     responses=error_responses(
         *ROLE_ERRORS,
-        errors.InvalidBookingId,
+        InvalidBookingId,
         errors.BookingNotFound,
         errors.NoDateChange,
         errors.DateChangeNotYours,

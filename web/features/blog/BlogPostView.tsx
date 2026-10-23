@@ -10,6 +10,7 @@ import { fetchPublishedBlogPost, type BlogPostPublicDetail } from "@/lib/blogApi
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { landingSectionClass } from "@/features/landing/landingSectionStyles";
 import { LandingSection } from "@/features/landing/LandingSection";
+import { formatDate } from "@/lib/dateFormat";
 
 type BlogPostViewProps = {
   slug: string;
@@ -20,11 +21,7 @@ function formatPublished(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return formatDate(d, "dayLongMonthYear");
 }
 
 /** One published post: a 3xl reading column with byline, cover and the sanitised body HTML. */

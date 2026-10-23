@@ -31,6 +31,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
+from app.core.pagination import LIKE_ESCAPE, contains_pattern
 
 #: `users.user_type` is a real Postgres enum, not text; a bound Text parameter
 #: cannot compare against it without an explicit cast (`operator does not exist:
@@ -373,7 +374,10 @@ async def search_directory_client_users(
     """Clients whose email contains `term` (case-insensitive)."""
     result = await session.execute(
         select(_users.c.id, _users.c.email)
-        .where(_users.c.user_type == "client", _users.c.email.ilike(f"%{term}%"))
+        .where(
+            _users.c.user_type == "client",
+            _users.c.email.ilike(contains_pattern(term), escape=LIKE_ESCAPE),
+        )
         .limit(limit)
     )
     return [plain_row(row) for row in result]
@@ -385,7 +389,10 @@ async def search_directory_vendor_users_by_email(
     """Vendor accounts whose email contains `term` (case-insensitive)."""
     result = await session.execute(
         select(_users.c.id, _users.c.email)
-        .where(_users.c.user_type == "vendor", _users.c.email.ilike(f"%{term}%"))
+        .where(
+            _users.c.user_type == "vendor",
+            _users.c.email.ilike(contains_pattern(term), escape=LIKE_ESCAPE),
+        )
         .limit(limit)
     )
     return [plain_row(row) for row in result]
@@ -398,7 +405,7 @@ async def search_directory_vendor_users_by_business_name(
     result = await session.execute(
         select(_users.c.id, _users.c.email, _vendors.c.business_name_normalized)
         .select_from(_vendors.join(_users, _users.c.id == _vendors.c.user_id))
-        .where(_vendors.c.business_name_normalized.ilike(f"%{term}%"))
+        .where(_vendors.c.business_name_normalized.ilike(contains_pattern(term), escape=LIKE_ESCAPE))
         .limit(limit)
     )
     return [plain_row(row) for row in result]

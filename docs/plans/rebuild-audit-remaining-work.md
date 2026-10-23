@@ -5,6 +5,11 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Done
 
+**Phase 3.7: one money and date formatter.**
+- `web/lib/money.ts` (`formatGbp`, `formatPence`, `formatCount`, `formatMoney`) and `web/lib/dateFormat.ts` (`formatDate` with named styles) are the only formatters. About 16 local copies and the inline `toLocaleString` / `Intl` sites were migrated and deleted.
+- `web/lib/formatGuard.test.ts` fails on new inline money or date formatting, with a meta-test.
+- Each screen keeps its old output through an option (`decimals`, `prefix`, `grouping`). Known changes: negatives read "-£x", `formatMoney` is fixed to en-GB, half-penny vendor inputs round like Intl instead of `toFixed`.
+
 **Phase 0: critical fixes** (#72, merged).
 - Frozen API contract restored and pinned.
 - Vendor search no longer leaks client emails.
@@ -33,8 +38,55 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `@layer components`, `ui/` blocks emit canvas `ez-*` markup (new `DataTable`, `TextField` absorbs
   `EzClearableInput`), `adminTheme.ts` and `sectionBlockTokens.ts` are deleted. design-diff results are
   identical to main (within 0.05%) on all 33 screens; the failures (P01, V01-V07, V13, V18, V19, V23, V24 and the
-  V11 `.ez-kpi` setup timeout) also fail on main. Deferred: `portalTheme.ts` (BookingDetailPanel, help views),
-  `AdminTable` and raw tables not yet on `DataTable`.
+  V11 `.ez-kpi` setup timeout) also fail on main. Deferred: `AdminTable` and raw tables not yet on `DataTable`.
+
+**Phase 3 (api half): one pagination kernel, merged twins, one error code each.**
+- **Pagination kernel.** `core/pagination.py` holds `PageParams`/`PageDep` (default 25), `PagedResponse`,
+  `paged()` (primary-key tie-breaker) and `escape_like()`. Every list router, schema and repository uses
+  it; `test_routers_use_page_params.py` guards it. Payout history and admin daily financials page in SQL.
+  ADR 0011 lists every route and the two default changes (audit log, admin reviews: 100 to 25).
+- **Twins merged.** `disputes/router_participant.py` and `notifications/router_portal.py` build the
+  client and vendor routes from one factory (operation ids unchanged); the bookings client and vendor
+  list rows share `_shared_list_fields`.
+- **Error codes.** `invalid_booking_id` and `no_fields_to_update` are one class each in `core/errors.py`;
+  `session_expired` and `account_deleted` reuse the `core/auth.py` classes with a message override.
+  `test_visibility_helpers_only` also catches `.notin_`, `.is_`, `filter_by` and dict-row access.
+
+**Phase 4: dead code and docs** (PR "Rebuild audit Phase 4", except `test_list_pagination.py`, which Phase 3 owns).
+- **Deleted web files with no importers (grep of every import form, then `npm run build`):**
+  `BookingDetailPanel`, the three old help views, `lib/useMediaQuery.ts`, four planner widgets
+  (`CelebrationSummary`, `ConfidenceBadge`, `PlannerBookNowButton`, `PlannerNextSteps`), four landing files
+  (`LandingBookingRecord`, `LandingCategoriesSection`, `LandingWaitlistCta`, and `LandingScreenshotFrame`, which
+  only the others used) and two vendor dashboard cards (`VendorAttentionCard`, `VendorBookingsCalendarCard`).
+- **Kept: `MasterDetailLayout`.** Chat imports it, so it stays; only the `UI-CONVENTIONS.md` claim is corrected
+  to "used by chat only".
+- **Still orphaned, other owners' areas, not deleted:** `client/bookings/{clientBookingListRowUi,clientBookingTrack,
+  clientBookingsListTab}.ts`, `reviews/ReviewSummaryHeader`, `vendor/analytics/vendorChartInfoCopy`,
+  `vendor/copilot/VendorGrowthGlanceTile`, `vendor/onboarding/ui/{OnboardingOptionPill,OnboardingQuestionLayout}`,
+  `lib/{addressApi,api-base,bookingNotificationsApi,bookingsEvents}.ts`. Each needs its owner to confirm.
+- **Docs fixed:** `docs/domain-rules.md` (visibility helpers now live in `vendors/service_listing.py` and
+  `marketplace/service_explore.py`, and chat checks `listed_vendor`), and the media README (image cap on
+  `/media/upload-urls`, the route itself).
+- **Tests made real:** `test_media_service.py` asserts the recorded presign request and the response; new
+  `test_media_s3_storage.py` checks the signed `presigned_post` policy.
+- **UK "today":** new `core/time.py` (`uk_date`, `uk_today`, Europe/London); `domain_portal_dashboard.py` uses it
+  (the old code used the server's local zone). `test_core_time.py` pins a BST midnight boundary.
+
+## Open questions and follow-ups from Phase 4
+
+- **Only the portal dashboard uses London "today" so far.** Six sites still use UTC and disagree with it between
+  00:00 and 01:00 BST: `vendors/service_moderation.py:600` (insurance expiry), `vendors/service_listing.py:39`
+  (listing visibility), `vendors/service_profile.py:33`, `bookings/service_admin_financials.py:124`,
+  `marketplace/service_analytics.py:22`, `admin_insights/domain.py:32`. Each belongs to a different owner, so
+  move them to `core.time.uk_today()` as follow-ups. The dashboard service also calls the clock once per helper;
+  compute `uk_today()` once and pass `today=` to all three, then make it required.
+
+### Decision for you: should a client shown as "Client" be searchable by vendors?
+
+Vendor search matches the name a vendor sees. A client with no preferred name and no email-derived name is shown
+as the fallback "Client", and a closed account shows nothing, so neither can be found by typing a name. This phase
+changed nothing. Options: (a) leave it, since there is nothing meaningful to search; (b) make the fallback client
+findable by email, which exposes the email the Phase 0 fix stopped leaking, so I advise against it. Which do you want?
 
 ## Before the next deploy (yours, about 5 minutes)
 

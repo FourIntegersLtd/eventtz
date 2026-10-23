@@ -110,6 +110,27 @@ def _list_client_total(breakdown: pricing.PricingBreakdown) -> str | None:
     return None if breakdown.has_pricing_tbc else breakdown.client_total_label
 
 
+def _shared_list_fields(booking: BookingRow, owners: dict[str, str]) -> dict[str, Any]:
+    """The list-row fields the client and vendor lists share, so the two lists cannot drift."""
+    return {
+        "id": booking.id,
+        "status": booking.status,
+        "event_name": booking.event_name,
+        "event_date": booking.event_date[:10],
+        "event_end_date": booking.event_end_date[:10] if booking.event_end_date else None,
+        "total_label": booking.total_label,
+        "client_total_label": _list_client_total(service_pricing.breakdown_for(booking, owners)),
+        "created_at": booking.created_at,
+        "updated_at": booking.updated_at,
+        "initiator": booking.initiator,
+        "conversation_id": booking.conversation_id,
+        "payment_status": booking.payment_status,
+        "has_price_update": domain.price_confirmation_required(booking),
+        "completion_waiting_on": domain.completion_waiting_on(booking),
+        "event_id": booking.event_id,
+    }
+
+
 def _shared_detail_fields(
     booking: BookingRow, breakdown: pricing.PricingBreakdown, owners: dict[str, str]
 ) -> dict[str, Any]:
@@ -211,29 +232,15 @@ async def _vendor_booking_list_items(
     return [
         VendorBookingListItem.model_validate(
             {
-                "id": booking.id,
-                "status": booking.status,
-                "event_name": booking.event_name,
-                "event_date": booking.event_date[:10],
-                "event_end_date": booking.event_end_date[:10] if booking.event_end_date else None,
-                "total_label": booking.total_label,
+                **_shared_list_fields(booking, owners),
                 "client_email": (
                     emails.get(booking.client_user_id)
                     if domain.contact_unlocked(booking.payment_status)
                     else None
                 ),
                 "client_display_name": names.get(booking.client_user_id),
-                "created_at": booking.created_at,
-                "updated_at": booking.updated_at,
-                "client_total_label": _list_client_total(service_pricing.breakdown_for(booking, owners)),
                 "review": reviews.get(booking.id),
-                "initiator": booking.initiator,
-                "conversation_id": booking.conversation_id,
-                "payment_status": booking.payment_status,
-                "has_price_update": domain.price_confirmation_required(booking),
-                "completion_waiting_on": domain.completion_waiting_on(booking),
                 "vendor_completion_confirmed_at": booking.vendor_completion_confirmed_at,
-                "event_id": booking.event_id,
                 "event_title": booking.event_name if booking.event_id else None,
             }
         )
@@ -355,25 +362,11 @@ async def _client_booking_list_items(
     return [
         ClientBookingListItem.model_validate(
             {
-                "id": booking.id,
-                "status": booking.status,
-                "event_name": booking.event_name,
-                "event_date": booking.event_date[:10],
-                "event_end_date": booking.event_end_date[:10] if booking.event_end_date else None,
-                "total_label": booking.total_label,
-                "client_total_label": _list_client_total(service_pricing.breakdown_for(booking, owners)),
+                **_shared_list_fields(booking, owners),
                 "vendor_user_id": booking.vendor_user_id,
                 "vendor_display_name": names.get(booking.vendor_user_id, _UNKNOWN_VENDOR_NAME),
-                "created_at": booking.created_at,
-                "updated_at": booking.updated_at,
-                "initiator": booking.initiator,
-                "conversation_id": booking.conversation_id,
                 "has_review": booking.id in reviewed,
-                "payment_status": booking.payment_status,
-                "has_price_update": domain.price_confirmation_required(booking),
-                "completion_waiting_on": domain.completion_waiting_on(booking),
                 "client_completion_confirmed_at": booking.client_completion_confirmed_at,
-                "event_id": booking.event_id,
                 "event_title": titles.get(booking.event_id) if booking.event_id else None,
             }
         )

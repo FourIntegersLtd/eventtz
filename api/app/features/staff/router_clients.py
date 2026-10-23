@@ -11,7 +11,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PageDep
 from app.core.ports import MailerDependency
 from app.features.staff import service_clients
 from app.features.staff.schemas import AdminClientsListResponse, AdminClientSuspendedBody, SuccessResponse
@@ -23,14 +23,13 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 async def list_clients(
     session: SessionDep,
     principal: CurrentStaff,
-    offset: int = Query(0, ge=0),
-    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
+    page: PageDep,
     search_email: str | None = Query(None, alias="q", max_length=200),
     suspended: bool | None = Query(None),
 ) -> AdminClientsListResponse:
     """A page of the client directory, optionally filtered by email search or suspension."""
     return await service_clients.list_clients(
-        session, offset=offset, limit=limit, search_email=search_email, suspended=suspended
+        session, offset=page.offset, limit=page.limit, search_email=search_email, suspended=suspended
     )
 
 

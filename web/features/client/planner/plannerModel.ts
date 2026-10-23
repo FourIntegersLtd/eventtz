@@ -5,21 +5,13 @@ import {
   type MarketplaceSearchState,
 } from "@/lib/marketplaceSearchParams";
 import { DEFAULT_COUNTRY_CODE } from "@/lib/markets";
-
-export function formatGbp(amount: number | null | undefined): string {
-  if (amount == null || Number.isNaN(amount)) return "-";
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+import { formatGbp } from "@/lib/money";
 
 export function formatVendorPrice(v: PlannerVendorCard): string {
   if (v.price_on_request || v.min_list_price_gbp == null) {
     return "Price on request";
   }
-  return `from ${formatGbp(v.min_list_price_gbp)}`;
+  return `from ${formatGbp(v.min_list_price_gbp, { decimals: 0 })}`;
 }
 
 export function formatRating(v: PlannerVendorCard): string | null {
@@ -32,7 +24,7 @@ export function celebrationMetaLine(plan: CelebrationPlanResponse): string {
   const parts: string[] = [];
   if (c.location) parts.push(c.location);
   if (c.guest_count) parts.push(`${c.guest_count} guests`);
-  if (c.budget_gbp != null) parts.push(formatGbp(c.budget_gbp));
+  if (c.budget_gbp != null) parts.push(formatGbp(c.budget_gbp, { decimals: 0 }));
   if (c.preferred_date) parts.push(c.preferred_date);
   return parts.join(" · ");
 }

@@ -79,11 +79,13 @@ describe("ui building blocks emit canvas markup", () => {
     );
   });
 
-  it("Stepper marks done and current steps", () => {
+  it("Stepper keeps the mobile step line and the connectors", () => {
     const markup = renderToStaticMarkup(<Stepper steps={["Account", "Business", "Review"]} current={1} />);
-    expect(markup).toContain('<li class="ez-step ez-step--done">');
-    expect(markup).toContain('<li class="ez-step ez-step--current" aria-current="step"><span class="ez-step__dot">2</span>');
-    expect(markup).toContain('<li class="ez-step"><span class="ez-step__dot">3</span><span>Review</span></li>');
+    expect(markup).toContain(
+      '<p class="text-xs font-medium text-ink-3 sm:hidden">Step 2 of 3: Business</p>',
+    );
+    expect(markup).toContain('<span aria-hidden="true" class="h-px flex-1 bg-primary"></span>');
+    expect(markup).toContain('<span aria-hidden="true" class="h-px flex-1 bg-line-strong"></span>');
   });
 
   it("TextField is an ez-field with label, ez-input and help or error", () => {
