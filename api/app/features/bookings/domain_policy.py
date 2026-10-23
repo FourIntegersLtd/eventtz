@@ -9,9 +9,10 @@ Pure values and small rules only: no database, no network.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Any, Literal
 
+from app.core.time import HOME_TIMEZONE
 from app.features.bookings.rows import BookingRow
 
 # Where a split-payout booking is in its payout: `full` (no split), `upfront` (nothing paid yet),
@@ -78,7 +79,8 @@ def payment_due_at(
     """When an accepted booking must be paid by, or None when no deadline applies.
 
     The earlier of `deadline_hours` after acceptance and PAYMENT_DEADLINE_HOURS_BEFORE_EVENT
-    before the start (UTC midnight) of the event's first day. A booking accepted inside that
+    before the start (UTC midnight of the event's first day;
+    not yet moved to London time like the delivery and deposit clocks). A booking accepted inside that
     window would otherwise be due before it was accepted, so it is due by the event start instead.
     """
     if accepted_at is None or event_date is None:
@@ -184,22 +186,26 @@ def _parse_instant(raw_value: str | None) -> datetime | None:
     return parsed if parsed.tzinfo is not None else parsed.replace(tzinfo=UTC)
 
 
-def event_over_at(booking: BookingRow) -> datetime | None:
-    """UTC midnight at the start of the day after the event's last day; None for a bad date."""
+def event_over_at(booking: BookingRow, *, plus_days: int = 0) -> datetime | None:
+    """The UTC instant of London midnight ending the event's last day, `plus_days` days later.
+
+    Whole London calendar days are added before taking midnight, so a window that crosses a clock
+    change still ends at London midnight. None for a bad date.
+    """
     last_day = (booking.event_end_date or booking.event_date or "")[:10]
     try:
         event_day = date.fromisoformat(last_day)
     except ValueError:
         return None
-    return datetime(event_day.year, event_day.month, event_day.day, tzinfo=UTC) + timedelta(days=1)
+    clock_day = event_day + timedelta(days=1 + plus_days)
+    return datetime.combine(clock_day, time.min, tzinfo=HOME_TIMEZONE).astimezone(UTC)
 
 
 def delivery_due_at(booking: BookingRow) -> datetime | None:
     """When the rest of a split payout is released even without the client confirming delivery."""
     if not booking.payout_upfront_percent or not booking.delivery_deadline_days:
         return None
-    over_at = event_over_at(booking)
-    return over_at + timedelta(days=booking.delivery_deadline_days) if over_at is not None else None
+    return event_over_at(booking, plus_days=booking.delivery_deadline_days)
 
 
 def payout_stage(booking: BookingRow, now: datetime) -> PayoutStage:
@@ -230,8 +236,7 @@ def deposit_refund_due_at(booking: BookingRow) -> datetime | None:
     """When an unclaimed deposit goes back to the client: `DEPOSIT_CLAIM_DAYS` after the event's last day."""
     if deposit_pence(booking) <= 0:
         return None
-    over_at = event_over_at(booking)
-    return over_at + timedelta(days=DEPOSIT_CLAIM_DAYS) if over_at is not None else None
+    return event_over_at(booking, plus_days=DEPOSIT_CLAIM_DAYS)
 
 
 def deposit_still_held(booking: BookingRow) -> bool:
@@ -265,7 +270,7 @@ def deposit_claim_open(booking: BookingRow, now: datetime) -> bool:
     due_at = deposit_refund_due_at(booking)
     first_day = (booking.event_date or "")[:10]
     try:
-        event_start = datetime.combine(date.fromisoformat(first_day), datetime.min.time(), tzinfo=UTC)
+        event_start = datetime.combine(date.fromisoformat(first_day), time.min, tzinfo=HOME_TIMEZONE)
     except ValueError:
         return False
     return (

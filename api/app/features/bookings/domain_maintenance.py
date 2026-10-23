@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 
-from app.core.time import uk_date
+from app.core.time import HOME_TIMEZONE, uk_date
 from app.features.bookings import domain
 from app.features.bookings.rows import BookingRow, EnquiryReminderRow
 
@@ -36,8 +36,8 @@ ENQUIRY_REMINDER_STEPS: tuple[tuple[str, str, int], ...] = (
 
 
 def format_release_date(release_at: datetime) -> str:
-    """The automatic payout date as the reminders print it, e.g. "Wednesday 3 June"."""
-    return release_at.strftime("%A %d %B").replace(" 0", " ")
+    """The automatic payout's London date as the reminders print it, e.g. "Wednesday 3 June"."""
+    return release_at.astimezone(HOME_TIMEZONE).strftime("%A %d %B").replace(" 0", " ")
 
 
 def completion_reminder_bodies(release_at: datetime | None) -> tuple[str, str]:

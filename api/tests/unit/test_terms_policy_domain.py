@@ -56,7 +56,7 @@ def test_a_booking_without_a_split_is_always_paid_in_full() -> None:
 
 
 def test_a_split_booking_moves_from_upfront_to_waiting_to_final() -> None:
-    """Event on 1 June, 14 days to deliver: the rest is due at 00:00 UTC on 16 June."""
+    """Event on 1 June, 14 days to deliver: the rest is due at 00:00 London (23:00 UTC) on 16 June."""
     split = {"payout_upfront_percent": 70, "delivery_deadline_days": 14}
     before_upfront = _booking(**split)
     after_upfront = _booking(**split, upfront_payout_at="2030-06-02T10:00:00+00:00", upfront_amount_gbp=105.0)
@@ -66,7 +66,7 @@ def test_a_split_booking_moves_from_upfront_to_waiting_to_final() -> None:
         upfront_amount_gbp=105.0,
         delivery_confirmed_at="2030-06-04T09:00:00+00:00",
     )
-    deadline = datetime(2030, 6, 16, tzinfo=UTC)
+    deadline = datetime(2030, 6, 15, 23, 0, tzinfo=UTC)
 
     assert domain_policy.delivery_due_at(after_upfront) == deadline
     assert domain_policy.payout_stage(before_upfront, deadline + timedelta(days=30)) == "upfront"
@@ -78,7 +78,7 @@ def test_a_split_booking_moves_from_upfront_to_waiting_to_final() -> None:
 def test_the_delivery_clock_starts_after_the_last_day_of_a_multi_day_event() -> None:
     booking = _booking(payout_upfront_percent=50, delivery_deadline_days=7, event_end_date="2030-06-03")
 
-    assert domain_policy.delivery_due_at(booking) == datetime(2030, 6, 11, tzinfo=UTC)
+    assert domain_policy.delivery_due_at(booking) == datetime(2030, 6, 10, 23, 0, tzinfo=UTC)
     assert domain_policy.delivery_due_at(_booking()) is None
 
 
@@ -246,19 +246,19 @@ def _deposit_booking(**columns: Any) -> BookingRow:
 
 def test_a_deposit_goes_back_seven_days_after_the_last_event_day() -> None:
     assert domain_policy.deposit_pence(_deposit_booking()) == 5000
-    assert domain_policy.deposit_refund_due_at(_deposit_booking()) == datetime(2030, 6, 9, tzinfo=UTC)
+    assert domain_policy.deposit_refund_due_at(_deposit_booking()) == datetime(2030, 6, 8, 23, 0, tzinfo=UTC)
     multi_day = _deposit_booking(event_end_date="2030-06-03")
-    assert domain_policy.deposit_refund_due_at(multi_day) == datetime(2030, 6, 11, tzinfo=UTC)
+    assert domain_policy.deposit_refund_due_at(multi_day) == datetime(2030, 6, 10, 23, 0, tzinfo=UTC)
     assert domain_policy.deposit_refund_due_at(_booking()) is None
 
 
 def test_the_claim_window_runs_from_the_first_event_day_to_the_refund_moment() -> None:
     booking = _deposit_booking()
 
-    assert not domain_policy.deposit_claim_open(booking, datetime(2030, 5, 31, 23, 59, tzinfo=UTC))
-    assert domain_policy.deposit_claim_open(booking, datetime(2030, 6, 1, 0, 0, tzinfo=UTC))
-    assert domain_policy.deposit_claim_open(booking, datetime(2030, 6, 8, 23, 59, tzinfo=UTC))
-    assert not domain_policy.deposit_claim_open(booking, datetime(2030, 6, 9, 0, 0, tzinfo=UTC))
+    assert not domain_policy.deposit_claim_open(booking, datetime(2030, 5, 31, 22, 59, tzinfo=UTC))
+    assert domain_policy.deposit_claim_open(booking, datetime(2030, 5, 31, 23, 0, tzinfo=UTC))
+    assert domain_policy.deposit_claim_open(booking, datetime(2030, 6, 8, 22, 59, tzinfo=UTC))
+    assert not domain_policy.deposit_claim_open(booking, datetime(2030, 6, 8, 23, 0, tzinfo=UTC))
 
 
 def test_a_claimed_or_resolved_or_refunded_deposit_is_not_claimable_or_auto_refunded() -> None:
@@ -266,7 +266,7 @@ def test_a_claimed_or_resolved_or_refunded_deposit_is_not_claimable_or_auto_refu
     during_window = datetime(2030, 6, 3, tzinfo=UTC)
 
     assert domain_policy.deposit_refund_due(_deposit_booking(), after_window)
-    assert not domain_policy.deposit_refund_due(_deposit_booking(), datetime(2030, 6, 8, 23, 59, tzinfo=UTC))
+    assert not domain_policy.deposit_refund_due(_deposit_booking(), datetime(2030, 6, 8, 22, 59, tzinfo=UTC))
     claimed = _deposit_booking(deposit_claimed_at="2030-06-02T10:00:00+00:00")
     assert not domain_policy.deposit_refund_due(claimed, after_window)
     assert not domain_policy.deposit_claim_open(claimed, during_window)
@@ -366,3 +366,28 @@ def test_profile_rejects_out_of_range_terms_options(options: dict[str, str], mes
         validate_step_fields(4, _step_four(**options))
 
     assert raised.value.message == message
+
+
+def test_summer_event_clocks_run_on_london_midnight_and_stop_at_23_30_uk() -> None:
+    """1 June 2030 is BST: the day ends at 23:00 UTC; 23:30 UK (22:30 UTC) is still the event day."""
+    split = _booking(payout_upfront_percent=50, delivery_deadline_days=7)
+    assert domain_policy.event_over_at(_booking()) == datetime(2030, 6, 1, 23, 0, tzinfo=UTC)
+    assert domain_policy.event_over_at(_booking()) > datetime(2030, 6, 1, 22, 30, tzinfo=UTC)
+    assert domain_policy.delivery_due_at(split) == datetime(2030, 6, 8, 23, 0, tzinfo=UTC)
+    assert domain_policy.deposit_refund_due_at(_deposit_booking()) == datetime(2030, 6, 8, 23, 0, tzinfo=UTC)
+
+
+def test_winter_event_clocks_match_utc_because_london_is_on_utc_in_winter() -> None:
+    """15 January 2030 is GMT: the day ends at 00:00 UTC on the 16th; deposit back 7 days later."""
+    winter = _deposit_booking(event_date="2030-01-15")
+    assert domain_policy.event_over_at(winter) == datetime(2030, 1, 16, 0, 0, tzinfo=UTC)
+    assert domain_policy.deposit_refund_due_at(winter) == datetime(2030, 1, 23, 0, 0, tzinfo=UTC)
+    assert domain_policy.deposit_claim_open(winter, datetime(2030, 1, 15, 0, 0, tzinfo=UTC))
+    assert not domain_policy.deposit_claim_open(winter, datetime(2030, 1, 14, 23, 59, tzinfo=UTC))
+
+
+def test_a_split_delivery_deadline_crossing_the_clock_change_stays_on_london_midnight() -> None:
+    """Event 29 March 2030, clocks go forward on the 31st: 3 days on is 23:00 UTC 1 April."""
+    booking = _booking(event_date="2030-03-29", payout_upfront_percent=50, delivery_deadline_days=3)
+    assert domain_policy.event_over_at(booking) == datetime(2030, 3, 30, 0, 0, tzinfo=UTC)
+    assert domain_policy.delivery_due_at(booking) == datetime(2030, 4, 1, 23, 0, tzinfo=UTC)

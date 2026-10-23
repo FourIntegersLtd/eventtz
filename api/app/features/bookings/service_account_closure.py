@@ -54,7 +54,7 @@ async def _bookings_of(session: AsyncSession, user_id: str) -> list[BookingRow]:
 
 
 async def closure_blockers(session: AsyncSession, user_id: str) -> list[ClosureBooking]:
-    """The account's bookings with the facts the deletion gates decide on (event day judged now, UTC)."""
+    """The account's bookings with the facts the deletion gates decide on (event day judged now, London)."""
     now = datetime.now(UTC)
     return [
         ClosureBooking(
