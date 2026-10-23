@@ -2,11 +2,22 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time
 from zoneinfo import ZoneInfo
 
 #: Eventtz is a UK marketplace: a booking's "today" is the London calendar day.
 HOME_TIMEZONE = ZoneInfo("Europe/London")
+
+
+def london_midnight_utc(day: date) -> datetime:
+    """The UTC instant at which London's calendar `day` begins (23:00 UTC the day before in summer).
+
+    Event-day clocks (payment deadline, delivery, deposit) are measured from London midnight. Convert
+    to UTC here, then add or subtract hours on the UTC value: `timedelta` on a London-aware datetime
+    counts wall-clock time, so a window across a clock change would come out an hour out. To move by
+    whole days, add them to `day` first, then call this, so the result still lands on London midnight.
+    """
+    return datetime.combine(day, time.min, tzinfo=HOME_TIMEZONE).astimezone(UTC)
 
 
 def uk_date(moment: datetime) -> date:

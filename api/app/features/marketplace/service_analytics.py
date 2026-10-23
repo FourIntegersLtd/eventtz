@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
-from app.core.time import HOME_TIMEZONE, uk_today
+from app.core.time import london_midnight_utc, uk_today
 from app.features.marketplace import repository_explore
 from app.features.marketplace.domain_metrics import vendor_analytics
 
@@ -20,7 +20,7 @@ MAX_PERIOD_DAYS = 365
 def period_start(days: int, now: datetime | None = None) -> tuple[date, datetime]:
     """London today and the instant the `days`-day window opens (London midnight of its first day)."""
     today = uk_today(now)
-    return today, datetime.combine(today - timedelta(days=days - 1), time.min, tzinfo=HOME_TIMEZONE)
+    return today, london_midnight_utc(today - timedelta(days=days - 1))
 
 
 async def analytics_for(
