@@ -1,4 +1,5 @@
 import { formatDateTime, formatEventDate } from "@/lib/dateFormat";
+import { formatDate } from "@/lib/dateFormat";
 
 export function formatReviewEventDate(iso?: string | null): string {
   if (!iso) return "-";
@@ -22,5 +23,5 @@ export function formatReviewRelative(iso: string | null | undefined): string {
   if (days < 30) return `${days} days ago`;
   const months = Math.floor(days / 30);
   if (months < 12) return `${months} month${months === 1 ? "" : "s"} ago`;
-  return d.toLocaleDateString("en-GB", { month: "short", year: "numeric" });
+  return formatDate(d, "monthYear");
 }

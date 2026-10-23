@@ -1,6 +1,7 @@
 import { SERVICE_OPTIONS } from "@/lib/vendorOnboarding/constants";
 import type { ExploreVendorSearchRow } from "@/lib/clientExploreApi";
 import type { MarketplaceSearchState } from "@/lib/marketplaceSearchParams";
+import { formatDate } from "@/lib/dateFormat";
 
 export type ExpandedSearchCard = {
   vendor: ExploreVendorSearchRow;
@@ -64,11 +65,7 @@ export function expandVendorsForSearchResults(
 function formatShortDate(isoDate: string): string {
   const d = new Date(`${isoDate}T12:00:00`);
   if (Number.isNaN(d.getTime())) return isoDate;
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  return formatDate(d, "dayLongMonthYear");
 }
 
 /** Headline line under the result count, e.g. “Top matches for Photography & Catering on 10 July 2026 in London”. */

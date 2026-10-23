@@ -3,6 +3,7 @@
 import { ChevronDown } from "lucide-react";
 import { ClientFeeBreakdownSummary } from "@/features/bookings/ClientFeeBreakdownSummary";
 import type { BookingPricing } from "@/lib/domain-types";
+import { formatGbp } from "@/lib/money";
 
 export type { BookingPricing } from "@/lib/domain-types";
 
@@ -23,12 +24,8 @@ export function formatLineUnitPrice(unitPriceGbp: number | null, lineId?: string
   if (unitPriceGbp == null) return "TBC";
   const isAutoDiscount =
     (lineId?.startsWith("auto-") ?? false) || unitPriceGbp < 0;
-  const abs = Math.abs(unitPriceGbp);
-  const formatted = abs.toLocaleString("en-GB", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  });
-  return isAutoDiscount ? `-£${formatted}` : `£${formatted}`;
+  const formatted = formatGbp(Math.abs(unitPriceGbp), { decimals: "upTo2" });
+  return isAutoDiscount ? `-${formatted}` : formatted;
 }
 
 /** True for an automatic discount row or any line stored as a negative amount. */
@@ -113,13 +110,7 @@ export function BookingPricingBreakdown({
                       li.quantity > 0 &&
                       li.unit_rate_gbp != null &&
                       !isDiscount
-                        ? ` · ${li.quantity} × £${Math.abs(li.unit_rate_gbp).toLocaleString(
-                            "en-GB",
-                            {
-                              minimumFractionDigits: li.unit_rate_gbp % 1 === 0 ? 0 : 2,
-                              maximumFractionDigits: 2,
-                            },
-                          )}${li.unit_label ? ` / ${li.unit_label}` : ""}`
+                        ? ` · ${li.quantity} × ${formatGbp(Math.abs(li.unit_rate_gbp))}${li.unit_label ? ` / ${li.unit_label}` : ""}`
                         : ""}
                     </span>
                     <span
@@ -172,8 +163,8 @@ export function BookingPricingBreakdown({
             {pricing.vendor_adjustments.map((a) => {
               const isDiscount = a.amount_gbp < 0;
               const display = isDiscount
-                ? `-£${Math.abs(a.amount_gbp).toFixed(2)}`
-                : `£${a.amount_gbp.toFixed(2)}`;
+                ? formatGbp(-Math.abs(a.amount_gbp), { decimals: 2, grouping: false })
+                : formatGbp(a.amount_gbp, { decimals: 2, grouping: false });
               return (
                 <li key={a.id} className="flex justify-between gap-2 text-sm text-neutral-800">
                   <span className="flex min-w-0 items-center gap-2">

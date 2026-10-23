@@ -22,6 +22,7 @@ import {
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 
 import type { PortalRole } from "@/lib/portalRole";
+import { formatDateTimeSeconds } from "@/lib/dateFormat";
 
 type Props = {
   role: PortalRole;
@@ -39,7 +40,7 @@ function openedByLabel(d: ParticipantDispute): string {
 
 function updatedLabel(d: ParticipantDispute): string {
   const raw = d.updated_at || d.created_at;
-  return raw ? new Date(raw).toLocaleString("en-GB") : "-";
+  return raw ? formatDateTimeSeconds(new Date(raw)) : "-";
 }
 
 export function ParticipantDisputesListView({ role, selectedId = null, onSelect }: Props) {

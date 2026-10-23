@@ -1,3 +1,5 @@
+import { formatDate } from "./dateFormat";
+
 /** Shared trailing date-window presets for admin analytics filters. */
 
 export const ADMIN_PERIOD_OPTIONS = [
@@ -38,12 +40,7 @@ export function formatCommerceDateRange(fromIso: string, toIso: string): string 
   const fmt = (iso: string) => {
     const d = new Date(`${iso.slice(0, 10)}T12:00:00Z`);
     if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      timeZone: "UTC",
-    });
+    return formatDate(d, "dayMonthYear", "UTC");
   };
   return `${fmt(fromIso)} - ${fmt(toIso)}`;
 }

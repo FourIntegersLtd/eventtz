@@ -9,13 +9,14 @@ import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState
 import { adminCard } from "@/components/admin-shell/adminTheme";
 import { chatBubbleClass } from "@/lib/chatBubbleClasses";
 import { LinkifyMessageBody } from "@/lib/linkifyMessageBody";
+import { formatDate } from "@/lib/dateFormat";
 
 
 function formatTime(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" });
+  return formatDate(d, "dateTimeShort");
 }
 
 function ParticipantAvatar({

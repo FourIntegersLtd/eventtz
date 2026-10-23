@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatMoney } from "@/lib/markets";
+import { formatMoney } from "@/lib/money";
 import {
   toVendorBookingRowViewModel,
   vendorBookingDetailHref,

@@ -1,3 +1,5 @@
+import { formatDate } from "@/lib/dateFormat";
+
 /** One cell in the vendor dashboard month grid. */
 export type DashboardCalendarCell = {
   day: number | null;
@@ -46,5 +48,5 @@ export function buildDashboardMonthGrid(
 }
 
 export function formatDashboardMonthTitle(viewMonth: Date): string {
-  return viewMonth.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  return formatDate(viewMonth, "longMonthYear");
 }

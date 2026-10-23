@@ -1,9 +1,10 @@
 "use client";
+import { formatDate } from "@/lib/dateFormat";
 
 function formatAxisDate(iso: string): string {
   const d = new Date(`${iso}T00:00:00`);
   if (Number.isNaN(d.getTime())) return iso.slice(5);
-  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return formatDate(d, "dayMonth");
 }
 
 export { formatAxisDate };

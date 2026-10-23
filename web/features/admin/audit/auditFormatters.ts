@@ -1,4 +1,5 @@
 import type { AdminAuditLogItem } from "@/lib/adminPlatformApi";
+import { formatDate } from "@/lib/dateFormat";
 
 export type AuditCategory =
   | "all"
@@ -181,7 +182,7 @@ export function formatAuditWhen(iso: string | null | undefined): string {
   if (!iso) return "-";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return String(iso).slice(0, 16);
-  return d.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
+  return formatDate(d, "dateTimeMedium");
 }
 
 export function formatAuditEntityLabel(entityType: string): string {

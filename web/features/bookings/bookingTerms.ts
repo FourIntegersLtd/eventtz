@@ -7,7 +7,7 @@ import type { BookingTermsFields } from "@/lib/bookingTermsFields";
 import policy from "@/lib/policyConstants.json";
 import { getBookingServiceFeePercent } from "@/lib/bookingServiceFee";
 import { formatDateTime } from "@/lib/dateFormat";
-import { formatGbp } from "@/lib/vendorDiscountDisplay";
+import { formatGbp } from "@/lib/money";
 
 export const DEPOSIT_NOTE_MIN_CHARS = 10;
 export const DEPOSIT_NOTE_MAX_CHARS = 2000;
@@ -40,7 +40,7 @@ export function deliveryDueLine(deliveryDueAt: string | null | undefined): strin
 export function vendorSplitStatusLine(terms: BookingTermsFields): string | null {
   if (terms.payout_stage !== "waiting_delivery" && terms.payout_stage !== "upfront") return null;
   const upfront = terms.upfront_amount_gbp;
-  const first = upfront != null ? `£${formatGbp(upfront)}` : "The first part";
+  const first = upfront != null ? `${formatGbp(upfront)}` : "The first part";
   const rest = terms.delivery_confirmed_at
     ? "the rest is being released"
     : terms.delivery_due_at
@@ -57,7 +57,7 @@ export function canConfirmDelivery(terms: BookingTermsFields): boolean {
 /** The deposit line in a price summary; `null` when the vendor has no deposit. */
 export function depositSummaryLine(depositGbp: number | null | undefined): string | null {
   if (!depositGbp || depositGbp <= 0) return null;
-  return `Refundable deposit £${formatGbp(depositGbp)} – returned within ${policy.depositClaimDays} days after the event unless the vendor reports damage.`;
+  return `Refundable deposit ${formatGbp(depositGbp)} – returned within ${policy.depositClaimDays} days after the event unless the vendor reports damage.`;
 }
 
 export type DepositState = "none" | "held" | "claim_pending" | "decided" | "refunded";
@@ -73,7 +73,7 @@ export function depositState(terms: BookingTermsFields): DepositState {
 
 /** Client-facing description of the deposit state. */
 export function depositStateLine(terms: BookingTermsFields): string | null {
-  const amount = terms.damage_deposit_gbp ? `£${formatGbp(terms.damage_deposit_gbp)}` : "";
+  const amount = terms.damage_deposit_gbp ? `${formatGbp(terms.damage_deposit_gbp)}` : "";
   switch (depositState(terms)) {
     case "none":
       return null;
@@ -84,10 +84,10 @@ export function depositStateLine(terms: BookingTermsFields): string | null {
     case "refunded":
       return `Your ${amount} deposit was refunded${terms.deposit_refunded_at ? ` on ${formatDateTime(terms.deposit_refunded_at)}` : ""}.`;
     case "claim_pending":
-      return `The vendor has reported damage or missing items (£${formatGbp(terms.deposit_claim_gbp ?? 0)}). Our team is reviewing it; the rest of your deposit is refunded once decided.`;
+      return `The vendor has reported damage or missing items (${formatGbp(terms.deposit_claim_gbp ?? 0)}). Our team is reviewing it; the rest of your deposit is refunded once decided.`;
     case "decided": {
       const kept = terms.deposit_claim_awarded_gbp ?? 0;
-      return `Deposit claim decided: the vendor keeps £${formatGbp(kept)} and the remaining £${formatGbp(Math.max(0, (terms.damage_deposit_gbp ?? 0) - kept))} goes back to you.`;
+      return `Deposit claim decided: the vendor keeps ${formatGbp(kept)} and the remaining ${formatGbp(Math.max(0, (terms.damage_deposit_gbp ?? 0) - kept))} goes back to you.`;
     }
   }
 }
@@ -109,7 +109,7 @@ export function depositClaimError(
   if (!amountText.trim() || !Number.isFinite(amount) || amount <= 0) {
     return "Enter the amount you are claiming.";
   }
-  if (amount > depositGbp) return `You can claim at most the £${formatGbp(depositGbp)} deposit.`;
+  if (amount > depositGbp) return `You can claim at most the ${formatGbp(depositGbp)} deposit.`;
   const length = note.trim().length;
   if (length < DEPOSIT_NOTE_MIN_CHARS) {
     return `Describe what was damaged or missing (at least ${DEPOSIT_NOTE_MIN_CHARS} characters).`;
@@ -124,7 +124,7 @@ export function depositClaimError(
 export function depositAwardError(awardText: string, claimGbp: number): string | null {
   const award = Number(awardText);
   if (!awardText.trim() || !Number.isFinite(award) || award < 0 || award > claimGbp) {
-    return `Enter an amount from £0 to £${formatGbp(claimGbp)}.`;
+    return `Enter an amount from £0 to ${formatGbp(claimGbp)}.`;
   }
   return null;
 }
@@ -180,7 +180,7 @@ export function damageDepositError(text: string): string | null {
   if (!text.trim()) return null;
   const value = Number(text);
   if (!Number.isFinite(value) || value < 0 || value > policy.depositMaxGbp) {
-    return `Damage deposit must be an amount from £0 to £${formatGbp(policy.depositMaxGbp)}.`;
+    return `Damage deposit must be an amount from £0 to ${formatGbp(policy.depositMaxGbp)}.`;
   }
   return null;
 }

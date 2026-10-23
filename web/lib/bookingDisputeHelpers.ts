@@ -1,4 +1,5 @@
 import type { Tone } from "@/lib/tone";
+import { formatDate } from "./dateFormat";
 
 /**
  * Dispute rules mirror `backend/app/services/dispute_service.py`
@@ -50,7 +51,7 @@ export function participantDisputeBookingLabel(dispute: {
 }): string {
   if (dispute.event_name) {
     const date = dispute.event_date
-      ? ` · ${new Date(dispute.event_date).toLocaleDateString("en-GB", { dateStyle: "medium" })}`
+      ? ` · ${formatDate(new Date(dispute.event_date), "dateMedium")}`
       : "";
     return `${dispute.event_name}${date}`;
   }

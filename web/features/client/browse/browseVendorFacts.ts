@@ -5,6 +5,7 @@ import {
   type CancellationPolicyTier,
 } from "@/features/bookings/cancellationPolicyCopy";
 import { RADIUS_OPTIONS, WEEKDAY_LABELS } from "@/lib/vendorOnboarding/constants";
+import { formatDate } from "@/lib/dateFormat";
 
 const TRAVEL_DELIVERY_LABELS: Record<string, string> = {
   fee_included: "Travel or delivery fee is included",
@@ -43,13 +44,7 @@ function asHttpUrl(raw: unknown): string | null {
 function formatBlockedDate(iso: string): string {
   const d = new Date(`${iso}T12:00:00Z`);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  return formatDate(d, "weekdayDayMonthYear", "UTC");
 }
 
 export type BrowseVendorFact = {

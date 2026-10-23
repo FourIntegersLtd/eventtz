@@ -9,6 +9,7 @@ import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { useReviewsQuery } from "@/features/reviews/useReviewsQuery";
 import { fetchVendorOwnReviews, type VendorOwnerReviewItem } from "@/lib/reviewsApi";
+import { formatDate } from "@/lib/dateFormat";
 
 function stars(rating: number) {
   return Array.from({ length: 5 }, (_, index) => (
@@ -26,7 +27,7 @@ function whenLabel(iso: string | null): string {
   if (!iso) return "";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return formatDate(date, "dayMonthYear");
 }
 
 function initials(name: string): string {

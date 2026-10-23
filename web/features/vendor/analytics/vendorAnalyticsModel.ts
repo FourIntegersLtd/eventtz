@@ -1,5 +1,6 @@
 import type { VendorAnalytics } from "@/lib/vendorAnalyticsApi";
 import type { AdminPeriodDays } from "@/lib/commercePeriod";
+import { formatDate } from "@/lib/dateFormat";
 
 export const VENDOR_ANALYTICS_PERIOD_OPTIONS: { value: AdminPeriodDays; label: string }[] = [
   { value: 7, label: "7 days" },
@@ -57,16 +58,12 @@ export function formatMonthShort(monthKey: string): string {
   if (!monthKey || monthKey.length < 7) return monthKey;
   const d = new Date(`${monthKey.slice(0, 7)}-01T12:00:00Z`);
   if (Number.isNaN(d.getTime())) return monthKey;
-  return d.toLocaleDateString("en-GB", { month: "short", timeZone: "UTC" });
+  return formatDate(d, "monthShort", "UTC");
 }
 
 export function formatVendorConversion(rate: number): string {
   if (!Number.isFinite(rate) || rate <= 0) return "0%";
   return `${(rate * 100).toFixed(1)}%`;
-}
-
-export function formatVendorMoneyGbp(amount: number): string {
-  return `£${amount.toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function formatVendorResponseTime(seconds: number | null): string {
@@ -154,7 +151,3 @@ export function formatVendorSeconds(seconds: number | null | undefined): string 
   return `${(seconds / 3600).toFixed(1)} h`;
 }
 
-export function formatVendorMoney(amount: number | null | undefined): string {
-  if (amount == null || Number.isNaN(amount)) return "-";
-  return `£${Number(amount).toLocaleString("en-GB", { maximumFractionDigits: 0 })}`;
-}

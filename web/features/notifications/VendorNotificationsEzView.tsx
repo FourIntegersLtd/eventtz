@@ -17,6 +17,7 @@ import {
 } from "@/lib/notificationsFeedApi";
 import { fetchVendorBookingNotificationsUnreadCount, markAllVendorBookingNotificationsRead } from "@/lib/vendorNotificationsApi";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
+import { formatDate } from "@/lib/dateFormat";
 
 type NotificationTab = "all" | "unread" | "bookings" | "payments" | "messages";
 
@@ -62,12 +63,7 @@ function whenLabel(iso: string | null): string {
   if (!iso) return "";
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("en-GB", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatDate(date, "dayMonthTime");
 }
 
 /** Vendor notification history (design V29). Unread stays unread until Mark all as read. */

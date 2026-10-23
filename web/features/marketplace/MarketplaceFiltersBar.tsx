@@ -17,10 +17,9 @@ import type { MarketplaceSort } from "@/lib/clientExploreApi";
 import type { MarketplaceSearchState } from "@/lib/marketplaceSearchParams";
 import {
   budgetFilterLabel,
-  formatCurrencySymbol,
-  formatMoney,
   getMarket,
 } from "@/lib/markets";
+import { formatCurrencySymbol, formatMoney } from "@/lib/money";
 import { marketplaceBudgetSchema, parseForm } from "@/lib/validation";
 
 const FILTER_BUTTON_CLASS =

@@ -11,7 +11,8 @@ import { useAdminDashboard } from "@/features/admin/dashboard/useAdminDashboard"
 import { useAdminDashboardMetrics } from "@/features/admin/dashboard/useAdminDashboardMetrics";
 import { commercePeriodRange, type AdminPeriodDays } from "@/lib/commercePeriod";
 import { fetchAdminFinancials, type AdminFinancialsSummary } from "@/lib/adminPlatformApi";
-import { formatGbp } from "@/lib/vendorDiscountDisplay";
+import { formatGbp } from "@/lib/money";
+import { formatDate } from "@/lib/dateFormat";
 
 function DashboardSkeleton() {
   return (
@@ -29,12 +30,7 @@ function DashboardSkeleton() {
 }
 
 export function adminDashboardTodayLine(): string {
-  const when = new Date().toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const when = formatDate(new Date(), "weekdayDayMonthYear");
   return `${when} · what needs you today`;
 }
 
@@ -140,12 +136,12 @@ export function AdminDashboardView({ period }: AdminDashboardViewProps) {
   const activeBookings = summary.bookings_pending + summary.bookings_accepted;
   const platformFeesLabel = financialsLoading
     ? "…"
-    : formatGbp(financials?.platform_fee_gbp ?? 0);
+    : formatGbp(financials?.platform_fee_gbp ?? 0, { prefix: "" });
 
   return (
     <div className="ez-stack ez-stack--lg">
       <div className="ez-grid-4">
-        <AdminKpiCard label="Gross booking value" value={formatGbp(periodGmv)} />
+        <AdminKpiCard label="Gross booking value" value={formatGbp(periodGmv, { prefix: "" })} />
         <AdminKpiCard label="Platform fees" value={platformFeesLabel} />
         <AdminKpiCard
           label="Active bookings"

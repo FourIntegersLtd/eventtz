@@ -4,6 +4,7 @@ import type { VendorOnboardingData } from "@/lib/vendorOnboarding/types";
 import { displayEventTypes, displayServicesOffered } from "@/lib/vendorBrowseLabels";
 import { isPerUnitPricing, perUnitPriceSuffix } from "@/lib/packagePricing";
 import { portfolioFileKey } from "@/lib/portfolioFileKey";
+import { formatDate } from "../dateFormat";
 
 export function formatReviewServices(values: string[]): string {
   if (values.length === 0) return "-";
@@ -107,12 +108,7 @@ export function formatReviewBlockedDates(dates: string[]): string | null {
   const formatIso = (iso: string): string => {
     const d = new Date(`${iso}T12:00:00Z`);
     if (Number.isNaN(d.getTime())) return iso;
-    return d.toLocaleDateString("en-GB", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      timeZone: "UTC",
-    });
+    return formatDate(d, "dayMonthYear", "UTC");
   };
   return [...dates]
     .map((d) => d.trim().slice(0, 10))

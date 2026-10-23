@@ -23,7 +23,6 @@ import {
   type CommercePeriodDays,
 } from "@/lib/commercePeriod";
 import {
-  formatMarketplaceMoney,
   formatMarketplacePct,
   formatMarketplaceSeconds,
   marketplaceOverviewKpis,
@@ -33,6 +32,7 @@ import {
   toMarketplaceDemandSeries,
 } from "@/features/admin/marketplace/marketplaceAnalyticsModel";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { formatGbp } from "@/lib/money";
 
 const ADMIN_TABLE_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
@@ -134,8 +134,8 @@ export function AdminMarketplaceAnalyticsView() {
         />
         <AdminKpiCard
           label="Revenue"
-          value={formatMarketplaceMoney(revenueTotal)}
-          hint={`Avg booking ${formatMarketplaceMoney(kpis.avgBookingValue)}`}
+          value={formatGbp(revenueTotal, { decimals: 0, grouping: false })}
+          hint={`Avg booking ${formatGbp(kpis.avgBookingValue, { decimals: 0, grouping: false })}`}
         />
       </div>
       <div className="ez-hrow" style={{ justifyContent: "flex-end" }}>
@@ -174,7 +174,7 @@ export function AdminMarketplaceAnalyticsView() {
                         {formatMarketplacePct(row.conversion_rate)}
                       </td>
                       <td className="ez-td-num tabular-nums">
-                        {formatMarketplaceMoney(row.revenue_gbp)}
+                        {formatGbp(row.revenue_gbp, { decimals: 0, grouping: false })}
                       </td>
                       <td>
                         <span
@@ -341,7 +341,7 @@ export function AdminMarketplaceAnalyticsView() {
                     </div>
                     <div className="shrink-0 text-right">
                       <p className="text-sm font-medium tabular-nums text-neutral-900">
-                        {formatMarketplaceMoney(v.revenue_gbp)}
+                        {formatGbp(v.revenue_gbp, { decimals: 0, grouping: false })}
                       </p>
                       <p className="text-xs tabular-nums text-neutral-500">
                         {formatMarketplacePct(v.conversion_rate)}
