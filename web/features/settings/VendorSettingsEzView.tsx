@@ -36,7 +36,7 @@ import {
 import { formatEventDate } from "@/lib/dateFormat";
 import { resetMixpanel } from "@/lib/mixpanelClient";
 import { useRouter } from "next/navigation";
-import { ChangePasswordModal } from "@/features/settings/ChangePasswordModal";
+import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
 import { TablePagination } from "@/components/ui/TablePagination";
 import {
   fetchVendorClientReferral,

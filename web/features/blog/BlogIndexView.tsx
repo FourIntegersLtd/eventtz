@@ -13,8 +13,8 @@ import {
   LANDING_FEATURE_HEADLINE_CLASS,
   LANDING_SECTION_CONTENT_MT,
   landingSectionClass,
-} from "@/features/landing/landingSectionStyles";
-import { LandingSection } from "@/features/landing/LandingSection";
+} from "@/components/landing/landingSectionStyles";
+import { LandingSection } from "@/components/landing/LandingSection";
 import { formatDate } from "@/lib/dateFormat";
 
 /** Formats an ISO timestamp as a UK long date, or an empty string when missing or invalid. */

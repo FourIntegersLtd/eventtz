@@ -9,7 +9,8 @@ Reusable UI and cross-cutting chrome only. **Product screens and domain widgets 
 | [`ui/`](ui/) | Generic primitives — Button, Modal, inputs, loading, motion, layout tokens |
 | [`charts/`](charts/) | recharts wrappers (`EzAreaChart`, `EzBarChart`, `EzDonutChart`, ...) coloured with `--ez-chart-*` tokens |
 | [`badges/`](badges/) | Domain-labeled status badges (booking, payment, vendor, dispute, admin) |
-| [`auth/`](auth/) | `AuthProvider`, `Require*`, auth page shell |
+| [`auth/`](auth/) | `AuthProvider`, `Require*`, auth page shell, `ChangePasswordModal` |
+| [`landing/`](landing/) | Public-site chrome: `LandingNav`, `LandingFooter`, `LandingSection`, section styles, nav and footer link data |
 | [`portal-shell/`](portal-shell/) | Client + vendor portal chrome (`PortalShell`, nav, theme, `PortalFillHeight`) |
 | [`admin-shell/`](admin-shell/) | Admin console chrome (`AdminShell`) |
 | [`branding/`](branding/) | Logo and brand marks |
@@ -42,25 +43,27 @@ A feature **area** is the first path segment under `features/` (`admin`, `client
 
 | Module | Why it is shared |
 |--------|------------------|
-| `features/bookings` | Booking view models, terms, pricing breakdown, quote and detail panels, used by client, vendor, admin, marketplace |
+| `features/bookings/{ActiveEventPrefillBanner,BookingCompletionBanner,BookingDateChangeCard,BookingDisputeSection,BookingListPanel,BookingPayoutPendingBanner,BookingPriceUpdateBanner,BookingPricingBreakdown,BookingTermsNotices,ClientFeeBreakdownSummary,MasterDetailLayout,MultiVendorPackagePicker,ParticipantDisputesListView,VendorBookingDetailEzPanel,VendorQuoteFormModal}` | Booking panels, banners and modals rendered by client, vendor, admin, chat and marketplace |
+| `features/bookings/{bookingConfirmCopy,bookingListConstants,bookingPriceLabels,bookingTerms,bookingViewModel,cancellationPolicyCopy,eventDay,eventEnquirePrefill,groupBookingsByEvent,multiVendorPackageSelection,toBookingDetailViewModel,useEnquireEventFormState,useLaunchingSoonBookingGuard,useParticipantBookingsScaffold}` | Booking view models, terms, copy and hooks used across areas |
 | `features/vendors/display` | Vendor listing presentation (browse cards, portfolio, pricing blocks) |
-| `features/receipts` | Receipt actions and views |
-| `features/landing` | Public-site chrome (`LandingNav`, `LandingFooter`, `LandingSection`) used by blog, errors, marketplace |
-| `features/reviews` | Review cards and panels shown to client, vendor and admin |
-| `features/chat` | Chat drawer, thread and composer |
-| `features/dashboard` | Attention feed and calendar cards of the client and vendor dashboards |
-| `features/auth` | `authRouting` helpers |
+| `features/receipts/ReceiptActions` | Receipt download and share buttons |
+| `features/landing/landingData` | Landing categories and copy, read by the marketplace category counts |
+| `features/reviews/{BookingReviewPanel,ReviewCard,ReviewPhotoGallery,ReviewPhotoPicker,VendorReviewsEzView,reviewFormatters,useReviewsQuery}` | Review cards, panels and queries shown to client, vendor and admin |
+| `features/chat/{ChatDrawer,ChatPortalView}` | Chat drawer and portal view |
+| `features/dashboard/{AttentionFeedCard,BookingsCalendarCard,attentionFeedHelpers,attentionTypes}` | Attention feed and calendar cards of the client and vendor dashboards |
+| `features/auth/authRouting` | `authRouting` helpers |
 | `features/vendor/copilot` | AI co-pilot, hosted by the portal shell, help widget and chat |
 | `features/help/helpContent` | Static help copy, also read by the co-pilot |
-| `features/settings/ChangePasswordModal` | Used by the admin and portal settings screens |
 | `features/vendor/onboarding/serializeVendorPayload` | Vendor profile payload shape, used by admin review and settings |
+
+`lib/eslintBoundariesLists.test.ts` fails when this table and `SHARED_FEATURE_MODULES` differ, or when an entry is
+no longer imported across areas (delete it).
 
 A few pages compose another area on purpose (`AREA_COMPOSES`): `landing` and `client` host
 `marketplace`, `settings` hosts `client/onboarding`, `help` hosts `contact`.
 
 **Shell allow-list** (`components/` files that may import `features/` widgets, never `app/`):
-`portal-shell/PortalShell`, `admin-shell/AdminShell`, `auth/RequireRole`,
-`compliances/CompliancePageShell`, `compliances/ComplianceReader`.
+`portal-shell/PortalShell`, `admin-shell/AdminShell`, `auth/RequireRole`.
 
 **Where a shared piece goes instead of a feature import:** generic UI → `components/ui/` (or
 `components/charts/` for recharts wrappers, coloured by the `--ez-chart-1..5` tokens); constants,

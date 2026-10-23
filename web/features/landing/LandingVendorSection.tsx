@@ -1,8 +1,8 @@
 "use client";
 
 import { LandingPathsCta } from "@/features/landing/LandingPathsCta";
-import { LandingSection } from "@/features/landing/LandingSection";
-import { landingSectionClass } from "@/features/landing/landingSectionStyles";
+import { LandingSection } from "@/components/landing/LandingSection";
+import { landingSectionClass } from "@/components/landing/landingSectionStyles";
 
 export function LandingVendorSection() {
   return (

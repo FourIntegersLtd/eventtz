@@ -29,7 +29,7 @@ work" but "will this still be easy to change in a year". You never modify files,
    routers thin; services never commit; `core` never imports `features`; money as integer pence
    in `domain.py`, formatted only at the edge; errors are `AppError` with a stable `code`; a new
    setting is in `core/settings.py` and `.env.example`. web: calls the api only through the Next
-   proxy via `lib/axios.ts`; branches on error `code`; types from `lib/api-types.ts`; changes a
+   proxy via `lib/axios.ts`; branches on error `code`; types from `lib/api-schema.d.ts` (generated); changes a
    copied screen only to fix it.
 4. **Subtraction.** Dead code, unused exports, commented-out code, an old path left beside its
    replacement, compatibility shims, a new layer or wrapper with only one caller.

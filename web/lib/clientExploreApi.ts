@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import type { ApiListResponse } from "@/lib/api-types";
+import type { components } from "@/lib/api-schema";
 import type { VendorApprovalStatus, VendorProfileStatus } from "@/lib/domain-types";
 
 export type ExploreVendor = {
@@ -101,7 +101,7 @@ type ExploreVendorSearchApiResponse = {
  * counts, which need the full list rather than a ranked/paginated page.
  */
 export async function fetchExploreVendors(): Promise<ExploreVendor[]> {
-  const { data } = await api.get<ApiListResponse<ExploreVendor>>("/api/v1/vendors/explore");
+  const { data } = await api.get<Omit<components["schemas"]["ExploreVendorsResponse"], "vendors"> & { vendors: ExploreVendor[] }>("/api/v1/vendors/explore");
   return data.vendors ?? [];
 }
 

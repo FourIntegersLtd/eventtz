@@ -6,12 +6,14 @@ on:
   pull_request:
     paths:
       - "web/**"
+      - "api/openapi.json"
       - ".github/workflows/ci-web.yml"
   push:
     branches:
       - main
     paths:
       - "web/**"
+      - "api/openapi.json"
       - ".github/workflows/ci-web.yml"
 
 permissions:
@@ -46,6 +48,9 @@ jobs:
 
       - name: Typecheck
         run: npx tsc --noEmit
+
+      - name: API types are current
+        run: npm run api:types:check
 
       - name: Test
         run: npm test

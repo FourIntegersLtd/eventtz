@@ -8,8 +8,8 @@ import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { POST_NOT_FOUND } from "@/lib/blog-messages";
 import { fetchPublishedBlogPost, type BlogPostPublicDetail } from "@/lib/blogApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
-import { landingSectionClass } from "@/features/landing/landingSectionStyles";
-import { LandingSection } from "@/features/landing/LandingSection";
+import { landingSectionClass } from "@/components/landing/landingSectionStyles";
+import { LandingSection } from "@/components/landing/LandingSection";
 import { formatDate } from "@/lib/dateFormat";
 
 type BlogPostViewProps = {

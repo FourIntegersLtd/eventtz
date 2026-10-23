@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveLandingSectionPrefix } from "@/features/landing/landingData";
+import { resolveLandingSectionPrefix } from "@/components/landing/landingChromeData";
 
 describe("resolveLandingSectionPrefix", () => {
   it("uses empty prefix on the home page", () => {

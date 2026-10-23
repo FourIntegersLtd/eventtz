@@ -1,5 +1,6 @@
+import type { components } from "@/lib/api-schema";
+import type { BookingReviewDisplay } from "@/lib/reviewTypes";
 import api from "@/lib/axios";
-import type { BookingTermsFields } from "@/lib/bookingTermsFields";
 import type {
   BookingInitiator,
   BookingPricingBreakdown,
@@ -45,13 +46,7 @@ export type CreateBookingRequestPayload = {
   vendor_referral_code?: string | null;
 };
 
-export type BookingRequestCreated = {
-  success: boolean;
-  booking_request_id: string;
-  booking_status: string;
-  created_at: string | null;
-  event_id?: string | null;
-};
+export type BookingRequestCreated = components["schemas"]["BookingRequestCreated"];
 
 export async function postBookingRequest(
   payload: CreateBookingRequestPayload,
@@ -80,38 +75,9 @@ export type ClientBookingsListParams = {
   q?: string;
 };
 
-export type ClientBookingListItem = {
-  booking_request_id: string;
-  booking_status: string;
-  event_name: string;
-  event_date: string;
-  event_end_date: string | null;
-  total_label: string;
-  client_total_label: string | null;
-  vendor_user_id: string;
-  vendor_display_name: string;
-  created_at: string | null;
-  updated_at?: string | null;
-  initiator?: BookingInitiator;
-  conversation_id: string | null;
-  /** Only meaningful for `group: "completed"` rows - powers the review nudge. */
-  has_review: boolean;
-  payment_status: string;
-  has_price_update?: boolean;
-  /** Who still needs to confirm the event went well (accepted + paid bookings). */
-  completion_waiting_on?: "client" | "vendor" | "both" | null;
-  client_completion_confirmed_at?: string | null;
-  event_id?: string | null;
-  event_title?: string | null;
-};
+export type ClientBookingListItem = components["schemas"]["ClientBookingListItem"];
 
-export type ClientBookingsListResponse = {
-  success: boolean;
-  bookings: ClientBookingListItem[];
-  total?: number;
-  offset?: number;
-  limit?: number;
-};
+export type ClientBookingsListResponse = components["schemas"]["ClientBookingsListResponse"];
 
 export type ClientBookingsPage = {
   bookings: ClientBookingListItem[];
@@ -122,74 +88,18 @@ export type ClientBookingsPage = {
 
 export const CLIENT_BOOKINGS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
-export type ClientBookingDetail = BookingTermsFields & {
-  booking_request_id: string;
-  booking_status: string;
-  vendor_user_id: string;
-  vendor_display_name: string;
-  event_name: string;
-  event_date: string;
-  event_end_date: string | null;
-  event_postcode: string | null;
-  event_address: string | null;
-  notes: string | null;
-  total_label: string;
-  selected_option_ids: string[];
+/**
+ * The api types `line_items` as free-form dicts (real row shape: `BookingLineItem`), and the review form
+ * hands back a `BookingReviewDisplay` whose `image_urls` may be absent.
+ */
+export type ClientBookingDetail = Omit<components["schemas"]["ClientBookingDetail"], "line_items" | "review"> & {
   line_items: BookingLineItem[];
-  vendor_adjustments: VendorAdjustmentItem[];
-  pricing: BookingPricingBreakdown | null;
-  created_at: string | null;
-  /** Set automatically when payment succeeds (e.g. Stripe webhook). */
-  paid_at: string | null;
-  /** Money lifecycle, independent of `booking_status`: unpaid/pending/paid/refunded/partially_refunded/payout_released. */
-  payment_status: string;
-  /** True while a problem report is open or under review: completion cannot be confirmed. */
-  has_open_dispute?: boolean;
-  client_completion_confirmed_at: string | null;
-  vendor_completion_confirmed_at: string | null;
-  /** When the vendor payout releases automatically (48h after the event) if no one confirms. */
-  payout_auto_release_at?: string | null;
-  /** Who still needs to confirm the event went well. */
-  completion_waiting_on?: "client" | "vendor" | "both" | null;
-  /** Present when the client has submitted a review for this booking. */
-  review?: {
-    id: string;
-    rating: number;
-    body: string;
-    created_at: string | null;
-    image_urls?: string[];
-  } | null;
-  initiator?: BookingInitiator;
-  /** The vendor declined this client's date-change request; the original date stands. */
-  date_change_declined?: boolean;
-  conversation_id: string | null;
-  counterparty_phone?: string | null;
-  /** Client-facing total at request time (before vendor price changes). */
-  initial_client_total_label?: string | null;
-  vendor_referral_code?: string | null;
-  /** Vendor's client-cancellation preset (current preset while unpaid). */
-  cancellation_policy?: string | null;
-  cancellation_policy_label?: string | null;
-  cancellation_policy_lines?: string[];
-  /** What cancelling now would refund; present only while paid and pending/accepted. */
-  cancellation_preview?: ClientCancellationPreview | null;
-  /** Set after a cancellation: share of the vendor's price refunded. */
-  cancellation_refund_percent?: number | null;
-  cancellation_refund_gbp?: number | null;
+  review: BookingReviewDisplay | null;
 };
 
-export type ClientCancellationPreview = {
-  percent: number;
-  refund_gbp: number;
-  refund_label: string;
-  cooling_off_until: string | null;
-  next_tier_at: string | null;
-  next_tier_percent: number | null;
-  lines: string[];
-};
+export type ClientCancellationPreview = NonNullable<ClientBookingDetail["cancellation_preview"]>;
 
-export type ClientBookingDetailResponse = {
-  success: boolean;
+export type ClientBookingDetailResponse = Omit<components["schemas"]["ClientBookingDetailResponse"], "booking"> & {
   booking: ClientBookingDetail;
 };
 

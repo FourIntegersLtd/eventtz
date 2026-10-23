@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { useRef } from "react";
 
-import { LandingSection } from "@/features/landing/LandingSection";
+import { LandingSection } from "@/components/landing/LandingSection";
 import {
   LANDING_SCREENSHOT_DEFAULT_HEIGHT,
   LANDING_SCREENSHOT_DEFAULT_WIDTH,
@@ -23,7 +23,7 @@ import {
   LANDING_SHOWCASE_MIN_H_LG_CLASS,
   LANDING_SHOWCASE_STICKY_TOP_CLASS,
   type LandingSectionTone,
-} from "@/features/landing/landingSectionStyles";
+} from "@/components/landing/landingSectionStyles";
 import type { LandingScrollFeatureStep } from "@/features/landing/landingData";
 import { useLandingScrollSpy } from "@/features/landing/useLandingScrollSpy";
 

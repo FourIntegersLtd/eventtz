@@ -4,14 +4,14 @@ import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { MotionReveal } from "@/components/ui/MotionReveal";
-import { LandingSection } from "@/features/landing/LandingSection";
+import { LandingSection } from "@/components/landing/LandingSection";
 import {
   LANDING_FEATURE_BODY_CLASS,
   LANDING_FEATURE_GAP,
   LANDING_FEATURE_HEADLINE_CLASS,
   landingFeatureSectionClass,
   type LandingSectionTone,
-} from "@/features/landing/landingSectionStyles";
+} from "@/components/landing/landingSectionStyles";
 import {
   LANDING_SCREENSHOT_DEFAULT_HEIGHT,
   LANDING_SCREENSHOT_DEFAULT_WIDTH,

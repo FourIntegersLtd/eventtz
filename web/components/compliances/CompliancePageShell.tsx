@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 import { BackLink } from "@/components/ui/BackLink";
 import { ComplianceReader } from "@/components/compliances/ComplianceReader";
-import { LandingFooter } from "@/features/landing/LandingFooter";
-import { LandingNav } from "@/features/landing/LandingNav";
-import { LandingSection } from "@/features/landing/LandingSection";
-import { LANDING_NAV_OFFSET_CLASS } from "@/features/landing/landingSectionStyles";
+import { LandingFooter } from "@/components/landing/LandingFooter";
+import { LandingNav } from "@/components/landing/LandingNav";
+import { LandingSection } from "@/components/landing/LandingSection";
+import { LANDING_NAV_OFFSET_CLASS } from "@/components/landing/landingSectionStyles";
 
 type CompliancePageShellProps = {
   children: ReactNode;
