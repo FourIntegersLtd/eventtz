@@ -315,5 +315,5 @@ For local testing without Docker:
   `ez-section--tint`, `ez-section--white`) and gained the used-but-missing `ez-table-row--active` (selected admin
   client row). Classes only the canvas `.dc.html` artboards use were kept so the design-diff artboards render the same.
   New guard `components/ui/rawEzClassGuard.test.ts` (meta-tests, stale-entry check) fails on raw
-  `ez-btn|card|badge|banner|pagehead|kpi` in `features/**` and `app/**`. Left: the 32 allow-listed files, to be moved onto the blocks and removed from `ALLOW_LISTED_FILES` in
+  `ez-btn|card|badge|banner|pagehead|kpi` in `features/**` and `app/**`. Left: the 23 allow-listed files, to be moved onto the blocks and removed from `ALLOW_LISTED_FILES` in
   `rawEzClassGuard.test.ts` (the list lives there).
