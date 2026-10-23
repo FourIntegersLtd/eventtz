@@ -140,13 +140,14 @@ async def to_admin_detail(session: AsyncSession, booking: BookingRow) -> AdminBo
     payouts_enabled = await repository_admin.vendor_payouts_enabled_by_user_id(
         session, [booking.vendor_user_id]
     )
-    has_dispute = await repository_admin.has_active_dispute(session, booking.id)
+    open_dispute = await repository_admin.active_dispute(session, booking.id)
     hours_after_event = get_settings().booking_payout_auto_release_hours_after_event
     support = service_admin_diagnostics.support_meta_for_booking(
         booking,
         hours_after_event=hours_after_event,
         vendor_payouts_enabled=payouts_enabled.get(booking.vendor_user_id, False),
-        has_active_dispute=has_dispute,
+        has_active_dispute=open_dispute is not None,
+        open_dispute=open_dispute,
     )
     return AdminBookingDetail(
         id=booking.id,

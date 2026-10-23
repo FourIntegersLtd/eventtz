@@ -58,11 +58,20 @@ class AdminBookingNeedsAttentionFlag(BaseModel):
     label: str
 
 
+class AdminBookingOpenDispute(BaseModel):
+    """The dispute blocking a booking's payout, enough for the admin banner to link to it."""
+
+    id: str
+    status: str
+    summary: str
+    created_at: str | None = None
+
+
 class AdminBookingSupportMeta(BaseModel):
     """The admin detail screen's diagnostics block for one booking."""
 
     needs_attention: list[AdminBookingNeedsAttentionFlag] = Field(default_factory=list)
-    open_dispute: dict[str, Any] | None = None
+    open_dispute: AdminBookingOpenDispute | None = None
     support_hold: bool = False
     vendor_stripe_payouts_enabled: bool = False
     next_action: str | None = None
