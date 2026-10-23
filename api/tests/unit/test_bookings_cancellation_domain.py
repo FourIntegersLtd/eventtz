@@ -76,7 +76,9 @@ def test_days_before_event_count_from_the_first_day() -> None:
     """A multi-day event is measured to its first day; the day itself is day 0."""
     booking = _booking(event_date="2026-06-01", event_end_date="2026-06-03")
     assert domain_cancellation.days_before_event(booking, NOW) == 151
-    assert domain_cancellation.days_before_event(booking, datetime(2026, 6, 1, 23, tzinfo=UTC)) == 0
+    assert domain_cancellation.days_before_event(booking, datetime(2026, 6, 1, 22, 59, tzinfo=UTC)) == 0
+    # 23:00 UTC in June is midnight BST: the event day has already started for a UK client.
+    assert domain_cancellation.days_before_event(booking, datetime(2026, 6, 1, 23, tzinfo=UTC)) == -1
     assert domain_cancellation.days_before_event(_booking(event_date="junk"), NOW) is None
 
 
@@ -178,3 +180,26 @@ def test_describe_preset_reads_as_the_terms() -> None:
         "2 to 6 days before the event: 50% refund of the vendor's price",
         "Less than 2 days before the event: no refund of the vendor's price",
     ]
+
+
+def test_cancelling_after_midnight_london_but_before_midnight_utc_counts_the_uk_day() -> None:
+    """23:30 UTC on 1 July is 00:30 BST on 2 July, so an 8 July event is 6 UK days away, not 7.
+
+    Flexible refunds 100% from 7 days out and 50% from 2 to 6 days, so the UK client who cancels at
+    00:30 on the 2nd gets half the vendor's price back (GBP 75), plus the GBP 7.50 service fee.
+    """
+    booking = _booking(event_date="2026-07-08", cancellation_policy="flexible")
+    cancelled_at = datetime(2026, 7, 1, 23, 30, tzinfo=UTC)
+
+    assert domain_cancellation.days_before_event(booking, cancelled_at) == 6
+    split = domain_cancellation.settlement(booking, cancelled_at)
+    assert (split.refund_percent, split.refund_pence, split.vendor_share_pence) == (50, 8250, 7500)
+    assert split.cooling_off is False
+
+
+def test_cancelling_just_before_midnight_london_still_counts_the_earlier_uk_day() -> None:
+    """22:30 UTC on 1 July is 23:30 BST the same day: the 8 July event is 7 days away, a full refund."""
+    booking = _booking(event_date="2026-07-08", cancellation_policy="flexible")
+    split = domain_cancellation.settlement(booking, datetime(2026, 7, 1, 22, 30, tzinfo=UTC))
+
+    assert (split.refund_percent, split.refund_pence, split.vendor_share_pence) == (100, 15750, 0)

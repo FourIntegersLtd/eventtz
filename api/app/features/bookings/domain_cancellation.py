@@ -20,6 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 
+from app.core.time import uk_date
 from app.features.bookings.domain_payments import gbp_to_pence, parse_event_date
 from app.features.bookings.rows import BookingRow
 
@@ -100,11 +101,15 @@ def tier_percent(preset: str, days_before_event: int) -> int:
 
 
 def days_before_event(booking: BookingRow, now: datetime) -> int | None:
-    """Whole days from today (UTC) to the event's first day; negative once it has started."""
+    """Whole days from today (London) to the event's first day; negative once it has started.
+
+    Event dates are UK calendar dates, so "today" is the London day: a cancel at 23:30 UTC in summer
+    is already tomorrow for the client.
+    """
     event_day = parse_event_date(booking.event_date)
     if event_day is None:
         return None
-    return (event_day - now.astimezone(UTC).date()).days
+    return (event_day - uk_date(now)).days
 
 
 def in_cooling_off(booking: BookingRow, now: datetime) -> bool:
