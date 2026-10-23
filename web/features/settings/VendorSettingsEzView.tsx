@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
@@ -43,7 +43,6 @@ const VENDOR_SETTINGS_TABS = [
 export function VendorSettingsEzView() {
   const { user, refreshUser } = useAuth();
   const { showToast } = useToast();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") === "referrals" ? "referrals" : "account";
   const { contact, saving: contactSaving, toggle: toggleContact } = useContactSharing(
@@ -134,9 +133,11 @@ export function VendorSettingsEzView() {
 
       <Tabs
         aria-label="Settings sections"
-        options={VENDOR_SETTINGS_TABS}
+        options={VENDOR_SETTINGS_TABS.map((option) => ({
+          ...option,
+          href: option.value === "account" ? "/vendor/settings" : `/vendor/settings?tab=${option.value}`,
+        }))}
         value={tab}
-        onChange={(next) => router.push(next === "account" ? "/vendor/settings" : `/vendor/settings?tab=${next}`)}
       />
 
       {tab === "account" ? (
@@ -227,6 +228,7 @@ export function VendorSettingsEzView() {
                 "This cannot be undone. You will be signed out. You can register again later with the same email; it will be a new account.",
               cancelLabel: "Keep account",
               confirmLabel: "Close my account",
+              layout: "vendor",
             }}
           />
 

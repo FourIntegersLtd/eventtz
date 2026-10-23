@@ -62,6 +62,21 @@ describe("ui building blocks emit canvas markup", () => {
     expect(markup).toContain('aria-selected="false" class="ez-tab">Past</button>');
   });
 
+  it("Tabs with an href render links that keep the ez-tab classes", () => {
+    const markup = renderToStaticMarkup(
+      <Tabs
+        aria-label="Settings sections"
+        value="account"
+        options={[
+          { value: "account", label: "Account", href: "/vendor/settings" },
+          { value: "referrals", label: "Referrals", href: "/vendor/settings?tab=referrals" },
+        ]}
+      />,
+    );
+    expect(markup).toContain('<a role="tab" aria-selected="true" class="ez-tab ez-tab--active" href="/vendor/settings">Account</a>');
+    expect(markup).toContain('class="ez-tab" href="/vendor/settings?tab=referrals">Referrals</a>');
+  });
+
   it("StatTile is an ez-kpi", () => {
     expect(renderToStaticMarkup(<StatTile label="Revenue" value="£1,200" delta="+4%" deltaTone="success" />)).toBe(
       '<div class="ez-kpi"><span class="ez-kpi__label">Revenue</span><span class="ez-kpi__value">£1,200</span><span class="ez-kpi__delta text-success">+4%</span></div>',

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Bell, CalendarDays, ChevronRight, Route, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/ui/Toast";
@@ -45,7 +45,6 @@ function resolveTab(value: string | null): SettingsTab {
 export function ClientSettingsEzView() {
   const { user, refreshUser } = useAuth();
   const { showToast } = useToast();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const tab = resolveTab(searchParams.get("tab"));
   const { openReplay } = useClientOnboarding();
@@ -115,9 +114,11 @@ export function ClientSettingsEzView() {
 
       <Tabs
         aria-label="Settings sections"
-        options={CLIENT_SETTINGS_TABS}
+        options={CLIENT_SETTINGS_TABS.map((option) => ({
+          ...option,
+          href: option.value === "account" ? settingsBase : `${settingsBase}?tab=${option.value}`,
+        }))}
         value={tab}
-        onChange={(next) => router.push(next === "account" ? settingsBase : `${settingsBase}?tab=${next}`)}
       />
 
       {tab === "account" ? (
@@ -168,6 +169,7 @@ export function ClientSettingsEzView() {
               modalBody: "Enter your password to confirm. This cannot be undone.",
               cancelLabel: "Cancel",
               confirmLabel: "Close account",
+              layout: "client",
             }}
           />
         </div>

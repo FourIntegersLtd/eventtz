@@ -174,6 +174,8 @@ export type CloseAccountCopy = {
   modalBody: string;
   cancelLabel: string;
   confirmLabel: string;
+  /** `client` keeps the compact modal with buttons under the field; `vendor` the footer layout. */
+  layout: "client" | "vendor";
 };
 
 /** Close-account card and its password-confirmation modal; on success the session ends and the user leaves. */
@@ -228,33 +230,54 @@ export function CloseAccountCard({ copy }: { copy: CloseAccountCopy }) {
       >
         <p className="ez-small">{copy.cardDescription}</p>
       </SettingsCard>
-      <Modal
-        isOpen={open}
-        onClose={dismiss}
-        title={copy.modalTitle}
-        maxWidthClassName="max-w-md"
-        footer={
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-            <Button variant="secondary" disabled={closing} onClick={dismiss}>
-              {copy.cancelLabel}
-            </Button>
-            <Button variant="destructive" disabled={closing || !password.trim()} onClick={() => void closeAccount()}>
-              {closing ? "Closing…" : copy.confirmLabel}
-            </Button>
+      {copy.layout === "vendor" ? (
+        <Modal
+          isOpen={open}
+          onClose={dismiss}
+          title={copy.modalTitle}
+          maxWidthClassName="max-w-md"
+          footer={
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+              <Button variant="secondary" disabled={closing} onClick={dismiss}>
+                {copy.cancelLabel}
+              </Button>
+              <Button variant="destructive" disabled={closing || !password.trim()} onClick={() => void closeAccount()}>
+                {closing ? "Closing…" : copy.confirmLabel}
+              </Button>
+            </div>
+          }
+        >
+          <p className="ez-small">{copy.modalBody}</p>
+          {error ? <LottieFailureInline message={error} className="mt-3" /> : null}
+          <div className="mt-4">
+            <PasswordField
+              label="Current password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+            />
           </div>
-        }
-      >
-        <p className="ez-small">{copy.modalBody}</p>
-        {error ? <LottieFailureInline message={error} className="mt-3" /> : null}
-        <div className="mt-4">
+        </Modal>
+      ) : (
+        <Modal isOpen={open} title={copy.modalTitle} onClose={dismiss}>
+          <p className="ez-small">{copy.modalBody}</p>
           <PasswordField
             label="Current password"
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
-        </div>
-      </Modal>
+          {error ? <LottieFailureInline message={error} /> : null}
+          <div className="ez-hrow mt-4">
+            <Button variant="secondary" disabled={closing} onClick={dismiss}>
+              {copy.cancelLabel}
+            </Button>
+            <Button variant="destructive" disabled={closing} onClick={() => void closeAccount()}>
+              {closing ? "Closing…" : copy.confirmLabel}
+            </Button>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }
