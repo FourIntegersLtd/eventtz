@@ -8,6 +8,7 @@ import { OptionCard } from "@/components/ui/OptionCard";
 import { DataTable } from "@/components/ui/DataTable";
 import { DescriptionList, DescriptionRow } from "@/components/ui/DescriptionList";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
 import { StatTile } from "@/components/ui/StatTile";
@@ -41,6 +42,7 @@ describe("ui building blocks emit canvas markup", () => {
   it("Card maps variants and slots onto ez-card classes", () => {
     expect(renderToStaticMarkup(<Card padding="md">x</Card>)).toBe('<div class="ez-card shadow-xs p-5">x</div>');
     expect(renderToStaticMarkup(<Card variant="muted">x</Card>)).toBe('<div class="ez-card ez-card--flat">x</div>');
+    expect(renderToStaticMarkup(<Card variant="raised">x</Card>)).toBe('<div class="ez-card ez-card--raised">x</div>');
     expect(renderToStaticMarkup(<Card.Header>h</Card.Header>)).toBe('<div class="ez-card__head">h</div>');
     expect(renderToStaticMarkup(<Card.Footer>f</Card.Footer>)).toBe('<div class="ez-card__foot">f</div>');
   });
@@ -208,6 +210,15 @@ describe("ui building blocks emit canvas markup", () => {
     );
     expect(markup).toBe(
       '<div class="ez-table-wrap w-full min-w-0 max-w-full ez-table-wrap--embedded"><table class="ez-table" aria-label="Vendors"><thead><tr><th scope="col">Name</th><th scope="col" class="ez-td-num">Total</th></tr></thead><tbody><tr><td class="ez-td-strong">Acme</td><td class="ez-td-num">3</td></tr></tbody></table></div>',
+    );
+  });
+
+  it("ProgressBar clamps its percentage onto the ez-progress bar", () => {
+    expect(renderToStaticMarkup(<ProgressBar percent={40} />)).toBe(
+      '<div class="ez-progress" aria-hidden="true"><div class="ez-progress__bar" style="width:40%"></div></div>',
+    );
+    expect(renderToStaticMarkup(<ProgressBar percent={140} label="Plan progress" />)).toBe(
+      '<div class="ez-progress" role="progressbar" aria-label="Plan progress" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"><div class="ez-progress__bar" style="width:100%"></div></div>',
     );
   });
 });

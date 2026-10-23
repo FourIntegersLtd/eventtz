@@ -63,3 +63,5 @@ the same event twice. Outside services are off locally; do not point at live Str
 - Goldens (`tests/golden/marketplace/*.json`) and `acceptance/` quirks are pinned on purpose; do not "fix" them.
 - A planner check on a fresh DB needs listed vendors; with none, plans look empty for the wrong reason.
 - Web: Node is not on PATH; use the export above. `npm run build` is the only full type check of screens.
+- Seeded vendors are invisible (explore total 0, vendor page 404) until they have a `stripe_account_id`: the visibility helper needs payouts verified, not just the `stripe_*_enabled` flags. Set a fake id on the local DB only.
+- Screen comparison: `screens.json` has no marketplace screen, so run two dev servers (main worktree vs branch) on one seeded DB, log in once per side, mark `client_onboarding_completed_at` to hide the first-visit modal (or compare it on its own), and wait for loading text to clear; lottie frames differ by about 0.1% every run.

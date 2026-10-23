@@ -263,3 +263,14 @@ For local testing without Docker:
   two-server page 1/2 comparison: identical except the two intended tiles. eslint 122 errors vs 126 on main.
   Follow-ups from review: give `useServerList` a `meta` field for the three side-channel `fetchPage` captures; render the
   client payments toolbar outside `PaymentsListSection` so a failed load can still change the filter.
+
+- **Done (PR "Rebuild audit: marketplace screens on the design system and server lists").** The booking modal, client
+  dashboard, onboarding modal, multi-vendor enquiry modal, planner (hero, budget, generating state, saved plans, vendor
+  cards) and admin marketplace analytics use the ui blocks and tokens (no `style={{}}`, `neutral-*` or raw `ez-*` left in
+  the area's feature dirs). New: `ProgressBar` block and `Card` `raised` variant (tested). Explore and favourites were
+  already server-paged card grids and the category table already had `TablePagination`, so no list moved. Two-server
+  screenshot comparison (no marketplace screen in `screens.json`): dashboard, browse, favourites, vendor profile, planner
+  and analytics identical bar lottie frames; the booking modal now shows canvas field labels and a taller venue box (the
+  block look, intended). eslint 121 errors, same as main.
+  Follow-ups from review: move the booking and onboarding overlays onto `Modal`; extract one ranked-list card for admin
+  "Top locations" and "Top vendors"; vendor onboarding (`WizardAside`, `StepPortfolio`) still hand-roll `ez-progress`.

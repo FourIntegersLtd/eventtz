@@ -61,7 +61,7 @@ export function PlannerVendorEzCard({
           ) : null}
         </div>
         {rating ? (
-          <div className="ez-hrow" style={{ gap: 6 }}>
+          <div className="ez-hrow gap-1.5">
             <span className="ez-rating">
               <Star width={15} height={15} strokeWidth={1.75} aria-hidden />
               {rating}
@@ -70,9 +70,9 @@ export function PlannerVendorEzCard({
           </div>
         ) : null}
         {unavailable ? (
-          <p className="ez-caption" style={{ color: "var(--ez-warning-ink)" }}>{PLANNER_COPY.unavailable}</p>
+          <p className="ez-caption text-warning">{PLANNER_COPY.unavailable}</p>
         ) : (
-          <label className="ez-check" style={{ paddingTop: 0, minHeight: 0 }}>
+          <label className="ez-check min-h-0 pt-0">
             <input
               type="checkbox"
               checked={selected}

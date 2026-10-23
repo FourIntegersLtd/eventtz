@@ -1,6 +1,10 @@
 "use client";
 
 import { Send } from "lucide-react";
+import { Banner } from "@/components/ui/Banner";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import type { CelebrationPlanResponse } from "@/lib/clientPlannerApi";
 import { formatGbp } from "@/lib/money";
 import { PLANNER_COPY } from "./plannerCopy";
@@ -38,13 +42,13 @@ export function BudgetBreakdown({
   };
 
   return (
-    <div className="ez-card ez-card--raised" style={{ position: "sticky", top: 16 }}>
-      <div className="ez-card__head">
+    <Card variant="raised" className="sticky top-4">
+      <Card.Header>
         <span className="ez-h3">{PLANNER_COPY.estimatedBudget}</span>
-      </div>
-      <div className="ez-card__body ez-stack">
+      </Card.Header>
+      <Card.Body className="ez-stack">
         {budget.over_budget ? (
-          <div className="ez-banner ez-banner--warning" role="status">{PLANNER_COPY.overBudget}</div>
+          <Banner tone="warning">{PLANNER_COPY.overBudget}</Banner>
         ) : null}
         <div className="ez-lines">
           {budget.lines.map((line) => (
@@ -58,23 +62,20 @@ export function BudgetBreakdown({
             <span>{formatGbp(budget.total_estimated_gbp, { decimals: 0 })}</span>
           </div>
         </div>
-        <div className="ez-progress" aria-hidden>
-          <div className="ez-progress__bar" style={{ width: `${progress}%` }} />
-        </div>
+        <ProgressBar percent={progress} />
         {remainingCaption() ? <span className="ez-caption">{remainingCaption()}</span> : null}
-      </div>
-      <div className="ez-card__foot" style={{ flexDirection: "column" }}>
-        <button
-          type="button"
-          className="ez-btn ez-btn--primary ez-btn--block"
+      </Card.Body>
+      <Card.Footer className="flex-col">
+        <Button
+          className="ez-btn--block"
           disabled={enquiryDisabled || enquiryBusy || selectedCount === 0}
           onClick={onSendEnquiry}
+          icon={<Send width={18} height={18} strokeWidth={1.75} aria-hidden />}
         >
-          <Send width={18} height={18} strokeWidth={1.75} aria-hidden />
           {PLANNER_COPY.sendEnquiryLabel} ({selectedCount})
-        </button>
+        </Button>
         <span className="ez-caption">{PLANNER_COPY.sendEnquiryHint}</span>
-      </div>
-    </div>
+      </Card.Footer>
+    </Card>
   );
 }

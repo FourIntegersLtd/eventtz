@@ -158,18 +158,18 @@ export function ClientDashboardView() {
       ) : null}
 
       {loadStatus === "ready" ? (
-        <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+        <section className="overflow-hidden rounded-2xl border border-line bg-surface">
           {nextEvent ? (
             <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <div className="min-w-0">
-                <p className="text-[13px] text-neutral-500">Your next event</p>
-                <p className="mt-1 truncate font-heading text-xl font-semibold text-neutral-900 sm:text-2xl">
+                <p className="text-[13px] text-ink-3">Your next event</p>
+                <p className="mt-1 truncate font-heading text-xl font-semibold text-ink sm:text-2xl">
                   {nextEvent.event_name}
                 </p>
-                <p className="mt-1 text-sm text-neutral-600">
+                <p className="mt-1 text-sm text-ink-2">
                   with {nextEvent.vendor_display_name} · {formatEventDate(nextEvent.event_date)}
                   {nextEventDays !== null ? (
-                    <span className="text-neutral-400"> · {countdownLabel(nextEventDays)}</span>
+                    <span className="text-ink-3"> · {countdownLabel(nextEventDays)}</span>
                   ) : null}
                 </p>
               </div>
@@ -186,10 +186,10 @@ export function ClientDashboardView() {
             <div className="flex flex-col gap-4 bg-primary/[0.04] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
               <div className="min-w-0">
                 <LottieIllustration asset="welcome" className="mb-2 h-16 w-16" ariaLabel="" />
-                <p className="font-heading text-lg font-semibold text-neutral-900">
+                <p className="font-heading text-lg font-semibold text-ink">
                   No upcoming events yet
                 </p>
-                <p className="mt-1 text-sm text-neutral-600">Browse vendors to get started.</p>
+                <p className="mt-1 text-sm text-ink-2">Browse vendors to get started.</p>
               </div>
               <ButtonLink href="/client/browse" variant="secondary" size="sm" className="shrink-0 gap-2">
                 <Compass className="h-4 w-4" aria-hidden />
@@ -236,21 +236,21 @@ export function ClientDashboardView() {
         zIndexClassName="z-[75]"
       >
         {!selectedDayKey ? (
-          <p className="text-sm text-neutral-600">Select a day to see bookings.</p>
+          <p className="text-sm text-ink-2">Select a day to see bookings.</p>
         ) : (bookingsByDate[selectedDayKey] ?? []).length === 0 ? (
-          <p className="rounded-xl border border-neutral-100 bg-neutral-50 px-4 py-6 text-center text-sm text-neutral-700">
+          <p className="rounded-xl border border-line bg-surface-3 px-4 py-6 text-center text-sm text-ink-2">
             No bookings on this day.
           </p>
         ) : (
-          <ul className="divide-y divide-neutral-100">
+          <ul className="divide-y divide-line">
             {(bookingsByDate[selectedDayKey] ?? []).map((b) => (
               <li key={b.booking_request_id} className="py-3 first:pt-0 last:pb-0">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-neutral-900">{b.event_name}</p>
-                    <p className="mt-0.5 text-sm text-neutral-600">{b.vendor_display_name}</p>
+                    <p className="truncate text-sm font-semibold text-ink">{b.event_name}</p>
+                    <p className="mt-0.5 text-sm text-ink-2">{b.vendor_display_name}</p>
                     {b.event_end_date ? (
-                      <p className="mt-0.5 text-xs text-neutral-500">
+                      <p className="mt-0.5 text-xs text-ink-3">
                         Runs to {formatEventDate(b.event_end_date)}
                       </p>
                     ) : null}
