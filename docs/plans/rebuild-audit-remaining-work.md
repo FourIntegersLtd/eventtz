@@ -270,7 +270,7 @@ For local testing without Docker:
   the area's feature dirs). New: `ProgressBar` block and `Card` `raised` variant (tested). Explore and favourites were
   already server-paged card grids and the category table already had `TablePagination`, so no list moved. Two-server
   screenshot comparison (no marketplace screen in `screens.json`): dashboard, browse, favourites, vendor profile, planner
-  and analytics identical bar lottie frames; the booking modal now shows canvas field labels and a taller venue box (the
-  block look, intended). eslint 121 errors, same as main.
+  and analytics identical bar lottie frames; the booking modal keeps main's uppercase labels, venue box and note sizes
+  (plain inputs on tokens, `DateInput`), 0.05% apart at 1280 and 390 bar the dev badge. eslint 121 errors, same as main.
   Follow-ups from review: move the booking and onboarding overlays onto `Modal`; extract one ranked-list card for admin
   "Top locations" and "Top vendors"; vendor onboarding (`WizardAside`, `StepPortfolio`) still hand-roll `ez-progress`.

@@ -8,8 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { Card } from "@/components/ui/Card";
-import { TextArea } from "@/components/ui/TextArea";
-import { TextField } from "@/components/ui/TextField";
+import { DateInput } from "@/components/ui/DateInput";
 import {
   explainVendorDateConflict,
   isoDatesInEventRange,
@@ -28,6 +27,13 @@ import {
   bookingQuantitiesPayload,
 } from "../../../lib/vendorBrowseDetailModel";
 import { usePerUnitPackageSelection } from "./usePerUnitPackageSelection";
+
+/** Uppercase caption above each field in the request form. */
+const FIELD_LABEL_CLASS = "block text-xs font-semibold uppercase tracking-wide text-ink-3";
+
+/** Shared look of the plain text inputs and textareas in the request form. */
+const FIELD_INPUT_CLASS =
+  "mt-1.5 w-full rounded-lg border border-line px-3 py-2 text-base text-ink placeholder:text-ink-3/65 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
 import { lineTotalGbp } from "@/lib/packagePricing";
 import { depositFromPayload, depositSummaryLine } from "@/features/bookings/bookingTerms";
@@ -269,7 +275,7 @@ export function VendorBookingModal({
         {submitResult?.type === "success" ? (
           <div className="flex flex-col items-center gap-3 text-center">
             <LottieIllustration asset="launchingSoon" size="status" ariaLabel="" />
-            <p className="ez-small">
+            <p className="text-sm leading-relaxed text-ink-2">
               Your booking request was sent to {vendorDisplayName}. They&apos;ll respond in your
               bookings inbox.
             </p>
@@ -315,14 +321,14 @@ export function VendorBookingModal({
                 With <span className="font-medium text-ink">{vendorDisplayName}</span>
               </p>
               {searchPrefill?.datesFlexible ? (
-                <Banner tone="neutral" className="mt-2">
+                <p className="mt-2 rounded-lg border border-line bg-surface-3 px-3 py-2 text-xs text-ink-2">
                   You searched with flexible dates. Confirm dates before sending.
-                </Banner>
+                </p>
               ) : null}
               {searchPrefill?.eventDate && !searchPrefill.datesFlexible ? (
-                <Banner tone="info" className="mt-2">
+                <p className="mt-2 rounded-lg border border-primary/20 bg-primary/[0.06] px-3 py-2 text-xs text-ink-2">
                   Dates from your search.
-                </Banner>
+                </p>
               ) : null}
             </div>
 
@@ -338,80 +344,99 @@ export function VendorBookingModal({
                   onNewEvent={dismissForNewEvent}
                 />
               ) : null}
-              <TextField
-                id="booking-event-name"
-                label="Event name"
-                type="text"
-                value={eventName}
-                onChange={(e) => {
-                  setEventName(e.target.value);
-                  setValidationError(null);
-                }}
-                placeholder="e.g. Ade and Kemi - wedding reception"
-              />
-
-              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
-                <TextField
-                  id="booking-event-date"
-                  label="Event date"
-                  type="date"
-                  min={minEventDate}
-                  value={eventDate}
+              <div>
+                <label htmlFor="booking-event-name" className={FIELD_LABEL_CLASS}>
+                  Event name
+                </label>
+                <input
+                  id="booking-event-name"
+                  type="text"
+                  value={eventName}
                   onChange={(e) => {
-                    setEventDate(e.target.value);
+                    setEventName(e.target.value);
                     setValidationError(null);
                   }}
-                />
-                <TextField
-                  id="booking-event-end"
-                  label={
-                    <>
-                      End date <span className="ez-label__opt">(optional)</span>
-                    </>
-                  }
-                  type="date"
-                  allowEmpty
-                  min={eventDate.trim() || minEventDate}
-                  value={eventEndDate}
-                  onChange={(e) => {
-                    setEventEndDate(e.target.value);
-                    setValidationError(null);
-                  }}
+                  placeholder="e.g. Ade and Kemi - wedding reception"
+                  className={FIELD_INPUT_CLASS}
                 />
               </div>
 
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="min-w-0">
+                  <label htmlFor="booking-event-date" className={FIELD_LABEL_CLASS}>
+                    Event date
+                  </label>
+                  <DateInput
+                    id="booking-event-date"
+                    min={minEventDate}
+                    value={eventDate}
+                    onChange={(e) => {
+                      setEventDate(e.target.value);
+                      setValidationError(null);
+                    }}
+                    shellClassName="mt-1.5"
+                    className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <label htmlFor="booking-event-end" className={FIELD_LABEL_CLASS}>
+                    End date <span className="font-normal normal-case text-ink-3/65">(optional)</span>
+                  </label>
+                  <DateInput
+                    id="booking-event-end"
+                    allowEmpty
+                    min={eventDate.trim() || minEventDate}
+                    value={eventEndDate}
+                    onChange={(e) => {
+                      setEventEndDate(e.target.value);
+                      setValidationError(null);
+                    }}
+                    shellClassName="mt-1.5"
+                    className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              </div>
+
               {workingDaysSentence || blockedDatesSentence ? (
-                <Banner tone="neutral">
+                <div className="rounded-lg border border-line bg-surface-3 px-3 py-2 text-xs leading-relaxed text-ink-2">
                   {workingDaysSentence ? <p>{workingDaysSentence}</p> : null}
-                  {blockedDatesSentence ? <p>{blockedDatesSentence}</p> : null}
-                </Banner>
+                  {blockedDatesSentence ? (
+                    <p className={workingDaysSentence ? "mt-1" : ""}>{blockedDatesSentence}</p>
+                  ) : null}
+                </div>
               ) : null}
 
-              <TextArea
-                id="booking-venue-address"
-                label={
-                  <>
-                    Venue location <span className="ez-label__opt">(optional)</span>
-                  </>
-                }
-                rows={3}
-                value={venueAddress}
-                onChange={(e) => {
-                  setVenueAddress(e.target.value);
-                  setValidationError(null);
-                }}
-                placeholder="e.g. The Grand Hall, 12 Park Lane, London"
-                hint="Add before you pay."
-              />
+              <div>
+                <label htmlFor="booking-venue-address" className={FIELD_LABEL_CLASS}>
+                  Venue location <span className="font-normal normal-case text-ink-3/65">(optional)</span>
+                </label>
+                <textarea
+                  id="booking-venue-address"
+                  rows={3}
+                  value={venueAddress}
+                  onChange={(e) => {
+                    setVenueAddress(e.target.value);
+                    setValidationError(null);
+                  }}
+                  placeholder="e.g. The Grand Hall, 12 Park Lane, London"
+                  className={`${FIELD_INPUT_CLASS} resize-y`}
+                />
+                <p className="mt-1 text-xs text-ink-3">Add before you pay.</p>
+              </div>
 
-              <div className="ez-stack ez-stack--sm">
+              <div>
                 <div className="flex items-baseline justify-between gap-2">
-                  <p className="ez-label">Packages &amp; rates</p>
-                  <Button variant="ghost" size="sm" onClick={onClose} icon={<Pencil className="h-3 w-3" strokeWidth={2.5} aria-hidden />}>
+                  <p className="block text-xs font-semibold uppercase tracking-wide text-ink-3">Packages &amp; rates</p>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                  >
+                    <Pencil className="h-3 w-3" strokeWidth={2.5} aria-hidden />
                     Change
-                  </Button>
+                  </button>
                 </div>
-                <ul className="divide-y divide-line rounded-lg border border-line">
+                <ul className="mt-2 divide-y divide-line rounded-lg border border-line">
                   {selectedOptions.map((opt) => {
                     const perUnit = opt.pricingMode === "per_unit";
                     const qty = quantities[opt.id] ?? opt.minQuantity;
@@ -477,14 +502,17 @@ export function VendorBookingModal({
               </div>
 
               <div>
-                <TextArea
+                <label htmlFor="booking-notes" className={FIELD_LABEL_CLASS}>
+                  Details for the vendor
+                </label>
+                <textarea
                   id="booking-notes"
-                  label="Details for the vendor"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={4}
                   maxLength={CLIENT_BOOKING_NOTES_MAX_LENGTH}
                   placeholder="Guest count, venue, dietary needs, timeline, or questions…"
+                  className={`${FIELD_INPUT_CLASS} resize-y`}
                 />
                 <p className="mt-1 text-right text-xs text-ink-3">
                   {notes.length}/{CLIENT_BOOKING_NOTES_MAX_LENGTH}
@@ -492,15 +520,13 @@ export function VendorBookingModal({
               </div>
 
               {referralFieldsOpen ? (
-                <div className="ez-stack ez-stack--sm">
-                  <TextField
+                <div>
+                  <label htmlFor="booking-referral-code" className={FIELD_LABEL_CLASS}>
+                    Referral code <span className="font-normal normal-case text-ink-3/65">(optional)</span>
+                  </label>
+                  <input
                     ref={referralInputRef}
                     id="booking-referral-code"
-                    label={
-                      <>
-                        Referral code <span className="ez-label__opt">(optional)</span>
-                      </>
-                    }
                     type="text"
                     inputMode="numeric"
                     maxLength={6}
@@ -509,17 +535,17 @@ export function VendorBookingModal({
                     onBlur={onReferralCodeBlur}
                     autoComplete="off"
                     placeholder="Up to 6 digits from the vendor"
-                    className="font-mono"
+                    className={`${FIELD_INPUT_CLASS} font-mono`}
                   />
                   {referralValidating ? (
-                    <p className="ez-help">Checking code…</p>
+                    <p className="mt-1 text-xs text-ink-3">Checking code…</p>
                   ) : referralApplied ? (
-                    <p className="text-xs font-medium text-success">
+                    <p className="mt-1 text-xs font-medium text-success">
                       Referral discount applied: {clientFeeBreakdown?.referralDiscountLabel?.replace("-", "")} off
                       your Eventtz fee
                     </p>
                   ) : referralError ? (
-                    <p className="text-xs text-danger">{referralError}</p>
+                    <p className="mt-1 text-xs text-danger">{referralError}</p>
                   ) : null}
                 </div>
               ) : (
