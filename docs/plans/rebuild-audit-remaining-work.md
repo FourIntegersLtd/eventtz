@@ -94,9 +94,13 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 - **Also done in the same PR.** Admin chart bounds and bucketing (`admin_insights`), the financials daily table
   and `paid_on_or_*` bounds, and the reminder job's "tomorrow" (`domain_maintenance.tomorrow_uk`) use London days.
   The guard also bans `.astimezone(UTC).date()`.
-- **Still UTC, follow-ups.** (1) `bookings/domain_cancellation.py:107` (`days_before_event`) sets the refund tier:
-  money-owner moves it to `uk_date` with a golden check, then drops it from `UTC_DAY_ALLOWED_FILES` in the guard.
-  (2) The financials summary filters `date_from` / `date_to` (date-only strings) still mean midnight UTC
+- **Done (PR "Cancellation refund tier counts UK days").** `bookings/domain_cancellation.days_before_event` now
+  counts from `uk_date(now)`; `UTC_DAY_ALLOWED_FILES` is empty. No golden encodes the refund tier, all 1557 pass
+  byte-exact. A cancel at 23:30 UTC in summer (00:30 BST) now lands in the next UK day's tier (pinned in
+  `test_bookings_cancellation_domain.py`). Terms (`TermsOfServiceContent.tsx`, "counted from the date of
+  cancellation to the first day of the event") does not name a timezone, so it is ambiguous but consistent;
+  copy left unchanged for the solicitor pass.
+- **Still UTC, follow-up.** The financials summary filters `date_from` / `date_to` (date-only strings) still mean midnight UTC
   (`repository_admin._as_datetime_bound`, frozen by acceptance), so a 23:30 UTC payment on the day before `date_from`
   is a London-day-of-`date_from` payment in the daily table but outside the summary total. Decide whether to freeze-break.
 

@@ -17,9 +17,8 @@ import pytest
 from tests.guards._scan import APP_ROOT, parse, python_files, rel
 
 ALLOWED_FILE = APP_ROOT / "core" / "time.py"
-#: Files still counting UTC days after `astimezone(UTC).date()`. `domain_cancellation.days_before_event` sets
-#: the refund tier, so money-owner moves it to `uk_date` separately with a golden check. Nothing else joins.
-UTC_DAY_ALLOWED_FILES = {"app/features/bookings/domain_cancellation.py"}
+#: Files allowed to count UTC days after `astimezone(UTC).date()`. None: every business date is a London day.
+UTC_DAY_ALLOWED_FILES: set[str] = set()
 SCANNED_FILES = [path for path in python_files(APP_ROOT) if path != ALLOWED_FILE]
 #: `datetime.<name>()` clocks whose date part is a server-zone or UTC calendar day.
 CLOCK_NAMES = {"now", "utcnow", "today"}
