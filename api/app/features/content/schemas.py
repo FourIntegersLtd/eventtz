@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 # --- blog ---------------------------------------------------------------------------------------
 from app.core.pagination import PagedResponse
@@ -158,11 +158,13 @@ class HelpArticleResponse(BaseModel):
 
 
 class HelpAskMessage(BaseModel):
-    """One earlier turn of the help chat. The web app sends it as `role`."""
+    """One earlier turn of the help chat: `message_role` from the web app, or the baseline's `role`."""
 
     model_config = ConfigDict(populate_by_name=True)
 
-    message_role: str = Field(description="user or assistant", validation_alias="role")
+    message_role: str = Field(
+        description="user or assistant", validation_alias=AliasChoices("message_role", "role")
+    )
     content: str
 
 

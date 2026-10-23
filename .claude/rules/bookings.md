@@ -51,3 +51,4 @@ cancellation, disputes blocking payouts, deletion or visibility.
 - A price, total or discount taken from the request body instead of the stored price list or quote lines.
 - A cancel, decline or dispute path that releases or keeps money while a dispute or `support_hold` is open.
 - Capacity checked only in Python, or a baseline quirk (404/400/403 shape, 200 on a missing review) "fixed" and the freeze test edited to match.
+- A response field the baseline sent that a slice rebuild dropped (the screen silently shows nothing): check `api/openapi.baseline.json` schemas, not only paths, when rebuilding a response model.
