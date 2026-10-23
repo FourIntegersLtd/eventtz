@@ -29,8 +29,8 @@ type AdminVendorListFilters = {
  * The admin vendors list: a server-paged list (`useServerList`) narrowed by a queue tab and a search,
  * plus the bulk selection and reminder emails that act on the rows of the current page.
  */
-export function useAdminVendors() {
-  const [queueTab, setQueueTab] = useState<VendorQueueTab>("pending");
+export function useAdminVendors(initialQueueTab: VendorQueueTab) {
+  const [queueTab, setQueueTab] = useState<VendorQueueTab>(initialQueueTab);
   const [search, setSearch] = useState("");
   const [nudgeBusy, setNudgeBusy] = useState(false);
   const [nudgeError, setNudgeError] = useState<string | null>(null);

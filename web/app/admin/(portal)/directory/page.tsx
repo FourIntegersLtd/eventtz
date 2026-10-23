@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { AdminConsolePage } from "@/features/admin/layout/AdminConsolePage";
 import { AdminSectionTabs } from "@/features/admin/layout/AdminSectionTabs";
 import { AdminVendorsView } from "@/features/admin/vendors/AdminVendorsView";
+import { parseVendorQueueTab } from "@/features/admin/vendors/adminVendorQueueStatus";
 import { AdminClientsView } from "@/features/admin/clients/AdminClientsView";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 
@@ -30,7 +31,11 @@ function DirectoryScreen() {
       }
     >
       <AdminSectionTabs tabs={TABS} activeId={tab} basePath="/admin/directory" />
-      {tab === "clients" ? <AdminClientsView /> : <AdminVendorsView />}
+      {tab === "clients" ? (
+        <AdminClientsView />
+      ) : (
+        <AdminVendorsView initialQueueTab={parseVendorQueueTab(searchParams.get("queue"))} />
+      )}
     </AdminConsolePage>
   );
 }
