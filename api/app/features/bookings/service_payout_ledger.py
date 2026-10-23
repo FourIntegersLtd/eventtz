@@ -106,6 +106,11 @@ async def vendor_payout_ledger(
                 kind="cancellation_share" if _is_cancellation_share(booking) else "event_payout",
             )
         )
+    next_release = await repository_payments.next_release_booking(session, vendor_user_id)
+    next_release_label = None
+    if next_release is not None:
+        next_release_names = await identity.client_display_names(session, [next_release.client_user_id])
+        next_release_label = next_release_names.get(next_release.client_user_id) or next_release.event_name
     paid_out_total = round(paid_out_total, 2)
     paid_out_last_30_days = round(paid_out_last_30_days, 2)
     awaiting_total = round(awaiting_total, 2)
@@ -117,6 +122,8 @@ async def vendor_payout_ledger(
         paid_out_last_30_days_label=pricing.format_gbp(paid_out_last_30_days),
         total_awaiting_gbp=awaiting_total,
         total_awaiting_label=pricing.format_gbp(awaiting_total),
+        next_release_event_date=next_release.event_date[:10] if next_release else None,
+        next_release_label=next_release_label,
     )
     return ledger, total
 

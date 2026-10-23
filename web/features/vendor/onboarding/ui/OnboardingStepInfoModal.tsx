@@ -14,11 +14,11 @@ type Props = {
 
 function GuideBody({ guide }: { guide: OnboardingStepGuide }) {
   return (
-    <div className="space-y-4 text-sm leading-relaxed text-neutral-700">
+    <div className="space-y-4 text-sm leading-relaxed text-ink-2">
       {guide.sections.map((section, i) => (
         <div key={i}>
           {section.heading ? (
-            <p className="mb-1 font-semibold text-neutral-900">{section.heading}</p>
+            <p className="mb-1 font-semibold text-ink">{section.heading}</p>
           ) : null}
           <p className="whitespace-pre-line">{section.body}</p>
         </div>

@@ -45,11 +45,11 @@ export function ClientOwnReviewsSection({ showShell = true }: ClientOwnReviewsSe
           {error}
         </p>
       ) : reviews.length === 0 ? (
-        <p className={showShell ? "mt-3 text-sm text-neutral-600" : "text-sm text-neutral-600"}>
+        <p className={showShell ? "mt-3 text-sm text-ink-2" : "text-sm text-ink-2"}>
           You haven&apos;t left any reviews yet.
         </p>
       ) : (
-        <ul className={`divide-y divide-neutral-100 overflow-hidden ${CARD_SURFACE} ${showShell ? "mt-4" : ""}`}>
+        <ul className={`divide-y divide-line overflow-hidden ${CARD_SURFACE} ${showShell ? "mt-4" : ""}`}>
           {reviews.map((review) => (
             <li key={review.id}>
               <ClientReviewRow review={review} />
@@ -64,7 +64,7 @@ export function ClientOwnReviewsSection({ showShell = true }: ClientOwnReviewsSe
 
   return (
     <section>
-      <h2 className="font-heading text-lg font-semibold text-neutral-900">Your reviews</h2>
+      <h2 className="font-heading text-lg font-semibold text-ink">Your reviews</h2>
       {list}
     </section>
   );

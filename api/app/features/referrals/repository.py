@@ -102,6 +102,17 @@ async def list_partners_newest_first_page(
     return [PartnerRow.model_validate(plain_row(row)) for row in found_rows], total
 
 
+async def count_active_partners(session: AsyncSession) -> int:
+    """How many partners are switched on, across all of them (not one page)."""
+    return int(
+        (
+            await session.execute(
+                select(func.count()).select_from(ReferralPartner).where(ReferralPartner.is_active.is_(True))
+            )
+        ).scalar_one()
+    )
+
+
 async def find_partner(session: AsyncSession, partner_id: str) -> PartnerRow | None:
     """One partner by id; `None` for an unknown or malformed id."""
     parsed_id = as_uuid(partner_id)

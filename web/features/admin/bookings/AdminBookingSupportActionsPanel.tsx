@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { formControlClass } from "@/components/ui/tokens";
 import { ChevronDown } from "lucide-react";
+import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
+import { getButtonClassName } from "@/components/ui/buttonStyles";
+import { Card } from "@/components/ui/Card";
 import { Modal } from "@/components/ui/Modal";
 import { CompactActionRow, type SupportAction } from "./AdminBookingDetailShared";
 import { VISIBLE_ACTION_COUNT } from "./adminBookingSupportActions";
@@ -58,11 +61,11 @@ export function AdminBookingSupportActionsPanel({
 
   return (
     <>
-      <section className="ez-card">
-        <div className="ez-card__head">
+      <Card as="section">
+        <Card.Header>
           <h2 className="ez-h3">Support actions</h2>
-        </div>
-        <div className="ez-card__body">
+        </Card.Header>
+        <Card.Body>
           <p className="ez-small">
             {canRunBookingSupportActions
               ? "Hover for when to use. Recorded in the admin audit log."
@@ -70,7 +73,7 @@ export function AdminBookingSupportActionsPanel({
           </p>
 
           {canRunBookingSupportActions ? (
-            <div className="ez-stack ez-stack--sm" style={{ marginTop: "12px" }}>
+            <div className="ez-stack ez-stack--sm mt-3">
               {primaryActions.map((action) => (
                 <CompactActionRow
                   key={action.id}
@@ -85,7 +88,7 @@ export function AdminBookingSupportActionsPanel({
                   <button
                     type="button"
                     onClick={() => setActionsExpanded((value) => !value)}
-                    className="ez-btn ez-btn--ghost ez-btn--sm"
+                    className={getButtonClassName({ variant: "ghost", size: "sm" })}
                   >
                     {actionsExpanded ? "Show fewer" : `More actions (${moreActions.length})`}
                     <ChevronDown
@@ -117,22 +120,17 @@ export function AdminBookingSupportActionsPanel({
                 </>
               ) : null}
 
-              <div className="ez-banner ez-banner--warning" role="status">
-                <div className="ez-banner__body">
-                  <span className="ez-banner__title">Confirm before moving money</span>
-                  <span className="ez-small">
-                    Refunds and payouts change real balances. You will confirm each action.
-                  </span>
-                </div>
-              </div>
+              <Banner tone="warning" title="Confirm before moving money">
+                Refunds and payouts change real balances. You will confirm each action.
+              </Banner>
             </div>
           ) : (
-            <p className="ez-small" style={{ marginTop: "12px" }}>
+            <p className="ez-small mt-3">
               You can review this booking and escalate if needed.
             </p>
           )}
-        </div>
-      </section>
+        </Card.Body>
+      </Card>
 
       <Modal
         isOpen={Boolean(pendingAction)}
@@ -165,13 +163,13 @@ export function AdminBookingSupportActionsPanel({
       >
         <div className="ez-stack text-left">
           {pendingAction ? (
-            <p className="text-sm leading-relaxed text-neutral-700">{pendingAction.confirmBody}</p>
+            <p className="text-sm leading-relaxed text-ink-2">{pendingAction.confirmBody}</p>
           ) : null}
 
           {pendingAction?.id === "cancel" ? (
             <div className="space-y-2">
               <label className="block text-sm">
-                <span className="text-neutral-600">On behalf of</span>
+                <span className="text-ink-2">On behalf of</span>
                 <select
                   value={cancelParty}
                   onChange={(e) => onCancelPartyChange(e.target.value as "client" | "vendor")}
@@ -182,7 +180,7 @@ export function AdminBookingSupportActionsPanel({
                 </select>
               </label>
               <label className="block text-sm">
-                <span className="text-neutral-600">Reason (required, at least 3 characters)</span>
+                <span className="text-ink-2">Reason (required, at least 3 characters)</span>
                 <input
                   value={cancelReason}
                   onChange={(e) => onCancelReasonChange(e.target.value)}
@@ -190,19 +188,19 @@ export function AdminBookingSupportActionsPanel({
                   placeholder="Why support is cancelling"
                 />
               </label>
-              <label className="flex items-start gap-2 text-sm text-neutral-700">
+              <label className="flex items-start gap-2 text-sm text-ink-2">
                 <input
                   type="checkbox"
                   checked={cancelExceptional}
                   onChange={(e) => onCancelExceptionalChange(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-neutral-300"
+                  className="mt-0.5 h-4 w-4 rounded border-line-strong"
                 />
                 <span>Exceptional circumstances (does not count against the vendor)</span>
               </label>
             </div>
           ) : null}
 
-          <p className="text-xs text-neutral-500">Recorded in the admin audit log.</p>
+          <p className="text-xs text-ink-3">Recorded in the admin audit log.</p>
         </div>
       </Modal>
 
@@ -219,7 +217,7 @@ export function AdminBookingSupportActionsPanel({
       >
         <p
           className={`text-sm ${
-            feedback?.tone === "error" ? "text-red-700" : "text-neutral-800"
+            feedback?.tone === "error" ? "text-red-700" : "text-ink"
           }`}
         >
           {feedback?.message}

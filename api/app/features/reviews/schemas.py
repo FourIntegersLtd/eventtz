@@ -94,6 +94,7 @@ class VendorOwnerReviewsResponse(PagedResponse):
     average_rating: float | None = None
     review_count: int = 0
     five_star_count: int = 0
+    with_photos_count: int = 0
     reviews: list[VendorOwnerReviewItem] = Field(default_factory=list)
 
 

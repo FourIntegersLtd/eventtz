@@ -42,7 +42,7 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
 
   const forgotHref = isAdmin ? "/forgot-password?portal=admin" : "/forgot-password";
   const adminSignInHref = loginPathWithNext("/admin/dashboard");
-  const shellClassName = isAdmin ? "bg-neutral-50" : undefined;
+  const shellClassName = isAdmin ? "bg-surface-2" : undefined;
   const schema = isAdmin ? adminResetPasswordSchema : resetPasswordSchema;
   const minLength = 6;
 

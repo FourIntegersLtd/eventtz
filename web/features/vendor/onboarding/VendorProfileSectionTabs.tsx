@@ -13,22 +13,22 @@ type VendorProfileSectionTabsProps = {
 
 const CONTAINER_CLASS: Record<"horizontal" | "vertical", string> = {
   horizontal:
-    "flex max-w-full flex-nowrap gap-1 overflow-x-auto rounded-xl border border-neutral-200/80 bg-neutral-100/60 p-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
-  vertical: "flex flex-col space-y-0.5 overflow-hidden rounded-2xl border border-neutral-100 bg-white p-2",
+    "flex max-w-full flex-nowrap gap-1 overflow-x-auto rounded-xl border border-line/80 bg-surface-3/60 p-1 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden",
+  vertical: "flex flex-col space-y-0.5 overflow-hidden rounded-2xl border border-line bg-white p-2",
 };
 
 const ITEM_CLASS: Record<"horizontal" | "vertical", (active: boolean) => string> = {
   horizontal: (active) =>
     `inline-flex min-h-10 shrink-0 items-center rounded-lg px-3.5 py-2 text-sm font-medium transition ${
       active
-        ? "bg-white text-neutral-900 shadow-sm ring-1 ring-neutral-200/80"
-        : "text-neutral-600 hover:text-neutral-900"
+        ? "bg-white text-ink shadow-sm ring-1 ring-line/80"
+        : "text-ink-2 hover:text-ink"
     }`,
   vertical: (active) =>
     `inline-flex shrink-0 items-center whitespace-nowrap rounded-xl px-3 py-2.5 text-left text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-primary/50 ${
       active
         ? "bg-primary/10 text-primary"
-        : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+        : "text-ink-2 hover:bg-surface-3 hover:text-ink"
     }`,
 };
 
@@ -77,7 +77,7 @@ export function VendorProfileSectionTabs({
         );
       })}
       {orientation === "vertical" ? (
-        <div className="my-1.5 border-t border-neutral-100" aria-hidden />
+        <div className="my-1.5 border-t border-line" aria-hidden />
       ) : null}
       <Link
         href="/vendor/profile?tab=reviews"

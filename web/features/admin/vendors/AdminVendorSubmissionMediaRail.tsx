@@ -6,6 +6,7 @@ import {
 } from "@/features/admin/vendors/AdminListingMediaEditor";
 import { SubmittedMediaViewer } from "@/features/admin/vendors/SubmittedMediaViewer";
 import type { SubmittedMediaBundle } from "@/lib/submittedMediaUtils";
+import { Card } from "@/components/ui/Card";
 
 type Props = {
   initials: string;
@@ -38,7 +39,7 @@ export function AdminVendorSubmissionMediaRail({
     <div className={embedded ? "ez-stack ez-stack--sm" : "ez-card__body ez-stack ez-stack--sm"}>
       {editableListingMedia && vendorUserId && profileFormData && onSaveListingMedia ? (
         <div>
-          <h4 className="mb-1 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+          <h4 className="mb-1 text-[11px] font-medium uppercase tracking-wide text-ink-3">
             Listing photos
           </h4>
           <AdminListingMediaEditor
@@ -67,12 +68,12 @@ export function AdminVendorSubmissionMediaRail({
   }
 
   return (
-    <section className="ez-card overflow-hidden">
+    <Card as="section" className="overflow-hidden">
       {body}
-      <div className="border-t border-neutral-100 px-4 py-3 sm:px-5">
-        <p className="text-sm font-medium text-neutral-900">{businessName}</p>
-        <p className="mt-0.5 text-xs text-neutral-500">{fullName}</p>
+      <div className="border-t border-line px-4 py-3 sm:px-5">
+        <p className="text-sm font-medium text-ink">{businessName}</p>
+        <p className="mt-0.5 text-xs text-ink-3">{fullName}</p>
       </div>
-    </section>
+    </Card>
   );
 }

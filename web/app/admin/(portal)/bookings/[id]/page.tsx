@@ -13,7 +13,7 @@ export default function AdminBookingDetailPage() {
       {id ? (
         <AdminBookingDetailView bookingId={id} />
       ) : (
-        <p className="text-sm text-neutral-600">Invalid id.</p>
+        <p className="text-sm text-ink-2">Invalid id.</p>
       )}
     </AdminConsolePage>
   );

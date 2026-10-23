@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Trash2, Upload, Video, X } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -9,6 +10,9 @@ import { MAX_PORTFOLIO_IMAGES, MIN_PORTFOLIO_IMAGES } from "../../../../lib/vend
 import type { PortfolioImageQualityRow } from "../useVendorOnboardingController";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
 import { uploadedFileDisplayName } from "../../../../lib/vendorOnboarding/uploadedFileDisplayName";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { getButtonClassName } from "@/components/ui/buttonStyles";
 
 export type StepPortfolioProps = {
   data: VendorOnboardingData;
@@ -42,55 +46,35 @@ function PhotoTile({
   statusNode?: React.ReactNode;
 }) {
   return (
-    <div style={{ position: "relative" }}>
+    <div className="relative">
       <div
-        className="ez-media-ph"
-        style={{ aspectRatio: "4/3", overflow: "hidden" }}
+        className="ez-media-ph aspect-[4/3] overflow-hidden"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           alt={label}
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          className="w-full h-full object-cover"
         />
       </div>
       {isCover ? (
-        <span
-          className="ez-badge ez-badge--brand ez-badge--plain"
-          style={{ position: "absolute", top: 8, left: 8 }}
-        >
+        <Badge
+          tone="brand"
+          className="ez-badge--plain absolute top-2 left-2">
           Cover
-        </span>
+        </Badge>
       ) : null}
       <button
-        className="ez-icon-btn"
+        className="ez-icon-btn absolute right-1 top-1 h-9 w-9 bg-white/[.92]"
         type="button"
         aria-label={`Remove ${label}`}
         onClick={onRemove}
-        style={{
-          position: "absolute",
-          top: 4,
-          right: 4,
-          background: "rgba(255,255,255,.92)",
-          width: 36,
-          height: 36,
-        }}
       >
         <X strokeWidth={1.75} aria-hidden />
       </button>
       {statusNode ? (
         <div
-          className="ez-small"
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            bottom: 0,
-            padding: "4px 8px",
-            background: "rgba(0,0,0,.55)",
-            color: "var(--ez-on-media)",
-            borderRadius: "0 0 var(--ez-r-card) var(--ez-r-card)",
-          }}
+          className="ez-small absolute inset-x-0 bottom-0 rounded-b-[var(--ez-r-card)] bg-black/[.55] px-2 py-1 text-[var(--ez-on-media)]"
         >
           {statusNode}
         </div>
@@ -117,7 +101,7 @@ function ProfilePhotoRow({
   return (
     <div className="ez-stack ez-stack--sm">
       <div className="ez-hrow">
-        <div className="ez-stack ez-stack--sm" style={{ flex: 1 }}>
+        <div className="ez-stack ez-stack--sm flex-1">
           <span className="ez-label">Profile photo</span>
           <span className="ez-help">A friendly face or your logo.</span>
         </div>
@@ -126,8 +110,7 @@ function ProfilePhotoRow({
           <img
             src={data.profileImageUrl}
             alt="Profile"
-            className="ez-avatar ez-avatar--lg"
-            style={{ objectFit: "cover" }}
+            className="ez-avatar ez-avatar--lg object-cover"
           />
         ) : (
           <span className="ez-avatar ez-avatar--lg">{initials}</span>
@@ -144,19 +127,18 @@ function ProfilePhotoRow({
             event.target.value = "";
           }}
         />
-        <button
-          className="ez-btn ez-btn--secondary ez-btn--sm"
+        <Button
+          variant="secondary"
+          size="sm"
           type="button"
           disabled={uploading}
-          onClick={() => inputRef.current?.click()}
-        >
+          onClick={() => inputRef.current?.click()}>
           {uploading ? "Uploading..." : "Change"}
-        </button>
+        </Button>
       </div>
       {error ? (
         <span
-          className="ez-help"
-          style={{ color: "var(--ez-danger)" }}
+          className="ez-help text-danger"
         >
           {error}
         </span>
@@ -304,22 +286,22 @@ export function StepPortfolio({
             event.target.value = "";
           }}
         />
-        <Upload size={32} strokeWidth={1.75} aria-hidden style={{ display: "inline", verticalAlign: "baseline" }} />
-        <div className="ez-strong" style={{ marginTop: 8 }}>
+        <Upload size={32} strokeWidth={1.75} aria-hidden className="inline align-baseline" />
+        <div className="ez-strong mt-2">
           Drag photos here or choose files
         </div>
         <p className="ez-small">
           JPG or PNG, up to 10 MB each. Add {MIN_PORTFOLIO_IMAGES} to{" "}
           {MAX_PORTFOLIO_IMAGES} photos.
         </p>
-        <div style={{ marginTop: 14 }}>
-          <label className="ez-btn ez-btn--secondary" htmlFor="portfolio-imgs">
+        <div className="mt-3.5">
+          <label className={getButtonClassName({ variant: "secondary" })} htmlFor="portfolio-imgs">
             <Upload size={18} strokeWidth={1.75} aria-hidden />
             Choose photos
           </label>
         </div>
         {duplicateNotice ? (
-          <p className="ez-small" style={{ marginTop: 8 }}>
+          <p className="ez-small mt-2">
             {duplicateNotice}
           </p>
         ) : null}
@@ -328,11 +310,9 @@ export function StepPortfolio({
       <div className="ez-stack ez-stack--sm">
         <div className="ez-between">
           <span className="ez-label">Your photos</span>
-          <span
-            className={`ez-badge ${minimumMet ? "ez-badge--success" : "ez-badge--warning"}`}
-          >
+          <Badge tone={minimumMet ? "success" : "warning"}>
             {totalCount} of {MIN_PORTFOLIO_IMAGES} minimum added
-          </span>
+          </Badge>
         </div>
         <div className="ez-progress">
           <div
@@ -343,25 +323,18 @@ export function StepPortfolio({
       </div>
 
       {data.portfolioWarnings.length > 0 ? (
-        <div className="ez-banner ez-banner--warning">
-          <div className="ez-banner__body">
-            {data.portfolioWarnings.map((warning) => (
-              <p
-                key={warning}
-                className="ez-small"
-                style={{ color: "inherit" }}
-              >
-                {warning}
-              </p>
-            ))}
-          </div>
-        </div>
+        <Banner tone="warning">
+          {data.portfolioWarnings.map((warning) => (
+            <p key={warning} className="ez-small text-inherit">
+              {warning}
+            </p>
+          ))}
+        </Banner>
       ) : null}
 
       {persistedCount > 0 || data.portfolioFiles.length > 0 ? (
         <div
-          className="ez-grid-4"
-          style={{ gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))" }}
+          className="ez-grid-4 grid-cols-[repeat(auto-fill,minmax(150px,1fr))]"
         >
           {data.portfolioFileNamesPersisted.map((url, index) => (
             <PhotoTile
@@ -379,7 +352,7 @@ export function StepPortfolio({
             const src = objectUrls[key];
             const status = quality?.loading ? (
               <span
-                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+                className="inline-flex items-center gap-1.5"
               >
                 <LoadingSpinner size="sm" className="text-white" />
                 Checking quality...
@@ -441,7 +414,7 @@ export function StepPortfolio({
         />
         <div>
           <label
-            className="ez-btn ez-btn--secondary ez-btn--sm"
+            className={getButtonClassName({ variant: "secondary", size: "sm" })}
             htmlFor="portfolio-video"
           >
             <Video strokeWidth={1.75} aria-hidden />
@@ -451,11 +424,7 @@ export function StepPortfolio({
         {data.portfolioVideoNamesPersisted.map((url) => (
           <div
             key={url}
-            className="ez-list-row"
-            style={{
-              padding: "10px 0",
-              borderBottom: "1px solid var(--ez-line)",
-            }}
+            className="ez-list-row border-b border-[var(--ez-line)] py-2.5"
           >
             <span className="ez-icon-tile">
               <Video size={20} strokeWidth={1.75} aria-hidden />
@@ -465,14 +434,14 @@ export function StepPortfolio({
                 {uploadedFileDisplayName(url, data.uploadedFileLabels, "Video")}
               </span>
             </div>
-            <button
-              className="ez-btn ez-btn--ghost ez-btn--sm"
+            <Button
+              variant="ghost"
+              size="sm"
               type="button"
-              onClick={() => onRemovePortfolioVideo(url)}
-            >
+              onClick={() => onRemovePortfolioVideo(url)}>
               <Trash2 strokeWidth={1.75} aria-hidden />
               Remove
-            </button>
+            </Button>
           </div>
         ))}
         {videoUploadError ? (

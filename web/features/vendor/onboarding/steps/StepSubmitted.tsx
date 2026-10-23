@@ -46,19 +46,19 @@ const FEEDBACK_STYLES: Record<
   { container: string; icon: typeof Info }
 > = {
   success: {
-    container: "bg-emerald-50 text-emerald-950 ring-emerald-200/70",
+    container: "bg-success-soft text-success ring-success-line/70",
     icon: CheckCircle2,
   },
   info: {
-    container: "bg-sky-50 text-sky-950 ring-sky-200/70",
+    container: "bg-info-soft text-info ring-info-line/70",
     icon: Info,
   },
   warning: {
-    container: "bg-amber-50 text-amber-950 ring-amber-200/70",
+    container: "bg-warning-soft text-warning ring-warning-line/70",
     icon: TriangleAlert,
   },
   error: {
-    container: "bg-red-50 text-red-950 ring-red-200/70",
+    container: "bg-danger-soft text-danger ring-danger-line/70",
     icon: XCircle,
   },
 };
@@ -192,13 +192,13 @@ export function StepSubmitted({
         />
       </AnimatedStepItem>
       <AnimatedStepItem index={1}>
-        <h2 className="font-heading text-2xl font-semibold text-neutral-900">{heading}</h2>
+        <h2 className="font-heading text-2xl font-semibold text-ink">{heading}</h2>
         {businessName?.trim() ? (
-          <p className="mt-2 text-sm font-medium text-neutral-700">
+          <p className="mt-2 text-sm font-medium text-ink-2">
             {businessName.trim()}
           </p>
         ) : null}
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-neutral-600">
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-ink-2">
           {statusCopy}
         </p>
       </AnimatedStepItem>
@@ -227,7 +227,7 @@ export function StepSubmitted({
               </Link>
               <Link
                 href="/vendor/dashboard"
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-neutral-50 sm:w-auto sm:min-w-[12rem]"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-surface-3 sm:w-auto sm:min-w-[12rem]"
               >
                 Go to dashboard
               </Link>
@@ -252,7 +252,7 @@ export function StepSubmitted({
               <button
                 type="button"
                 onClick={onViewProfileReview}
-                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-neutral-50 sm:w-auto sm:min-w-[12rem]"
+                className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-surface-3 sm:w-auto sm:min-w-[12rem]"
               >
                 View profile review
               </button>
@@ -294,7 +294,7 @@ export function StepSubmitted({
                 ) : null}
                 <Link
                   href="/vendor/help"
-                  className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-neutral-50 sm:w-auto sm:min-w-[12rem]"
+                  className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-primary bg-white px-6 py-3 text-sm font-semibold text-primary shadow-sm hover:bg-surface-3 sm:w-auto sm:min-w-[12rem]"
                 >
                   Read message
                 </Link>
@@ -303,11 +303,11 @@ export function StepSubmitted({
           ) : null}
           {needsMorePortfolioPhotos && onAddPortfolioPhotos && blockedCopy ? (
             <AnimatedStepItem index={2}>
-              <div className="mx-auto max-w-md rounded-xl bg-amber-50 px-4 py-4 text-left ring-1 ring-amber-200/70">
-                <p className="text-sm font-semibold text-amber-950">
+              <div className="mx-auto max-w-md rounded-xl bg-warning-soft px-4 py-4 text-left ring-1 ring-warning-line/70">
+                <p className="text-sm font-semibold text-warning">
                   {blockedCopy.cardTitle}
                 </p>
-                <p className="mt-1 text-sm leading-relaxed text-amber-900/90">
+                <p className="mt-1 text-sm leading-relaxed text-warning/90">
                   {blockedCopy.cardBody}
                 </p>
                 <button
@@ -327,7 +327,7 @@ export function StepSubmitted({
               onClick={onRefreshStatus}
               className={`inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold shadow-sm hover:opacity-95 disabled:opacity-60 sm:mx-auto sm:w-auto sm:min-w-[12rem] ${
                 needsMorePortfolioPhotos
-                  ? "border border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50"
+                  ? "border border-line bg-white text-ink hover:bg-surface-3"
                   : "bg-primary text-white"
               }`}
             >
@@ -340,7 +340,7 @@ export function StepSubmitted({
                 "Check approval status"
               )}
             </button>
-            <p className="mx-auto mt-3 max-w-md text-xs text-neutral-500">
+            <p className="mx-auto mt-3 max-w-md text-xs text-ink-3">
               {needsMorePortfolioPhotos && blockedCopy
                 ? blockedCopy.checkStatusHint
                 : "Tap to refresh. We'll show the latest review status here."}

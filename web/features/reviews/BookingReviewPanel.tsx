@@ -20,18 +20,18 @@ export function BookingReviewPanel({
   showReviewer = false,
 }: BookingReviewPanelProps) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-4">
-      <h3 className="font-heading text-sm font-semibold text-neutral-900">{title}</h3>
+    <section className="overflow-hidden rounded-2xl border border-line bg-white px-5 py-4">
+      <h3 className="font-heading text-sm font-semibold text-ink">{title}</h3>
       {review ? (
         <div className="mt-2">
           <div className="flex flex-wrap items-center gap-2">
             <StarRating rating={review.rating} size="md" />
-            <span className="text-sm font-semibold text-neutral-900">{review.rating}/5</span>
+            <span className="text-sm font-semibold text-ink">{review.rating}/5</span>
             {showReviewer && review.reviewer_display ? (
-              <span className="text-xs text-neutral-500">{review.reviewer_display}</span>
+              <span className="text-xs text-ink-3">{review.reviewer_display}</span>
             ) : null}
             {review.created_at ? (
-              <span className="text-xs text-neutral-500">{formatReviewWhen(review.created_at)}</span>
+              <span className="text-xs text-ink-3">{formatReviewWhen(review.created_at)}</span>
             ) : null}
           </div>
           <div className="mt-3">
@@ -40,7 +40,7 @@ export function BookingReviewPanel({
           <ReviewPhotoGallery urls={review.image_urls} />
         </div>
       ) : (
-        <p className="mt-2 text-xs text-neutral-500">{emptyLabel}</p>
+        <p className="mt-2 text-xs text-ink-3">{emptyLabel}</p>
       )}
     </section>
   );

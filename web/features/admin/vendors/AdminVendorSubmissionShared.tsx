@@ -21,7 +21,7 @@ export function SubmissionFieldGrid({ fields }: { fields: AdminSubmissionField[]
   if (safeFields.length === 0) {
     return (
       <SubmissionCard>
-        <p className="text-sm text-neutral-500">Nothing submitted.</p>
+        <p className="text-sm text-ink-3">Nothing submitted.</p>
       </SubmissionCard>
     );
   }
@@ -34,7 +34,7 @@ export function SubmissionFieldGrid({ fields }: { fields: AdminSubmissionField[]
     <SubmissionCard>
       <dl>
         <div className="grid min-w-0 gap-0 sm:grid-cols-2">
-          <div className="space-y-5 sm:border-r sm:border-neutral-100 sm:pr-6">
+          <div className="space-y-5 sm:border-r sm:border-line sm:pr-6">
             {left.map((f) => (
               <DescriptionRow
                 key={f.label}
@@ -45,7 +45,7 @@ export function SubmissionFieldGrid({ fields }: { fields: AdminSubmissionField[]
               />
             ))}
           </div>
-          <div className="mt-5 space-y-5 border-t border-neutral-100 pt-5 sm:mt-0 sm:border-t-0 sm:pt-0 sm:pl-6">
+          <div className="mt-5 space-y-5 border-t border-line pt-5 sm:mt-0 sm:border-t-0 sm:pt-0 sm:pl-6">
             {right.map((f) => (
               <DescriptionRow
                 key={f.label}
@@ -65,7 +65,7 @@ export function SubmissionFieldGrid({ fields }: { fields: AdminSubmissionField[]
 export function SubmissionFieldRows({ fields }: { fields: AdminSubmissionField[] }) {
   const safeFields = fields ?? [];
   if (safeFields.length === 0) {
-    return <p className="text-sm text-neutral-500">Nothing submitted.</p>;
+    return <p className="text-sm text-ink-3">Nothing submitted.</p>;
   }
 
   return <DescriptionList rowLayout="split" items={safeFields} />;
@@ -79,8 +79,8 @@ export function SubmissionLabelRow({
   children: ReactNode;
 }) {
   return (
-    <div className="border-t border-neutral-100 pt-5">
-      <p className="text-[13px] font-medium text-neutral-500">{label}</p>
+    <div className="border-t border-line pt-5">
+      <p className="text-[13px] font-medium text-ink-3">{label}</p>
       <div className="mt-3">{children}</div>
     </div>
   );
@@ -103,7 +103,7 @@ export function SubmissionPricingOptionsList({
     sharedContext.promoLines.length > 0;
 
   if (safeOptions.length === 0 && !hasShared && safeDiscounts.length === 0) {
-    return <p className="text-sm text-neutral-500">No packages submitted.</p>;
+    return <p className="text-sm text-ink-3">No packages submitted.</p>;
   }
 
   return (
@@ -129,11 +129,11 @@ export function SubmissionPricingOptionsList({
           )}
         </BrowsePricingPackagesSection>
       ) : (
-        <p className="text-sm text-neutral-500">No packages submitted.</p>
+        <p className="text-sm text-ink-3">No packages submitted.</p>
       )}
       {safeDiscounts.length > 0 ? (
         <SubmissionLabelRow label="Discounts">
-          <ul className="space-y-2 text-sm text-neutral-700">
+          <ul className="space-y-2 text-sm text-ink-2">
             {safeDiscounts.map((line) => (
               <li key={line}>{line}</li>
             ))}

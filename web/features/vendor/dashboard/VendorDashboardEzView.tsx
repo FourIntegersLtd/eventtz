@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { MessageCircle, Calendar, Wallet, Activity } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import { copyToClipboard } from "@/lib/copyToClipboard";
@@ -14,6 +13,12 @@ import {
   formatDashboardMonthTitle,
 } from "@/features/vendor/dashboard/vendorDashboardCalendar";
 import type { VendorBookingsByDate } from "@/features/vendor/dashboard/useVendorDashboard";
+import { Badge } from "@/components/ui/Badge";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Card } from "@/components/ui/Card";
+import { Banner } from "@/components/ui/Banner";
+import { StatTile } from "@/components/ui/StatTile";
+import { Button } from "@/components/ui/Button";
 
 type VendorDashboardEzViewProps = {
   greetingName: string;
@@ -54,9 +59,10 @@ export function VendorDashboardEzView({
         description="Here is what needs you today."
         actions={
           publicProfileHref ? (
-            <button
+            <Button
+              variant="secondary"
               type="button"
-              className="ez-btn ez-btn--secondary"
+
               onClick={() => {
                 void copyToClipboard(publicProfileHref).then((copied) => {
                   if (!copied) {
@@ -71,74 +77,42 @@ export function VendorDashboardEzView({
                   });
                   window.setTimeout(() => setProfileCopied(false), 2000);
                 });
-              }}
-            >
+              }}>
               {profileCopied ? "Link copied" : "Share my profile"}
-            </button>
+            </Button>
           ) : null
         }
       />
 
       {showEnquiryBanner ? (
-        <div className="ez-banner ez-banner--warning">
-          <Activity size={20} strokeWidth={1.75} aria-hidden />
-          <div className="ez-banner__body">
-            <div className="ez-banner__title">
-              {pendingEnquiries} {pendingEnquiries === 1 ? "enquiry is" : "enquiries are"} waiting for a reply
-            </div>
-            <p className="ez-small" style={{ color: "inherit" }}>
-              Vendors who reply within 24 hours get more bookings.
-            </p>
-          </div>
-          <div className="ez-banner__actions">
-            <Link className="ez-btn ez-btn--primary" href="/vendor/bookings">
-              Review enquiries
-            </Link>
-          </div>
-        </div>
+        <Banner
+          tone="warning"
+          icon={<Activity size={20} strokeWidth={1.75} aria-hidden />}
+          title={`${pendingEnquiries} ${pendingEnquiries === 1 ? "enquiry is" : "enquiries are"} waiting for a reply`}
+          action={<ButtonLink href="/vendor/bookings">Review enquiries</ButtonLink>}>
+          <p className="ez-small text-inherit">
+            Vendors who reply within 24 hours get more bookings.
+          </p>
+        </Banner>
       ) : null}
 
       <div className="ez-grid-4">
-        <div className="ez-kpi">
-          <span className="ez-kpi__label">
-            <MessageCircle size={16} strokeWidth={1.75} aria-hidden />
-            Pending enquiries
-          </span>
-          <span className="ez-kpi__value">{pendingEnquiries}</span>
-        </div>
-        <div className="ez-kpi">
-          <span className="ez-kpi__label">
-            <Calendar size={16} strokeWidth={1.75} aria-hidden />
-            Upcoming events
-          </span>
-          <span className="ez-kpi__value">{confirmedBookings}</span>
-        </div>
-        <div className="ez-kpi">
-          <span className="ez-kpi__label">
-            <Wallet size={16} strokeWidth={1.75} aria-hidden />
-            Earned this month
-          </span>
-          <span className="ez-kpi__value">{analyticsSlice.earnedThisMonthLabel}</span>
-        </div>
-        <div className="ez-kpi">
-          <span className="ez-kpi__label">
-            <Activity size={16} strokeWidth={1.75} aria-hidden />
-            Avg response
-          </span>
-          <span className="ez-kpi__value">{analyticsSlice.avgResponseLabel}</span>
-        </div>
+        <StatTile icon={MessageCircle} label="Pending enquiries" value={pendingEnquiries} />
+        <StatTile icon={Calendar} label="Upcoming events" value={confirmedBookings} />
+        <StatTile icon={Wallet} label="Earned this month" value={analyticsSlice.earnedThisMonthLabel} />
+        <StatTile icon={Activity} label="Avg response" value={analyticsSlice.avgResponseLabel} />
       </div>
 
       <div className="ez-split">
         <div className="ez-split__main ez-stack ez-stack--lg">
-          <div className="ez-card">
-            <div className="ez-card__head">
+          <Card>
+            <Card.Header>
               <span className="ez-h3">Needs your attention</span>
-              <Link className="ez-btn ez-btn--ghost ez-btn--sm" href="/vendor/bookings">
+              <ButtonLink variant="ghost" size="sm" href="/vendor/bookings">
                 All bookings
-              </Link>
-            </div>
-            <div className="ez-card__body ez-stack ez-stack--sm">
+              </ButtonLink>
+            </Card.Header>
+            <Card.Body className="ez-stack ez-stack--sm">
               {needsResponse.length === 0 ? (
                 <p className="ez-small">No enquiries need a reply right now.</p>
               ) : (
@@ -154,23 +128,22 @@ export function VendorDashboardEzView({
                       </span>
                       <span className="ez-small">{enquiry.event_date}</span>
                     </div>
-                    <span className="ez-badge ez-badge--warning">Pending</span>
-                    <Link
-                      className="ez-btn ez-btn--primary ez-btn--sm"
-                      href={`/vendor/bookings/${encodeURIComponent(enquiry.booking_request_id)}`}
-                    >
+                    <Badge tone="warning">Pending</Badge>
+                    <ButtonLink
+                      size="sm"
+                      href={`/vendor/bookings/${encodeURIComponent(enquiry.booking_request_id)}`}>
                       Respond
-                    </Link>
+                    </ButtonLink>
                   </div>
                 ))
               )}
-            </div>
-          </div>
-          <div className="ez-card">
-            <div className="ez-card__head">
+            </Card.Body>
+          </Card>
+          <Card>
+            <Card.Header>
               <span className="ez-h3">Earnings, last 6 months</span>
-            </div>
-            <div className="ez-card__body">
+            </Card.Header>
+            <Card.Body>
               {analyticsSlice.revenueBars.length === 0 ? (
                 <p className="ez-small">Complete bookings to see earnings here.</p>
               ) : (
@@ -184,15 +157,15 @@ export function VendorDashboardEzView({
                   ))}
                 </div>
               )}
-            </div>
-          </div>
+            </Card.Body>
+          </Card>
         </div>
         <div className="ez-split__aside ez-stack ez-stack--lg">
-          <div className="ez-card">
-            <div className="ez-card__head">
+          <Card>
+            <Card.Header>
               <span className="ez-h3">{formatDashboardMonthTitle(viewMonth)}</span>
-            </div>
-            <div className="ez-card__body">
+            </Card.Header>
+            <Card.Body>
               <div className="ez-cal">
                 {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((dow) => (
                   <div className="ez-cal__dow" key={dow}>
@@ -224,8 +197,8 @@ export function VendorDashboardEzView({
                   );
                 })}
               </div>
-            </div>
-          </div>
+            </Card.Body>
+          </Card>
         </div>
       </div>
     </div>

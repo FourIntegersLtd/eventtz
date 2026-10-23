@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useServerList } from "@/lib/useServerList";
+import { Card } from "@/components/ui/Card";
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 // lucide-react 1.x dropped brand logos, so the Instagram mark comes from react-icons.
 import { Link2, type LucideIcon } from "lucide-react";
@@ -40,10 +42,10 @@ function CreatorDetailRow({
 }) {
   return (
     <div className="flex items-start gap-3">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-ink-3" aria-hidden />
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-neutral-500">{label}</p>
-        <div className="mt-0.5 text-sm text-neutral-900">{children}</div>
+        <p className="text-xs font-medium text-ink-3">{label}</p>
+        <div className="mt-0.5 text-sm text-ink">{children}</div>
       </div>
     </div>
   );
@@ -70,74 +72,58 @@ const SIGNUPS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsViewProps) {
   const { showToast } = useToast();
+  // The creator comes back with every page of signups; keep the newest copy for the header card.
   const [partner, setPartner] = useState<ReferralPartner | null>(null);
-  const [signups, setSignups] = useState<ReferralVendorSignup[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [shoutoutFilter, setShoutoutFilter] = useState<ShoutoutFilter>("all");
-  const [offset, setOffset] = useState(0);
   const [toggleBusyId, setToggleBusyId] = useState<string | null>(null);
   const [copyNote, setCopyNote] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const data = await fetchReferralSignups(partnerId, {
-        shoutout: shoutoutFilter,
+  const list = useServerList<ReferralVendorSignup, { partnerId: string; shoutout: ShoutoutFilter }>({
+    pageSize: SIGNUPS_PAGE_SIZE,
+    errorMessage: "Could not load signups for this creator.",
+    filters: { partnerId, shoutout: shoutoutFilter },
+    fetchPage: async ({ offset, limit, filters }) => {
+      const data = await fetchReferralSignups(filters.partnerId, {
+        shoutout: filters.shoutout,
         offset,
-        limit: SIGNUPS_PAGE_SIZE,
+        limit,
       });
       setPartner(data.partner);
-      setSignups(data.signups);
-      setTotal(data.total);
-    } catch {
-      setError("Could not load signups for this creator.");
-    } finally {
-      setLoading(false);
-    }
-  }, [partnerId, shoutoutFilter, offset]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  useEffect(() => {
-    setOffset(0);
-  }, [shoutoutFilter, partnerId]);
+      return { items: data.signups, total: data.total };
+    },
+  });
+  const signups = list.items;
+  const total = list.total;
+  const loading = list.loading;
+  const error = actionError ?? list.error;
 
   const onToggleShoutout = async (row: ReferralVendorSignup) => {
     setToggleBusyId(row.user_id);
-    setError(null);
-    const next = !row.shoutout_completed;
-    setSignups((prev) =>
-      prev.map((s) =>
-        s.user_id === row.user_id
-          ? { ...s, shoutout_completed: next, shoutout_completed_at: next ? new Date().toISOString() : null }
-          : s,
-      ),
-    );
+    setActionError(null);
     try {
-      const updated = await patchReferralShoutout(row.user_id, next);
-      setSignups((prev) => prev.map((s) => (s.user_id === row.user_id ? updated : s)));
+      await patchReferralShoutout(row.user_id, !row.shoutout_completed);
       showToast({
-        title: next ? "Shoutout marked complete" : "Shoutout marked pending",
+        title: !row.shoutout_completed ? "Shoutout marked complete" : "Shoutout marked pending",
         tone: "success",
       });
+      list.reload();
     } catch (err: unknown) {
-      setSignups((prev) =>
-        prev.map((s) =>
-          s.user_id === row.user_id
-            ? { ...s, shoutout_completed: row.shoutout_completed, shoutout_completed_at: row.shoutout_completed_at }
-            : s,
-        ),
-      );
-      setError(getApiErrorDetail(err) ?? "Could not update shoutout status.");
-    } finally {
+      setActionError(getApiErrorDetail(err) ?? "Could not update shoutout status.");
       setToggleBusyId(null);
     }
   };
+
+  // Keep the checkbox disabled until the reload answers, so a second click cannot repeat the first.
+  useEffect(() => {
+    if (!list.loading) setToggleBusyId(null);
+  }, [list.loading]);
+
+  // A filtered last page can empty after a toggle; step back instead of showing "no matches".
+  const { items: pageItems, total: pageTotal, offset: pageOffset, loading: pageLoading, goPrevious } = list;
+  useEffect(() => {
+    if (!pageLoading && pageItems.length === 0 && pageTotal > 0 && pageOffset > 0) goPrevious();
+  }, [pageLoading, pageItems.length, pageTotal, pageOffset, goPrevious]);
 
   if (loading && !partner) {
     return <AdminLoadingState label="Loading signups…" />;
@@ -159,36 +145,36 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
       {copyNote ? <AdminSuccessBanner message={copyNote} /> : null}
       <BackLink href="/admin/referrals" label="Back to creators" />
 
-      <section className="ez-card overflow-hidden">
-        <div className="ez-card__body p-4 sm:p-5">
-        <div className="mb-4 flex flex-col items-center gap-3 border-b border-neutral-100 pb-4 sm:flex-row sm:items-center">
-          <LottieIllustration asset="welcome" size="status" className="mx-0 h-24 w-24 shrink-0 sm:h-28 sm:w-28" ariaLabel="" />
-          <div className="min-w-0 text-center sm:text-left">
-            <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Creator referral</p>
-            <p className="font-heading text-lg font-semibold text-neutral-900">{partner.display_name}</p>
-          </div>
-        </div>
-        <div className="ez-stack">
-          <CreatorDetailRow icon={SiInstagram} label="Instagram handle">
-            {partner.instagram_handle ? (
-              <span>{partner.instagram_handle}</span>
-            ) : (
-              <span className="text-neutral-400">Not set</span>
-            )}
-          </CreatorDetailRow>
-
-          <CreatorDetailRow icon={Link2} label="Vendor signup link">
-            <div className="flex items-start gap-1.5">
-              <p className="min-w-0 flex-1 break-all text-neutral-700">{partner.referral_link}</p>
-              <CopyReferralLinkButton
-                link={partner.referral_link}
-                onCopied={() => setCopyNote("Vendor signup link copied.")}
-              />
+      <Card as="section" className="overflow-hidden">
+        <Card.Body className="p-4 sm:p-5">
+          <div className="mb-4 flex flex-col items-center gap-3 border-b border-line pb-4 sm:flex-row sm:items-center">
+            <LottieIllustration asset="welcome" size="status" className="mx-0 h-24 w-24 shrink-0 sm:h-28 sm:w-28" ariaLabel="" />
+            <div className="min-w-0 text-center sm:text-left">
+              <p className="text-xs font-medium uppercase tracking-wide text-ink-3">Creator referral</p>
+              <p className="font-heading text-lg font-semibold text-ink">{partner.display_name}</p>
             </div>
-          </CreatorDetailRow>
-        </div>
-        </div>
-      </section>
+          </div>
+          <div className="ez-stack">
+            <CreatorDetailRow icon={SiInstagram} label="Instagram handle">
+              {partner.instagram_handle ? (
+                <span>{partner.instagram_handle}</span>
+              ) : (
+                <span className="text-ink-3">Not set</span>
+              )}
+            </CreatorDetailRow>
+
+            <CreatorDetailRow icon={Link2} label="Vendor signup link">
+              <div className="flex items-start gap-1.5">
+                <p className="min-w-0 flex-1 break-all text-ink-2">{partner.referral_link}</p>
+                <CopyReferralLinkButton
+                  link={partner.referral_link}
+                  onCopied={() => setCopyNote("Vendor signup link copied.")}
+                />
+              </div>
+            </CreatorDetailRow>
+          </div>
+        </Card.Body>
+      </Card>
 
       <SegmentedControl
         aria-label="Filter signups by shoutout status"
@@ -208,7 +194,7 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
         />
       ) : (
         <>
-          <p className="text-sm text-neutral-600">
+          <p className="text-sm text-ink-2">
             {total} signup{total === 1 ? "" : "s"}
           </p>
           <DataTable
@@ -234,15 +220,15 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
                     <label className="flex cursor-pointer items-center gap-2 text-sm">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 rounded border-neutral-300 text-primary focus:ring-primary"
+                        className="h-4 w-4 rounded border-line-strong text-primary focus:ring-primary"
                         checked={row.shoutout_completed}
                         disabled={toggleBusyId === row.user_id}
                         onChange={() => void onToggleShoutout(row)}
                       />
-                      <span className="text-neutral-700">{row.shoutout_completed ? "Completed" : "Pending"}</span>
+                      <span className="text-ink-2">{row.shoutout_completed ? "Completed" : "Pending"}</span>
                     </label>
                     {row.shoutout_completed_at ? (
-                      <p className="mt-0.5 text-xs text-neutral-500">{formatDay(row.shoutout_completed_at)}</p>
+                      <p className="mt-0.5 text-xs text-ink-3">{formatDay(row.shoutout_completed_at)}</p>
                     ) : null}
                   </>
                 ),
@@ -268,13 +254,13 @@ export function AdminReferralSignupsView({ partnerId }: AdminReferralSignupsView
             ]}
           />
           <TablePagination
-            offset={offset}
-            limit={SIGNUPS_PAGE_SIZE}
+            offset={list.offset}
+            limit={list.limit}
             total={total}
             pageRowCount={signups.length}
             loading={loading}
-            onPrevious={() => setOffset((value) => Math.max(0, value - SIGNUPS_PAGE_SIZE))}
-            onNext={() => setOffset((value) => value + SIGNUPS_PAGE_SIZE)}
+            onPrevious={list.goPrevious}
+            onNext={list.goNext}
           />
         </>
       )}

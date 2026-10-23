@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import {
   CircleCheck,
   Clock,
@@ -21,6 +22,8 @@ import type { VendorOnboardingData } from "../../../../lib/vendorOnboarding/type
 import { BOOKING_SERVICE_FEE_PERCENT } from "@/lib/bookingServiceFee";
 import { isPerUnitPricing, parsePackageQuantity } from "@/lib/packagePricing";
 import { formatGbp, formatPence } from "@/lib/money";
+import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 
 type WizardAsideProps = {
   step: number;
@@ -38,15 +41,15 @@ function AsideCard({
   children: ReactNode;
 }) {
   return (
-    <div className="ez-card">
-      <div className="ez-card__head">
+    <Card>
+      <Card.Header>
         <div className="ez-hrow">
           {icon}
           <span className="ez-h3">{title}</span>
         </div>
-      </div>
-      <div className="ez-card__body">{children}</div>
-    </div>
+      </Card.Header>
+      <Card.Body>{children}</Card.Body>
+    </Card>
   );
 }
 
@@ -63,18 +66,18 @@ function AccountAside() {
           </span>
         }
       >
-        <ul style={{ margin: 0, paddingLeft: 18, listStyle: "disc" }}>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+        <ul className="m-0 pl-4.5 list-disc">
+          <li className="ez-small mb-1.5">
             Clients see your name and number after booking, so they can reach
             you on the day.
           </li>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+          <li className="ez-small mb-1.5">
             We use your phone only for urgent booking changes, never marketing.
           </li>
         </ul>
       </AsideCard>
-      <div className="ez-card">
-        <div className="ez-card__body">
+      <Card>
+        <Card.Body>
           <div className="ez-hrow">
             <Clock size={20} strokeWidth={1.75} aria-hidden />
             <div>
@@ -84,14 +87,14 @@ function AccountAside() {
               </div>
             </div>
           </div>
-          <div className="ez-progress" style={{ marginTop: 14 }}>
+          <div className="ez-progress mt-3.5">
             <div
               className="ez-progress__bar"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
     </div>
   );
 }
@@ -114,14 +117,14 @@ function BusinessAside({ data }: { data: VendorOnboardingData }) {
   const fromPrice = lowestPackagePrice(data);
   const categoryAndCity = [serviceLabel, data.baseCity.trim()].filter(Boolean);
   return (
-    <div className="ez-card">
-      <div className="ez-card__head">
+    <Card>
+      <Card.Header>
         <span className="ez-h3">Live preview</span>
-        <span className="ez-badge ez-badge--neutral ez-badge--plain">
+        <Badge className="ez-badge--plain">
           How clients see you
-        </span>
-      </div>
-      <div className="ez-card__body">
+        </Badge>
+      </Card.Header>
+      <Card.Body>
         <div className="ez-vcard">
           <div className="ez-vcard__media">
             <ImageIcon
@@ -157,11 +160,11 @@ function BusinessAside({ data }: { data: VendorOnboardingData }) {
             </div>
           ) : null}
         </div>
-        <p className="ez-caption" style={{ marginTop: 12 }}>
+        <p className="ez-caption mt-3">
           Updates as you type. Clients only see this after approval.
         </p>
-      </div>
-    </div>
+      </Card.Body>
+    </Card>
   );
 }
 
@@ -174,15 +177,15 @@ function LocationAside({ data }: { data: VendorOnboardingData }) {
   );
   return (
     <div className="ez-stack ez-stack--lg">
-      <div className="ez-card">
-        <div className="ez-card__head">
+      <Card>
+        <Card.Header>
           <span className="ez-h3">Where clients will find you</span>
-        </div>
-        <div className="ez-card__body">
-          <div className="ez-media-ph" style={{ height: 200 }}>
+        </Card.Header>
+        <Card.Body>
+          <div className="ez-media-ph h-[200px]">
             <MapPin strokeWidth={1.75} aria-hidden />
           </div>
-          <div className="ez-stack ez-stack--sm" style={{ marginTop: 14 }}>
+          <div className="ez-stack ez-stack--sm mt-3.5">
             <span className="ez-strong">{place || "Add your base city"}</span>
             {radius ? (
               <span className="ez-small">
@@ -190,8 +193,8 @@ function LocationAside({ data }: { data: VendorOnboardingData }) {
               </span>
             ) : null}
           </div>
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
       <AsideCard
         title="Good to know"
         icon={
@@ -200,11 +203,11 @@ function LocationAside({ data }: { data: VendorOnboardingData }) {
           </span>
         }
       >
-        <ul style={{ margin: 0, paddingLeft: 18, listStyle: "disc" }}>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+        <ul className="m-0 pl-4.5 list-disc">
+          <li className="ez-small mb-1.5">
             Clients search by town, so use the city you are really based in.
           </li>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+          <li className="ez-small mb-1.5">
             Your exact address is never shown publicly.
           </li>
         </ul>
@@ -231,11 +234,11 @@ function PricingAside({ data }: { data: VendorOnboardingData }) {
     );
     const unit = priced.unitLabel.trim() || "item";
     illustration = (
-      <div className="ez-card">
-        <div className="ez-card__head">
+      <Card>
+        <Card.Header>
           <span className="ez-h3">What a client pays</span>
-        </div>
-        <div className="ez-card__body">
+        </Card.Header>
+        <Card.Body>
           <div className="ez-lines">
             <div className="ez-lines__row">
               <span>
@@ -252,11 +255,11 @@ function PricingAside({ data }: { data: VendorOnboardingData }) {
               <span>{formatPence(pricePence + feePence)}</span>
             </div>
           </div>
-          <p className="ez-caption" style={{ marginTop: 10 }}>
+          <p className="ez-caption mt-2.5">
             You receive your price in full. The fee is added on top at checkout.
           </p>
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
     );
   }
   return (
@@ -269,14 +272,14 @@ function PricingAside({ data }: { data: VendorOnboardingData }) {
           </span>
         }
       >
-        <ul style={{ margin: 0, paddingLeft: 18, listStyle: "disc" }}>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+        <ul className="m-0 pl-4.5 list-disc">
+          <li className="ez-small mb-1.5">
             Name the package for what the client gets.
           </li>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+          <li className="ez-small mb-1.5">
             List what is included, so there are fewer questions.
           </li>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+          <li className="ez-small mb-1.5">
             One price per package. Clients choose the quantity when they
             enquire.
           </li>
@@ -299,21 +302,21 @@ function CancellationAside() {
           </span>
         }
       >
-        <ul style={{ margin: 0, paddingLeft: 18, listStyle: "disc" }}>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+        <ul className="m-0 pl-4.5 list-disc">
+          <li className="ez-small mb-1.5">
             Flexible wins more small bookings. Strict protects dates you turn
             other work away for.
           </li>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+          <li className="ez-small mb-1.5">
             Clients see the policy on your profile and again before they pay.
           </li>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+          <li className="ez-small mb-1.5">
             Most vendors pick Moderate.
           </li>
         </ul>
       </AsideCard>
-      <div className="ez-card">
-        <div className="ez-card__body">
+      <Card>
+        <Card.Body>
           <div className="ez-hrow">
             <Lock size={20} strokeWidth={1.75} aria-hidden />
             <span className="ez-small">
@@ -321,8 +324,8 @@ function CancellationAside() {
               it was made under.
             </span>
           </div>
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
     </div>
   );
 }
@@ -354,7 +357,7 @@ function AvailabilityAside({ data }: { data: VendorOnboardingData }) {
             </span>
           </div>
         </div>
-        <p className="ez-caption" style={{ marginTop: 10 }}>
+        <p className="ez-caption mt-2.5">
           Clients cannot enquire for days you block or days that are full.
         </p>
       </AsideCard>
@@ -366,11 +369,11 @@ function AvailabilityAside({ data }: { data: VendorOnboardingData }) {
           </span>
         }
       >
-        <ul style={{ margin: 0, paddingLeft: 18, listStyle: "disc" }}>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+        <ul className="m-0 pl-4.5 list-disc">
+          <li className="ez-small mb-1.5">
             Block holidays now so you never have to decline.
           </li>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+          <li className="ez-small mb-1.5">
             You can change all of this later in Profile, Availability.
           </li>
         </ul>
@@ -391,37 +394,32 @@ function PortfolioAside() {
           </span>
         }
       >
-        <ul style={{ margin: 0, paddingLeft: 18, listStyle: "disc" }}>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+        <ul className="m-0 pl-4.5 list-disc">
+          <li className="ez-small mb-1.5">
             Use bright, sharp photos of real events you have done.
           </li>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+          <li className="ez-small mb-1.5">
             Show food, setup and happy guests, not stock images.
           </li>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+          <li className="ez-small mb-1.5">
             Put your best photo first: it becomes the cover.
           </li>
         </ul>
       </AsideCard>
-      <div className="ez-card">
-        <div className="ez-card__body">
-          <div
-            className="ez-banner ez-banner--warning"
-            style={{ border: 0, padding: 0, background: "none" }}
-          >
-            <TriangleAlert size={20} strokeWidth={1.75} aria-hidden />
-            <div className="ez-banner__body">
-              <div className="ez-banner__title">
-                You can still submit with fewer than {MIN_PORTFOLIO_IMAGES}
-              </div>
-              <p className="ez-small" style={{ color: "inherit" }}>
-                But we cannot approve you until at least {MIN_PORTFOLIO_IMAGES}{" "}
-                photos are uploaded.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Card>
+        <Card.Body>
+          <Banner
+            tone="warning"
+            className="border-0 p-0 bg-transparent"
+            icon={<TriangleAlert size={20} strokeWidth={1.75} aria-hidden />}
+            title={`You can still submit with fewer than ${MIN_PORTFOLIO_IMAGES}`}>
+            <p className="ez-small text-inherit">
+              But we cannot approve you until at least {MIN_PORTFOLIO_IMAGES}{" "}
+              photos are uploaded.
+            </p>
+          </Banner>
+        </Card.Body>
+      </Card>
     </div>
   );
 }
@@ -438,25 +436,25 @@ function AdditionalInfoAside() {
           </span>
         }
       >
-        <ul style={{ margin: 0, paddingLeft: 18, listStyle: "disc" }}>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+        <ul className="m-0 pl-4.5 list-disc">
+          <li className="ez-small mb-1.5">
             Vendors with a certificate get a Verified mark on their profile.
           </li>
-          <li className="ez-small" style={{ marginBottom: 6 }}>
+          <li className="ez-small mb-1.5">
             Documents are seen by our team only, never published.
           </li>
         </ul>
       </AsideCard>
-      <div className="ez-card">
-        <div className="ez-card__body">
+      <Card>
+        <Card.Body>
           <div className="ez-hrow">
             <Lock size={20} strokeWidth={1.75} aria-hidden />
             <span className="ez-small">
               Stored securely and deleted if you close your account.
             </span>
           </div>
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
     </div>
   );
 }
@@ -466,9 +464,9 @@ function ReadinessLine({ met, children }: { met: boolean; children: ReactNode })
   return (
     <div className="ez-hrow">
       {met ? (
-        <CircleCheck size={18} strokeWidth={1.75} aria-hidden style={{ color: "var(--ez-success)" }} />
+        <CircleCheck size={18} strokeWidth={1.75} aria-hidden className="text-success" />
       ) : (
-        <TriangleAlert size={18} strokeWidth={1.75} aria-hidden style={{ color: "var(--ez-warning)" }} />
+        <TriangleAlert size={18} strokeWidth={1.75} aria-hidden className="text-warning" />
       )}
       <span className="ez-small">{children}</span>
     </div>
@@ -502,8 +500,7 @@ function ReviewAside({ data }: { data: VendorOnboardingData }) {
       </AsideCard>
       <AsideCard title="What happens next">
         <ol
-          className="ez-small"
-          style={{ margin: 0, paddingLeft: 18, display: "flex", flexDirection: "column", gap: 6, listStyle: "decimal" }}
+          className="ez-small m-0 pl-4.5 flex flex-col gap-1.5 list-decimal"
         >
           <li>Our team reviews within 2 working days.</li>
           <li>We email you the result.</li>

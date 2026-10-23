@@ -25,20 +25,21 @@ import type {
   AdminVendorSubmissionReviewModel,
 } from "./adminVendorSubmissionReviewModel";
 import type { AdminVendorUnsubmitHandler } from "./vendorUnsubmitTypes";
+import { Card } from "@/components/ui/Card";
 
 function ConfirmationRow({ label, accepted }: { label: string; accepted: boolean }) {
   return (
     <div className="flex items-start gap-3 py-4 first:pt-0 last:pb-0">
       {accepted ? (
-        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden />
       ) : (
-        <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+        <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden />
       )}
       <div className="min-w-0">
-        <p className={`text-sm ${accepted ? "text-neutral-800" : "font-medium text-amber-900"}`}>
+        <p className={`text-sm ${accepted ? "text-ink" : "font-medium text-warning"}`}>
           {label}
         </p>
-        <p className="mt-0.5 text-xs text-neutral-500">
+        <p className="mt-0.5 text-xs text-ink-3">
           {accepted ? "Confirmed by vendor" : "Not confirmed"}
         </p>
       </div>
@@ -115,15 +116,15 @@ export function AdminVendorSubmissionReview({
   const showStaffAside = Boolean(vendor && onSetApproval && onSetListingOverride);
 
   const submissionReviewPanel = (
-    <section className="ez-card overflow-hidden">
-      <div className="ez-card__head">
+    <Card as="section" className="overflow-hidden">
+      <Card.Header>
         <h2 className="ez-h3">Review checklist</h2>
         <p className="ez-small mt-1">
-          Work through gaps here, then use <strong className="font-medium text-neutral-800">Actions</strong> to
+          Work through gaps here, then use <strong className="font-medium text-ink">Actions</strong> to
           approve or update listing status.
         </p>
-      </div>
-      <div className="ez-card__body flex flex-col gap-4">
+      </Card.Header>
+      <Card.Body className="flex flex-col gap-4">
         {vendor && onUnsubmit ? (
           <AdminVendorSubmissionActions
             vendor={vendor}
@@ -135,8 +136,8 @@ export function AdminVendorSubmissionReview({
           />
         ) : null}
         <AdminVendorSubmissionChecklist groups={checklistGroups} embedded />
-      </div>
-    </section>
+      </Card.Body>
+    </Card>
   );
 
   const submissionContent = (
@@ -173,7 +174,7 @@ export function AdminVendorSubmissionReview({
           </SubmissionLabelRow>
           {socialLinks ? (
             <SubmissionLabelRow label="Social links">
-              <p className="text-sm text-neutral-800">{socialLinks.value}</p>
+              <p className="text-sm text-ink">{socialLinks.value}</p>
             </SubmissionLabelRow>
           ) : null}
         </SubmissionCard>
@@ -250,7 +251,7 @@ export function AdminVendorSubmissionReview({
         description="Attestations at submission"
       >
         <SubmissionCard>
-          <div className="divide-y divide-neutral-100">
+          <div className="divide-y divide-line">
             {confirmations.map((item) => (
               <ConfirmationRow
                 key={item.label}
@@ -295,7 +296,7 @@ export function AdminVendorSubmissionReview({
 
   if (!staffContent) {
     return (
-      <p className="text-sm text-neutral-600">Staff actions are not available for this vendor.</p>
+      <p className="text-sm text-ink-2">Staff actions are not available for this vendor.</p>
     );
   }
 

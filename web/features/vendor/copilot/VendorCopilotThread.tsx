@@ -39,10 +39,10 @@ function ActionChip({ action }: { action: CopilotAction }) {
   return (
     <Link
       href={href}
-      className="block rounded-lg border border-neutral-200 bg-white px-3 py-2 text-left text-xs transition hover:border-primary/30 hover:bg-primary/[0.03]"
+      className="block rounded-lg border border-line bg-white px-3 py-2 text-left text-xs transition hover:border-primary/30 hover:bg-primary/[0.03]"
     >
-      <span className="font-semibold text-neutral-900">{action.title}</span>
-      <span className="mt-0.5 block text-neutral-600">{action.rationale}</span>
+      <span className="font-semibold text-ink">{action.title}</span>
+      <span className="mt-0.5 block text-ink-2">{action.rationale}</span>
     </Link>
   );
 }
@@ -115,13 +115,13 @@ export function VendorCopilotThread({
   return (
     <div className={`flex min-h-0 flex-1 flex-col ${embedded ? "" : "max-h-[70vh]"}`}>
       {!embedded ? (
-        <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3">
           <div className="flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-primary" aria-hidden />
-            <p className="text-sm font-semibold text-neutral-900">{VENDOR_COPILOT.name}</p>
+            <p className="text-sm font-semibold text-ink">{VENDOR_COPILOT.name}</p>
           </div>
           {onClose ? (
-            <button type="button" onClick={onClose} className="rounded-md p-1 text-neutral-500 hover:bg-neutral-100">
+            <button type="button" onClick={onClose} className="rounded-md p-1 text-ink-3 hover:bg-surface-3">
               <X className="h-4 w-4" aria-hidden />
             </button>
           ) : null}
@@ -167,16 +167,16 @@ export function VendorCopilotThread({
         {busy ? (
           <div className="mt-3 flex items-center gap-2">
             <LottieIllustration asset="aiThinking" size="inline" className="mx-0" ariaLabel="" />
-            <p className="text-xs text-neutral-500">Thinking…</p>
+            <p className="text-xs text-ink-3">Thinking…</p>
           </div>
         ) : null}
-        {error ? <p className="mt-3 text-xs text-red-700">{error}</p> : null}
+        {error ? <p className="mt-3 text-xs text-danger">{error}</p> : null}
         <div ref={bottomRef} />
       </div>
 
       <form
         onSubmit={onSubmit}
-        className="shrink-0 border-t border-neutral-100 bg-white px-4 py-3"
+        className="shrink-0 border-t border-line bg-white px-4 py-3"
       >
         <div className="flex gap-2">
           <div className="relative min-w-0 flex-1">
@@ -185,7 +185,7 @@ export function VendorCopilotThread({
               visible={!input.trim() && !busy}
               compact
               className="px-4"
-              textClassName="text-neutral-500"
+              textClassName="text-ink-3"
             />
             <input
               value={input}
@@ -193,7 +193,7 @@ export function VendorCopilotThread({
               placeholder=""
               aria-label="Ask Abba a question"
               disabled={busy}
-              className={formControlClass("rounded-xl bg-neutral-100 px-4 focus:ring-1 focus:ring-neutral-300 disabled:opacity-60")}
+              className={formControlClass("rounded-xl bg-surface-3 px-4 focus:ring-1 focus:ring-line-strong disabled:opacity-60")}
             />
           </div>
           <Button type="submit" size="sm" disabled={busy || !input.trim()}>

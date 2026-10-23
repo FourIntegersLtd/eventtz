@@ -70,8 +70,8 @@ export function PaymentReceiptView({
     <div className="w-full">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-heading text-xl font-semibold text-neutral-900">{title}</h1>
-          <p className="mt-0.5 text-sm text-neutral-500">{receipt.receipt_number}</p>
+          <h1 className="font-heading text-xl font-semibold text-ink">{title}</h1>
+          <p className="mt-0.5 text-sm text-ink-3">{receipt.receipt_number}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {htmlBlobUrl ? (
@@ -103,13 +103,13 @@ export function PaymentReceiptView({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-neutral-200 bg-neutral-100 shadow-sm">
+      <div className="rounded-2xl border border-line bg-surface-3 shadow-sm">
         {htmlLoading ? (
-          <div className="flex min-h-[70vh] items-center justify-center text-sm text-neutral-500">
+          <div className="flex min-h-[70vh] items-center justify-center text-sm text-ink-3">
             Loading receipt…
           </div>
         ) : htmlError ? (
-          <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-6 py-12 text-center text-sm text-neutral-600">
+          <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 px-6 py-12 text-center text-sm text-ink-2">
             <p>{htmlError}</p>
             {onRetryPreview ? (
               <Button variant="secondary" size="sm" onClick={onRetryPreview}>

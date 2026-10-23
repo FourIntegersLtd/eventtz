@@ -66,7 +66,7 @@ export function PortfolioImageGallery({
       if (emptyFallback?.trim()) {
         return (
           <div
-            className={`flex h-14 w-14 items-center justify-center rounded-lg border border-neutral-100 bg-neutral-50 font-heading text-lg font-semibold text-neutral-400 ${className}`.trim()}
+            className={`flex h-14 w-14 items-center justify-center rounded-lg border border-line bg-surface-3 font-heading text-lg font-semibold text-ink-3 ${className}`.trim()}
           >
             {emptyFallback.slice(0, 1).toUpperCase()}
           </div>
@@ -74,7 +74,7 @@ export function PortfolioImageGallery({
       }
       return (
         <p
-          className={`rounded-lg border border-dashed border-neutral-200 px-3 py-3 text-center text-xs text-neutral-400 ${className}`.trim()}
+          className={`rounded-lg border border-dashed border-line px-3 py-3 text-center text-xs text-ink-3 ${className}`.trim()}
         >
           No photos uploaded
         </p>
@@ -95,7 +95,7 @@ export function PortfolioImageGallery({
               key={url}
               type="button"
               onClick={() => openLightbox(index)}
-              className={`group flex ${cellClass} cursor-zoom-in items-center justify-center overflow-hidden rounded-lg border border-neutral-100 bg-neutral-50 transition hover:border-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40`}
+              className={`group flex ${cellClass} cursor-zoom-in items-center justify-center overflow-hidden rounded-lg border border-line bg-surface-3 transition hover:border-line focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40`}
               aria-label={`Open ${alt} photo ${index + 1} fullscreen`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -127,7 +127,7 @@ export function PortfolioImageGallery({
 
   return (
     <>
-      <div className={`overflow-hidden rounded-2xl border border-neutral-100 bg-white ${className}`.trim()}>
+      <div className={`overflow-hidden rounded-2xl border border-line bg-white ${className}`.trim()}>
         <div
           className={`relative flex ${heroMinH} ${heroMaxH} w-full items-center justify-center overflow-hidden bg-white`}
         >
@@ -148,16 +148,16 @@ export function PortfolioImageGallery({
             </button>
           ) : (
             <div
-              className={`flex ${heroMinH} w-full items-center justify-center bg-gradient-to-br from-neutral-100 via-white to-neutral-50`}
+              className={`flex ${heroMinH} w-full items-center justify-center bg-gradient-to-br from-surface-3 via-white to-surface-3`}
             >
-              <span className="font-heading text-4xl font-semibold tracking-tight text-neutral-300 sm:text-5xl">
+              <span className="font-heading text-4xl font-semibold tracking-tight text-ink-3 sm:text-5xl">
                 {emptyFallback?.slice(0, 1).toUpperCase() ?? "?"}
               </span>
             </div>
           )}
         </div>
         {photos.length > 1 ? (
-          <div className="flex shrink-0 gap-2.5 overflow-x-auto border-t border-neutral-100 px-3 py-3.5">
+          <div className="flex shrink-0 gap-2.5 overflow-x-auto border-t border-line px-3 py-3.5">
             {photos.map((url, index) => {
               const selected = index === activePhotoIndex;
               return (
@@ -167,7 +167,7 @@ export function PortfolioImageGallery({
                   onClick={() => setActivePhotoIndex(index)}
                   onDoubleClick={() => openLightbox(index)}
                   className={`flex ${thumbH} shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-2 transition ${
-                    selected ? "ring-neutral-400" : "ring-transparent hover:ring-neutral-300"
+                    selected ? "ring-line-strong" : "ring-transparent hover:ring-line-strong"
                   }`}
                   aria-label={`View ${alt} photo ${index + 1}`}
                   aria-pressed={selected}

@@ -132,12 +132,12 @@ export function AdminVendorSubmissionActions({
       <div className="ez-banner ez-banner--warning">
         <div className="ez-banner__body flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-amber-950">
+            <p className="text-sm font-medium text-warning">
               {missingCount > 0
                 ? `Submitted with ${missingCount} required item${missingCount === 1 ? "" : "s"} still missing.`
                 : "Waiting for review."}
             </p>
-            <p className="mt-1 text-xs text-amber-900/80">
+            <p className="mt-1 text-xs text-warning/80">
               Return unlocks their profile for editing, emails them, and sends an Eventtz Support
               message explaining what to fix.
             </p>
@@ -154,7 +154,7 @@ export function AdminVendorSubmissionActions({
           </Button>
         </div>
         {localError && !modalOpen ? (
-          <p className="mt-3 text-sm text-red-700" role="alert">
+          <p className="mt-3 text-sm text-danger" role="alert">
             {localError}
           </p>
         ) : null}
@@ -188,12 +188,12 @@ export function AdminVendorSubmissionActions({
           </div>
         }
       >
-        <p className="mb-3 text-sm text-neutral-600">
+        <p className="mb-3 text-sm text-ink-2">
           This returns {businessName || "the vendor"}&apos;s profile to draft, emails them, and
           sends the message below via Eventtz Support.
         </p>
         {localError ? (
-          <p className="mb-3 text-sm text-red-700" role="alert">
+          <p className="mb-3 text-sm text-danger" role="alert">
             {localError}
           </p>
         ) : null}

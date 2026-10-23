@@ -1,5 +1,6 @@
 import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 
 export type PublicReviewItem = components["schemas"]["PublicReviewItem"];
 
@@ -30,7 +31,7 @@ export async function fetchVendorOwnReviews(
   const { data } = await api.get<VendorOwnerReviewsResponse>("/api/v1/vendor/reviews", {
     params: {
       offset: params.offset ?? 0,
-      limit: params.limit ?? 100,
+      limit: params.limit ?? DEFAULT_LIST_PAGE_SIZE,
       ...(params.min_rating != null ? { min_rating: params.min_rating } : {}),
     },
   });

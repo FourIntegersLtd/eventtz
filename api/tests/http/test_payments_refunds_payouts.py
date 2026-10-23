@@ -772,3 +772,39 @@ async def test_vendor_dashboard_counts_held_payouts_like_the_ledger(
     history = await client.get("/api/v1/vendor/payments/history", headers=headers)
     assert held.json()["held_payouts_count"] == 3
     assert [row["status"] for row in history.json()["payouts"]].count("awaiting_payout") == 3
+
+
+async def test_vendor_payout_history_names_the_held_payout_with_the_earliest_event(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    """`next_release_*` is the earliest held event across the whole ledger, not the newest row or the page."""
+    client_id, _client_token = await _make_account(db_session, "next-client@example.com", "client")
+    vendor_id, vendor_token = await _make_vendor(db_session, "next-vendor@example.com", stripe_ready=True)
+    headers = {"Authorization": f"Bearer {vendor_token}"}
+
+    empty = await client.get("/api/v1/vendor/payments/history", headers=headers)
+    assert empty.json()["next_release_event_date"] is None
+    assert empty.json()["next_release_label"] is None
+
+    # Released, with the earliest event of all: never the next release.
+    await _make_booking(
+        db_session,
+        client_id=client_id,
+        vendor_id=vendor_id,
+        payment_status="payout_released",
+        payout_released_at=datetime(2026, 3, 5, tzinfo=UTC),
+        event_date="2026-01-01",
+    )
+    await _make_booking(
+        db_session, client_id=client_id, vendor_id=vendor_id, event_date="2026-06-10", event_name="June"
+    )
+    await _make_booking(
+        db_session, client_id=client_id, vendor_id=vendor_id, event_date="2026-04-02", event_name="April"
+    )
+
+    # A page of one row holds a single ledger row; the answer still spans the whole ledger.
+    history = await client.get("/api/v1/vendor/payments/history", headers=headers, params={"limit": 1})
+    body = history.json()
+    assert len(body["payouts"]) == 1
+    assert body["next_release_event_date"] == "2026-04-02"
+    assert body["next_release_label"] == "Next Client"

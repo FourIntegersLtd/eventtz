@@ -97,7 +97,7 @@ export function BookingStatusBreakdown({ byStatus }: { byStatus: Record<string, 
   const total = entries.reduce((sum, { count }) => sum + count, 0);
 
   if (entries.length === 0) {
-    return <p className="text-sm text-neutral-500">No bookings recorded yet.</p>;
+    return <p className="text-sm text-ink-3">No bookings recorded yet.</p>;
   }
 
   return (
@@ -114,7 +114,7 @@ export function BookingStatusBreakdown({ byStatus }: { byStatus: Record<string, 
         />
       </div>
 
-      <dl className="w-full divide-y divide-neutral-100">
+      <dl className="w-full divide-y divide-line">
         {entries.map(({ status, count }) => {
           const pct = total > 0 ? Math.round((count / total) * 100) : 0;
 
@@ -131,9 +131,9 @@ export function BookingStatusBreakdown({ byStatus }: { byStatus: Record<string, 
                 />
                 <StatusBadge status={status} />
               </dt>
-              <dd className="shrink-0 text-sm font-semibold tabular-nums text-neutral-900">
+              <dd className="shrink-0 text-sm font-semibold tabular-nums text-ink">
                 {count}
-                <span className="ml-1.5 font-normal text-neutral-500">{pct}%</span>
+                <span className="ml-1.5 font-normal text-ink-3">{pct}%</span>
               </dd>
             </div>
           );
@@ -158,12 +158,12 @@ export function QuickLinkRow({
   inset?: boolean;
 }) {
   const className = inset
-    ? "flex items-center gap-3 py-4 text-sm font-medium text-neutral-800 transition first:pt-0 last:pb-0 hover:text-primary"
-    : "flex items-center gap-3 rounded-xl border border-neutral-100 bg-white px-4 py-3.5 text-sm font-medium text-neutral-800 transition hover:border-neutral-200";
+    ? "flex items-center gap-3 py-4 text-sm font-medium text-ink transition first:pt-0 last:pb-0 hover:text-primary"
+    : "flex items-center gap-3 rounded-xl border border-line bg-white px-4 py-3.5 text-sm font-medium text-ink transition hover:border-line";
 
   const iconWrapClass = inset
-    ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-50 text-primary ring-1 ring-inset ring-neutral-100"
-    : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-neutral-50 text-primary ring-1 ring-inset ring-neutral-100";
+    ? "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-3 text-primary ring-1 ring-inset ring-line"
+    : "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-3 text-primary ring-1 ring-inset ring-line";
 
   return (
     <Link
@@ -177,9 +177,9 @@ export function QuickLinkRow({
       </span>
       <span className="min-w-0 flex-1">{label}</span>
       {external ? (
-        <ExternalLink className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+        <ExternalLink className="h-4 w-4 shrink-0 text-ink-3" aria-hidden />
       ) : (
-        <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+        <ChevronRight className="h-4 w-4 shrink-0 text-ink-3" aria-hidden />
       )}
     </Link>
   );
@@ -204,12 +204,12 @@ export function VendorActionOptionRow({
 }) {
   const iconClass =
     tone === "success"
-      ? "bg-emerald-50 text-emerald-700"
+      ? "bg-success-soft text-success"
       : tone === "danger"
-        ? "bg-red-50 text-red-700"
+        ? "bg-danger-soft text-danger"
         : tone === "warning"
-          ? "bg-amber-50 text-amber-800"
-          : "bg-neutral-100 text-neutral-600";
+          ? "bg-warning-soft text-warning"
+          : "bg-surface-3 text-ink-2";
 
   return (
     <button
@@ -219,7 +219,7 @@ export function VendorActionOptionRow({
       className={`flex w-full items-center gap-3 rounded-xl border px-3.5 py-3 text-left transition ${
         selected
           ? "border-primary/30 bg-primary/[0.04] ring-1 ring-primary/20"
-          : "border-transparent hover:border-neutral-200 hover:bg-neutral-50/80"
+          : "border-transparent hover:border-line hover:bg-surface-3/80"
       } disabled:cursor-not-allowed disabled:opacity-45`}
     >
       <span
@@ -228,12 +228,12 @@ export function VendorActionOptionRow({
         <Icon className="h-4 w-4" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium text-neutral-900">{title}</span>
-        <span className="mt-0.5 block text-xs leading-relaxed text-neutral-500">{description}</span>
+        <span className="block text-sm font-medium text-ink">{title}</span>
+        <span className="mt-0.5 block text-xs leading-relaxed text-ink-3">{description}</span>
       </span>
       <span
         className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
-          selected ? "border-primary bg-primary" : "border-neutral-300 bg-white"
+          selected ? "border-primary bg-primary" : "border-line-strong bg-white"
         }`}
         aria-hidden
       >
@@ -265,20 +265,20 @@ export function ApprovalCard({
 }) {
   const iconTone =
     variant === "primary"
-      ? "bg-emerald-50 text-emerald-700"
+      ? "bg-success-soft text-success"
       : variant === "destructive"
-        ? "bg-red-50 text-red-700"
-        : "bg-neutral-100 text-neutral-600";
+        ? "bg-danger-soft text-danger"
+        : "bg-surface-3 text-ink-2";
 
   const ringClass = selected
     ? "border-primary bg-primary/5 ring-2 ring-primary/30"
     : isCurrent
       ? variant === "primary"
-        ? "border-emerald-300 bg-emerald-50/50 ring-2 ring-emerald-200/80"
+        ? "border-success-line bg-success-soft/50 ring-2 ring-success-line/80"
         : variant === "destructive"
-          ? "border-red-300 bg-red-50/50 ring-2 ring-red-200/80"
-          : "border-neutral-300 bg-neutral-50/80 ring-2 ring-neutral-200/80"
-      : "border-neutral-200/80 bg-transparent hover:border-neutral-300 hover:bg-neutral-50/50";
+          ? "border-danger-line bg-danger-soft/50 ring-2 ring-danger-line/80"
+          : "border-line-strong bg-surface-3/80 ring-2 ring-line/80"
+      : "border-line/80 bg-transparent hover:border-line-strong hover:bg-surface-3/50";
 
   return (
     <button
@@ -291,22 +291,22 @@ export function ApprovalCard({
       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconTone}`}>
         <Icon className="h-4 w-4" aria-hidden />
       </span>
-      <span className="min-w-0 flex-1 text-sm font-medium text-neutral-900">{title}</span>
+      <span className="min-w-0 flex-1 text-sm font-medium text-ink">{title}</span>
       {loading ? (
-        <span className="shrink-0 text-[11px] text-neutral-500">…</span>
+        <span className="shrink-0 text-[11px] text-ink-3">…</span>
       ) : selected ? (
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
           <CheckCircle2 className="h-3 w-3" aria-hidden />
           Selected
         </span>
       ) : isCurrent ? (
-        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-600">
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-surface-3 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-2">
           <CheckCircle2 className="h-3 w-3" aria-hidden />
           Active
         </span>
       ) : (
         <span
-          className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-neutral-300 bg-white"
+          className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-line-strong bg-white"
           aria-hidden
         />
       )}
@@ -332,7 +332,7 @@ export function TabButton({
       aria-selected={active}
       onClick={onClick}
       className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
-        active ? "bg-white text-neutral-900 shadow-sm ring-1 ring-neutral-200/80" : "text-neutral-600 hover:text-neutral-900"
+        active ? "bg-white text-ink shadow-sm ring-1 ring-line/80" : "text-ink-2 hover:text-ink"
       }`}
     >
       <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
@@ -363,14 +363,14 @@ export function ProfileSection({
 export function TagPills({ items }: { items: string[] }) {
   const safeItems = Array.isArray(items) ? items : [];
   if (safeItems.length === 0) {
-    return <span className="text-sm text-neutral-500">-</span>;
+    return <span className="text-sm text-ink-3">-</span>;
   }
   return (
     <ul className="flex flex-wrap gap-1.5">
       {safeItems.map((item) => (
         <li
           key={item}
-          className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-700"
+          className="rounded-full bg-surface-3 px-2.5 py-0.5 text-xs font-medium text-ink-2"
         >
           {item}
         </li>
@@ -391,12 +391,12 @@ export function RateCard({
   const display = formatMoneyLabel(value);
   const empty = display === "-";
   return (
-    <div className="rounded-xl border border-neutral-200/80 bg-neutral-50/50 px-5 py-4">
-      <div className="flex items-center gap-2 text-neutral-500">
+    <div className="rounded-xl border border-line/80 bg-surface-3/50 px-5 py-4">
+      <div className="flex items-center gap-2 text-ink-3">
         <Icon className="h-4 w-4 shrink-0" aria-hidden />
         <span className="text-xs font-medium uppercase tracking-wide">{label}</span>
       </div>
-      <p className={`mt-2 font-heading text-2xl font-semibold tabular-nums ${empty ? "text-neutral-400" : "text-neutral-900"}`}>
+      <p className={`mt-2 font-heading text-2xl font-semibold tabular-nums ${empty ? "text-ink-3" : "text-ink"}`}>
         {display}
       </p>
     </div>
@@ -413,12 +413,12 @@ export function PackageRow({
   duration: string;
 }) {
   return (
-    <li className="flex items-start justify-between gap-4 border-b border-neutral-100 py-3.5 last:border-0 last:pb-0 first:pt-0">
+    <li className="flex items-start justify-between gap-4 border-b border-line py-3.5 last:border-0 last:pb-0 first:pt-0">
       <div className="min-w-0">
-        <p className="font-medium text-neutral-900">{title}</p>
-        {duration !== "-" ? <p className="mt-0.5 text-xs text-neutral-500">{duration}</p> : null}
+        <p className="font-medium text-ink">{title}</p>
+        {duration !== "-" ? <p className="mt-0.5 text-xs text-ink-3">{duration}</p> : null}
       </div>
-      <p className="shrink-0 font-semibold tabular-nums text-neutral-900">{price}</p>
+      <p className="shrink-0 font-semibold tabular-nums text-ink">{price}</p>
     </li>
   );
 }

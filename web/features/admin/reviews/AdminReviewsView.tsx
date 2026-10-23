@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { useMemo, useState } from "react";
+import { useServerList } from "@/lib/useServerList";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ReviewVisibilityBadge } from "@/components/badges/ReviewVisibilityBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StarRating } from "@/components/ui/StarRating";
-import { fetchAdminReviews, type AdminReviewRow } from "@/lib/adminPlatformApi";
+import { fetchAdminReviews } from "@/lib/adminPlatformApi";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { EzFilterOptionsModal } from "@/components/ui/EzFilterOptionsModal";
 import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
@@ -30,47 +31,31 @@ function reviewFilterLabel(filter: ReviewFilter): string {
   return REVIEW_FILTER_OPTIONS.find((option) => option.id === filter)?.title ?? "Filter";
 }
 
-const REVIEWS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
-
 export function AdminReviewsView() {
   const searchParams = useSearchParams();
   const vendorUserId = useMemo(() => searchParams.get("vendor")?.trim() || null, [searchParams]);
   const vendorNameFromUrl = useMemo(() => searchParams.get("vendorName")?.trim() || null, [searchParams]);
 
-  const [rows, setRows] = useState<AdminReviewRow[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<ReviewFilter>("all");
   const [filterOpen, setFilterOpen] = useState(false);
-  const [offset, setOffset] = useState(0);
 
-  const load = useCallback(async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const { reviews, total: reviewTotal } = await fetchAdminReviews(
-        offset,
-        REVIEWS_PAGE_SIZE,
-        vendorUserId,
-        filter,
-      );
-      setRows(reviews);
-      setTotal(reviewTotal);
-    } catch {
-      setError("Could not load reviews.");
-    } finally {
-      setLoading(false);
-    }
-  }, [offset, vendorUserId, filter]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
-
-  useEffect(() => {
-    setOffset(0);
-  }, [vendorUserId, filter]);
+  const {
+    items: rows,
+    total,
+    offset,
+    limit,
+    loading,
+    error,
+    goNext,
+    goPrevious,
+  } = useServerList({
+    filters: { vendorUserId, filter },
+    errorMessage: "Could not load reviews.",
+    fetchPage: async ({ offset: pageOffset, limit: pageLimit, filters }) => {
+      const page = await fetchAdminReviews(pageOffset, pageLimit, filters.vendorUserId, filters.filter);
+      return { items: page.reviews, total: page.total };
+    },
+  });
 
   const resolvedVendorName =
     vendorNameFromUrl ?? rows[0]?.vendor_display_name ?? null;
@@ -84,15 +69,15 @@ export function AdminReviewsView() {
       {error ? <AdminErrorBanner message={error} /> : null}
 
       {vendorUserId ? (
-        <div className="ez-hrow flex-wrap items-end gap-3" style={{ alignItems: "flex-end" }}>
+        <div className="ez-hrow flex-wrap !items-end gap-3">
           <p className="min-w-0 flex-1 ez-small">
             Showing reviews for{" "}
             <span className="ez-strong">{resolvedVendorName ?? "this vendor"}</span>
             {total > 0 ? <span>{` · ${total} total`}</span> : null}
           </p>
-          <Link href={adminTrustReviewsHref()} className="ez-btn ez-btn--secondary ez-btn--sm">
+          <ButtonLink href={adminTrustReviewsHref()} variant="secondary" size="sm">
             Clear filter
-          </Link>
+          </ButtonLink>
         </div>
       ) : null}
 
@@ -103,10 +88,7 @@ export function AdminReviewsView() {
           filter !== "all"
             ? {
                 label: reviewFilterLabel(filter),
-                onClear: () => {
-                  setFilter("all");
-                  setOffset(0);
-                },
+                onClear: () => setFilter("all"),
               }
             : null
         }
@@ -119,10 +101,7 @@ export function AdminReviewsView() {
         description="Show all reviews or narrow by visibility on vendor profiles."
         options={REVIEW_FILTER_OPTIONS}
         value={filter}
-        onChange={(id) => {
-          setFilter(id);
-          setOffset(0);
-        }}
+        onChange={setFilter}
         listAriaLabel="Review visibility"
         resetValue="all"
         resetLabel="Show all"
@@ -189,9 +168,9 @@ export function AdminReviewsView() {
               header: " ",
               className: "align-top",
               cell: (row) => (
-                <Link href={`/admin/trust/reviews/${row.id}`} className="ez-btn ez-btn--secondary ez-btn--sm">
+                <ButtonLink href={`/admin/trust/reviews/${row.id}`} variant="secondary" size="sm">
                   Open
-                </Link>
+                </ButtonLink>
               ),
             },
           ]}
@@ -200,12 +179,12 @@ export function AdminReviewsView() {
 
       <TablePagination
         offset={offset}
-        limit={REVIEWS_PAGE_SIZE}
+        limit={limit}
         total={total}
         pageRowCount={rows.length}
         loading={loading}
-        onPrevious={() => setOffset((value) => Math.max(0, value - REVIEWS_PAGE_SIZE))}
-        onNext={() => setOffset((value) => value + REVIEWS_PAGE_SIZE)}
+        onPrevious={goPrevious}
+        onNext={goNext}
       />
     </div>
   );

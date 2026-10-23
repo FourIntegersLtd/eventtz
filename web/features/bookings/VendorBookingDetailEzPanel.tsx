@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { Calendar, Check, ExternalLink, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { Button, type ButtonProps } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import type { Tone } from "@/lib/tone";
 import { CopyToClipboardButton } from "@/components/ui/CopyToClipboardButton";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -53,23 +56,20 @@ function statusBadgeTone(status: string): Tone {
 }
 
 function EzActionButton({ action }: { action: BookingDetailAction }) {
-  const variantClass =
-    action.variant === "primary"
-      ? "ez-btn--primary"
-      : action.variant === "destructive"
-        ? "ez-btn--danger-quiet"
-        : action.variant === "ghost"
-          ? "ez-btn--ghost"
-          : "ez-btn--secondary";
+  const variant: ButtonProps["variant"] =
+    action.variant === "primary" || action.variant === "destructive" || action.variant === "ghost"
+      ? action.variant
+      : "secondary";
   return (
-    <button
+    <Button
       type="button"
-      className={`ez-btn ${variantClass} ez-btn--block`}
+      variant={variant}
+      className="ez-btn--block"
       disabled={action.disabled}
       onClick={action.onClick}
     >
       {action.loading && action.loadingLabel ? action.loadingLabel : action.label}
-    </button>
+    </Button>
   );
 }
 
@@ -103,11 +103,11 @@ export function VendorBookingDetailEzPanel({
 }: VendorBookingDetailEzPanelProps) {
   if (loading) {
     return (
-      <div className="ez-card">
-        <div className="ez-card__body">
+      <Card>
+        <Card.Body>
           <SkeletonDetailHeader />
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
     );
   }
 
@@ -134,27 +134,30 @@ export function VendorBookingDetailEzPanel({
         All bookings
       </Link>
 
-      <div className="ez-pagehead">
-        <div className="ez-pagehead__text">
-          <span className="ez-eyebrow">Booking</span>
-          <h1 className="ez-h1">{booking.eventName}</h1>
-          <p className="ez-body">{booking.timelineLabel}</p>
-          <p className="ez-caption">
+      <PageHeader
+        descriptionSize="body"
+        eyebrow="Booking"
+        title={booking.eventName}
+        description={booking.timelineLabel}
+        meta={
+          <>
             Ref {shortId(booking.id)}
             <CopyToClipboardButton text={booking.id} ariaLabel="Copy booking reference" />
-          </p>
-        </div>
-        <div className="ez-pagehead__actions ez-hrow">
-          <Badge tone={statusBadgeTone(booking.status)}>{booking.status}</Badge>
-          {booking.paymentStatus ? (
-            <Badge tone={paymentBadgeTone(booking.paymentStatus)}>{paymentStatusLabel(booking.paymentStatus)}</Badge>
-          ) : null}
-          {headerActions.map((action) => (
-            <EzActionButton key={action.key} action={action} />
-          ))}
-          {slots.disputeSection}
-        </div>
-      </div>
+          </>
+        }
+        actions={
+          <div className="ez-hrow">
+            <Badge tone={statusBadgeTone(booking.status)}>{booking.status}</Badge>
+            {booking.paymentStatus ? (
+              <Badge tone={paymentBadgeTone(booking.paymentStatus)}>{paymentStatusLabel(booking.paymentStatus)}</Badge>
+            ) : null}
+            {headerActions.map((action) => (
+              <EzActionButton key={action.key} action={action} />
+            ))}
+            {slots.disputeSection}
+          </div>
+        }
+      />
 
       <div className="ez-track" aria-label="Booking progress">
         {trackLabels.map((label, index) => {
@@ -191,44 +194,44 @@ export function VendorBookingDetailEzPanel({
         <div className="ez-stack ez-stack--lg">
           {slots.beforeSections}
           <section>
-              <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+              <h3 className="text-[15px] font-semibold tracking-tight text-ink">
                 Event &amp; contact
               </h3>
-              <dl className="mt-3 divide-y divide-neutral-100 overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+              <dl className="mt-3 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-white">
                 <div className="grid gap-0 sm:grid-cols-2">
-                  <div className="flex gap-3 px-5 py-4 sm:border-r sm:border-neutral-100">
-                    <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+                  <div className="flex gap-3 px-5 py-4 sm:border-r sm:border-line">
+                    <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-ink-3" aria-hidden />
                     <div className="min-w-0">
-                      <dt className="text-[13px] text-neutral-500">Event date</dt>
-                      <dd className="mt-0.5 text-sm font-medium text-neutral-900">
+                      <dt className="text-[13px] text-ink-3">Event date</dt>
+                      <dd className="mt-0.5 text-sm font-medium text-ink">
                         {booking.eventDateLabel}
                       </dd>
                       {booking.eventEndDateLabel ? (
-                        <p className="mt-0.5 text-xs text-neutral-500">to {booking.eventEndDateLabel}</p>
+                        <p className="mt-0.5 text-xs text-ink-3">to {booking.eventEndDateLabel}</p>
                       ) : null}
                     </div>
                   </div>
-                  <div className="flex gap-3 border-t border-neutral-100 px-5 py-4 sm:border-t-0">
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+                  <div className="flex gap-3 border-t border-line px-5 py-4 sm:border-t-0">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-ink-3" aria-hidden />
                     <div className="min-w-0">
-                      <dt className="text-[13px] text-neutral-500">Location</dt>
+                      <dt className="text-[13px] text-ink-3">Location</dt>
                       <dd
                         className={`mt-0.5 text-sm font-medium ${
-                          location.primary === "Not added yet" ? "text-neutral-500" : "text-neutral-900"
+                          location.primary === "Not added yet" ? "text-ink-3" : "text-ink"
                         }`}
                       >
                         {location.primary}
                       </dd>
                       {location.secondary ? (
-                        <p className="mt-0.5 text-xs text-neutral-500">{location.secondary}</p>
+                        <p className="mt-0.5 text-xs text-ink-3">{location.secondary}</p>
                       ) : null}
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-3 px-5 py-4">
-                  <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+                  <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-ink-3" aria-hidden />
                   <div className="min-w-0">
-                    <dt className="text-[13px] text-neutral-500">{booking.counterpartyRoleLabel}</dt>
+                    <dt className="text-[13px] text-ink-3">{booking.counterpartyRoleLabel}</dt>
                     <dd className="mt-0.5">
                       {booking.counterpartyHref ? (
                         <Link
@@ -238,13 +241,13 @@ export function VendorBookingDetailEzPanel({
                           {booking.counterpartyName}
                         </Link>
                       ) : (
-                        <p className="truncate text-sm font-medium text-neutral-900">
+                        <p className="truncate text-sm font-medium text-ink">
                           {booking.counterpartyName}
                         </p>
                       )}
                     </dd>
                     {booking.counterpartyPhone ? (
-                      <p className="mt-0.5 text-xs text-neutral-500">{booking.counterpartyPhone}</p>
+                      <p className="mt-0.5 text-xs text-ink-3">{booking.counterpartyPhone}</p>
                     ) : null}
                   </div>
                 </div>
@@ -262,17 +265,17 @@ export function VendorBookingDetailEzPanel({
               {booking.paidAtLabel ? (
                 <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl bg-emerald-50/70 px-5 py-3.5 text-sm ring-1 ring-emerald-200/70">
                   <span className="font-semibold text-emerald-900">Paid</span>
-                  <span className="text-neutral-600">recorded {booking.paidAtLabel}</span>
+                  <span className="text-ink-2">recorded {booking.paidAtLabel}</span>
                 </div>
               ) : null}
             </section>
 
             {booking.notes ? (
               <section>
-                <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                <h3 className="px-1 text-xs font-semibold uppercase tracking-wide text-ink-3">
                   {booking.notesLabel}
                 </h3>
-                <p className="mt-3 whitespace-pre-wrap rounded-2xl bg-neutral-50 px-5 py-4 text-sm leading-relaxed text-neutral-800 ring-1 ring-neutral-200/50">
+                <p className="mt-3 whitespace-pre-wrap rounded-2xl bg-surface-3 px-5 py-4 text-sm leading-relaxed text-ink ring-1 ring-line">
                   {booking.notes}
                 </p>
               </section>
@@ -282,24 +285,24 @@ export function VendorBookingDetailEzPanel({
         </div>
 
         {slots.sideActions || slots.footerSection || footerActions.length > 0 ? (
-          <div className="ez-card vendor-booking-actions">
+          <Card className="vendor-booking-actions">
             {slots.sideActions || footerActions.length > 0 ? (
-              <div className="ez-card__body ez-stack ez-stack--sm">
+              <Card.Body className="ez-stack ez-stack--sm">
                 {slots.sideActions}
                 {footerActions.map((action) => (
                   <EzActionButton key={action.key} action={action} />
                 ))}
-              </div>
+              </Card.Body>
             ) : null}
             {slots.footerSection ? (
               <>
-                <div className="ez-card__head">
+                <Card.Header>
                   <span className="ez-h3">{footerSectionTitle}</span>
-                </div>
-                <div className="ez-card__body ez-stack ez-stack--sm">{slots.footerSection}</div>
+                </Card.Header>
+                <Card.Body className="ez-stack ez-stack--sm">{slots.footerSection}</Card.Body>
               </>
             ) : null}
-          </div>
+          </Card>
         ) : null}
       </div>
     </div>

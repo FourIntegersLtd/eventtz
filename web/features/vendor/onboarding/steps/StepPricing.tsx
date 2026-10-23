@@ -35,6 +35,8 @@ import {
   type PackagePricingMode,
 } from "@/lib/packagePricing";
 import { formatGbp } from "@/lib/money";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 export type StepPricingProps = {
   data: VendorOnboardingData;
@@ -226,7 +228,7 @@ export function StepPricing({
                 inputMode="numeric"
                 value={data.deliveryUpfrontPercent}
                 onChange={({ target: { value } }) => update({ deliveryUpfrontPercent: value })}
-                placeholder={`${policy.deliveryUpfrontPercentDefault}`}
+                placeholder={String(policy.deliveryUpfrontPercentDefault)}
                 error={splitErrors.upfront}
               />
               <TextField
@@ -234,7 +236,7 @@ export function StepPricing({
                 inputMode="numeric"
                 value={data.deliveryDeadlineDays}
                 onChange={({ target: { value } }) => update({ deliveryDeadlineDays: value })}
-                placeholder={`${policy.deliveryDeadlineDaysDefault}`}
+                placeholder={String(policy.deliveryDeadlineDaysDefault)}
                 error={splitErrors.deadline}
               />
             </div>
@@ -271,17 +273,17 @@ export function StepPricing({
           const patch = (change: Partial<VendorPackageItem>) =>
             update({ packages: updatePackage(packages, pkg.id, change) });
           return (
-            <div
+            <Card
+              variant="muted"
               key={pkg.id}
               id={`package-${pkg.id}`}
-              className="ez-card ez-card--flat"
+
               style={
                 isHighlighted
                   ? { borderColor: "var(--ez-success-ring)", scrollMarginTop: 16 }
                   : { scrollMarginTop: 16 }
-              }
-            >
-              <div className="ez-card__body ez-stack">
+              }>
+              <Card.Body className="ez-stack">
                 <div className="ez-between">
                   <span className="ez-strong">Package {index + 1}</span>
                   <div className="ez-hrow">
@@ -417,19 +419,18 @@ export function StepPricing({
                     </Checkbox>
                   </>
                 ) : null}
-              </div>
-            </div>
+              </Card.Body>
+            </Card>
           );
         })}
 
-        <button
-          className="ez-btn ez-btn--secondary"
+        <Button
+          variant="secondary"
           type="button"
-          onClick={addPackage}
-        >
+          onClick={addPackage}>
           <Plus strokeWidth={1.75} aria-hidden />
           Add another package
-        </button>
+        </Button>
         {showPackageExamples ? (
           <PackageExamplesModal servicesOffered={data.servicesOffered} />
         ) : null}

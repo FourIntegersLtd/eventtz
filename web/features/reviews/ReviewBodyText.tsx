@@ -13,7 +13,7 @@ export function ReviewBodyText({
   body,
   previewLen = 280,
   expandLabels = { more: "Read more", less: "Show less" },
-  className = "text-sm leading-relaxed text-neutral-800",
+  className = "text-sm leading-relaxed text-ink",
 }: ReviewBodyTextProps) {
   const [expanded, setExpanded] = useState(false);
   const long = body.length > previewLen;

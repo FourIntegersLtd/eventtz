@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { useCallback, useState } from "react";
 import { AlertTriangle, Ban, CheckCircle2, Clock, Eye, EyeOff, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -15,6 +16,7 @@ import {
 import { VendorMarketplaceStatusBanner } from "./VendorMarketplaceStatusBanner";
 import { ApprovalCard, VendorActionOptionRow } from "./vendorDetailsShared";
 import { formControlClass } from "@/components/ui/tokens";
+import { Card } from "@/components/ui/Card";
 
 type Props = {
   vendor: AdminVendorRow;
@@ -129,25 +131,22 @@ export function VendorDetailsApprovalSection({
     <div className={`ez-stack ez-stack--lg ${busy ? "pointer-events-none opacity-60" : ""}`}>
       <VendorMarketplaceStatusBanner vendor={vendor} />
 
-      <section className="ez-card overflow-hidden">
-        <div className="ez-card__head">
+      <Card as="section" className="overflow-hidden">
+        <Card.Header>
           <div>
             <h2 className="ez-h3">Decision</h2>
             <p className="ez-small">Whether this vendor has passed admin review</p>
           </div>
-        </div>
-        <div className="ez-card__body ez-stack ez-stack--lg">
+        </Card.Header>
+        <Card.Body className="ez-stack ez-stack--lg">
           {approvingWontPublish ? (
-            <div className="ez-banner ez-banner--warning">
-              <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
-              <div className="ez-banner__body">
-                <p className="text-sm leading-relaxed">
-                  Approving alone won&apos;t make this vendor visible. Clients can only see and book
-                  them once Stripe verifies their payout details, which happens automatically - or
-                  you choose <strong>Publish anyway</strong> below.
-                </p>
-              </div>
-            </div>
+            <Banner tone="warning" icon={<AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />}>
+              <p className="text-sm leading-relaxed">
+                Approving alone won&apos;t make this vendor visible. Clients can only see and book
+                them once Stripe verifies their payout details, which happens automatically - or
+                you choose <strong>Publish anyway</strong> below.
+              </p>
+            </Banner>
           ) : null}
           <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
             <Tooltip hint={APPROVAL_HINTS.pending} widthClassName="w-60" className="h-full">
@@ -184,19 +183,19 @@ export function VendorDetailsApprovalSection({
               />
             </Tooltip>
           </div>
-        </div>
-      </section>
+        </Card.Body>
+      </Card>
 
-      <section className="ez-card overflow-hidden">
-        <div className="ez-card__head">
+      <Card as="section" className="overflow-hidden">
+        <Card.Header>
           <div>
             <h2 className="ez-h3">Explore listing</h2>
             <p className="ez-small">What clients see when browsing vendors</p>
           </div>
-        </div>
-        <div className="ez-card__body !p-0">
+        </Card.Header>
+        <Card.Body className="!p-0">
           {showStripeHint ? (
-            <p className="border-b border-neutral-100 px-4 py-3 text-xs leading-relaxed text-amber-800 sm:px-5">
+            <p className="border-b border-line px-4 py-3 text-xs leading-relaxed text-warning sm:px-5">
               Stripe isn&apos;t verified yet, so they stay hidden on Automatic. Use{" "}
               <strong>Publish anyway</strong> if you want them live now.
             </p>
@@ -231,7 +230,7 @@ export function VendorDetailsApprovalSection({
               />
             </>
           ) : (
-            <p className="px-3 py-2 text-xs leading-relaxed text-neutral-500">
+            <p className="px-3 py-2 text-xs leading-relaxed text-ink-3">
               Publish anyway and Hide listing require a super admin. You can still revert to{" "}
               <strong>Automatic</strong> when a listing override is active.
             </p>
@@ -239,10 +238,10 @@ export function VendorDetailsApprovalSection({
         </div>
 
         {listingDirty ? (
-          <div className="border-t border-neutral-100 bg-neutral-50/60 px-4 py-4 sm:px-5">
+          <div className="border-t border-line bg-surface-3/60 px-4 py-4 sm:px-5">
             {needsReason ? (
               <label className="block">
-                <span className="text-xs font-medium text-neutral-700">
+                <span className="text-xs font-medium text-ink-2">
                   Reason for audit log
                 </span>
                 <textarea
@@ -251,12 +250,12 @@ export function VendorDetailsApprovalSection({
                   rows={2}
                   maxLength={500}
                   placeholder="Brief note on why you're overriding the listing"
-                  className={formControlClass("mt-1.5 placeholder:text-neutral-400")}
+                  className={formControlClass("mt-1.5 placeholder:text-ink-3")}
                 />
               </label>
             ) : null}
             {draftOverride === "visible" ? (
-              <p className="mt-2 text-xs leading-relaxed text-neutral-600">
+              <p className="mt-2 text-xs leading-relaxed text-ink-2">
                 Clients can book and pay without verified Stripe. Payout still waits for Connect.
               </p>
             ) : null}
@@ -277,12 +276,12 @@ export function VendorDetailsApprovalSection({
         ) : null}
 
         {!approved ? (
-          <p className="border-t border-neutral-100 px-4 py-3 text-xs text-neutral-500 sm:px-5">
+          <p className="border-t border-line px-4 py-3 text-xs text-ink-3 sm:px-5">
             This vendor is not approved, so they stay hidden regardless of listing setting.
           </p>
         ) : null}
-        </div>
-      </section>
+        </Card.Body>
+      </Card>
 
       <ConfirmDialog
         isOpen={banConfirmOpen}

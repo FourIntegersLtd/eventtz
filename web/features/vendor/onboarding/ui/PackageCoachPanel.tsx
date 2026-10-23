@@ -152,8 +152,8 @@ export function PackageCoachPanel({
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-neutral-900">AI package review</p>
-          <p className="mt-1 text-xs leading-relaxed text-neutral-600">
+          <p className="text-sm font-semibold text-ink">AI package review</p>
+          <p className="mt-1 text-xs leading-relaxed text-ink-2">
             {variant === "prominent"
               ? "We fill in improved names and descriptions directly."
               : "AI updates your package fields when possible."}
@@ -172,10 +172,10 @@ export function PackageCoachPanel({
         ) : null}
       </div>
 
-      {error ? <p className="mt-3 text-xs text-red-700">{error}</p> : null}
+      {error ? <p className="mt-3 text-xs text-danger">{error}</p> : null}
 
       {applied ? (
-        <div className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-sm text-neutral-900">
+        <div className="mt-3 rounded-lg border border-line bg-surface-3 px-3 py-2.5 text-sm text-ink">
           <p>
             We&apos;ve updated your packages. Please review the highlighted packages and check
             everything is accurate. AI can make mistakes.
@@ -188,11 +188,11 @@ export function PackageCoachPanel({
           {feedback.map((pkg) => (
             <li
               key={pkg.package_id ?? pkg.package_title}
-              className="rounded-lg border border-neutral-200 bg-white px-3 py-3 shadow-sm"
+              className="rounded-lg border border-line bg-white px-3 py-3 shadow-sm"
             >
-              <p className="text-sm font-semibold text-neutral-900">{pkg.package_title}</p>
+              <p className="text-sm font-semibold text-ink">{pkg.package_title}</p>
               {pkg.items.length > 0 ? (
-                <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-relaxed text-neutral-700">
+                <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-relaxed text-ink-2">
                   {pkg.items.map((item, i) => (
                     <li key={i}>{item}</li>
                   ))}
@@ -204,13 +204,13 @@ export function PackageCoachPanel({
       ) : null}
 
       {!applied && !feedback.length && result?.summary && !loading ? (
-        <p className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-xs text-neutral-700">
+        <p className="mt-3 rounded-lg border border-line bg-surface-3 px-3 py-2 text-xs text-ink-2">
           {result.summary}
         </p>
       ) : null}
 
       {hasOverallOnly ? (
-        <p className="mt-2 text-xs text-neutral-500">
+        <p className="mt-2 text-xs text-ink-3">
           Add any missing packages manually. We can only auto-fill existing ones.
         </p>
       ) : null}

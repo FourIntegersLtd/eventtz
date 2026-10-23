@@ -13,6 +13,7 @@ import {
   vendorQueueStatusBadge,
   vendorSubmittedLabel,
 } from "./adminVendorQueueStatus";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 
 type AdminVendorsTableProps = {
   rows: AdminVendorRow[];
@@ -56,7 +57,7 @@ export function AdminVendorsTable({
               vendorIsBulkEmailSelectable(row) ? (
                 <input
                   type="checkbox"
-                  className="h-4 w-4 rounded border-neutral-300 text-primary focus:ring-primary"
+                  className="h-4 w-4 rounded border-line-strong text-primary focus:ring-primary"
                   checked={selectedSet.has(row.user_id)}
                   aria-label={`Select ${vendorBusinessName(row)}`}
                   onChange={(event) => onToggleSelected(row.user_id, event.target.checked)}
@@ -98,9 +99,9 @@ export function AdminVendorsTable({
       header: " ",
       className: "whitespace-nowrap",
       cell: (row) => (
-        <Link href={adminVendorHref(row.user_id)} className="ez-btn ez-btn--secondary ez-btn--sm">
+        <ButtonLink variant="secondary" size="sm" href={adminVendorHref(row.user_id)}>
           Review
-        </Link>
+        </ButtonLink>
       ),
     },
   ];

@@ -37,8 +37,8 @@ const VARIANT_STYLES: Record<
     editIconSize: "h-3.5 w-3.5",
     layout: "column",
     wrapper: "flex flex-col items-center gap-2",
-    hint: "max-w-xs text-center text-xs text-neutral-500",
-    error: "text-center text-xs text-red-600",
+    hint: "max-w-xs text-center text-xs text-ink-3",
+    error: "text-center text-xs text-danger",
   },
   sidebar: {
     avatarSize: "h-20 w-20 text-xl",
@@ -46,9 +46,9 @@ const VARIANT_STYLES: Record<
     editIconSize: "h-3.5 w-3.5",
     layout: "column",
     wrapper:
-      "flex flex-col items-center gap-2 rounded-2xl border border-neutral-100 bg-neutral-50/80 px-3 py-4",
-    hint: "max-w-[11rem] text-center text-[11px] leading-snug text-neutral-500",
-    error: "text-center text-xs text-red-600",
+      "flex flex-col items-center gap-2 rounded-2xl border border-line bg-surface-3/80 px-3 py-4",
+    hint: "max-w-[11rem] text-center text-[11px] leading-snug text-ink-3",
+    error: "text-center text-xs text-danger",
   },
   header: {
     avatarSize: "h-16 w-16 text-xl",
@@ -56,8 +56,8 @@ const VARIANT_STYLES: Record<
     editIconSize: "h-3 w-3",
     layout: "row",
     wrapper: "w-full",
-    hint: "min-w-0 flex-1 text-left text-sm leading-snug text-neutral-600",
-    error: "mt-1.5 text-sm text-red-600",
+    hint: "min-w-0 flex-1 text-left text-sm leading-snug text-ink-2",
+    error: "mt-1.5 text-sm text-danger",
   },
 };
 
@@ -87,7 +87,7 @@ export function VendorProfilePhotoField({
         <img
           src={profileImageUrl}
           alt="Profile"
-          className={`${styles.avatarSize} rounded-full border border-neutral-100 object-cover object-center`}
+          className={`${styles.avatarSize} rounded-full border border-line object-cover object-center`}
         />
       ) : (
         <div
@@ -115,7 +115,7 @@ export function VendorProfilePhotoField({
             aria-label="Edit profile photo"
             disabled={uploading}
             onClick={() => inputRef.current?.click()}
-            className={`absolute -bottom-1 -right-1 inline-flex ${styles.editButtonSize} items-center justify-center rounded-full border border-neutral-100 bg-white text-neutral-600 shadow-sm hover:bg-neutral-50 disabled:opacity-60`}
+            className={`absolute -bottom-1 -right-1 inline-flex ${styles.editButtonSize} items-center justify-center rounded-full border border-line bg-white text-ink-2 shadow-sm hover:bg-surface-3 disabled:opacity-60`}
           >
             {uploading ? (
               <LoadingSpinner size="sm" />
