@@ -29,6 +29,42 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 - **Freeze suite.** The fixes for the 9 acceptance tests that already failed on `main` ship with the
   Phase 1 PR.
 
+**Phase 4: dead code and docs** (PR "Rebuild audit Phase 4", except `test_list_pagination.py`, which Phase 3 owns).
+- **Deleted web files with no importers (grep of every import form, then `npm run build`):**
+  `BookingDetailPanel`, the three old help views, `lib/useMediaQuery.ts`, four planner widgets
+  (`CelebrationSummary`, `ConfidenceBadge`, `PlannerBookNowButton`, `PlannerNextSteps`), four landing files
+  (`LandingBookingRecord`, `LandingCategoriesSection`, `LandingWaitlistCta`, and `LandingScreenshotFrame`, which
+  only the others used) and two vendor dashboard cards (`VendorAttentionCard`, `VendorBookingsCalendarCard`).
+- **Kept: `MasterDetailLayout`.** Chat imports it, so it stays; only the `UI-CONVENTIONS.md` claim is corrected
+  to "used by chat only".
+- **Still orphaned, other owners' areas, not deleted:** `client/bookings/{clientBookingListRowUi,clientBookingTrack,
+  clientBookingsListTab}.ts`, `reviews/ReviewSummaryHeader`, `vendor/analytics/vendorChartInfoCopy`,
+  `vendor/copilot/VendorGrowthGlanceTile`, `vendor/onboarding/ui/{OnboardingOptionPill,OnboardingQuestionLayout}`,
+  `lib/{addressApi,api-base,bookingNotificationsApi,bookingsEvents}.ts`. Each needs its owner to confirm.
+- **Docs fixed:** `docs/domain-rules.md` (visibility helpers now live in `vendors/service_listing.py` and
+  `marketplace/service_explore.py`, and chat checks `listed_vendor`), and the media README (image cap on
+  `/media/upload-urls`, the route itself).
+- **Tests made real:** `test_media_service.py` asserts the recorded presign request and the response; new
+  `test_media_s3_storage.py` checks the signed `presigned_post` policy.
+- **UK "today":** new `core/time.py` (`uk_date`, `uk_today`, Europe/London); `domain_portal_dashboard.py` uses it
+  (the old code used the server's local zone). `test_core_time.py` pins a BST midnight boundary.
+
+## Open questions and follow-ups from Phase 4
+
+- **Only the portal dashboard uses London "today" so far.** Six sites still use UTC and disagree with it between
+  00:00 and 01:00 BST: `vendors/service_moderation.py:600` (insurance expiry), `vendors/service_listing.py:39`
+  (listing visibility), `vendors/service_profile.py:33`, `bookings/service_admin_financials.py:124`,
+  `marketplace/service_analytics.py:22`, `admin_insights/domain.py:32`. Each belongs to a different owner, so
+  move them to `core.time.uk_today()` as follow-ups. The dashboard service also calls the clock once per helper;
+  compute `uk_today()` once and pass `today=` to all three, then make it required.
+
+### Decision for you: should a client shown as "Client" be searchable by vendors?
+
+Vendor search matches the name a vendor sees. A client with no preferred name and no email-derived name is shown
+as the fallback "Client", and a closed account shows nothing, so neither can be found by typing a name. This phase
+changed nothing. Options: (a) leave it, since there is nothing meaningful to search; (b) make the fallback client
+findable by email, which exposes the email the Phase 0 fix stopped leaking, so I advise against it. Which do you want?
+
 ## Before the next deploy (yours, about 5 minutes)
 
 1. **Check live upload URLs.** Profile save now keeps only image URLs whose key starts with `users/<id>/`.
