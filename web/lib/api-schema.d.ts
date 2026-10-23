@@ -9429,6 +9429,11 @@ export interface components {
              * @default 0
              */
             total: number;
+            /**
+             * With Photos Count
+             * @default 0
+             */
+            with_photos_count: number;
         };
         /**
          * VendorPaymentsConnectResponse

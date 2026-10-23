@@ -47,12 +47,22 @@ type VendorReviewsEzViewProps = {
 };
 
 /** Whole-business figures the reviews endpoint returns beside each page of rows. */
-type ReviewTotals = { reviewCount: number; fiveStarCount: number; average: number | null };
+type ReviewTotals = {
+  reviewCount: number;
+  fiveStarCount: number;
+  withPhotosCount: number;
+  average: number | null;
+};
 
 /** Vendor reviews (design V27). There is no reply API, so the list is read-only. */
 export function VendorReviewsEzView({ embedded = false }: VendorReviewsEzViewProps) {
   const [fiveOnly, setFiveOnly] = useState(false);
-  const [totals, setTotals] = useState<ReviewTotals>({ reviewCount: 0, fiveStarCount: 0, average: null });
+  const [totals, setTotals] = useState<ReviewTotals>({
+    reviewCount: 0,
+    fiveStarCount: 0,
+    withPhotosCount: 0,
+    average: null,
+  });
 
   const {
     items: reviews,
@@ -75,6 +85,7 @@ export function VendorReviewsEzView({ embedded = false }: VendorReviewsEzViewPro
       setTotals({
         reviewCount: page.review_count ?? 0,
         fiveStarCount: page.five_star_count ?? 0,
+        withPhotosCount: page.with_photos_count ?? 0,
         average: page.average_rating ?? null,
       });
       return { items: page.reviews ?? [], total: page.total ?? 0 };
@@ -100,11 +111,7 @@ export function VendorReviewsEzView({ embedded = false }: VendorReviewsEzViewPro
         />
         <StatTile label="5 stars" value={totals.fiveStarCount} />
         <StatTile label="Reviews" value={totals.reviewCount} />
-        <StatTile
-          label="With photos"
-          value={reviews.filter((review) => (review.image_urls?.length ?? 0) > 0).length}
-          hint="on this page"
-        />
+        <StatTile label="With photos" value={totals.withPhotosCount} />
       </div>
 
       <Card>

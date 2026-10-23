@@ -14094,6 +14094,11 @@
             "default": 0,
             "title": "Total",
             "type": "integer"
+          },
+          "with_photos_count": {
+            "default": 0,
+            "title": "With Photos Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -14104,7 +14109,8 @@
           "review_count",
           "reviews",
           "success",
-          "total"
+          "total",
+          "with_photos_count"
         ],
         "title": "VendorOwnerReviewsResponse",
         "type": "object"
