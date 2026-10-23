@@ -72,7 +72,7 @@ describe("ui building blocks emit canvas markup", () => {
     expect(
       renderToStaticMarkup(<PageHeader eyebrow="Admin" title="Vendors" description="All vendors" actions={<b>go</b>} />),
     ).toBe(
-      '<div class="ez-pagehead"><div class="ez-pagehead__text"><span class="ez-eyebrow">Admin</span><h1 class="ez-h1">Vendors</h1><p class="ez-small">All vendors</p></div><div class="ez-pagehead__actions"><b>go</b></div></div>',
+      '<header class="ez-pagehead"><div class="ez-pagehead__text"><span class="ez-eyebrow">Admin</span><h1 class="ez-h1">Vendors</h1><p class="ez-small">All vendors</p></div><div class="ez-pagehead__actions"><b>go</b></div></header>',
     );
   });
 
