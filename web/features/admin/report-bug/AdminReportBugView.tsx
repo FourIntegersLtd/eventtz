@@ -1,5 +1,7 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
@@ -45,10 +47,10 @@ export function AdminReportBugView() {
   return (
     <div className="ez-split">
       <div className="ez-split__main">
-        <section className="ez-card overflow-hidden">
-          <div className="ez-card__head">
+        <Card as="section" className="overflow-hidden">
+          <Card.Header>
             <h2 className="ez-h3">What went wrong</h2>
-          </div>
+          </Card.Header>
           <form onSubmit={onSubmit} className="ez-card__body ez-stack ez-stack--lg">
             {error ? <AdminErrorBanner message={error} /> : null}
             <label htmlFor="admin-bug-message" className="ez-field">
@@ -63,27 +65,27 @@ export function AdminReportBugView() {
               />
             </label>
             <div className="flex flex-wrap justify-end gap-2">
-              <button type="submit" className="ez-btn ez-btn--primary" disabled={busy}>
+              <Button type="submit" disabled={busy}>
                 {busy ? "Sending…" : "Send bug report"}
-              </button>
+              </Button>
             </div>
           </form>
-        </section>
+        </Card>
       </div>
 
       <div className="ez-split__aside">
-        <section className="ez-card overflow-hidden lg:sticky lg:top-4">
-          <div className="ez-card__head">
+        <Card as="section" className="overflow-hidden lg:sticky lg:top-4">
+          <Card.Header>
             <h2 className="ez-h3">Before you send</h2>
-          </div>
-          <div className="ez-card__body ez-lines ez-small">
+          </Card.Header>
+          <Card.Body className="ez-lines ez-small">
             <p>
               Do not paste customer emails or card details. Use the booking reference instead, like
               EZ-20418.
             </p>
             <p>Urgent problems with money: message the on-call engineer directly.</p>
-          </div>
-        </section>
+          </Card.Body>
+        </Card>
       </div>
     </div>
   );

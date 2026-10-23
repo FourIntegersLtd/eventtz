@@ -56,6 +56,7 @@ export const SHARED_FEATURE_MODULES = [
   "bookings/useParticipantBookingsScaffold",
   "vendors/display", // vendor listing presentation (browse cards, pricing blocks)
   "receipts/ReceiptActions", // receipt download and share buttons
+  "receipts/PaymentsListSection", // loading, error, empty and paging frame of the client and vendor payment lists
   "landing/landingData", // landing categories and copy, read by the marketplace category counts
   "reviews/BookingReviewPanel",
   "reviews/ReviewCard",

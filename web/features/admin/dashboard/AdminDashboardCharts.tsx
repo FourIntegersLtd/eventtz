@@ -1,5 +1,6 @@
 "use client";
 
+import { Card } from "@/components/ui/Card";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -60,17 +61,17 @@ export function AdminDashboardCharts({ summary, metrics, loading, error }: Admin
           Open analytics
         </Link>
       </div>
-      <div className="ez-card overflow-hidden">
+      <Card className="overflow-hidden">
         {error ? (
           <div className="px-5 pt-4 sm:px-6">
             <AdminErrorBanner message={error} />
           </div>
         ) : null}
 
-        <div className="grid divide-y divide-neutral-100 lg:grid-cols-2 lg:divide-x lg:divide-y-0">
+        <div className="grid divide-y divide-line lg:grid-cols-2 lg:divide-x lg:divide-y-0">
           <div className="min-w-0 p-5 sm:p-6">
             <div className="mb-4 flex items-start justify-between gap-2">
-              <h3 className="text-sm font-medium text-neutral-900">Signups</h3>
+              <h3 className="text-sm font-medium text-ink">Signups</h3>
               <AdminInfoHint label="Signups" info={DASHBOARD_CHART_INFO.signups} />
             </div>
             {loading ? (
@@ -84,7 +85,7 @@ export function AdminDashboardCharts({ summary, metrics, loading, error }: Admin
 
           <div className="min-w-0 p-5 sm:p-6">
             <div className="mb-4 flex items-start justify-between gap-2">
-              <h3 className="text-sm font-medium text-neutral-900">Booking pipeline</h3>
+              <h3 className="text-sm font-medium text-ink">Booking pipeline</h3>
               <AdminInfoHint label="Booking pipeline" info={DASHBOARD_CHART_INFO.pipeline} />
             </div>
             {pipelineTotal === 0 ? (
@@ -93,10 +94,10 @@ export function AdminDashboardCharts({ summary, metrics, loading, error }: Admin
               <EzDonutChart data={pipelineData} />
             )}
             {pipelineTotal > 0 ? (
-              <div className="mt-3 border-t border-neutral-100 pt-3">
+              <div className="mt-3 border-t border-line pt-3">
                 <Link
                   href="/admin/commerce?tab=bookings"
-                  className="text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:underline"
+                  className="text-xs font-medium text-ink-2 hover:text-ink hover:underline"
                 >
                   View all bookings →
                 </Link>
@@ -104,13 +105,13 @@ export function AdminDashboardCharts({ summary, metrics, loading, error }: Admin
             ) : null}
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="ez-card overflow-hidden">
-        <div className="ez-card__head">
+      <Card className="overflow-hidden">
+        <Card.Header>
           <h2 className="ez-h3">Marketplace health</h2>
-        </div>
-        <div className="ez-card__body">
+        </Card.Header>
+        <Card.Body>
           {loading ? (
             <ChartSkeleton />
           ) : chartHasData(gmvData.map((d) => d.value)) ? (
@@ -118,8 +119,8 @@ export function AdminDashboardCharts({ summary, metrics, loading, error }: Admin
           ) : (
             <EmptyState className="border-0 py-8" title="No paid volume in this period" lottie="searchNoResults" />
           )}
-        </div>
-      </div>
+        </Card.Body>
+      </Card>
     </section>
   );
 }

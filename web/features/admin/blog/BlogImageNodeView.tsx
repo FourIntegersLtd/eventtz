@@ -11,7 +11,7 @@ export function BlogImageNodeView({ node, deleteNode, selected }: NodeViewProps)
     <NodeViewWrapper
       as="div"
       className={`blog-image-block group relative mx-auto my-3 w-fit max-w-[75%] sm:max-w-[78%] ${
-        selected ? "rounded-lg ring-2 ring-neutral-300" : ""
+        selected ? "rounded-lg ring-2 ring-line-strong" : ""
       }`}
       data-drag-handle
     >
@@ -32,7 +32,7 @@ export function BlogImageNodeView({ node, deleteNode, selected }: NodeViewProps)
           e.stopPropagation();
           deleteNode();
         }}
-        className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 shadow-sm transition hover:bg-red-50 hover:text-red-600"
+        className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-white text-ink-2 shadow-sm transition hover:bg-red-50 hover:text-red-600"
       >
         <X className="h-3.5 w-3.5" aria-hidden />
       </button>

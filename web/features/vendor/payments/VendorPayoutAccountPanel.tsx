@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { VendorPayoutHowItWorksCard } from "@/features/vendor/payments/VendorPayoutHowItWorksCard";
 import {
@@ -38,9 +39,9 @@ export function VendorPayoutAccountPanel({
       <VendorPayoutHowItWorksCard />
 
       {error ? (
-        <div className="ez-banner ez-banner--danger" role="alert">
+        <Banner tone="danger">
           <p className="ez-small">{error}</p>
-        </div>
+        </Banner>
       ) : null}
     </div>
   );

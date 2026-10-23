@@ -5,6 +5,11 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Done
 
+**Admin console screens, platform-owned part** (PR "Rebuild audit: admin screens on the design system and server lists").
+- `OWNERS.md` gives platform-owner only admin blog, dashboard, report-bug, settings, layout and components. Blog list is now on `useServerList`; `fetchAdminBlogPosts` (the `limit: 200` wrapper, no callers) is deleted. Cards, buttons, badges and the success banner in those folders use `Card`, `Button`/`ButtonLink`, `Badge`, `Banner`; the last inline `style` and `neutral-*` classes are gone.
+- Two-server comparison (seeded 40 posts, pages 1 and 2, desktop and 390px) and dashboard, report-bug, settings and editor screenshots against main: at most 0.012% mismatching pixels.
+- Not done here, owned by others (still to move onto `useServerList` / `DataTable`): audit, clients (incl. the raw `ez-dl` in `AdminClientsView`) and team (access-owner); bookings, disputes, reviews (bookings-owner); financials, referrals, referral signups (money-owner); marketplace analytics (marketplace-owner); messages inbox (comms-owner); vendors (vendors-owner).
+
 **Phase 3 item 5 (start) and Phase 2.3 (finish): shared list hook and the last duplicate components** (PR "Rebuild audit: shared list hook and the last duplicate components").
 - `web/lib/useServerList.ts` (offset/limit default 25, total, filters, search; offset resets when they change) with literal-value tests. The bookings scaffold is built on it.
 - Client and vendor bookings lists are one `BookingsEzList` with a `perspective` prop. `EzListFilterToolbar` takes `searchId`.
@@ -255,3 +260,13 @@ own PR.
 For local testing without Docker:
 - Start Postgres 16 from `/usr/lib/postgresql/16/bin` on :5434 and `redis-server --port 6381`.
 - For api tests, set `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5434/<db>`.
+
+- **Done (PR "Rebuild audit: money screens on the design system and server lists").** Payments, payouts, receipts,
+  financials and referral screens use the ui blocks (no `style={{}}`, `neutral-*` or raw `ez-*` left in the area's
+  feature dirs). Client and vendor payments, admin financials, referrals and referral signups are on `useServerList`
+  (server paging, 25); the pair shares `features/receipts/PaymentsListSection`. Vendor "Next release" now comes from the
+  api (`next_release_event_date`, `next_release_label`: the earliest-event held payout across the whole ledger, where it
+  was the first awaiting row of the newest-first page) and admin "Active creators" from `active_total`. Seeded
+  two-server page 1/2 comparison: identical except the two intended tiles. eslint 122 errors vs 126 on main.
+  Follow-ups from review: give `useServerList` a `meta` field for the three side-channel `fetchPage` captures; render the
+  client payments toolbar outside `PaymentsListSection` so a failed load can still change the filter.

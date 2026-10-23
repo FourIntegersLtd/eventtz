@@ -50,7 +50,7 @@ A feature **area** is the first path segment under `features/` (`admin`, `client
 | `features/bookings/{ActiveEventPrefillBanner,BookingCompletionBanner,BookingDateChangeCard,BookingDisputeSection,BookingPayoutPendingBanner,BookingPriceUpdateBanner,BookingPricingBreakdown,BookingTermsNotices,BookingsEzList,ClientFeeBreakdownSummary,MasterDetailLayout,MultiVendorPackagePicker,ParticipantDisputesListView,VendorBookingDetailEzPanel,VendorQuoteFormModal}` | Booking panels, banners and modals rendered by client, vendor, admin, chat and marketplace |
 | `features/bookings/{bookingConfirmCopy,bookingListConstants,bookingPriceLabels,bookingTerms,bookingViewModel,cancellationPolicyCopy,eventDay,eventEnquirePrefill,groupBookingsByEvent,multiVendorPackageSelection,toBookingDetailViewModel,useEnquireEventFormState,useLaunchingSoonBookingGuard,useParticipantBookingsScaffold}` | Booking view models, terms, copy and hooks used across areas |
 | `features/vendors/display` | Vendor listing presentation (browse cards, portfolio, pricing blocks) |
-| `features/receipts/ReceiptActions` | Receipt download and share buttons |
+| `features/receipts/{PaymentsListSection,ReceiptActions}` | Receipt download and share buttons; the loading, error, empty and paging frame of the client and vendor payment lists |
 | `features/landing/landingData` | Landing categories and copy, read by the marketplace category counts |
 | `features/reviews/{BookingReviewPanel,ReviewCard,ReviewPhotoGallery,ReviewPhotoPicker,VendorReviewsEzView,reviewFormatters,useReviewsQuery}` | Review cards, panels and queries shown to client, vendor and admin |
 | `features/chat/{ChatDrawer,ChatPortalView}` | Chat drawer and portal view |

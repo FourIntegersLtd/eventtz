@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import Link from "next/link";
 import { Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
@@ -19,6 +21,7 @@ import {
   type BlogPostListItem,
   type BlogPostStatus,
 } from "@/lib/adminBlogApi";
+import { useServerList } from "@/lib/useServerList";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
 
@@ -31,64 +34,60 @@ type AdminBlogListViewProps = {
   onRegisterPageHead?: (head: AdminBlogListPageHead) => void;
 };
 
+const BLOG_STATUS_FILTER_OPTIONS: EzFilterOption<"" | BlogPostStatus>[] = [
+  { id: "", title: "All posts" },
+  { id: "published", title: "Published" },
+  { id: "draft", title: "Draft" },
+];
+
 function statusBadge(status: BlogPostStatus) {
-  return status === "published" ? (
-    <span className="ez-badge ez-badge--success">Published</span>
-  ) : (
-    <span className="ez-badge ez-badge--neutral">Draft</span>
-  );
+  return status === "published" ? <Badge tone="success">Published</Badge> : <Badge>Draft</Badge>;
 }
 
 export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps) {
   const router = useRouter();
-  const [posts, setPosts] = useState<BlogPostListItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"" | BlogPostStatus>("");
   const [statusFilterOpen, setStatusFilterOpen] = useState(false);
-  const [offset, setOffset] = useState(0);
-
-  const BLOG_STATUS_FILTER_OPTIONS: EzFilterOption<"" | BlogPostStatus>[] = [
-    { id: "", title: "All posts" },
-    { id: "published", title: "Published" },
-    { id: "draft", title: "Draft" },
-  ];
 
   const blogStatusLabel =
     BLOG_STATUS_FILTER_OPTIONS.find((option) => option.id === statusFilter)?.title ?? "Status";
-  const [total, setTotal] = useState(0);
 
-  const load = useCallback(async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const page = await fetchAdminBlogPostsPage(offset, ADMIN_BLOG_PAGE_SIZE, {
-        search,
-        status: statusFilter,
+  const {
+    items: posts,
+    total,
+    offset,
+    limit,
+    loading,
+    error: loadError,
+    goNext,
+    goPrevious,
+    reload,
+  } = useServerList<BlogPostListItem, { status: "" | BlogPostStatus }>({
+    fetchPage: async (query) => {
+      const page = await fetchAdminBlogPostsPage(query.offset, query.limit, {
+        search: query.search,
+        status: query.filters.status,
       });
-      setPosts(page.posts);
-      setTotal(page.total);
-    } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not load posts.");
-    } finally {
-      setLoading(false);
-    }
-  }, [offset, search, statusFilter]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+      return { items: page.posts, total: page.total };
+    },
+    filters: { status: statusFilter },
+    search,
+    pageSize: ADMIN_BLOG_PAGE_SIZE,
+    errorMessage: "Could not load posts.",
+  });
+  const error = createError ?? loadError;
 
   const createPost = useCallback(async () => {
     setCreating(true);
-    setError(null);
+    setCreateError(null);
     try {
       const post = await createAdminBlogPost({ title: "Untitled" });
       router.push(`/admin/blog/${post.id}`);
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not create post.");
+      setCreateError(getApiErrorDetail(e) ?? "Could not create post.");
       setCreating(false);
     }
   }, [router]);
@@ -98,15 +97,14 @@ export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps
     onRegisterPageHead({
       description: total ? `${total} post${total === 1 ? "" : "s"}` : undefined,
       actions: (
-        <button
-          type="button"
-          className="ez-btn ez-btn--primary ez-btn--sm"
+        <Button
+          size="sm"
           disabled={creating}
+          icon={<Plus className="h-4 w-4" aria-hidden />}
           onClick={() => void createPost()}
         >
-          <Plus className="h-4 w-4" aria-hidden />
           New post
-        </button>
+        </Button>
       ),
     });
     return () => onRegisterPageHead({});
@@ -115,21 +113,20 @@ export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps
   const clearFilters = () => {
     setSearch("");
     setStatusFilter("");
-    setOffset(0);
   };
 
   if (loading && posts.length === 0) return <AdminLoadingState label="Loading posts…" />;
 
   return (
     <div className="ez-stack">
-      {error ? <AdminErrorBanner message={error} onRetry={() => void load()} /> : null}
+      {error ? <AdminErrorBanner message={error} onRetry={() => {
+          setCreateError(null);
+          reload();
+        }} /> : null}
 
       <EzListFilterToolbar
         searchValue={search}
-        onSearchChange={(value) => {
-          setSearch(value);
-          setOffset(0);
-        }}
+        onSearchChange={setSearch}
         searchPlaceholder="Search title or slug"
         searchAriaLabel="Search posts"
         onOpenFilter={() => setStatusFilterOpen(true)}
@@ -138,10 +135,7 @@ export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps
           statusFilter
             ? {
                 label: blogStatusLabel,
-                onClear: () => {
-                  setStatusFilter("");
-                  setOffset(0);
-                },
+                onClear: () => setStatusFilter(""),
               }
             : null
         }
@@ -154,10 +148,7 @@ export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps
         description="Show all posts or narrow by publish status."
         options={BLOG_STATUS_FILTER_OPTIONS}
         value={statusFilter}
-        onChange={(id) => {
-          setStatusFilter(id);
-          setOffset(0);
-        }}
+        onChange={setStatusFilter}
         listAriaLabel="Post status"
         resetValue=""
         resetLabel="Show all"
@@ -169,18 +160,13 @@ export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps
           lottie="searchNoResults"
           action={
             total === 0 && !search && !statusFilter ? (
-              <button
-                type="button"
-                className="ez-btn ez-btn--primary ez-btn--sm"
-                disabled={creating}
-                onClick={() => void createPost()}
-              >
+              <Button size="sm" disabled={creating} onClick={() => void createPost()}>
                 New post
-              </button>
+              </Button>
             ) : (
-              <button type="button" className="ez-btn ez-btn--secondary ez-btn--sm" onClick={clearFilters}>
+              <Button variant="secondary" size="sm" onClick={clearFilters}>
                 Clear filters
-              </button>
+              </Button>
             )
           }
         />
@@ -213,9 +199,9 @@ export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps
               key: "edit",
               header: " ",
               cell: (post) => (
-                <Link href={`/admin/blog/${post.id}`} className="ez-btn ez-btn--secondary ez-btn--sm">
+                <ButtonLink href={`/admin/blog/${post.id}`} variant="secondary" size="sm">
                   Edit
-                </Link>
+                </ButtonLink>
               ),
             },
           ]}
@@ -224,11 +210,11 @@ export function AdminBlogListView({ onRegisterPageHead }: AdminBlogListViewProps
 
       <TablePagination
         offset={offset}
-        limit={ADMIN_BLOG_PAGE_SIZE}
+        limit={limit}
         total={total}
         loading={loading}
-        onPrevious={() => setOffset((current) => Math.max(0, current - ADMIN_BLOG_PAGE_SIZE))}
-        onNext={() => setOffset((current) => current + ADMIN_BLOG_PAGE_SIZE)}
+        onPrevious={goPrevious}
+        onNext={goNext}
       />
     </div>
   );

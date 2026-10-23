@@ -33,6 +33,8 @@ class ReferralPartnerListResponse(PagedResponse):
 
     success: bool = True
     partners: list[ReferralPartnerRow]
+    # Partners switched on across the whole list, not just this page.
+    active_total: int = 0
 
 
 class CreateReferralPartnerRequest(BaseModel):

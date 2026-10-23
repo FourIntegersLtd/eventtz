@@ -1,5 +1,7 @@
 "use client";
 
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
 import Link from "next/link";
 import { AlertCircle, ChevronRight, Info, Sparkles } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -22,7 +24,7 @@ const TONE_ICON = {
 
 const TONE_CLASS = {
   urgent: "text-amber-600",
-  info: "text-neutral-400",
+  info: "text-ink-3",
   positive: "text-primary",
 } as const;
 
@@ -44,13 +46,13 @@ export function AdminAttentionList({
     (items.length > 0 ? `${items.length} item${items.length === 1 ? "" : "s"}` : undefined);
 
   return (
-    <section className="ez-card">
-      <div className="ez-card__head">
+    <Card as="section">
+      <Card.Header>
         <div>
           <h2 className="ez-h3">{title}</h2>
           {countLine ? <p className="ez-small">{countLine}</p> : null}
         </div>
-      </div>
+      </Card.Header>
       {items.length === 0 ? (
         <EmptyState
           className="border-0 shadow-none"
@@ -70,9 +72,7 @@ export function AdminAttentionList({
                   {item.subtitle ? <span className="ez-caption truncate">{item.subtitle}</span> : null}
                 </div>
                 {item.badge ? (
-                  <span className={tone === "urgent" ? "ez-badge ez-badge--warning" : "ez-badge ez-badge--neutral"}>
-                    {item.badge}
-                  </span>
+                  <Badge tone={tone === "urgent" ? "warning" : "neutral"}>{item.badge}</Badge>
                 ) : null}
                 <ChevronRight className="h-4 w-4 shrink-0" aria-hidden />
               </Link>
@@ -80,6 +80,6 @@ export function AdminAttentionList({
           })}
         </div>
       )}
-    </section>
+    </Card>
   );
 }

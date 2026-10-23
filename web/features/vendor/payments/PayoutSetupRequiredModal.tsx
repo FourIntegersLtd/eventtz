@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Wallet } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 
 type PayoutSetupRequiredModalProps = {
   isOpen: boolean;
@@ -44,16 +45,19 @@ export function PayoutSetupRequiredModal({
         <div className="ez-modal__body ez-stack">
           <p className="ez-body">{payoutCopy}</p>
           <p className="ez-small">This usually takes 2-3 minutes.</p>
-          {error ? <p className="ez-small" style={{ color: "var(--ez-danger)" }}>{error}</p> : null}
+          {error ? <p className="ez-small text-danger">{error}</p> : null}
         </div>
         <div className="ez-modal__foot">
-          <button className="ez-btn ez-btn--ghost" type="button" onClick={onClose} disabled={connecting}>
+          <Button variant="ghost" onClick={onClose} disabled={connecting}>
             Not now
-          </button>
-          <button className="ez-btn ez-btn--primary" type="button" disabled={connecting} onClick={onCompleteSetup}>
-            <ArrowRight size={18} strokeWidth={1.75} aria-hidden />
+          </Button>
+          <Button
+            disabled={connecting}
+            icon={<ArrowRight size={18} strokeWidth={1.75} aria-hidden />}
+            onClick={onCompleteSetup}
+          >
             {connecting ? "Opening Stripe…" : "Complete payout setup"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

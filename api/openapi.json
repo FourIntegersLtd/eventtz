@@ -11635,6 +11635,11 @@
       "ReferralPartnerListResponse": {
         "description": "Every partner, newest first.",
         "properties": {
+          "active_total": {
+            "default": 0,
+            "title": "Active Total",
+            "type": "integer"
+          },
           "limit": {
             "default": 25,
             "title": "Limit",
@@ -11664,6 +11669,7 @@
           }
         },
         "required": [
+          "active_total",
           "limit",
           "offset",
           "partners",
@@ -14194,6 +14200,28 @@
             "title": "Limit",
             "type": "integer"
           },
+          "next_release_event_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Release Event Date"
+          },
+          "next_release_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Release Label"
+          },
           "offset": {
             "default": 0,
             "title": "Offset",
@@ -14249,6 +14277,8 @@
         },
         "required": [
           "limit",
+          "next_release_event_date",
+          "next_release_label",
           "offset",
           "paid_out_last_30_days_gbp",
           "paid_out_last_30_days_label",
