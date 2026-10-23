@@ -6,8 +6,9 @@ Ported from the baseline's `payment_maintenance.py`, `completion_rules.py` and
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 
+from app.core.time import uk_date
 from app.features.bookings import domain
 from app.features.bookings.rows import BookingRow, EnquiryReminderRow
 
@@ -136,6 +137,6 @@ def parse_timestamp(value: str | None) -> datetime | None:
         return None
 
 
-def tomorrow_utc(now: datetime) -> date:
-    """The calendar day after `now` in UTC, which is the day "event tomorrow" reminders look for."""
-    return now.astimezone(UTC).date() + timedelta(days=1)
+def tomorrow_uk(now: datetime) -> date:
+    """The London calendar day after `now`, which is the day "event tomorrow" reminders look for."""
+    return uk_date(now) + timedelta(days=1)

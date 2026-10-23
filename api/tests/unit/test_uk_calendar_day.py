@@ -6,7 +6,9 @@ from datetime import UTC, date, datetime
 
 import pytest
 
+from app.core.time import uk_day_key
 from app.features.admin_insights import domain as insights_domain
+from app.features.bookings.domain_maintenance import tomorrow_uk
 from app.features.bookings.errors import DateChangeInPast
 from app.features.bookings.schemas import _check_event_dates
 from app.features.bookings.service_admin_financials import _daily_window
@@ -81,3 +83,63 @@ def test_a_date_change_to_today_in_london_is_allowed() -> None:
     _check_new_dates(date(2026, 7, 1), None, JUST_PAST_LONDON_MIDNIGHT)
     with pytest.raises(DateChangeInPast):
         _check_new_dates(date(2026, 6, 30), None, JUST_PAST_LONDON_MIDNIGHT)
+
+
+def test_event_tomorrow_reminders_look_at_the_london_tomorrow() -> None:
+    """At 00:30 BST on 1 July, tomorrow is 2 July (UTC would still say 1 July)."""
+    assert tomorrow_uk(JUST_PAST_LONDON_MIDNIGHT) == date(2026, 7, 2)
+    assert tomorrow_uk(JUST_BEFORE_LONDON_MIDNIGHT) == date(2026, 7, 1)
+
+
+def test_paid_and_created_bookings_bucket_on_the_london_day() -> None:
+    """A booking paid and created at 23:30 UTC on 30 June counts under 1 July."""
+    days = ["2026-06-30", "2026-07-01"]
+    row = {"paid_at": "2026-06-30T23:30:00+00:00", "created_at": "2026-06-30T23:30:00Z", "gmv_gbp": 120.0}
+    paid = insights_domain.build_booking_paid_buckets(days, [row])
+    created = insights_domain.build_booking_created_buckets(days, [row])
+    assert [(bucket["date"], bucket["count"], bucket["gmv_gbp"]) for bucket in paid] == [
+        ("2026-06-30", 0, 0.0),
+        ("2026-07-01", 1, 120.0),
+    ]
+    assert [bucket["count"] for bucket in created] == [0, 1]
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("2026-06-30T23:30:00+00:00", "2026-07-01"),
+        ("2026-06-30T23:30:00Z", "2026-07-01"),
+        ("2026-06-30 23:30:00+00:00", "2026-07-01"),
+        ("2026-06-30T23:30:00", "2026-07-01"),
+        ("2026-06-30T22:59:00+00:00", "2026-06-30"),
+        ("2026-01-15T23:30:00+00:00", "2026-01-15"),
+        ("2026-06-30", "2026-06-30"),
+        ("garbage", None),
+        ("", None),
+        (None, None),
+    ],
+)
+def test_uk_day_key_reads_every_timestamp_shape_as_a_london_day(
+    raw: str | None, expected: str | None
+) -> None:
+    """Offsets, Z, a space separator, naive (read as UTC), a bare date, and unreadable input."""
+    assert uk_day_key(raw) == expected
+
+
+def test_months_roll_over_on_the_london_day() -> None:
+    """An enquiry created 23:30 UTC on 30 June belongs to July."""
+    assert insights_domain.month_key("2026-06-30T23:30:00+00:00") == "2026-07"
+
+
+def test_a_day_bound_is_london_midnight_across_clock_changes() -> None:
+    """The day the clocks go forward is 23 hours long, the day they go back 25, in UTC instants."""
+    from app.features.admin_insights.repository import _day_bounds
+
+    assert _day_bounds("2026-03-29") == (
+        datetime(2026, 3, 29, 0, 0, tzinfo=UTC),
+        datetime(2026, 3, 29, 23, 0, tzinfo=UTC),
+    )
+    assert _day_bounds("2026-10-25") == (
+        datetime(2026, 10, 24, 23, 0, tzinfo=UTC),
+        datetime(2026, 10, 26, 0, 0, tzinfo=UTC),
+    )

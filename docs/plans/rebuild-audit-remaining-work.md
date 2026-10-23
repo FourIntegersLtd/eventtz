@@ -91,13 +91,14 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `bookings/service_date_change.py`, `planner/service_plans.py` and `admin_insights/service.py`. The portal
   dashboard computes `uk_today()` once and `today=` is required. Services take an optional `now` (the test clock).
   `tests/guards/test_dates_use_uk_calendar_day.py` bans the direct forms.
-- **Still UTC, follow-ups.** (1) The guard misses `.astimezone(UTC).date()` and a clock stored in a variable:
-  `bookings/domain_cancellation.py:107` (`days_before_event`, sets the refund tier, money-owner, needs a golden check),
-  `bookings/domain_maintenance.py:141` (`tomorrow_utc`, reminder job) and `bookings/domain_policy.py:86` count UTC days.
-  (2) The admin charts label days in London but query bounds and bucketing are still UTC days
-  (`admin_insights/repository.py` `_day_bounds`, `domain.day_key`, `service_admin_financials` `paid_at[:10]`), so a
-  booking at 00:30 BST lands under the previous bar. Move bounds to London `[start, end)` instants and bucket on
-  `uk_date(timestamp)`; amounts do not change.
+- **Also done in the same PR.** Admin chart bounds and bucketing (`admin_insights`), the financials daily table
+  and `paid_on_or_*` bounds, and the reminder job's "tomorrow" (`domain_maintenance.tomorrow_uk`) use London days.
+  The guard also bans `.astimezone(UTC).date()`.
+- **Still UTC, follow-ups.** (1) `bookings/domain_cancellation.py:107` (`days_before_event`) sets the refund tier:
+  money-owner moves it to `uk_date` with a golden check, then drops it from `UTC_DAY_ALLOWED_FILES` in the guard.
+  (2) The financials summary filters `date_from` / `date_to` (date-only strings) still mean midnight UTC
+  (`repository_admin._as_datetime_bound`, frozen by acceptance), so a 23:30 UTC payment on the day before `date_from`
+  is a London-day-of-`date_from` payment in the daily table but outside the summary total. Decide whether to freeze-break.
 
 ### Decision for you: should a client shown as "Client" be searchable by vendors?
 

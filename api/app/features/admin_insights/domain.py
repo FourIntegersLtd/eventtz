@@ -14,7 +14,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from app.core.time import uk_today
+from app.core.time import uk_day_key, uk_today
 
 #: `booking_requests.payment_status` values where Eventtz has actually collected
 #: money from the client (mirrors `backend/app/features/admin/dashboard_queries.py`).
@@ -55,8 +55,8 @@ def day_key(value: Any) -> str | None:
 
 
 def month_key(value: Any) -> str | None:
-    """The `YYYY-MM` prefix of an ISO timestamp/date (mirrors baseline's `_month_key`)."""
-    day = day_key(value)
+    """The London `YYYY-MM` of an ISO timestamp/date (mirrors baseline's `_month_key`, on London days)."""
+    day = uk_day_key(value)
     return day[:7] if day else None
 
 
@@ -64,7 +64,7 @@ def build_booking_created_buckets(days: list[str], rows: list[dict[str, Any]]) -
     """One `{date, count, gmv_gbp}` row per day: bookings created that day."""
     counts = dict.fromkeys(days, 0)
     for row in rows:
-        day = day_key(row.get("created_at"))
+        day = uk_day_key(row.get("created_at"))
         if day in counts:
             counts[day] += 1
     return [{"date": day, "count": counts[day], "gmv_gbp": 0.0} for day in days]
@@ -82,7 +82,7 @@ def build_booking_paid_buckets(days: list[str], rows: list[dict[str, Any]]) -> l
     counts = dict.fromkeys(days, 0)
     totals = dict.fromkeys(days, 0.0)
     for row in rows:
-        day = day_key(row.get("paid_at"))
+        day = uk_day_key(row.get("paid_at"))
         if day not in counts:
             continue
         counts[day] += 1
@@ -97,7 +97,7 @@ def build_signup_buckets(days: list[str], rows: list[dict[str, Any]]) -> list[di
     clients = dict.fromkeys(days, 0)
     vendors = dict.fromkeys(days, 0)
     for row in rows:
-        day = day_key(row.get("created_at"))
+        day = uk_day_key(row.get("created_at"))
         if day not in clients:
             continue
         user_type = row.get("user_type")

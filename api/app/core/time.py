@@ -14,6 +14,17 @@ def uk_date(moment: datetime) -> date:
     return moment.astimezone(HOME_TIMEZONE).date()
 
 
+def uk_day_key(iso_timestamp: object) -> str | None:
+    """The London `YYYY-MM-DD` of an ISO timestamp (no offset means UTC), or `None` if blank or unreadable."""
+    if not iso_timestamp:
+        return None
+    try:
+        moment = datetime.fromisoformat(str(iso_timestamp).strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return uk_date(moment if moment.tzinfo else moment.replace(tzinfo=UTC)).isoformat()
+
+
 def uk_today(now: datetime | None = None) -> date:
     """Today's London calendar date; `now` is the clock tests set (an aware instant), default the real one."""
     return uk_date(now or datetime.now(UTC))

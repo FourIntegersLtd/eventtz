@@ -17,6 +17,9 @@ import pytest
 from tests.guards._scan import APP_ROOT, parse, python_files, rel
 
 ALLOWED_FILE = APP_ROOT / "core" / "time.py"
+#: Files still counting UTC days after `astimezone(UTC).date()`. `domain_cancellation.days_before_event` sets
+#: the refund tier, so money-owner moves it to `uk_date` separately with a golden check. Nothing else joins.
+UTC_DAY_ALLOWED_FILES = {"app/features/bookings/domain_cancellation.py"}
 SCANNED_FILES = [path for path in python_files(APP_ROOT) if path != ALLOWED_FILE]
 #: `datetime.<name>()` clocks whose date part is a server-zone or UTC calendar day.
 CLOCK_NAMES = {"now", "utcnow", "today"}
@@ -33,6 +36,20 @@ def _is_clock_call(node: ast.expr) -> bool:
     )
 
 
+def _is_astimezone_utc(node: ast.expr) -> bool:
+    """True for `<moment>.astimezone(UTC)` / `.astimezone(timezone.utc)`."""
+    if not (
+        isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "astimezone"
+    ):
+        return False
+    if len(node.args) != 1:
+        return False
+    zone = node.args[0]
+    return (isinstance(zone, ast.Name) and zone.id == "UTC") or (
+        isinstance(zone, ast.Attribute) and zone.attr == "utc"
+    )
+
+
 def violations(path: Path) -> list[str]:
     """`file:line` of every server-clock or UTC calendar-day computation in `path`."""
     found: list[str] = []
@@ -44,6 +61,11 @@ def violations(path: Path) -> list[str]:
             found.append(f"{rel(path)}:{node.lineno} calls {owner.id}.today(); use core.time.uk_today()")
         elif node.func.attr == "utcnow" and isinstance(owner, ast.Name) and owner.id == "datetime":
             found.append(f"{rel(path)}:{node.lineno} calls datetime.utcnow(); use core.time.uk_today()")
+        elif node.func.attr == "date" and _is_astimezone_utc(owner):
+            if rel(path) not in UTC_DAY_ALLOWED_FILES:
+                found.append(
+                    f"{rel(path)}:{node.lineno} takes .date() after astimezone(UTC); use core.time.uk_date()"
+                )
         elif node.func.attr == "date" and _is_clock_call(owner):
             found.append(
                 f"{rel(path)}:{node.lineno} takes .date() of a clock; use core.time.uk_today()/uk_date()"
@@ -69,6 +91,8 @@ def test_the_guard_would_catch_a_utc_or_server_zone_day(tmp_path: Path) -> None:
         "fourth = datetime.today()\n"
         "fifth = datetime.utcnow()\n"
         "moment = datetime.now(UTC)\n"
+        "sixth = moment.astimezone(UTC).date()\n"
+        "seventh = moment.astimezone(timezone.utc).date()\n"
         "fine = uk_today()\n",
         encoding="utf-8",
     )
@@ -79,4 +103,6 @@ def test_the_guard_would_catch_a_utc_or_server_zone_day(tmp_path: Path) -> None:
         "planted.py:4",
         "planted.py:5",
         "planted.py:6",
+        "planted.py:8",
+        "planted.py:9",
     ]
