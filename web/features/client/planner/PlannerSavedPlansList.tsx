@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import type { CelebrationPlanListItem } from "@/lib/clientPlannerApi";
 import { PLANNER_COPY } from "./plannerCopy";
 
@@ -40,12 +40,13 @@ export function PlannerSavedPlansList({ plans }: PlannerSavedPlansListProps) {
               <span className="ez-strong">{plan.title}</span>
               <span className="ez-caption">{planCaption(plan) || "Saved plan"}</span>
             </div>
-            <Link
+            <ButtonLink
               href={`/client/planner/${encodeURIComponent(plan.plan_id)}`}
-              className="ez-btn ez-btn--secondary ez-btn--sm"
+              variant="secondary"
+              size="sm"
             >
               Open
-            </Link>
+            </ButtonLink>
           </div>
         ))}
       </div>

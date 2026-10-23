@@ -1,7 +1,7 @@
 import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 import { CARD_PADDING, CARD_SURFACE } from "@/components/ui/tokens";
 
-export type CardVariant = "portal" | "portal-inset" | "admin" | "muted" | "callout";
+export type CardVariant = "portal" | "portal-inset" | "admin" | "muted" | "callout" | "raised";
 export type CardPadding = "none" | "md" | "lg";
 
 type CardProps<T extends ElementType = "div"> = Omit<ComponentPropsWithoutRef<T>, "className" | "children"> & {
@@ -19,6 +19,7 @@ const VARIANT_CLASSES: Record<CardVariant, string> = {
   admin: CARD_SURFACE,
   muted: "ez-card ez-card--flat",
   callout: "ez-card ez-card--brand",
+  raised: "ez-card ez-card--raised",
 };
 
 const PADDING_CLASSES: Record<CardPadding, string> = {
@@ -29,7 +30,7 @@ const PADDING_CLASSES: Record<CardPadding, string> = {
 
 /**
  * Shared surface container (`ez-card`): portal, admin and inset panels share one look;
- * `muted` is the flat tint and `callout` the brand tint.
+ * `muted` is the flat tint, `callout` the brand tint and `raised` the lifted card of the planner.
  */
 function CardRoot<T extends ElementType = "div">({
   as,

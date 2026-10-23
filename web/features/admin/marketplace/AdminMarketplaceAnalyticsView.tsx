@@ -8,6 +8,9 @@ import {
 } from "@/lib/adminPlatformApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
+import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
+import { DataTable } from "@/components/ui/DataTable";
 import { StatTile } from "@/components/ui/StatTile";
 import { AdminChartCard } from "@/features/admin/components/AdminChartCard";
 import { EzBarChart } from "@/components/charts/EzBarChart";
@@ -117,7 +120,7 @@ export function AdminMarketplaceAnalyticsView() {
     <div className="ez-stack ez-stack--lg">
       {error ? <AdminErrorBanner message={error} /> : null}
 
-      <div className="ez-hrow" style={{ justifyContent: "flex-end" }}>
+      <div className="ez-hrow justify-end">
         <EzPeriodFilterButton options={ADMIN_PERIOD_OPTIONS} value={period} onChange={handlePeriodChange} defaultValue={30} />
       </div>
 
@@ -139,7 +142,7 @@ export function AdminMarketplaceAnalyticsView() {
           hint={`Avg booking ${formatGbp(kpis.avgBookingValue, { decimals: 0, grouping: false })}`}
         />
       </div>
-      <div className="ez-hrow" style={{ justifyContent: "flex-end" }}>
+      <div className="ez-hrow justify-end">
         <AdminInfoHint label="Overview" info={MARKETPLACE_CHART_INFO.overview} />
       </div>
       {secondary.length > 0 ? (
@@ -147,53 +150,45 @@ export function AdminMarketplaceAnalyticsView() {
       ) : null}
 
       {data.by_category.length > 0 ? (
-        <section className="ez-card">
-          <div className="ez-card__head">
+        <Card as="section">
+          <Card.Header>
             <h2 className="ez-h3">Category performance and recruitment opportunities</h2>
-          </div>
-          <div className="ez-table-wrap">
-            <table className="ez-table">
-              <thead>
-                <tr>
-                  <th>Category</th>
-                  <th className="ez-td-num">Enquiries</th>
-                  <th className="ez-td-num">Completed</th>
-                  <th className="ez-td-num">Conversion</th>
-                  <th className="ez-td-num">Revenue</th>
-                  <th>Supply</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.by_category.map((row) => {
-                  const needsRecruit = recruitCategoryKeys.has(row.key.toLowerCase());
-                  return (
-                    <tr key={row.key}>
-                      <td className="ez-td-strong">{row.key}</td>
-                      <td className="ez-td-num tabular-nums">{row.enquiries}</td>
-                      <td className="ez-td-num tabular-nums">{row.completed}</td>
-                      <td className="ez-td-num tabular-nums">
-                        {formatMarketplacePct(row.conversion_rate)}
-                      </td>
-                      <td className="ez-td-num tabular-nums">
-                        {formatGbp(row.revenue_gbp, { decimals: 0, grouping: false })}
-                      </td>
-                      <td>
-                        <span
-                          className={
-                            needsRecruit
-                              ? "ez-badge ez-badge--warning"
-                              : "ez-badge ez-badge--success"
-                          }
-                        >
-                          {needsRecruit ? "Recruit more" : "Well supplied"}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          </Card.Header>
+          <DataTable
+            aria-label="Category performance"
+            embedded
+            rows={data.by_category}
+            getRowKey={(row) => row.key}
+            columns={[
+              { key: "category", header: "Category", kind: "strong", cell: (row) => row.key },
+              { key: "enquiries", header: "Enquiries", kind: "num", className: "tabular-nums", cell: (row) => row.enquiries },
+              { key: "completed", header: "Completed", kind: "num", className: "tabular-nums", cell: (row) => row.completed },
+              {
+                key: "conversion",
+                header: "Conversion",
+                kind: "num",
+                className: "tabular-nums",
+                cell: (row) => formatMarketplacePct(row.conversion_rate),
+              },
+              {
+                key: "revenue",
+                header: "Revenue",
+                kind: "num",
+                className: "tabular-nums",
+                cell: (row) => formatGbp(row.revenue_gbp, { decimals: 0, grouping: false }),
+              },
+              {
+                key: "supply",
+                header: "Supply",
+                cell: (row) =>
+                  recruitCategoryKeys.has(row.key.toLowerCase()) ? (
+                    <Badge tone="warning">Recruit more</Badge>
+                  ) : (
+                    <Badge tone="success">Well supplied</Badge>
+                  ),
+              },
+            ]}
+          />
           <TablePagination
             offset={categoryOffset}
             limit={ADMIN_TABLE_PAGE_SIZE}
@@ -205,7 +200,7 @@ export function AdminMarketplaceAnalyticsView() {
             onNext={() => setCategoryOffset((current) => current + ADMIN_TABLE_PAGE_SIZE)}
           />
           {recruitHints.length > 0 ? (
-            <div className="ez-card__body">
+            <Card.Body>
               <ul className="ez-stack ez-stack--sm">
                 {recruitHints.map((message) => (
                   <li key={message} className="ez-small">
@@ -213,9 +208,9 @@ export function AdminMarketplaceAnalyticsView() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Card.Body>
           ) : null}
-        </section>
+        </Card>
       ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
@@ -252,7 +247,7 @@ export function AdminMarketplaceAnalyticsView() {
                 color="var(--ez-chart-1)"
               />
             ) : (
-              <p className="flex h-[180px] items-center justify-center text-sm text-neutral-500">
+              <p className="flex h-[180px] items-center justify-center text-sm text-ink-3">
                 No category data in this period.
               </p>
             )}
@@ -268,83 +263,83 @@ export function AdminMarketplaceAnalyticsView() {
             {failureDonut.length > 0 ? (
               <EzDonutChart data={failureDonut} />
             ) : (
-              <p className="flex h-[180px] items-center justify-center text-sm text-neutral-500">
+              <p className="flex h-[180px] items-center justify-center text-sm text-ink-3">
                 No failures recorded.
               </p>
             )}
           </AdminChartCard>
 
-          <section className={`ez-card overflow-hidden`}>
-            <div className="flex items-center justify-between gap-2 border-b border-neutral-100 px-5 py-3.5">
+          <Card as="section" className="overflow-hidden">
+            <div className="flex items-center justify-between gap-2 border-b border-line px-5 py-3.5">
               <div className="min-w-0">
-                <h2 className="text-sm font-semibold text-neutral-900">Top locations</h2>
-                <p className="mt-0.5 text-xs text-neutral-500">By enquiry volume</p>
+                <h2 className="text-sm font-semibold text-ink">Top locations</h2>
+                <p className="mt-0.5 text-xs text-ink-3">By enquiry volume</p>
               </div>
               <AdminInfoHint label="Top locations" info={MARKETPLACE_CHART_INFO.locations} />
             </div>
             {locations.length === 0 ? (
-              <p className="px-5 py-6 text-center text-sm text-neutral-500">
+              <p className="px-5 py-6 text-center text-sm text-ink-3">
                 No location data in this period.
               </p>
             ) : (
-              <ul className="divide-y divide-neutral-100">
+              <ul className="divide-y divide-line">
                 {locations.map((r, i) => (
                   <li
                     key={r.key}
                     className="flex items-center justify-between gap-3 px-5 py-2.5 text-sm"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="w-4 shrink-0 text-xs tabular-nums text-neutral-400">
+                      <span className="w-4 shrink-0 text-xs tabular-nums text-ink-3">
                         {i + 1}
                       </span>
-                      <span className="truncate text-neutral-900">{r.key}</span>
+                      <span className="truncate text-ink">{r.key}</span>
                     </div>
-                    <div className="shrink-0 text-right text-xs tabular-nums text-neutral-500">
-                      <span className="font-medium text-neutral-900">{r.enquiries}</span>
-                      <span className="mx-1 text-neutral-300">·</span>
+                    <div className="shrink-0 text-right text-xs tabular-nums text-ink-3">
+                      <span className="font-medium text-ink">{r.enquiries}</span>
+                      <span className="mx-1 text-ink-3">·</span>
                       {formatMarketplacePct(r.conversion_rate)}
                     </div>
                   </li>
                 ))}
               </ul>
             )}
-          </section>
+          </Card>
 
-          <section className={`ez-card overflow-hidden`}>
-            <div className="flex items-center justify-between gap-2 border-b border-neutral-100 px-5 py-3.5">
+          <Card as="section" className="overflow-hidden">
+            <div className="flex items-center justify-between gap-2 border-b border-line px-5 py-3.5">
               <div className="min-w-0">
-                <h2 className="text-sm font-semibold text-neutral-900">Top vendors</h2>
-                <p className="mt-0.5 text-xs text-neutral-500">Completed bookings & revenue</p>
+                <h2 className="text-sm font-semibold text-ink">Top vendors</h2>
+                <p className="mt-0.5 text-xs text-ink-3">Completed bookings & revenue</p>
               </div>
               <AdminInfoHint label="Top vendors" info={MARKETPLACE_CHART_INFO.vendors} />
             </div>
             {vendors.length === 0 ? (
-              <p className="px-5 py-6 text-center text-sm text-neutral-500">
+              <p className="px-5 py-6 text-center text-sm text-ink-3">
                 No vendor data in this period.
               </p>
             ) : (
-              <ul className="divide-y divide-neutral-100">
+              <ul className="divide-y divide-line">
                 {vendors.map((v, i) => (
                   <li
                     key={v.vendor_user_id}
                     className="flex items-center justify-between gap-3 px-5 py-2.5 text-sm"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="w-4 shrink-0 text-xs tabular-nums text-neutral-400">
+                      <span className="w-4 shrink-0 text-xs tabular-nums text-ink-3">
                         {i + 1}
                       </span>
                       <div className="min-w-0">
-                        <p className="truncate text-neutral-900">{v.business_name}</p>
-                        <p className="text-xs text-neutral-500">
+                        <p className="truncate text-ink">{v.business_name}</p>
+                        <p className="text-xs text-ink-3">
                           {v.completed} completed · {formatMarketplaceSeconds(v.avg_response_seconds)}
                         </p>
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
-                      <p className="text-sm font-medium tabular-nums text-neutral-900">
+                      <p className="text-sm font-medium tabular-nums text-ink">
                         {formatGbp(v.revenue_gbp, { decimals: 0, grouping: false })}
                       </p>
-                      <p className="text-xs tabular-nums text-neutral-500">
+                      <p className="text-xs tabular-nums text-ink-3">
                         {formatMarketplacePct(v.conversion_rate)}
                       </p>
                     </div>
@@ -352,7 +347,7 @@ export function AdminMarketplaceAnalyticsView() {
                 ))}
               </ul>
             )}
-          </section>
+          </Card>
         </div>
       </div>
     </div>

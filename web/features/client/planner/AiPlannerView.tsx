@@ -6,6 +6,9 @@ import { Pencil } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BackLink } from "@/components/ui/BackLink";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
+import { Badge } from "@/components/ui/Badge";
+import { Banner } from "@/components/ui/Banner";
+import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { ensurePlanClientEvent } from "@/lib/clientPlannerApi";
@@ -177,17 +180,20 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
           />
 
           {simpleIntent ? (
-            <div className="ez-banner ez-banner--warning" role="status">
-              <p>{error || PLANNER_COPY.simpleIntentHint}</p>
-              <ButtonLink
-                href={`/client/browse?q=${encodeURIComponent(composePlannerPrompt(form))}`}
-                variant="secondary"
-                size="sm"
-                className="mt-3"
-              >
-                {PLANNER_COPY.browseCta}
-              </ButtonLink>
-            </div>
+            <Banner
+              tone="warning"
+              action={
+                <ButtonLink
+                  href={`/client/browse?q=${encodeURIComponent(composePlannerPrompt(form))}`}
+                  variant="secondary"
+                  size="sm"
+                >
+                  {PLANNER_COPY.browseCta}
+                </ButtonLink>
+              }
+            >
+              {error || PLANNER_COPY.simpleIntentHint}
+            </Banner>
           ) : null}
 
           {error && !simpleIntent ? <LottieFailureInline message={error} /> : null}
@@ -219,15 +225,18 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
             eyebrow="Your plan"
             title={plan.celebration.title}
             actions={
-              <button type="button" className="ez-btn ez-btn--secondary" onClick={handleEditDetails}>
-                <Pencil width={18} height={18} strokeWidth={1.75} aria-hidden />
+              <Button
+                variant="secondary"
+                onClick={handleEditDetails}
+                icon={<Pencil width={18} height={18} strokeWidth={1.75} aria-hidden />}
+              >
                 {PLANNER_COPY.editDetails}
-              </button>
+              </Button>
             }
           />
           {celebrationMetaLine(plan) && confidence ? (
             <p className="ez-body">
-              {celebrationMetaLine(plan)} · <span className={confidence.className}>{confidence.label}</span>
+              {celebrationMetaLine(plan)} · <Badge tone={confidence.tone}>{confidence.label}</Badge>
             </p>
           ) : null}
 
@@ -247,7 +256,7 @@ export function AiPlannerView({ initialPlanId }: { initialPlanId?: string }) {
                 />
               ))}
             </div>
-            <div className="ez-split__aside" style={{ flex: "0 1 340px" }}>
+            <div className="ez-split__aside flex-[0_1_340px]">
               <BudgetBreakdown
                 budget={plan.budget}
                 selectedCount={selectedCount}
