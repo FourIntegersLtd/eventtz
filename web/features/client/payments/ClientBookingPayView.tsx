@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailurePanel } from "@/components/ui/LottieFailurePanel";
@@ -38,9 +39,9 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
           title="Payment couldn't be started"
           description={error ?? "Could not load this booking."}
           action={
-            <button type="button" className="ez-btn ez-btn--secondary" onClick={() => router.push(bookingHref)}>
+            <Button variant="secondary" onClick={() => router.push(bookingHref)}>
               Back to booking
-            </button>
+            </Button>
           }
         />
       </div>
@@ -81,22 +82,12 @@ export function ClientBookingPayView({ bookingId }: ClientBookingPayViewProps) {
           />
         </label>
         <div className="ez-hrow">
-          <button
-            type="button"
-            className="ez-btn ez-btn--primary"
-            disabled={busy}
-            onClick={() => void continueFromVenue()}
-          >
+          <Button disabled={busy} onClick={() => void continueFromVenue()}>
             {busy ? "Saving…" : "Continue"}
-          </button>
-          <button
-            type="button"
-            className="ez-btn ez-btn--secondary"
-            disabled={busy}
-            onClick={() => router.push(bookingHref)}
-          >
+          </Button>
+          <Button variant="secondary" disabled={busy} onClick={() => router.push(bookingHref)}>
             Back to booking
-          </button>
+          </Button>
         </div>
       </div>
     );

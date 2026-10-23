@@ -16,6 +16,8 @@ export async function fetchReferralPartnersPage(
 ): Promise<{
   partners: ReferralPartner[];
   total: number;
+  /** Switched-on partners across every page, not just this one. */
+  activeTotal: number;
   offset: number;
   limit: number;
 }> {
@@ -26,14 +28,10 @@ export async function fetchReferralPartnersPage(
   return {
     partners: data.partners ?? [],
     total: data.total ?? 0,
+    activeTotal: data.active_total ?? 0,
     offset: data.offset ?? offset,
     limit: data.limit ?? limit,
   };
-}
-
-export async function fetchReferralPartners(): Promise<ReferralPartner[]> {
-  const page = await fetchReferralPartnersPage(0, 200);
-  return page.partners;
 }
 
 export async function createReferralPartner(body: components["schemas"]["CreateReferralPartnerRequest"]): Promise<ReferralPartner> {

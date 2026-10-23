@@ -248,3 +248,13 @@ own PR.
 For local testing without Docker:
 - Start Postgres 16 from `/usr/lib/postgresql/16/bin` on :5434 and `redis-server --port 6381`.
 - For api tests, set `TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5434/<db>`.
+
+- **Done (PR "Rebuild audit: money screens on the design system and server lists").** Payments, payouts, receipts,
+  financials and referral screens use the ui blocks (no `style={{}}`, `neutral-*` or raw `ez-*` left in the area's
+  feature dirs). Client and vendor payments, admin financials, referrals and referral signups are on `useServerList`
+  (server paging, 25); the pair shares `features/receipts/PaymentsListSection`. Vendor "Next release" now comes from the
+  api (`next_release_event_date`, `next_release_label`: the earliest-event held payout across the whole ledger, where it
+  was the first awaiting row of the newest-first page) and admin "Active creators" from `active_total`. Seeded
+  two-server page 1/2 comparison: identical except the two intended tiles. eslint 122 errors vs 126 on main.
+  Follow-ups from review: give `useServerList` a `meta` field for the three side-channel `fetchPage` captures; render the
+  client payments toolbar outside `PaymentsListSection` so a failed load can still change the filter.

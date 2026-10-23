@@ -10,7 +10,10 @@ import {
   type AdminFinancialsSummary,
 } from "@/lib/adminFinancialsApi";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { StatTile } from "@/components/ui/StatTile";
+import { useServerList } from "@/lib/useServerList";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
 import { EzPeriodFilterButton } from "@/components/ui/EzPeriodFilterButton";
 import { ADMIN_PERIOD_OPTIONS } from "@/lib/commercePeriod";
@@ -34,15 +37,20 @@ export function AdminFinancialsView({ onRegisterPageActions }: AdminFinancialsVi
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [dailyOffset, setDailyOffset] = useState(0);
-  const [dailyRows, setDailyRows] = useState<AdminFinancialsDailyBucket[]>([]);
-  const [dailyTotal, setDailyTotal] = useState(0);
-  const [dailyLoading, setDailyLoading] = useState(false);
+  // The api pages the daily buckets; a new period returns to the first page.
+  const daily = useServerList<AdminFinancialsDailyBucket, { from: string; to: string }>({
+    pageSize: ADMIN_FINANCIALS_DAILY_PAGE_SIZE,
+    errorMessage: "Could not load daily totals.",
+    filters: { from: range.from, to: range.to },
+    fetchPage: async ({ offset, limit, filters }) => {
+      const page = await fetchAdminFinancialsDailyPage(filters.from, filters.to, offset, limit);
+      return { items: page.daily, total: page.total };
+    },
+  });
 
   const handlePeriodChange = useCallback((next: CommercePeriodDays) => {
     setPeriod(next);
     setRange(commercePeriodRange(next));
-    setDailyOffset(0);
   }, []);
 
   const load = useCallback(async () => {
@@ -63,26 +71,11 @@ export function AdminFinancialsView({ onRegisterPageActions }: AdminFinancialsVi
   }, [load]);
 
   useEffect(() => {
-    if (!summary) return;
-    setDailyLoading(true);
-    void fetchAdminFinancialsDailyPage(range.from, range.to, dailyOffset, ADMIN_FINANCIALS_DAILY_PAGE_SIZE)
-      .then((page) => {
-        setDailyRows(page.daily);
-        setDailyTotal(page.total);
-      })
-      .catch(() => {
-        setDailyRows([]);
-        setDailyTotal(0);
-      })
-      .finally(() => setDailyLoading(false));
-  }, [summary, range.from, range.to, dailyOffset]);
-
-  useEffect(() => {
     if (!onRegisterPageActions) return;
     onRegisterPageActions(
-      <button
-        type="button"
-        className="ez-btn ez-btn--secondary ez-btn--sm"
+      <Button
+        variant="secondary"
+        size="sm"
         disabled={exporting}
         onClick={() => {
           setExporting(true);
@@ -92,7 +85,7 @@ export function AdminFinancialsView({ onRegisterPageActions }: AdminFinancialsVi
         }}
       >
         {exporting ? "Exporting…" : "Export CSV"}
-      </button>,
+      </Button>,
     );
     return () => onRegisterPageActions(null);
   }, [exporting, onRegisterPageActions, range.from, range.to]);
@@ -132,14 +125,14 @@ export function AdminFinancialsView({ onRegisterPageActions }: AdminFinancialsVi
 
           <AdminFinancialsCharts summary={summary} />
 
-          {dailyTotal > 0 || dailyLoading ? (
-            <section className="ez-card">
-              <div className="ez-card__head">
+          {daily.total > 0 || daily.loading ? (
+            <Card as="section">
+              <Card.Header>
                 <h2 className="ez-h3">Daily totals</h2>
-              </div>
+              </Card.Header>
               <DataTable
                 aria-label="Daily totals"
-                rows={dailyRows}
+                rows={daily.items}
                 getRowKey={(bucket) => bucket.date}
                 columns={[
                   { key: "date", header: "Date", kind: "strong", cell: (bucket) => bucket.date },
@@ -168,17 +161,15 @@ export function AdminFinancialsView({ onRegisterPageActions }: AdminFinancialsVi
                 ]}
               />
               <TablePagination
-                offset={dailyOffset}
-                limit={ADMIN_FINANCIALS_DAILY_PAGE_SIZE}
-                total={dailyTotal}
-                pageRowCount={dailyRows.length}
-                loading={dailyLoading}
-                onPrevious={() =>
-                  setDailyOffset((current) => Math.max(0, current - ADMIN_FINANCIALS_DAILY_PAGE_SIZE))
-                }
-                onNext={() => setDailyOffset((current) => current + ADMIN_FINANCIALS_DAILY_PAGE_SIZE)}
+                offset={daily.offset}
+                limit={daily.limit}
+                total={daily.total}
+                pageRowCount={daily.items.length}
+                loading={daily.loading}
+                onPrevious={daily.goPrevious}
+                onNext={daily.goNext}
               />
-            </section>
+            </Card>
           ) : null}
         </>
       ) : null}

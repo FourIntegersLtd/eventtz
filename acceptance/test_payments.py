@@ -183,7 +183,8 @@ def test_vendor_payments_history_is_empty_for_a_vendor_with_no_paid_bookings(adm
 
     Post-freeze additive fields (c21acdf, ADR 0011): the vendor payments screen pages the ledger
     on the server (`total`/`offset`/`limit`, default page 25) and shows `paid_out_last_30_days_*`.
-    The frozen keys and values are unchanged.
+    The frozen keys and values are unchanged. `next_release_*` (earliest held event, whole ledger) is
+    also additive.
     """
     account = seed_account(admin_db, unique_email("pay-history-empty"), "vendor")
     browser = sign_in(account)
@@ -198,6 +199,8 @@ def test_vendor_payments_history_is_empty_for_a_vendor_with_no_paid_bookings(adm
         "total_awaiting_label": "GBP 0",
         "paid_out_last_30_days_gbp": 0.0,
         "paid_out_last_30_days_label": "GBP 0",
+        "next_release_event_date": None,
+        "next_release_label": None,
         "total": 0,
         "offset": 0,
         "limit": 25,

@@ -1,11 +1,13 @@
+import { Card } from "@/components/ui/Card";
+
 /** Static copy from design V12 — payout timing explainer. */
 export function VendorPayoutHowItWorksCard() {
   return (
-    <div className="ez-card">
-      <div className="ez-card__head">
+    <Card>
+      <Card.Header>
         <span className="ez-h3">How payouts work</span>
-      </div>
-      <div className="ez-card__body">
+      </Card.Header>
+      <Card.Body>
         <div className="ez-lines">
           <div className="ez-lines__row">
             <span>Client pays Eventtz</span>
@@ -24,7 +26,7 @@ export function VendorPayoutHowItWorksCard() {
             <span>Usually 1 to 3 working days</span>
           </div>
         </div>
-      </div>
-    </div>
+      </Card.Body>
+    </Card>
   );
 }

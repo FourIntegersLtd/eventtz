@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { Banner } from "@/components/ui/Banner";
 import { Modal } from "@/components/ui/Modal";
 import { TextArea } from "@/components/ui/TextArea";
 import { TextField } from "@/components/ui/TextField";
@@ -108,11 +109,9 @@ export function AdminCreateReferralPartnerModal({
           rows={3}
         />
         {error ? (
-          <div className="ez-banner ez-banner--danger">
-            <div className="ez-banner__body">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          </div>
+          <Banner tone="danger">
+            <p className="text-sm">{error}</p>
+          </Banner>
         ) : null}
       </div>
     </Modal>

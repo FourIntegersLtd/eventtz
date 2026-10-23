@@ -71,6 +71,11 @@ async def list_partners_page(
     return [_partner_view(partner) for partner in rows], total
 
 
+async def count_active_partners(session: AsyncSession) -> int:
+    """How many partners are switched on, for the admin list's "Active creators" tile."""
+    return await repository.count_active_partners(session)
+
+
 async def create_partner(
     session: AsyncSession, staff_id: str, body: CreateReferralPartnerRequest
 ) -> ReferralPartnerRow:
