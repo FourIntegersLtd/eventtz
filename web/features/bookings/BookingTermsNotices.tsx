@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
@@ -58,9 +59,9 @@ export function ClientBookingTermsNotices({
   return (
     <>
       {deadline ? (
-        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-950">
+        <Banner tone="warning" className="mt-4">
           {deadline}
-        </div>
+        </Banner>
       ) : null}
       {canConfirmDelivery(detail) ? (
         <NoticeCard title="Have your photos/video arrived?">
@@ -139,9 +140,9 @@ export function VendorBookingTermsNotices({
   return (
     <>
       {showPaymentDeadline && deadline ? (
-        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-950">
+        <Banner tone="warning" className="mt-4">
           {deadline}
-        </div>
+        </Banner>
       ) : null}
       {splitLine ? <NoticeCard title="Split payment">{splitLine}</NoticeCard> : null}
       {depositLine ? <NoticeCard title="Client's refundable deposit">{depositLine}</NoticeCard> : null}

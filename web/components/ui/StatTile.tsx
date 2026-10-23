@@ -16,9 +16,11 @@ export type StatTileProps = {
   /** Makes the whole tile a link (`ez-kpi--link`). */
   href?: string;
   className?: string;
+  /** Small bordered card for dense public profiles (label above a modest value) instead of the large `ez-kpi` tile. */
+  compact?: boolean;
 };
 
-/** KPI tile (`ez-kpi`): small label, large serif value, an optional toned delta or hint, and an optional link. */
+/** KPI tile (`ez-kpi`, or a small card with `compact`): small label, large serif value, an optional toned delta or hint, and an optional link. */
 export function StatTile({
   label,
   value,
@@ -28,7 +30,24 @@ export function StatTile({
   hint,
   href,
   className = "",
+  compact = false,
 }: StatTileProps) {
+  if (compact) {
+    return (
+      <div
+        className={`h-full rounded-xl border border-neutral-100 bg-white px-3.5 py-3 ${className}`.trim()}
+      >
+        <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+          {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}
+          {label}
+        </div>
+        <p className="mt-1.5 text-base font-semibold tabular-nums tracking-tight text-neutral-900">
+          {value}
+        </p>
+      </div>
+    );
+  }
+
   const body = (
     <>
       <span className="ez-kpi__label">

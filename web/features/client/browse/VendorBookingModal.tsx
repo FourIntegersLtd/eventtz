@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarRange, Pencil, X } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
@@ -328,9 +329,7 @@ export function VendorBookingModal({
 
           <div className="max-h-[min(70vh,560px)] space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
             {dateConflictMessage ? (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950">
-                {dateConflictMessage}
-              </div>
+              <Banner tone="warning">{dateConflictMessage}</Banner>
             ) : null}
             {bannerVisible && pendingPrefill ? (
               <ActiveEventPrefillBanner

@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
-import { inputClass, labelClass, ToggleChip } from "@/components/ui/form-primitives";
+import { Chip } from "@/components/ui/Chip";
+import { TextField } from "@/components/ui/TextField";
 import { parseForm, vendorPriceAdjustmentsSchema } from "@/lib/validation";
 import {
   adjustmentLineKey,
@@ -141,33 +142,30 @@ export function VendorBookingResponseAdjustments({
       <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
         <div className="space-y-4 p-4">
           <div className="flex flex-wrap gap-2">
-            <ToggleChip active={adjKind === "cost"} onClick={() => handleKindChange("cost")}>
+            <Chip active={adjKind === "cost"} onClick={() => handleKindChange("cost")}>
               Add to price
-            </ToggleChip>
-            <ToggleChip active={adjKind === "discount"} onClick={() => handleKindChange("discount")}>
+            </Chip>
+            <Chip active={adjKind === "discount"} onClick={() => handleKindChange("discount")}>
               Discount
-            </ToggleChip>
+            </Chip>
           </div>
 
           {adjKind === "cost" ? (
             <div>
-              <label className={labelClass()} htmlFor="adj-reason">
-                What is this for?
-              </label>
-              <input
+              <TextField
                 id="adj-reason"
+                label="What is this for?"
                 type="text"
                 value={reasonInput}
                 maxLength={200}
                 placeholder="e.g. travel, extra hour, setup fee"
-                className={inputClass()}
                 onChange={(e) => handleReasonChange(e.target.value)}
               />
             </div>
           ) : null}
 
           <div>
-            <label className={labelClass()} htmlFor="adj-amount">
+            <label className="ez-label" htmlFor="adj-amount">
               {adjKind === "discount" ? "Amount off" : "Amount"}
             </label>
             <div className="relative">
@@ -180,7 +178,7 @@ export function VendorBookingResponseAdjustments({
                 inputMode="decimal"
                 value={amountInput}
                 placeholder="0"
-                className={`${inputClass()} pl-7`}
+                className="ez-input pl-7"
                 onChange={(e) => handleAmountChange(e.target.value)}
               />
             </div>

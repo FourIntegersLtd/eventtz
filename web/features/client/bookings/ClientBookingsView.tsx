@@ -5,7 +5,7 @@ import { ClientBookingReviewForm } from "@/features/client/bookings/ClientBookin
 import { ClientBookingDetailExtras } from "@/features/client/bookings/ClientBookingDetailExtras";
 import { useClientBookingsController } from "@/features/client/bookings/useClientBookingsController";
 import { BookingDisputeSection } from "@/features/bookings/BookingDisputeSection";
-import { ClientBookingsEzList } from "@/features/client/bookings/ClientBookingsEzList";
+import { BookingsEzList } from "@/features/bookings/BookingsEzList";
 import { ClientMyBookingsHub } from "@/features/client/bookings/ClientMyBookingsHub";
 import { BOOKING_EMPTY_LIST_TITLE } from "@/features/bookings/bookingListConstants";
 import { VendorBookingDetailEzPanel } from "@/features/bookings/VendorBookingDetailEzPanel";
@@ -170,7 +170,8 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
         />
       ) : (
         <ClientMyBookingsHub segment="bookings">
-          <ClientBookingsEzList
+          <BookingsEzList
+            perspective="client"
             tab={c.tab}
             onTabChange={c.setTab}
             rows={c.rows}
@@ -182,8 +183,8 @@ export function ClientBookingsView({ selectedBookingId }: ClientBookingsViewProp
             listTotal={c.listTotal}
             listSearch={c.listSearch}
             onListSearchChange={c.setListSearch}
-            onListPrevious={() => c.setListOffset(Math.max(0, c.listOffset - c.listPageSize))}
-            onListNext={() => c.setListOffset(c.listOffset + c.listPageSize)}
+            onListPrevious={() => c.goListPrevious()}
+            onListNext={() => c.goListNext()}
           />
         </ClientMyBookingsHub>
       )}

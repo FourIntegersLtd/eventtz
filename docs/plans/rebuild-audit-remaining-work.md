@@ -5,6 +5,13 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Done
 
+**Phase 3 item 5 (start) and Phase 2.3 (finish): shared list hook and the last duplicate components** (PR "Rebuild audit: shared list hook and the last duplicate components").
+- `web/lib/useServerList.ts` (offset/limit default 25, total, filters, search; offset resets when they change) with literal-value tests. The bookings scaffold is built on it.
+- Client and vendor bookings lists are one `BookingsEzList` with a `perspective` prop. `EzListFilterToolbar` takes `searchId`.
+- No `limit: 200` wrapper is left. Still fixed-limit: `limit: 100` in `features/reviews/VendorReviewsEzView.tsx` (`fetchVendorOwnReviews`).
+- Phase 2.3 collapses finished: Field helpers to `DescriptionList`/`DescriptionRow`, StatCard/VendorMetricsStrip to `StatTile` (`compact`), `form-primitives` to `TextField`/`Select`/`TextArea` (`hideLabel`), `AdminFilterDateField` to `ui/EzFilterDateField`, hand-rolled alerts and pills to `Banner`/`Chip`. Structured alert cards (payout pending, price update, date change, pricing breakdown, refund box) were left on purpose.
+- Still to move onto `useServerList` (by owner). Admin (platform): audit, blog list, bookings, clients, disputes, financials, marketplace analytics, messages inbox, referral signups, referrals, reviews, team, vendors. Portal: client and vendor payments (money), participant and vendor disputes (bookings), notifications and chat/messages (comms), vendor reviews (bookings).
+
 **Phase 3.7: one money and date formatter.**
 - `web/lib/money.ts` (`formatGbp`, `formatPence`, `formatCount`, `formatMoney`) and `web/lib/dateFormat.ts` (`formatDate` with named styles) are the only formatters. About 16 local copies and the inline `toLocaleString` / `Intl` sites were migrated and deleted.
 - `web/lib/formatGuard.test.ts` fails on new inline money or date formatting, with a meta-test.
@@ -200,7 +207,7 @@ compared with `main`.
 5. **Web lists.**
    - Add one `useServerList` hook and build the bookings scaffold on it.
    - Migrate the ~23 hand-rolled list views and put `EzListFilterToolbar` on every list screen.
-   - Delete the `limit: 200` wrappers.
+   - Delete the `limit: 200` wrappers (done).
    - Replace the dispute 50-second poll with realtime.
    - Remaining page-only KPIs: vendor "Next release" and admin referrals "Active creators".
 7. **Formatting.**

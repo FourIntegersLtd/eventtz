@@ -2,13 +2,44 @@
 
 import Link from "next/link";
 import type { BookingListRowViewModel } from "@/features/bookings/bookingViewModel";
-import type { BookingListTab } from "@/features/bookings/BookingListPanel";
-import { TablePagination } from "@/components/ui/TablePagination";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-import { TextField } from "@/components/ui/TextField";
+import type { BookingListTab } from "@/features/bookings/bookingListConstants";
 import { Badge } from "@/components/ui/Badge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { TablePagination } from "@/components/ui/TablePagination";
+import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import type { Tone } from "@/lib/tone";
+
+/** Whose bookings the list shows: it decides the wording, the counterparty column and where a row links. */
+export type BookingsListPerspective = "client" | "vendor";
+
+/** What differs between the client and the vendor list. */
+type PerspectiveConfig = {
+  searchId: string;
+  searchLabel: string;
+  counterpartyHeading: string;
+  detailHref: (bookingId: string) => string;
+  /** The vendor list is a page of its own, so it brings its own header and a count on the active tab. */
+  showPageHeader: boolean;
+};
+
+const PERSPECTIVE_CONFIG: Record<BookingsListPerspective, PerspectiveConfig> = {
+  client: {
+    searchId: "client-bookings-search",
+    searchLabel: "Search by vendor or event",
+    counterpartyHeading: "Vendor",
+    detailHref: (bookingId) => `/client/bookings/${bookingId}`,
+    showPageHeader: false,
+  },
+  vendor: {
+    searchId: "vendor-bookings-search",
+    searchLabel: "Search by client or event",
+    counterpartyHeading: "Client",
+    detailHref: (bookingId) => `/vendor/bookings/${encodeURIComponent(bookingId)}`,
+    showPageHeader: true,
+  },
+};
 
 /** Badge tone for a booking status label. */
 function statusBadgeTone(status: string): Tone {
@@ -19,11 +50,8 @@ function statusBadgeTone(status: string): Tone {
   return "info";
 }
 
-function clientBookingDetailHref(id: string): string {
-  return `/client/bookings/${id}`;
-}
-
-type ClientBookingsEzListProps = {
+type BookingsEzListProps = {
+  perspective: BookingsListPerspective;
   tab: BookingListTab;
   onTabChange: (tab: BookingListTab) => void;
   rows: BookingListRowViewModel[];
@@ -39,8 +67,9 @@ type ClientBookingsEzListProps = {
   onListSearchChange?: (value: string) => void;
 };
 
-/** Client bookings list — same table layout as vendor `VendorBookingsEzList`. */
-export function ClientBookingsEzList({
+/** The bookings table for either side (design C10 and V16): tabs, search, rows that link to the detail page, paging. */
+export function BookingsEzList({
+  perspective,
   tab,
   onTabChange,
   rows,
@@ -54,9 +83,19 @@ export function ClientBookingsEzList({
   onListNext,
   listSearch = "",
   onListSearchChange,
-}: ClientBookingsEzListProps) {
+}: BookingsEzListProps) {
+  const config = PERSPECTIVE_CONFIG[perspective];
   return (
     <div className="ez-stack ez-stack--lg">
+      {config.showPageHeader ? (
+        <PageHeader
+          descriptionSize="body"
+          eyebrow="Work"
+          title="Bookings"
+          description="Respond to enquiries and manage confirmed events."
+        />
+      ) : null}
+
       <div className="ez-tabs" role="tablist">
         <button
           type="button"
@@ -64,6 +103,9 @@ export function ClientBookingsEzList({
           onClick={() => onTabChange("active")}
         >
           Active
+          {config.showPageHeader && tab === "active" ? (
+            <span className="ez-tab__count">{rows.length}</span>
+          ) : null}
         </button>
         <button
           type="button"
@@ -74,31 +116,29 @@ export function ClientBookingsEzList({
         </button>
       </div>
 
-      <div className="ez-hrow">
-        <TextField
-          id="client-bookings-search"
-          type="search"
-          label="Search by vendor or event"
-          hideLabel
-          value={listSearch}
-          placeholder="Search by vendor or event"
-          wrapperStyle={{ width: "min(18rem, 100%)" }}
-          onChange={(event) => onListSearchChange?.(event.target.value)}
-          onClear={() => onListSearchChange?.("")}
-        />
-      </div>
+      <EzListFilterToolbar
+        searchId={config.searchId}
+        searchValue={listSearch}
+        onSearchChange={onListSearchChange}
+        searchPlaceholder={config.searchLabel}
+        searchMaxWidth="18rem"
+      />
 
       {error ? <p className="ez-small" role="alert">{error}</p> : null}
       {loading ? <p className="ez-small">Loading bookings…</p> : null}
 
       {!loading && rows.length === 0 ? (
-        <EmptyState title={emptyTitle} variant="bookings" />
+        perspective === "client" ? (
+          <EmptyState title={emptyTitle} variant="bookings" />
+        ) : (
+          <p className="ez-small">{emptyTitle}</p>
+        )
       ) : (
         <div className="ez-table-wrap">
           <table className="ez-table">
             <thead>
               <tr>
-                <th>Vendor</th>
+                <th>{config.counterpartyHeading}</th>
                 <th>Event</th>
                 <th>Date</th>
                 <th className="ez-td-status">Status</th>
@@ -107,7 +147,7 @@ export function ClientBookingsEzList({
             </thead>
             <tbody>
               {rows.map((row) => {
-                const href = clientBookingDetailHref(row.id);
+                const href = config.detailHref(row.id);
                 return (
                   <tr key={row.id}>
                     <td className="ez-td-strong">

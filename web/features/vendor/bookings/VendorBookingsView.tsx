@@ -10,7 +10,7 @@ import { VendorBookingDetailExtras } from "@/features/vendor/bookings/VendorBook
 import { VendorBookingResponseFlow } from "@/features/vendor/bookings/VendorBookingResponseFlow";
 import { useVendorBookingsController } from "@/features/vendor/bookings/useVendorBookingsController";
 import { PayoutSetupRequiredModal } from "@/features/vendor/payments/PayoutSetupRequiredModal";
-import { VendorBookingsEzList } from "@/features/vendor/bookings/VendorBookingsEzList";
+import { BookingsEzList } from "@/features/bookings/BookingsEzList";
 import { BookingDateChangeCard, dateChangeIsVisible } from "@/features/bookings/BookingDateChangeCard";
 import { paymentDeadlineLine } from "@/features/bookings/bookingTerms";
 import type { VendorBookingDetail } from "@/lib/vendorBookingsApi";
@@ -167,7 +167,8 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
           }}
         />
       ) : (
-        <VendorBookingsEzList
+        <BookingsEzList
+          perspective="vendor"
           tab={controller.tab}
           onTabChange={controller.setTab}
           rows={controller.rows}
@@ -177,10 +178,8 @@ export function VendorBookingsView({ selectedBookingId }: VendorBookingsViewProp
           listOffset={controller.listOffset}
           listPageSize={controller.listPageSize}
           listTotal={controller.listTotal}
-          onListPrevious={() =>
-            controller.setListOffset(Math.max(0, controller.listOffset - controller.listPageSize))
-          }
-          onListNext={() => controller.setListOffset(controller.listOffset + controller.listPageSize)}
+          onListPrevious={controller.goListPrevious}
+          onListNext={controller.goListNext}
           listSearch={controller.listSearch}
           onListSearchChange={controller.setListSearch}
         />

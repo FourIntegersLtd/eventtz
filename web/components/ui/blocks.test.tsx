@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { OptionCard } from "@/components/ui/OptionCard";
 import { DataTable } from "@/components/ui/DataTable";
-import { DescriptionList } from "@/components/ui/DescriptionList";
+import { DescriptionList, DescriptionRow } from "@/components/ui/DescriptionList";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
@@ -107,6 +107,28 @@ describe("ui building blocks emit canvas markup", () => {
     expect(renderToStaticMarkup(<DescriptionList items={[{ label: "Total", value: "£10" }]} />)).toBe(
       '<dl class="ez-dl"><dt>Total</dt><dd>£10</dd></dl>',
     );
+  });
+
+  it("DescriptionList split rows divide and show a missing value in amber", () => {
+    const markup = renderToStaticMarkup(
+      <DescriptionList rowLayout="split" items={[{ label: "Bio", value: "-", missing: true }]} />,
+    );
+    expect(markup).toContain('<dl class="divide-y divide-neutral-100">');
+    expect(markup).toContain(
+      '<dd class="min-w-0 text-sm leading-snug sm:text-right font-medium text-amber-800">-</dd>',
+    );
+  });
+
+  it("DescriptionRow review layout marks the field for the compact review card", () => {
+    const markup = renderToStaticMarkup(<DescriptionRow layout="review" label="Email" value="a@b.co" />);
+    expect(markup).toContain("data-review-field");
+    expect(markup).toContain('<dd class="min-w-0 text-sm font-medium text-neutral-900 sm:text-right">a@b.co</dd>');
+  });
+
+  it("StatTile compact is a bordered card, not an ez-kpi", () => {
+    const markup = renderToStaticMarkup(<StatTile compact label="Rating" value="4.9" />);
+    expect(markup).toContain('class="h-full rounded-xl border border-neutral-100 bg-white px-3.5 py-3"');
+    expect(markup).not.toContain("ez-kpi");
   });
 
   it("Stepper keeps the mobile step line and the connectors", () => {

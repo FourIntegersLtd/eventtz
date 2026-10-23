@@ -9,6 +9,8 @@ type EzListFilterToolbarProps = {
   onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
   searchAriaLabel?: string;
+  /** DOM id for the search input, for a screen that needs a stable hook (tests, labels). */
+  searchId?: string;
   inputClassName?: string;
   searchMaxWidth?: string;
   /** Opens the single list-filter modal. */
@@ -19,12 +21,16 @@ type EzListFilterToolbarProps = {
   trailing?: ReactNode;
 };
 
-/** Search on the left, one Filter control on the right; optional active-filter summary below. */
+/**
+ * Search on the left, one Filter control on the right; optional active-filter summary below. Every part
+ * is optional, so any list can use just the search, just the filter button, or both.
+ */
 export function EzListFilterToolbar({
   searchValue,
   onSearchChange,
   searchPlaceholder,
   searchAriaLabel,
+  searchId,
   inputClassName,
   searchMaxWidth = "22rem",
   onOpenFilter,
@@ -43,6 +49,7 @@ export function EzListFilterToolbar({
         {showSearch ? (
           <div className="min-w-0 flex-1" style={{ maxWidth: searchMaxWidth }}>
             <TextField
+              id={searchId}
               type="search"
               label={searchAriaLabel ?? searchPlaceholder ?? "Search"}
               hideLabel
@@ -55,6 +62,7 @@ export function EzListFilterToolbar({
             />
           </div>
         ) : null}
+        {onOpenFilter || trailing ? (
         <div className="ez-hrow shrink-0 flex-wrap gap-2">
           {onOpenFilter ? (
             <button
@@ -74,6 +82,7 @@ export function EzListFilterToolbar({
           ) : null}
           {trailing}
         </div>
+        ) : null}
       </div>
       {summary ? (
         <p className="ez-small text-neutral-600">

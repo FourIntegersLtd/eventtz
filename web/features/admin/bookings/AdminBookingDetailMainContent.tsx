@@ -1,5 +1,6 @@
 "use client";
 
+import { DescriptionList } from "@/components/ui/DescriptionList";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
 import type { BookingLineItemRow, BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
@@ -10,7 +11,7 @@ import {
   buildPaymentLifecycleTimeline,
   buildRequestLifecycleTimeline,
 } from "./adminBookingLifecycle";
-import { DetailSection, ExpandableId, Field, formatTs } from "./AdminBookingDetailShared";
+import { DetailSection, ExpandableId, formatTs } from "./AdminBookingDetailShared";
 import { formatGbp } from "@/lib/money";
 
 type Props = {
@@ -111,22 +112,20 @@ export function AdminBookingDetailMainContent({
       ) : null}
 
       <DetailSection title="Parties">
-        <dl className="ez-dl">
-          <dt>Client</dt>
-          <dd>{String(booking.client_email ?? "-")}</dd>
-          <dt>Vendor</dt>
-          <dd>{String(booking.vendor_display_name ?? "-")}</dd>
-          <dt>Vendor email</dt>
-          <dd>{String(booking.vendor_email ?? "-")}</dd>
-          <dt>Event date</dt>
-          <dd>{String(booking.event_date ?? "-")}</dd>
-          <dt>Postcode</dt>
-          <dd>{booking.event_postcode != null ? String(booking.event_postcode) : "-"}</dd>
-          <dt>Paid</dt>
-          <dd>{formatTs(booking.paid_at)}</dd>
-          <dt>Payout sent</dt>
-          <dd>{formatTs(booking.payout_released_at)}</dd>
-        </dl>
+        <DescriptionList
+          items={[
+            { label: "Client", value: String(booking.client_email ?? "-") },
+            { label: "Vendor", value: String(booking.vendor_display_name ?? "-") },
+            { label: "Vendor email", value: String(booking.vendor_email ?? "-") },
+            { label: "Event date", value: String(booking.event_date ?? "-") },
+            {
+              label: "Postcode",
+              value: booking.event_postcode != null ? String(booking.event_postcode) : "-",
+            },
+            { label: "Paid", value: formatTs(booking.paid_at) },
+            { label: "Payout sent", value: formatTs(booking.payout_released_at) },
+          ]}
+        />
       </DetailSection>
 
       <DetailSection title="Stripe references">

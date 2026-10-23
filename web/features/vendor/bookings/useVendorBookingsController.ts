@@ -3,7 +3,11 @@
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { BookingDetailAction } from "@/features/bookings/bookingViewModel";
-import { useParticipantBookingsScaffold } from "@/features/bookings/useParticipantBookingsScaffold";
+import {
+  type BookingsListFilters,
+  useParticipantBookingsScaffold,
+} from "@/features/bookings/useParticipantBookingsScaffold";
+import type { ServerListQuery } from "@/lib/useServerList";
 import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { setPendingAcceptBookingId } from "@/features/vendor/payments/payoutAcceptIntent";
 import { useVendorPayoutsReady } from "@/features/vendor/payments/useVendorPayoutsReady";
@@ -29,25 +33,18 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   const searchParams = useSearchParams();
   const listStatusFilter = searchParams.get("status") ?? "";
   const urlTab = searchParams.get("tab");
-  const [listSearch, setListSearch] = useState("");
-
   const fetchListPage = useCallback(
-    async (t: "active" | "closed", offset: number, limit: number) => {
+    async ({ offset, limit, filters, search }: ServerListQuery<BookingsListFilters>) => {
       const page = await fetchVendorBookingsPage({
-        group: t,
+        group: filters.tab,
         offset,
         limit,
-        ...(listStatusFilter === "pending" ? { status: "pending" } : {}),
-        ...(listSearch.trim() ? { q: listSearch.trim() } : {}),
+        ...(filters.status === "pending" ? { status: "pending" } : {}),
+        ...(search ? { q: search } : {}),
       });
-      return {
-        items: page.bookings,
-        total: page.total,
-        offset: page.offset,
-        limit: page.limit,
-      };
+      return { items: page.bookings, total: page.total };
     },
-    [listStatusFilter, listSearch],
+    [],
   );
   const fetchDetail = useCallback((id: string) => fetchVendorBookingDetail(id), []);
   const getDetailStatus = useCallback((b: VendorBookingDetail) => b.booking_status, []);
@@ -55,11 +52,14 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
   const {
     tab,
     setTab,
+    listSearch,
+    setListSearch,
     list,
     listTotal,
     listOffset,
     listPageSize,
-    setListOffset,
+    goListNext,
+    goListPrevious,
     listLoading,
     listError,
     detail,
@@ -73,6 +73,7 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     setChatOpen,
   } = useParticipantBookingsScaffold({
     selectedBookingId,
+    listStatusFilter,
     fetchListPage,
     pageSize: VENDOR_BOOKINGS_PAGE_SIZE,
     fetchDetail,
@@ -91,10 +92,6 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
       setTab(urlTab);
     }
   }, [urlTab, setTab]);
-
-  useEffect(() => {
-    setListOffset(0);
-  }, [listSearch, setListOffset]);
 
   const {
     payoutsReady,
@@ -262,7 +259,8 @@ export function useVendorBookingsController({ selectedBookingId }: UseVendorBook
     listTotal,
     listOffset,
     listPageSize,
-    setListOffset,
+    goListNext,
+    goListPrevious,
     listSearch,
     setListSearch,
     listLoading,

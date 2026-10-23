@@ -191,7 +191,8 @@
 .ez-clearable-input > .ez-input,
 .ez-clearable-input > input.ez-input { width: 100%; box-sizing: border-box; }
 .ez-clearable-input--has-value > .ez-input,
-.ez-clearable-input--has-value > input.ez-input { padding-right: 2.5rem; }
+.ez-clearable-input--has-value > input.ez-input,
+.ez-clearable-input--has-value > textarea.ez-input { padding-right: 2.5rem; }
 .ez-clearable-input__clear {
   position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
   width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px;
@@ -199,6 +200,7 @@
   display: inline-flex; align-items: center; justify-content: center;
 }
 .ez-clearable-input__clear:hover { background: var(--ez-surface-3); color: var(--ez-ink-2); }
+.ez-clearable-input--area .ez-clearable-input__clear { top: 6px; transform: none; }
 .ez-clearable-input__clear svg { width: 16px; height: 16px; }
 .ez-select { appearance: none; padding-right: 40px; background: var(--ez-surface); }
 .ez-select-wrap { position: relative; }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import {
   CLIENT_BOOKINGS_PAGE_SIZE,
   fetchClientBookingDetail,
@@ -18,7 +18,11 @@ import {
   BOOKING_NOTIFICATIONS_CLEARED_EVENT,
   markAllClientBookingNotificationsRead,
 } from "@/lib/clientNotificationsApi";
-import { useParticipantBookingsScaffold } from "@/features/bookings/useParticipantBookingsScaffold";
+import {
+  type BookingsListFilters,
+  useParticipantBookingsScaffold,
+} from "@/features/bookings/useParticipantBookingsScaffold";
+import type { ServerListQuery } from "@/lib/useServerList";
 import { BOOKING_CONFIRM_COPY, clientPaidCancelCopy } from "@/features/bookings/bookingConfirmCopy";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { useClientBookingActions } from "@/features/client/bookings/useClientBookingActions";
@@ -33,25 +37,18 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   const rateParam = Number(searchParams.get("rate") ?? "");
   const deepLinkRating = rateParam >= 1 && rateParam <= 5 ? rateParam : undefined;
   const listStatusFilter = searchParams.get("status") ?? "";
-  const [listSearch, setListSearch] = useState("");
-
   const fetchListPage = useCallback(
-    async (listTab: "active" | "closed", offset: number, limit: number) => {
+    async ({ offset, limit, filters, search }: ServerListQuery<BookingsListFilters>) => {
       const page = await fetchClientBookingsPage({
-        group: listTab,
+        group: filters.tab,
         offset,
         limit,
-        ...(listStatusFilter === "pending" ? { status: "pending" } : {}),
-        ...(listSearch.trim() ? { q: listSearch.trim() } : {}),
+        ...(filters.status === "pending" ? { status: "pending" } : {}),
+        ...(search ? { q: search } : {}),
       });
-      return {
-        items: page.bookings,
-        total: page.total,
-        offset: page.offset,
-        limit: page.limit,
-      };
+      return { items: page.bookings, total: page.total };
     },
-    [listSearch, listStatusFilter],
+    [],
   );
   const fetchDetail = useCallback((id: string) => fetchClientBookingDetail(id), []);
   const getDetailStatus = useCallback((b: ClientBookingDetail) => b.booking_status, []);
@@ -59,11 +56,14 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
   const {
     tab,
     setTab,
+    listSearch,
+    setListSearch,
     list,
     listTotal,
     listOffset,
     listPageSize,
-    setListOffset,
+    goListNext,
+    goListPrevious,
     listLoading,
     listError,
     detail,
@@ -77,15 +77,12 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     setChatOpen,
   } = useParticipantBookingsScaffold({
     selectedBookingId,
+    listStatusFilter,
     fetchListPage,
     pageSize: CLIENT_BOOKINGS_PAGE_SIZE,
     fetchDetail,
     getDetailStatus,
   });
-
-  useEffect(() => {
-    setListOffset(0);
-  }, [listSearch, setListOffset]);
 
   const detailViewedRef = useRef<string | null>(null);
 
@@ -254,7 +251,8 @@ export function useClientBookingsController({ selectedBookingId }: UseClientBook
     listTotal,
     listOffset,
     listPageSize,
-    setListOffset,
+    goListNext,
+    goListPrevious,
     listLoading,
     listError,
     detail,

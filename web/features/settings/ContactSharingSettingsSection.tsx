@@ -11,7 +11,7 @@ import {
 import { parseForm, contactPhoneFormSchema } from "@/lib/validation";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
-import { inputClass, labelClass } from "@/components/ui/form-primitives";
+import { TextField } from "@/components/ui/TextField";
 import type { PortalRole } from "@/lib/portalRole";
 import { SettingsSection } from "./SettingsSection";
 
@@ -135,13 +135,10 @@ export function ContactSharingSettingsSection({ role }: ContactSharingSettingsSe
 
         {!isVendor ? (
           <div className="pt-2">
-            <label className={labelClass()} htmlFor="settings-contact-phone">
-              Phone (optional)
-            </label>
-            <input
+            <TextField
               id="settings-contact-phone"
+              label="Phone (optional)"
               type="tel"
-              className={inputClass()}
               defaultValue={settings.contact_phone ?? ""}
               placeholder="e.g. 07xxx xxxxxx"
               disabled={saving}

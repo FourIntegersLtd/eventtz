@@ -1,5 +1,6 @@
 "use client";
 
+import { DescriptionList } from "@/components/ui/DescriptionList";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Download } from "lucide-react";
@@ -121,20 +122,16 @@ export function VendorReceiptEzPage({ bookingId, load }: VendorReceiptEzPageProp
                   </div>
                 </div>
               ) : (
-                <dl className="ez-dl">
-                  <dt>Paid by</dt>
-                  <dd>{receipt.counterparty_name}</dd>
-                  <dt>Event</dt>
-                  <dd>{receipt.event_date || receipt.event_name}</dd>
-                  <dt>Package</dt>
-                  <dd>{receipt.event_name}</dd>
-                  {receipt.payment_reference ? (
-                    <>
-                      <dt>Payment reference</dt>
-                      <dd>{receipt.payment_reference}</dd>
-                    </>
-                  ) : null}
-                </dl>
+                <DescriptionList
+                  items={[
+                    { label: "Paid by", value: receipt.counterparty_name },
+                    { label: "Event", value: receipt.event_date || receipt.event_name },
+                    { label: "Package", value: receipt.event_name },
+                    ...(receipt.payment_reference
+                      ? [{ label: "Payment reference", value: receipt.payment_reference }]
+                      : []),
+                  ]}
+                />
               )}
             </div>
           </div>
@@ -203,22 +200,17 @@ export function VendorReceiptEzPage({ bookingId, load }: VendorReceiptEzPageProp
             </div>
             <div className="ez-card__body">
               {statement ? (
-                <dl className="ez-dl">
-                  <dt>Paid to</dt>
-                  <dd>{receipt.counterparty_name}</dd>
-                  {receipt.transfer_reference ? (
-                    <>
-                      <dt>Transfer reference</dt>
-                      <dd>{receipt.transfer_reference}</dd>
-                    </>
-                  ) : null}
-                  {receipt.payout_released_at ? (
-                    <>
-                      <dt>Released</dt>
-                      <dd>{receipt.payout_released_at}</dd>
-                    </>
-                  ) : null}
-                </dl>
+                <DescriptionList
+                  items={[
+                    { label: "Paid to", value: receipt.counterparty_name },
+                    ...(receipt.transfer_reference
+                      ? [{ label: "Transfer reference", value: receipt.transfer_reference }]
+                      : []),
+                    ...(receipt.payout_released_at
+                      ? [{ label: "Released", value: receipt.payout_released_at }]
+                      : []),
+                  ]}
+                />
               ) : (
                 <div className="ez-lines">
                   <div className="ez-lines__row">

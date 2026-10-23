@@ -11,10 +11,10 @@ import { VendorConsequencesSection } from "./VendorConsequencesSection";
 import { VendorDetailsApprovalSection } from "./VendorDetailsApprovalSection";
 import { VendorInsuranceSection } from "./VendorInsuranceSection";
 import { VendorStripeConnectSection } from "./VendorStripeConnectSection";
+import { DescriptionRow } from "@/components/ui/DescriptionList";
 import {
   DetailSection,
   SubmissionCard,
-  SubmissionFieldBlock,
   SubmissionFieldGrid,
   SubmissionFieldRows,
   SubmissionLabelRow,
@@ -158,7 +158,8 @@ export function AdminVendorSubmissionReview({
       >
         <SubmissionCard>
           <dl>
-            <SubmissionFieldBlock
+            <DescriptionRow
+              layout="block"
               label="Public bio"
               value={model.bio}
               missing={model.bioMissing}

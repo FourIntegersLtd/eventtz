@@ -1,19 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { BookingListTab } from "@/features/bookings/BookingListPanel";
+import { type BookingListTab, bookingTabForStatus } from "@/features/bookings/bookingListConstants";
 import {
   type BookingListActivityFields,
   sortBookingListItemsRecentFirst,
 } from "@/features/bookings/bookingListOrder";
-import { bookingTabForStatus } from "@/features/bookings/bookingListConstants";
 import { useRealtimeRefresh } from "@/lib/realtimeHooks";
+import {
+  type ServerListPage,
+  type ServerListQuery,
+  useServerList,
+} from "@/lib/useServerList";
 
-export type ParticipantBookingsListPage<TListItem> = {
-  items: TListItem[];
-  total: number;
-  offset: number;
-  limit: number;
+/** Filters a bookings list sends to the api besides the search text. */
+export type BookingsListFilters = {
+  tab: BookingListTab;
+  /** "" for every status, or "pending" for the notification deep link. */
+  status: string;
 };
 
 type UseParticipantBookingsScaffoldOptions<
@@ -21,32 +25,33 @@ type UseParticipantBookingsScaffoldOptions<
   TDetail,
 > = {
   selectedBookingId?: string;
+  /** The `?status=` value of the page URL. */
+  listStatusFilter: string;
   fetchListPage: (
-    tab: BookingListTab,
-    offset: number,
-    limit: number,
-  ) => Promise<ParticipantBookingsListPage<TListItem>>;
+    query: ServerListQuery<BookingsListFilters>,
+  ) => Promise<ServerListPage<TListItem>>;
   pageSize: number;
   fetchDetail: (id: string) => Promise<TDetail>;
   getDetailStatus: (detail: TDetail) => string;
 };
 
+/**
+ * State shared by the client and vendor bookings screens: the paged list (on `useServerList`, filtered
+ * by tab, status and search), the selected booking's detail, and the action and chat flags around it.
+ */
 export function useParticipantBookingsScaffold<
   TListItem extends BookingListActivityFields,
   TDetail,
 >({
   selectedBookingId,
+  listStatusFilter,
   fetchListPage,
   pageSize,
   fetchDetail,
   getDetailStatus,
 }: UseParticipantBookingsScaffoldOptions<TListItem, TDetail>) {
   const [tab, setTab] = useState<BookingListTab>("active");
-  const [list, setList] = useState<TListItem[]>([]);
-  const [listTotal, setListTotal] = useState(0);
-  const [listOffset, setListOffset] = useState(0);
-  const [listLoading, setListLoading] = useState(true);
-  const [listError, setListError] = useState<string | null>(null);
+  const [listSearch, setListSearch] = useState("");
   const [detail, setDetail] = useState<TDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState<string | null>(null);
@@ -54,37 +59,34 @@ export function useParticipantBookingsScaffold<
   const [actionError, setActionError] = useState<string | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
 
-  const loadList = useCallback(async () => {
-    setListLoading(true);
-    setListError(null);
-    try {
-      const page = await fetchListPage(tab, listOffset, pageSize);
-      setList(sortBookingListItemsRecentFirst(page.items));
-      setListTotal(page.total);
-    } catch {
-      setListError("Could not load bookings.");
-      setList([]);
-      setListTotal(0);
-    } finally {
-      setListLoading(false);
-    }
-  }, [fetchListPage, tab, listOffset, pageSize]);
+  const {
+    items: list,
+    total: listTotal,
+    offset: listOffset,
+    loading: listLoading,
+    error: listError,
+    goNext: goListNext,
+    goPrevious: goListPrevious,
+    reload: reloadList,
+  } = useServerList<TListItem, BookingsListFilters>({
+    fetchPage: async (query) => {
+      const page = await fetchListPage(query);
+      return { items: sortBookingListItemsRecentFirst(page.items), total: page.total };
+    },
+    filters: { tab, status: listStatusFilter },
+    search: listSearch,
+    pageSize,
+    errorMessage: "Could not load bookings.",
+  });
 
-  useEffect(() => {
-    void loadList();
-  }, [loadList]);
-
-  useEffect(() => {
-    setListOffset(0);
-  }, [tab]);
-
+  // Empty deps are safe: `reload` only bumps a counter, so it never goes stale.
   useRealtimeRefresh(
     "bookings:refresh",
     () => {
-      void loadList();
+      reloadList();
       setDetailTick((n) => n + 1);
     },
-    [tab, listOffset, loadList],
+    [],
   );
 
   useEffect(() => {
@@ -125,19 +127,17 @@ export function useParticipantBookingsScaffold<
 
   const bumpDetail = useCallback(() => setDetailTick((n) => n + 1), []);
 
-  const setTabAndResetPage = useCallback((next: BookingListTab) => {
-    setListOffset(0);
-    setTab(next);
-  }, []);
-
   return {
     tab,
-    setTab: setTabAndResetPage,
+    setTab,
+    listSearch,
+    setListSearch,
     list,
     listTotal,
     listOffset,
     listPageSize: pageSize,
-    setListOffset,
+    goListNext,
+    goListPrevious,
     listLoading,
     listError,
     detail,
@@ -150,6 +150,5 @@ export function useParticipantBookingsScaffold<
     setActionError,
     chatOpen,
     setChatOpen,
-    loadList,
   };
 }
