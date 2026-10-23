@@ -3,6 +3,7 @@ import {
   defaultListingDisplayOrder,
   listingDisplayOrderFromPayload,
   listingHiddenImageUrlsFromPayload,
+  mergeUnique,
   profileImageUrlFromPayload,
 } from "@/lib/vendorPortfolioImages";
 
@@ -12,17 +13,6 @@ export type AdminListingMediaItem = {
   label: string;
 };
 
-function mergeEditorOrder(preferred: string[], fallback: string[]): string[] {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const url of [...preferred, ...fallback]) {
-    if (seen.has(url)) continue;
-    seen.add(url);
-    out.push(url);
-  }
-  return out;
-}
-
 /** Build admin editor items preserving stored drag order and hidden flags. */
 export function adminListingMediaItemsFromPayload(
   payload: Record<string, unknown>,
@@ -30,8 +20,10 @@ export function adminListingMediaItemsFromPayload(
   const profile = profileImageUrlFromPayload(payload);
   const hidden = new Set(listingHiddenImageUrlsFromPayload(payload));
   const fallback = defaultListingDisplayOrder(payload);
-  const stored = listingDisplayOrderFromPayload(payload);
-  const order = mergeEditorOrder(stored, fallback);
+  // The saved order can still name a photo the vendor has since removed or replaced. The api
+  // refuses any URL that is not the current profile photo or a portfolio image, so a drag that
+  // sent the whole list back would fail: offer only the current photos.
+  const order = mergeUnique(listingDisplayOrderFromPayload(payload), fallback, new Set(fallback));
 
   return order.map((url, index) => ({
     url,
@@ -40,6 +32,7 @@ export function adminListingMediaItemsFromPayload(
   }));
 }
 
+/** What the listing-media PATCH sends for these items: their order and the hidden ones. */
 export function adminListingMediaStateFromItems(
   items: AdminListingMediaItem[],
 ): AdminListingMediaSavePayload {
@@ -49,6 +42,7 @@ export function adminListingMediaStateFromItems(
   };
 }
 
+/** True when nothing is hidden and the items are in the vendor's default order. */
 export function adminListingMediaMatchesDefault(
   items: AdminListingMediaItem[],
   payload: Record<string, unknown>,
