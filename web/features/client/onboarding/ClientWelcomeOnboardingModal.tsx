@@ -150,7 +150,7 @@ export function ClientWelcomeOnboardingModal() {
       onClose={close}
       title="Welcome to Eventtz"
       maxWidthClassName="max-w-2xl"
-      scrimClassName="bg-scrim backdrop-blur-[2px]"
+      scrimClassName="bg-black/55 backdrop-blur-[2px]"
       positionClassName="items-end justify-center sm:items-center sm:p-6"
       panelClassName="max-h-[min(92dvh,820px)] rounded-t-3xl bg-surface shadow-2xl sm:rounded-3xl"
       bodyMaxHeightClassName="max-h-none"

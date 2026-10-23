@@ -37,7 +37,7 @@ type ModalProps = {
   positionClassName?: string;
 };
 
-const DEFAULT_PANEL = "rounded-card bg-white shadow-overlay max-h-[min(90dvh,720px)]";
+const DEFAULT_PANEL = "my-auto rounded-card bg-white shadow-overlay max-h-[min(90dvh,720px)]";
 const DEFAULT_BODY_PADDING = "bg-page-bg px-4 py-4 sm:px-5 sm:py-5";
 const DEFAULT_FOOTER = "border-t border-line bg-white px-4 py-3 sm:px-5 sm:py-4";
 const DEFAULT_POSITION = "items-center justify-center p-4 sm:p-6";
@@ -136,7 +136,7 @@ export function Modal({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={reduceMotion ? undefined : { opacity: 0, scale: 0.98, y: 4 }}
               transition={transition}
-              className={`my-auto flex w-full flex-col overflow-hidden ${panelClassName} ${MODAL_PANEL} ${maxWidthClassName}`}
+              className={`flex w-full flex-col overflow-hidden ${panelClassName} ${MODAL_PANEL} ${maxWidthClassName}`}
             >
               {header ?? <DefaultModalHeader title={title} onClose={onClose} />}
               {children ? (

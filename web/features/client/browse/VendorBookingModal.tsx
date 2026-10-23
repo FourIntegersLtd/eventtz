@@ -130,14 +130,6 @@ export function VendorBookingModal({
     }
   }, [initialReferralCode]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   const minEventDate = todayIsoDate();
 
   const chosenDates = useMemo(() => {
@@ -292,7 +284,7 @@ export function VendorBookingModal({
         onClose={closeUnlessResult}
         title="Request a booking"
         maxWidthClassName="max-w-lg"
-        panelClassName="relative rounded-card border border-line bg-surface shadow-overlay"
+        panelClassName="relative my-auto rounded-card border border-line bg-surface shadow-overlay"
         positionClassName="items-start justify-center p-4 pt-6 sm:pt-10"
         bodyMaxHeightClassName="max-h-[min(70vh,560px)]"
         bodyPaddingClassName="space-y-4 px-5 py-4 sm:px-6"
