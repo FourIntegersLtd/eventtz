@@ -32,7 +32,7 @@ export function BookingPriceUpdateBanner({
       <div className="px-5 py-4">
         <div className="flex items-start gap-3">
           <LottieIllustration asset="pendingReview" size="inline" ariaLabel="" />
-          <p className="pt-1 text-[15px] font-semibold tracking-tight text-neutral-900">
+          <p className="pt-1 text-[15px] font-semibold tracking-tight text-ink">
             New price from your vendor
           </p>
         </div>
@@ -44,8 +44,8 @@ export function BookingPriceUpdateBanner({
             <ul className="mt-1.5 space-y-1.5">
               {adjustments.map((adjustment) => (
                 <li key={adjustment.id} className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="font-medium text-neutral-900">{adjustment.label}</span>
-                  <span className="shrink-0 font-semibold tabular-nums text-neutral-900">
+                  <span className="font-medium text-ink">{adjustment.label}</span>
+                  <span className="shrink-0 font-semibold tabular-nums text-ink">
                     {formatGbp(adjustment.amount_gbp, { showPlus: true })}
                   </span>
                 </li>
@@ -55,18 +55,18 @@ export function BookingPriceUpdateBanner({
         ) : null}
 
         <div className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="text-sm text-neutral-500">
+          <span className="text-sm text-ink-3">
             Was:{" "}
-            <span className="font-medium text-neutral-600 line-through">{wasTotalLabel}</span>
+            <span className="font-medium text-ink-2 line-through">{wasTotalLabel}</span>
           </span>
-          <span className="text-sm font-semibold text-neutral-400" aria-hidden>
+          <span className="text-sm font-semibold text-ink-3" aria-hidden>
             →
           </span>
-          <span className="text-sm font-semibold text-neutral-900">Now: {nowTotalLabel}</span>
+          <span className="text-sm font-semibold text-ink">Now: {nowTotalLabel}</span>
         </div>
 
         {pricing && !pricing.has_pricing_tbc ? (
-          <div className="mt-3 rounded-lg border border-neutral-200/80 bg-white/70 px-3 py-2.5">
+          <div className="mt-3 rounded-lg border border-line bg-white/70 px-3 py-2.5">
             <ClientFeeBreakdownSummary
               breakdown={{
                 vendorPortionLabel: pricing.vendor_portion_label,
@@ -81,7 +81,7 @@ export function BookingPriceUpdateBanner({
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-2 border-t border-neutral-100 bg-primary/[0.04] px-5 py-4 sm:flex-row sm:justify-end">
+      <div className="flex flex-col gap-2 border-t border-line bg-primary/[0.04] px-5 py-4 sm:flex-row sm:justify-end">
         <Button
           variant="primary"
           size="sm"

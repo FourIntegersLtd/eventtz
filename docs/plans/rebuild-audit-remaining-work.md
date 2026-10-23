@@ -108,6 +108,13 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `test_media_s3_storage.py` checks the signed `presigned_post` policy.
 - **UK "today":** new `core/time.py` (`uk_date`, `uk_today`, Europe/London); `domain_portal_dashboard.py` uses it
   (the old code used the server's local zone). `test_core_time.py` pins a BST midnight boundary.
+- **Bookings screens (PR "Rebuild audit: bookings screens on the design system and server lists").** Booking
+  detail, quotes, date changes, disputes, reviews and the admin bookings/disputes/reviews screens use Card, Banner,
+  Button, PageHeader (new optional `meta`) and tokens; no inline styles or `neutral-*` remain. Participant, vendor
+  and admin disputes, vendor reviews and admin bookings/reviews run on `useServerList` (25 per page, no
+  `limit: 100`); the dispute 50 s poll is `useRealtimeRefresh("disputes:refresh")`. Seeded page 1/2 comparison
+  against main matched on every list except vendor reviews, which had no paging on main. Skipped:
+  `VendorBookingModal` (marketplace-owner's).
 
 ## Open questions and follow-ups from Phase 4
 

@@ -176,6 +176,25 @@ async def visible_five_star_count_for_vendor(session: AsyncSession, vendor_user_
     )
 
 
+async def visible_photo_review_count_for_vendor(session: AsyncSession, vendor_user_id: str) -> int:
+    """How many visible reviews carry at least one photo (the vendor reviews "With photos" tile)."""
+    vendor_uuid = as_uuid(vendor_user_id)
+    if vendor_uuid is None:
+        return 0
+    return int(
+        (
+            await session.execute(
+                select(func.count(BookingReview.id)).where(
+                    BookingReview.vendor_user_id == vendor_uuid,
+                    BookingReview.hidden_at.is_(None),
+                    func.cardinality(BookingReview.image_urls) > 0,
+                )
+            )
+        ).scalar_one()
+        or 0
+    )
+
+
 async def visible_review_stats_for_vendor(session: AsyncSession, vendor_user_id: str) -> VendorReviewStatsRow:
     """The vendor's visible-review count and average rating (matches `vendor_review_stats`)."""
     result = await session.execute(

@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/ui/Toast";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Drawer } from "@/components/ui/Drawer";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
@@ -28,7 +29,7 @@ import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 type DisputeActionPanelProps = {
   dispute: AdminDisputeCase;
   onClose: () => void;
-  onUpdated: () => Promise<void>;
+  onUpdated: () => void | Promise<void>;
   onResolve: (dispute: AdminDisputeCase) => void;
 };
 
@@ -198,20 +199,20 @@ export function DisputeActionPanel({
         <div className="ez-stack text-sm">
           {error ? <LottieFailureInline message={error} /> : null}
 
-          <div className="ez-card overflow-hidden">
+          <Card className="overflow-hidden">
             <div className="px-5 py-4">
               {dispute.resolution_action ? (
-                <p className="mb-2 text-[13px] text-neutral-500">
+                <p className="mb-2 text-[13px] text-ink-3">
                   {resolutionActionLabel(dispute.resolution_action)}
                 </p>
               ) : null}
-              <p className="text-[13px] font-medium text-neutral-500">What was reported</p>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
+              <p className="text-[13px] font-medium text-ink-3">What was reported</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink">
                 {dispute.summary}
               </p>
             </div>
 
-            <div className="border-t border-neutral-100 px-5 py-4">
+            <div className="border-t border-line px-5 py-4">
               <DisputePartiesPanel
                 dispute={dispute}
                 actions={
@@ -236,15 +237,15 @@ export function DisputeActionPanel({
                 }
               />
               {chatOpen && dispute.conversation_id ? (
-                <div className="mt-4 border-t border-neutral-100 pt-4">
+                <div className="mt-4 border-t border-line pt-4">
                   <AdminChatThread conversationId={dispute.conversation_id} compact />
                 </div>
               ) : null}
             </div>
 
-            <div className="grid gap-4 border-t border-neutral-100 px-5 py-4 sm:grid-cols-2">
+            <div className="grid gap-4 border-t border-line px-5 py-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="dispute-status" className="mb-1.5 block text-[13px] text-neutral-500">
+                <label htmlFor="dispute-status" className="mb-1.5 block text-[13px] text-ink-3">
                   Status
                 </label>
                 <select
@@ -274,7 +275,7 @@ export function DisputeActionPanel({
               <div>
                 <label
                   htmlFor="dispute-assignee"
-                  className="mb-1.5 block text-[13px] text-neutral-500"
+                  className="mb-1.5 block text-[13px] text-ink-3"
                 >
                   Assigned to
                 </label>
@@ -311,9 +312,9 @@ export function DisputeActionPanel({
               </div>
             </div>
 
-            <div className="border-t border-neutral-100 bg-neutral-50/60 px-5 py-4">
-              <p className="text-[13px] font-medium text-neutral-500">Message to parties</p>
-              <p className="mt-1 text-[13px] text-neutral-400">
+            <div className="border-t border-line bg-surface-3 px-5 py-4">
+              <p className="text-[13px] font-medium text-ink-3">Message to parties</p>
+              <p className="mt-1 text-[13px] text-ink-3">
                 Shown on their dispute page - not as a chat message.
               </p>
               <fieldset className="mt-3">
@@ -331,7 +332,7 @@ export function DisputeActionPanel({
                       className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                         noteAudience === opt.value
                           ? "border-primary bg-primary-soft text-primary"
-                          : "border-neutral-200 bg-white text-neutral-700 hover:border-neutral-300"
+                          : "border-line bg-white text-ink-2 hover:border-line-strong"
                       }`}
                     >
                       <input
@@ -374,7 +375,7 @@ export function DisputeActionPanel({
                 dispute.vendor_resolution_note ||
                 dispute.resolution_note) &&
               noteAudience !== "both" ? (
-                <p className="mt-2 text-xs text-neutral-500">
+                <p className="mt-2 text-xs text-ink-3">
                   {noteAudience === "client"
                     ? dispute.vendor_resolution_note
                       ? "Vendor already has a separate message saved."
@@ -394,7 +395,7 @@ export function DisputeActionPanel({
                 Save message
               </Button>
             </div>
-          </div>
+          </Card>
         </div>
       </Drawer>
 

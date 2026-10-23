@@ -66,11 +66,6 @@ export async function fetchParticipantDisputesPage(
   };
 }
 
-export async function fetchParticipantDisputes(role: ParticipantRole): Promise<ParticipantDispute[]> {
-  const page = await fetchParticipantDisputesPage(role, 0, 200);
-  return page.disputes;
-}
-
 export async function fetchParticipantDispute(
   role: ParticipantRole,
   disputeId: string,
@@ -101,14 +96,6 @@ export async function postVendorBookingDispute(
   summary: string,
 ): Promise<ParticipantDispute> {
   return postParticipantBookingDispute("vendor", bookingId, summary);
-}
-
-export async function fetchClientDisputes(): Promise<ParticipantDispute[]> {
-  return fetchParticipantDisputes("client");
-}
-
-export async function fetchVendorDisputes(): Promise<ParticipantDispute[]> {
-  return fetchParticipantDisputes("vendor");
 }
 
 export async function fetchClientDispute(disputeId: string): Promise<ParticipantDispute> {

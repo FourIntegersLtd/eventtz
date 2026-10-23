@@ -56,9 +56,9 @@ export function BookingPricingBreakdown({
 }: BookingPricingBreakdownProps) {
   if (!pricing) {
     return (
-      <div className="rounded-2xl border border-neutral-100 bg-white px-5 py-5">
-        <p className="text-[13px] font-medium text-neutral-500">Estimated total</p>
-        <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-neutral-900">
+      <div className="rounded-2xl border border-line bg-white px-5 py-5">
+        <p className="text-[13px] font-medium text-ink-3">Estimated total</p>
+        <p className="mt-1 text-2xl font-semibold tabular-nums tracking-tight text-ink">
           {quoteTotalLabel}
         </p>
       </div>
@@ -66,13 +66,13 @@ export function BookingPricingBreakdown({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+    <div className="overflow-hidden rounded-2xl border border-line bg-white">
       <div className="flex items-baseline justify-between gap-3 px-5 py-4">
         <div>
-          <h3 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+          <h3 className="text-[15px] font-semibold tracking-tight text-ink">
             {variant === "client" ? "Pricing" : "Client-facing total"}
           </h3>
-          <p className="mt-0.5 text-[13px] text-neutral-400">
+          <p className="mt-0.5 text-[13px] text-ink-3">
             {variant === "vendor"
               ? "What the client sees and what you earn"
               : "What’s included and what you’ll pay"}
@@ -81,20 +81,20 @@ export function BookingPricingBreakdown({
       </div>
 
       {lineItems && lineItems.length > 0 ? (
-        <details className="group border-t border-neutral-100" open>
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-neutral-50/80 [&::-webkit-details-marker]:hidden">
-            <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-neutral-800">
+        <details className="group border-t border-line" open>
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-surface-3 [&::-webkit-details-marker]:hidden">
+            <span className="flex min-w-0 items-center gap-2 text-sm font-medium text-ink">
               What&apos;s included
               <ChevronDown
-                className="h-3.5 w-3.5 shrink-0 text-neutral-400 transition-transform group-open:rotate-180"
+                className="h-3.5 w-3.5 shrink-0 text-ink-3 transition-transform group-open:rotate-180"
                 aria-hidden
               />
             </span>
-            <span className="text-sm font-semibold tabular-nums text-neutral-900">
+            <span className="text-sm font-semibold tabular-nums text-ink">
               {pricing.line_items_subtotal_label}
             </span>
           </summary>
-          <ul className="divide-y divide-neutral-100 border-t border-neutral-100">
+          <ul className="divide-y divide-line border-t border-line">
             {lineItems.map((li) => {
               const isDiscount = isAutoDiscountLine(li.id, li.unit_price_gbp);
               return (
@@ -102,7 +102,7 @@ export function BookingPricingBreakdown({
                   <div className="flex items-baseline justify-between gap-3">
                     <span
                       className={`min-w-0 text-sm font-medium ${
-                        isDiscount ? "text-emerald-800" : "text-neutral-900"
+                        isDiscount ? "text-emerald-800" : "text-ink"
                       }`}
                     >
                       {li.heading}
@@ -115,17 +115,17 @@ export function BookingPricingBreakdown({
                     </span>
                     <span
                       className={`shrink-0 text-sm font-semibold tabular-nums ${
-                        isDiscount ? "text-emerald-700" : "text-neutral-900"
+                        isDiscount ? "text-emerald-700" : "text-ink"
                       }`}
                     >
                       {formatLineUnitPrice(li.unit_price_gbp, li.id)}
                     </span>
                   </div>
                   {li.timeline_line ? (
-                    <p className="mt-1 text-[13px] text-neutral-500">{li.timeline_line}</p>
+                    <p className="mt-1 text-[13px] text-ink-3">{li.timeline_line}</p>
                   ) : null}
                   {li.description ? (
-                    <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-relaxed text-neutral-500">
+                    <p className="mt-1.5 whitespace-pre-wrap text-[13px] leading-relaxed text-ink-3">
                       {li.description}
                     </p>
                   ) : null}
@@ -134,9 +134,9 @@ export function BookingPricingBreakdown({
                       {li.feature_lines.map((line, fIdx) => (
                         <li
                           key={`${li.id}-f-${fIdx}`}
-                          className="flex items-start gap-2 text-[13px] text-neutral-500"
+                          className="flex items-start gap-2 text-[13px] text-ink-3"
                         >
-                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-neutral-300" />
+                          <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-line-strong" />
                           <span>{line}</span>
                         </li>
                       ))}
@@ -148,17 +148,17 @@ export function BookingPricingBreakdown({
           </ul>
         </details>
       ) : (
-        <div className="flex justify-between gap-3 border-t border-neutral-100 px-5 py-3.5 text-sm">
-          <span className="text-neutral-600">What&apos;s included</span>
-          <span className="font-semibold tabular-nums text-neutral-900">
+        <div className="flex justify-between gap-3 border-t border-line px-5 py-3.5 text-sm">
+          <span className="text-ink-2">What&apos;s included</span>
+          <span className="font-semibold tabular-nums text-ink">
             {pricing.line_items_subtotal_label}
           </span>
         </div>
       )}
 
       {pricing.vendor_adjustments.length > 0 ? (
-        <div className="border-t border-neutral-100 px-5 py-4">
-          <p className="text-[13px] font-medium text-neutral-500">Additions and discounts</p>
+        <div className="border-t border-line px-5 py-4">
+          <p className="text-[13px] font-medium text-ink-3">Additions and discounts</p>
           <ul className="mt-2.5 space-y-2">
             {pricing.vendor_adjustments.map((a) => {
               const isDiscount = a.amount_gbp < 0;
@@ -166,9 +166,9 @@ export function BookingPricingBreakdown({
                 ? formatGbp(-Math.abs(a.amount_gbp), { decimals: 2, grouping: false })
                 : formatGbp(a.amount_gbp, { decimals: 2, grouping: false });
               return (
-                <li key={a.id} className="flex justify-between gap-2 text-sm text-neutral-800">
+                <li key={a.id} className="flex justify-between gap-2 text-sm text-ink">
                   <span className="flex min-w-0 items-center gap-2">
-                    <span className="rounded-md bg-neutral-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-600">
+                    <span className="rounded-md bg-surface-3 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink-2">
                       {a.adjustment_category}
                     </span>
                     <span className="truncate">{a.label}</span>
@@ -198,8 +198,8 @@ export function BookingPricingBreakdown({
       ) : null}
 
       <div
-        className={`border-t border-neutral-100 px-5 py-4 ${
-          variant === "vendor" ? "bg-neutral-50" : "py-3.5"
+        className={`border-t border-line px-5 py-4 ${
+          variant === "vendor" ? "bg-surface-3" : "py-3.5"
         }`}
       >
         <ClientFeeBreakdownSummary
@@ -222,9 +222,9 @@ export function BookingPricingBreakdown({
           }
         />
         {variant === "vendor" ? (
-          <div className="mt-3 flex items-baseline justify-between gap-3 border-t border-neutral-200 pt-3 text-sm">
-            <p className="font-medium text-neutral-700">Your payout</p>
-            <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
+          <div className="mt-3 flex items-baseline justify-between gap-3 border-t border-line pt-3 text-sm">
+            <p className="font-medium text-ink-2">Your payout</p>
+            <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-ink">
               {pricing.vendor_portion_label}
             </p>
           </div>
@@ -232,12 +232,12 @@ export function BookingPricingBreakdown({
       </div>
 
       {variant !== "vendor" ? (
-        <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-4">
+        <div className="border-t border-line bg-surface-3 px-5 py-4">
           <div className="flex items-baseline justify-between gap-3">
-            <p className="text-sm font-medium text-neutral-700">Total due</p>
-            <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-neutral-900">
+            <p className="text-sm font-medium text-ink-2">Total due</p>
+            <p className="text-right text-lg font-semibold tabular-nums tracking-tight text-ink">
               {compareTotalLabel ? (
-                <span className="mr-2 text-sm font-normal text-neutral-400 line-through">
+                <span className="mr-2 text-sm font-normal text-ink-3 line-through">
                   {compareTotalLabel}
                 </span>
               ) : null}
@@ -251,7 +251,7 @@ export function BookingPricingBreakdown({
           ) : null}
         </div>
       ) : pricing.has_pricing_tbc ? (
-        <div className="border-t border-neutral-100 bg-neutral-50 px-5 py-3">
+        <div className="border-t border-line bg-surface-3 px-5 py-3">
           <p className="text-[12px] text-amber-700">Some items are TBC and may change the total.</p>
         </div>
       ) : null}

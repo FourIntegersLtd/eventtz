@@ -99,8 +99,8 @@ export function ReviewPhotoPicker({ urls, onChange, disabled = false }: ReviewPh
 
   return (
     <div>
-      <p className="text-sm font-medium text-neutral-900">Share photos of your event</p>
-      <p className="mt-0.5 text-xs text-neutral-500">
+      <p className="text-sm font-medium text-ink">Share photos of your event</p>
+      <p className="mt-0.5 text-xs text-ink-3">
         Optional · up to {MAX_REVIEW_IMAGES} photos
       </p>
 
@@ -122,7 +122,7 @@ export function ReviewPhotoPicker({ urls, onChange, disabled = false }: ReviewPh
             />
             <label
               htmlFor={inputId}
-              className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-neutral-300 bg-neutral-50 text-neutral-600 transition hover:border-neutral-400 hover:bg-neutral-100 focus-within:ring-2 focus-within:ring-primary/30 sm:h-[72px] sm:w-[72px]"
+              className="flex h-16 w-16 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-line-strong bg-surface-3 text-ink-2 transition hover:border-line-strong hover:bg-surface-3 focus-within:ring-2 focus-within:ring-primary/30 sm:h-[72px] sm:w-[72px]"
             >
               <Camera className="h-5 w-5" strokeWidth={1.75} aria-hidden />
               <span className="text-[10px] font-medium leading-tight">Add a photo</span>
@@ -133,7 +133,7 @@ export function ReviewPhotoPicker({ urls, onChange, disabled = false }: ReviewPh
         {urls.map((url) => (
           <div
             key={url}
-            className="group relative h-16 w-16 overflow-hidden rounded-md bg-neutral-100 ring-1 ring-neutral-200/80 sm:h-[72px] sm:w-[72px]"
+            className="group relative h-16 w-16 overflow-hidden rounded-md bg-surface-3 ring-1 ring-line sm:h-[72px] sm:w-[72px]"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={url} alt="" className="h-full w-full object-cover" decoding="async" />
@@ -153,7 +153,7 @@ export function ReviewPhotoPicker({ urls, onChange, disabled = false }: ReviewPh
         {drafts.map((d) => (
           <div
             key={d.key}
-            className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-md bg-neutral-100 ring-1 ring-neutral-200/80 sm:h-[72px] sm:w-[72px]"
+            className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-md bg-surface-3 ring-1 ring-line sm:h-[72px] sm:w-[72px]"
           >
             {d.previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -165,7 +165,7 @@ export function ReviewPhotoPicker({ urls, onChange, disabled = false }: ReviewPh
               />
             ) : null}
             <Loader2
-              className="absolute h-5 w-5 animate-spin text-neutral-700"
+              className="absolute h-5 w-5 animate-spin text-ink-2"
               aria-label="Uploading"
             />
           </div>
@@ -173,7 +173,7 @@ export function ReviewPhotoPicker({ urls, onChange, disabled = false }: ReviewPh
       </div>
 
       {showThumbs && remaining === 0 && !error ? (
-        <p className="mt-1.5 text-[11px] text-neutral-500">
+        <p className="mt-1.5 text-[11px] text-ink-3">
           Maximum of {MAX_REVIEW_IMAGES} photos reached.
         </p>
       ) : null}

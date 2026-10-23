@@ -76,6 +76,12 @@ describe("ui building blocks emit canvas markup", () => {
     );
   });
 
+  it("PageHeader shows a meta line under the description", () => {
+    expect(renderToStaticMarkup(<PageHeader title="Booking" description="Sat" meta="Ref 1234" />)).toContain(
+      '<p class="ez-small">Sat</p><p class="ez-caption">Ref 1234</p>',
+    );
+  });
+
   it("PageHeader can use body-size description", () => {
     expect(renderToStaticMarkup(<PageHeader title="Home" description="Hi" descriptionSize="body" />)).toContain(
       '<p class="ez-body">Hi</p>',
