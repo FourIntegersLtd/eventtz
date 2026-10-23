@@ -216,7 +216,7 @@ export function VendorQuoteFormModal({
       }
     >
       <div className="space-y-4">
-        <p className="text-sm leading-relaxed text-neutral-600">
+        <p className="text-sm leading-relaxed text-ink-2">
           Send this client a price from chat. Use a package you already list, or enter a
           one-off amount. They can accept or decline in Bookings. This stays on their
           booking only. It won&apos;t appear on your listing.

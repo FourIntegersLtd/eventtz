@@ -76,6 +76,25 @@ async def payout_ledger_page(
     return [BookingRow.model_validate(plain_row(found)) for found in found_rows], total
 
 
+async def next_release_booking(session: AsyncSession, vendor_user_id: str) -> BookingRow | None:
+    """The unreleased ledger row whose event comes first, across the whole ledger; `None` when none is held.
+
+    Ties on the event date break on the id so the answer is stable.
+    """
+    vendor_uuid = as_uuid(vendor_user_id)
+    if vendor_uuid is None:
+        return None
+    found = (
+        await session.execute(
+            select(*BOOKING_COLUMNS)
+            .where(_ledger_filter(vendor_uuid), not_(_IS_RELEASED))
+            .order_by(BookingRequest.event_date.asc(), BookingRequest.id.asc())
+            .limit(1)
+        )
+    ).first()
+    return BookingRow.model_validate(plain_row(found)) if found else None
+
+
 @dataclass(frozen=True)
 class PayoutLedgerSums:
     """Totals over the vendor's whole ledger, from rows that carry a payment-time snapshot.

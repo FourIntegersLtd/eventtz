@@ -1,11 +1,10 @@
 "use client";
 
 import { CARD_SURFACE } from "@/components/ui/tokens";
-import { useCallback, useEffect, useState } from "react";
+import { useServerList } from "@/lib/useServerList";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
   fetchParticipantDisputesPage,
-  PARTICIPANT_DISPUTES_PAGE_SIZE,
   type ParticipantDispute,
 } from "@/lib/bookingDisputesApi";
 import { TablePagination } from "@/components/ui/TablePagination";
@@ -45,22 +44,22 @@ function updatedLabel(d: ParticipantDispute): string {
 
 export function ParticipantDisputesListView({ role, selectedId = null, onSelect }: Props) {
   const { user } = useAuth();
-  const [rows, setRows] = useState<ParticipantDispute[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [offset, setOffset] = useState(0);
-  const [total, setTotal] = useState(0);
-
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const page = await fetchParticipantDisputesPage(
-        role,
-        offset,
-        PARTICIPANT_DISPUTES_PAGE_SIZE,
-      );
+  const {
+    items: rows,
+    total,
+    offset,
+    limit,
+    loading,
+    error,
+    goNext,
+    goPrevious,
+    reload,
+  } = useServerList<ParticipantDispute, { role: PortalRole }>({
+    filters: { role },
+    errorMessage: "Could not load disputes.",
+    fetchPage: async ({ offset: pageOffset, limit: pageLimit }) => {
+      const page = await fetchParticipantDisputesPage(role, pageOffset, pageLimit);
       let list = page.disputes;
-      setTotal(page.total);
       if (user?.id && list.some(participantDisputeNeedsHydration)) {
         try {
           const bookings = await loadParticipantBookingLookup(role);
@@ -73,22 +72,14 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
           // Keep API list when booking lookup fails.
         }
       }
-      setRows(list);
-    } catch {
-      setError("Could not load disputes.");
-      setRows([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [role, user?.email, user?.id, offset]);
+      return { items: list, total: page.total };
+    },
+  });
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useRealtimeRefresh("disputes:refresh", reload, [role, reload]);
 
-  useRealtimeRefresh("disputes:refresh", () => void load(), [role, load]);
-
-  if (loading) {
+  // Only the first load blanks the screen; paging and realtime refreshes keep the rows in place.
+  if (loading && rows.length === 0 && !error) {
     return <LoadingState label="Loading disputes…" variant="centered" branded className="py-12" />;
   }
 
@@ -100,7 +91,7 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
         {rows.length === 0 ? (
           <EmptyState className="border-0 py-14" title="No disputes yet." lottie="allCaughtUp" />
         ) : (
-          <ul className="divide-y divide-neutral-100">
+          <ul className="divide-y divide-line">
             {rows.map((d) => {
               const sel = selectedId === d.id;
               return (
@@ -110,7 +101,7 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
                     onClick={() => onSelect(d.id)}
                     aria-current={sel}
                     className={`relative w-full px-5 py-6 text-left transition duration-150 ease-out sm:px-6 sm:py-7 ${
-                      sel ? "bg-primary/[0.05]" : "hover:bg-neutral-50/90"
+                      sel ? "bg-primary/[0.05]" : "hover:bg-surface-3"
                     }`}
                   >
                     {sel ? (
@@ -121,7 +112,7 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
                     ) : null}
 
                     <div className="flex items-start justify-between gap-4">
-                      <p className="min-w-0 text-[15px] font-semibold leading-snug tracking-tight text-neutral-900 line-clamp-2">
+                      <p className="min-w-0 text-[15px] font-semibold leading-snug tracking-tight text-ink line-clamp-2">
                         {participantDisputeBookingLabel(d)}
                       </p>
                       <span className="ez-list-row__status shrink-0">
@@ -130,9 +121,9 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
                     </div>
 
                     <div className="mt-4 space-y-1.5">
-                      <p className="line-clamp-2 text-sm text-neutral-600">{d.summary}</p>
-                      <p className="text-sm text-neutral-500">Opened by {openedByLabel(d)}</p>
-                      <p className="text-sm text-neutral-500">{updatedLabel(d)}</p>
+                      <p className="line-clamp-2 text-sm text-ink-2">{d.summary}</p>
+                      <p className="text-sm text-ink-3">Opened by {openedByLabel(d)}</p>
+                      <p className="text-sm text-ink-3">{updatedLabel(d)}</p>
                     </div>
                   </button>
                 </li>
@@ -144,13 +135,11 @@ export function ParticipantDisputesListView({ role, selectedId = null, onSelect 
 
       <TablePagination
         offset={offset}
-        limit={PARTICIPANT_DISPUTES_PAGE_SIZE}
+        limit={limit}
         total={total}
         loading={loading}
-        onPrevious={() =>
-          setOffset((current) => Math.max(0, current - PARTICIPANT_DISPUTES_PAGE_SIZE))
-        }
-        onNext={() => setOffset((current) => current + PARTICIPANT_DISPUTES_PAGE_SIZE)}
+        onPrevious={goPrevious}
+        onNext={goNext}
       />
     </div>
   );

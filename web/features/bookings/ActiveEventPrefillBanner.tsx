@@ -24,7 +24,7 @@ export function ActiveEventPrefillBanner({
       <button
         type="button"
         onClick={onNewEvent}
-        className={`absolute right-1 top-1 inline-flex ${TOUCH_TARGET} items-center justify-center rounded-lg text-neutral-400 hover:bg-white/70 hover:text-neutral-700 ${FOCUS_RING}`}
+        className={`absolute right-1 top-1 inline-flex ${TOUCH_TARGET} items-center justify-center rounded-lg text-ink-3 hover:bg-white/70 hover:text-ink ${FOCUS_RING}`}
         aria-label="Dismiss"
       >
         <X className="h-4 w-4" aria-hidden />
@@ -32,9 +32,9 @@ export function ActiveEventPrefillBanner({
       <div className="flex gap-3">
         <CalendarHeart className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-neutral-900">Planning the same event?</p>
-          <p className="mt-0.5 text-sm text-neutral-600">
-            <span className="font-medium text-neutral-800">{prefill.eventName}</span>
+          <p className="text-sm font-semibold text-ink">Planning the same event?</p>
+          <p className="mt-0.5 text-sm text-ink-2">
+            <span className="font-medium text-ink">{prefill.eventName}</span>
             {dateLabel ? ` · ${dateLabel}` : null}
           </p>
           <div className="mt-3">

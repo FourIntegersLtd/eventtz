@@ -68,7 +68,7 @@ function ToolbarButton({
         if (!disabled) onAction();
       }}
       className={`inline-flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
-        active ? "bg-primary/15 text-primary" : "text-neutral-600 hover:bg-neutral-100"
+        active ? "bg-primary/15 text-primary" : "text-ink-2 hover:bg-surface-3"
       }`}
     >
       {children}
@@ -129,7 +129,7 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
     editorProps: {
       attributes: {
         class:
-          "prose-blog min-h-[22rem] max-w-none px-1 py-2 text-left text-[1.05rem] leading-relaxed text-neutral-900 outline-none focus:outline-none",
+          "prose-blog min-h-[22rem] max-w-none px-1 py-2 text-left text-[1.05rem] leading-relaxed text-ink outline-none focus:outline-none",
       },
       handleDrop: (view, event, _slice, moved) => {
         if (moved || !editorRef.current) return false;
@@ -169,7 +169,7 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
 
   return (
     <div className="ez-card overflow-hidden text-left">
-      <div className="flex flex-wrap items-center gap-0.5 border-b border-neutral-100 px-2 py-1.5">
+      <div className="flex flex-wrap items-center gap-0.5 border-b border-line px-2 py-1.5">
         <ToolbarButton
           label="Heading 1"
           active={editor.isActive("heading", { level: 1 })}
@@ -243,7 +243,7 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
           <LinkIcon className="h-4 w-4" />
         </ToolbarButton>
         {uploading ? (
-          <span className="px-2 text-xs text-neutral-500">Uploading image…</span>
+          <span className="px-2 text-xs text-ink-3">Uploading image…</span>
         ) : null}
       </div>
       <div

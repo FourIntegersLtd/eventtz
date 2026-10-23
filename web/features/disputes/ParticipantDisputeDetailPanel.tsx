@@ -52,7 +52,7 @@ export function ParticipantDisputeDetailPanel({ role, dispute, loading, error }:
 
   return (
     <div className="space-y-6 text-sm">
-      <div className="overflow-hidden rounded-2xl border border-neutral-100 bg-white">
+      <div className="overflow-hidden rounded-2xl border border-line bg-white">
         <div className="px-5 py-4">
           <div className="flex flex-wrap items-center gap-2">
             <ParticipantDisputeStatusBadge status={dispute.status} />
@@ -60,57 +60,57 @@ export function ParticipantDisputeDetailPanel({ role, dispute, loading, error }:
               <PaymentStatusBadge status={dispute.payment_status} />
             ) : null}
           </div>
-          <p className="mt-3 text-sm text-neutral-700">
-            Opened by <span className="font-medium text-neutral-900">{openedByLabel(dispute)}</span>
+          <p className="mt-3 text-sm text-ink-2">
+            Opened by <span className="font-medium text-ink">{openedByLabel(dispute)}</span>
             {dispute.created_at ? (
-              <span className="text-neutral-500"> · {formatDateTime(dispute.created_at)}</span>
+              <span className="text-ink-3"> · {formatDateTime(dispute.created_at)}</span>
             ) : null}
           </p>
         </div>
 
-        <dl className="divide-y divide-neutral-100 border-t border-neutral-100">
+        <dl className="divide-y divide-line border-t border-line">
           <div className="grid gap-0 sm:grid-cols-2">
-            <div className="px-5 py-4 sm:border-r sm:border-neutral-100">
-              <dt className="text-[13px] text-neutral-500">Event</dt>
-              <dd className="mt-0.5 text-sm font-medium text-neutral-900">
+            <div className="px-5 py-4 sm:border-r sm:border-line">
+              <dt className="text-[13px] text-ink-3">Event</dt>
+              <dd className="mt-0.5 text-sm font-medium text-ink">
                 {dispute.event_name ?? "-"}
               </dd>
               {dispute.event_date ? (
-                <p className="mt-0.5 text-xs text-neutral-500">
+                <p className="mt-0.5 text-xs text-ink-3">
                   {formatEventDate(dispute.event_date)}
                 </p>
               ) : null}
             </div>
-            <div className="border-t border-neutral-100 px-5 py-4 sm:border-t-0">
-              <dt className="text-[13px] text-neutral-500">
+            <div className="border-t border-line px-5 py-4 sm:border-t-0">
+              <dt className="text-[13px] text-ink-3">
                 {role === "client" ? "Vendor" : "Client"}
               </dt>
-              <dd className="mt-0.5 text-sm font-medium text-neutral-900">
+              <dd className="mt-0.5 text-sm font-medium text-ink">
                 {counterparty ?? "-"}
               </dd>
             </div>
           </div>
 
           <div className="px-5 py-4">
-            <dt className="text-[13px] text-neutral-500">What was reported</dt>
-            <dd className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
+            <dt className="text-[13px] text-ink-3">What was reported</dt>
+            <dd className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink">
               {dispute.summary}
             </dd>
             {dispute.chat_included_for_review ? (
-              <p className="mt-2 text-[13px] text-neutral-400">
+              <p className="mt-2 text-[13px] text-ink-3">
                 Booking messages were included for review
               </p>
             ) : null}
           </div>
 
           {dispute.resolution_note ? (
-            <div className="bg-neutral-50 px-5 py-4">
-              <dt className="text-[13px] text-neutral-500">Update from Eventtz</dt>
-              <dd className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-neutral-900">
+            <div className="bg-surface-3 px-5 py-4">
+              <dt className="text-[13px] text-ink-3">Update from Eventtz</dt>
+              <dd className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-ink">
                 {dispute.resolution_note}
               </dd>
               {dispute.resolved_at ? (
-                <p className="mt-2 text-[13px] text-neutral-400">
+                <p className="mt-2 text-[13px] text-ink-3">
                   {formatDateTime(dispute.resolved_at)}
                 </p>
               ) : null}

@@ -21,9 +21,9 @@ import { formatGbp } from "@/lib/money";
 
 function NoticeCard({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
-    <div className="mt-4 rounded-2xl border border-neutral-100 bg-neutral-50 px-5 py-4">
-      {title ? <p className="text-sm font-semibold text-neutral-900">{title}</p> : null}
-      <div className={`${title ? "mt-1 " : ""}text-[13px] text-neutral-600`}>{children}</div>
+    <div className="mt-4 rounded-2xl border border-line bg-surface-3 px-5 py-4">
+      {title ? <p className="text-sm font-semibold text-ink">{title}</p> : null}
+      <div className={`${title ? "mt-1 " : ""}text-[13px] text-ink-2`}>{children}</div>
     </div>
   );
 }
@@ -72,7 +72,7 @@ export function ClientBookingTermsNotices({
             Confirm once you have received them and the rest is released.
           </p>
           {deliveryDueLine(detail.delivery_due_at) ? (
-            <p className="mt-1 text-neutral-500">{deliveryDueLine(detail.delivery_due_at)}</p>
+            <p className="mt-1 text-ink-3">{deliveryDueLine(detail.delivery_due_at)}</p>
           ) : null}
           <Button
             className="mt-3"
@@ -154,24 +154,24 @@ export function VendorBookingTermsNotices({
             {detail.deposit_refund_due_at ? " on the date above" : ""}.
           </p>
           <div className="mt-3 space-y-3">
-            <label className="block text-sm text-neutral-800">
+            <label className="block text-sm text-ink">
               Amount to claim (£)
               <input
                 type="text"
                 inputMode="decimal"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
-                className="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-line bg-white px-3 py-2 text-sm"
                 placeholder={`Up to ${formatGbp(deposit)}`}
               />
             </label>
-            <label className="block text-sm text-neutral-800">
+            <label className="block text-sm text-ink">
               What was damaged or missing?
               <textarea
                 value={note}
                 maxLength={DEPOSIT_NOTE_MAX_CHARS}
                 onChange={(event) => setNote(event.target.value)}
-                className="mt-1 block min-h-[88px] w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
+                className="mt-1 block min-h-[88px] w-full rounded-lg border border-line bg-white px-3 py-2 text-sm"
               />
             </label>
             {formError ? <p className="text-xs text-amber-800">{formError}</p> : null}

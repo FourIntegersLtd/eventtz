@@ -8444,6 +8444,11 @@ export interface components {
          */
         ReferralPartnerListResponse: {
             /**
+             * Active Total
+             * @default 0
+             */
+            active_total: number;
+            /**
              * Limit
              * @default 25
              */
@@ -9429,6 +9434,11 @@ export interface components {
              * @default 0
              */
             total: number;
+            /**
+             * With Photos Count
+             * @default 0
+             */
+            with_photos_count: number;
         };
         /**
          * VendorPaymentsConnectResponse
@@ -9486,6 +9496,10 @@ export interface components {
              * @default 25
              */
             limit: number;
+            /** Next Release Event Date */
+            next_release_event_date: string | null;
+            /** Next Release Label */
+            next_release_label: string | null;
             /**
              * Offset
              * @default 0

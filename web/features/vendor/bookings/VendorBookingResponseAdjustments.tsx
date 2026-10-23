@@ -135,11 +135,11 @@ export function VendorBookingResponseAdjustments({
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm font-medium text-neutral-900">Suggest a new price</p>
-        <p className="mt-1 text-sm text-neutral-600">Say what changed. They need to accept first.</p>
+        <p className="text-sm font-medium text-ink">Suggest a new price</p>
+        <p className="mt-1 text-sm text-ink-2">Say what changed. They need to accept first.</p>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+      <div className="overflow-hidden rounded-xl border border-line bg-white">
         <div className="space-y-4 p-4">
           <div className="flex flex-wrap gap-2">
             <Chip active={adjKind === "cost"} onClick={() => handleKindChange("cost")}>
@@ -169,7 +169,7 @@ export function VendorBookingResponseAdjustments({
               {adjKind === "discount" ? "Amount off" : "Amount"}
             </label>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-neutral-500">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ink-3">
                 £
               </span>
               <input
@@ -183,7 +183,7 @@ export function VendorBookingResponseAdjustments({
               />
             </div>
             {adjKind === "discount" ? (
-              <p className="mt-1.5 text-xs text-neutral-500">Type − for a discount.</p>
+              <p className="mt-1.5 text-xs text-ink-3">Type − for a discount.</p>
             ) : null}
           </div>
 
@@ -193,20 +193,20 @@ export function VendorBookingResponseAdjustments({
         </div>
 
         {lines.length > 0 || (previewDelta != null && previewBreakdown) ? (
-          <div className="space-y-3 border-t border-neutral-100 bg-neutral-50/70 px-4 py-3">
+          <div className="space-y-3 border-t border-line bg-surface-3 px-4 py-3">
             {lines.length > 0 ? (
               <ul className="space-y-2">
                 {lines.map((row) => (
                   <li
                     key={adjustmentLineKey(row)}
-                    className="flex items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2"
+                    className="flex items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 py-2"
                   >
-                    <span className="min-w-0 text-sm text-neutral-800">{formatLineSummary(row)}</span>
+                    <span className="min-w-0 text-sm text-ink">{formatLineSummary(row)}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveDraft(row.kind)}
                       aria-label={`Remove ${row.kind === "discount" ? "discount" : "extra charge"}`}
-                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800"
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-3 transition hover:bg-surface-3 hover:text-ink"
                     >
                       <X className="h-3.5 w-3.5" strokeWidth={2.5} />
                     </button>
@@ -216,15 +216,15 @@ export function VendorBookingResponseAdjustments({
             ) : null}
 
             {previewDelta != null && previewBreakdown ? (
-              <div className="text-sm text-neutral-700">
+              <div className="text-sm text-ink-2">
                 <p>
                   New total for them:{" "}
-                  <span className="font-semibold text-neutral-900">{previewBreakdown.totalLabel}</span>
+                  <span className="font-semibold text-ink">{previewBreakdown.totalLabel}</span>
                   {currentTotalLabel ? (
-                    <span className="text-neutral-500"> (was {currentTotalLabel})</span>
+                    <span className="text-ink-3"> (was {currentTotalLabel})</span>
                   ) : null}
                 </p>
-                <p className="mt-1 text-neutral-600">
+                <p className="mt-1 text-ink-2">
                   {previewDeltaExplanation ??
                     `${formatTotalDeltaLabel(previewDelta)} from their current total.`}
                 </p>

@@ -33,7 +33,7 @@ export function ReviewPhotoGallery({
             <button
               type="button"
               onClick={() => setLightboxIndex(i)}
-              className="group relative block h-16 w-16 overflow-hidden rounded-md bg-neutral-100 ring-1 ring-neutral-200/80 transition hover:ring-neutral-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:h-[72px] sm:w-[72px]"
+              className="group relative block h-16 w-16 overflow-hidden rounded-md bg-surface-3 ring-1 ring-line transition hover:ring-line-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 sm:h-[72px] sm:w-[72px]"
               aria-label={`${altPrefix} ${i + 1} of ${photos.length}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

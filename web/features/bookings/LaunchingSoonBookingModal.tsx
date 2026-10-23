@@ -23,7 +23,7 @@ export function LaunchingSoonBookingModal({ isOpen, onClose }: LaunchingSoonBook
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+            className="rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-medium text-ink-2 hover:bg-surface-3"
           >
             Close
           </button>
@@ -49,11 +49,11 @@ export function LaunchingSoonBookingModal({ isOpen, onClose }: LaunchingSoonBook
             </span>
           }
         />
-        <p className="mt-2 text-sm leading-relaxed text-neutral-700">
+        <p className="mt-2 text-sm leading-relaxed text-ink-2">
           Booking isn&apos;t open yet. We&apos;re putting the finishing touches on Eventtz. You
           can still browse vendors and save favourites.
         </p>
-        <p className="mt-3 text-sm text-neutral-600">
+        <p className="mt-3 text-sm text-ink-2">
           Join the waitlist and we&apos;ll let you know as soon as you can send booking requests.
         </p>
       </div>

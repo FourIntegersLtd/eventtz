@@ -1,6 +1,11 @@
 "use client";
 
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Card } from "@/components/ui/Card";
 import { DescriptionList } from "@/components/ui/DescriptionList";
+import type { Tone } from "@/lib/tone";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { Download } from "lucide-react";
@@ -15,13 +20,13 @@ type VendorReceiptEzPageProps = {
   load: (bookingId: string) => Promise<PaymentReceipt>;
 };
 
-function statusBadge(status: string): { label: string; className: string } {
-  if (status === "payout_released") return { label: "Payout sent", className: "ez-badge ez-badge--success" };
-  if (status === "paid") return { label: "Paid", className: "ez-badge ez-badge--success" };
+function statusBadge(status: string): { label: string; tone: Tone } {
+  if (status === "payout_released") return { label: "Payout sent", tone: "success" };
+  if (status === "paid") return { label: "Paid", tone: "success" };
   if (status === "refunded" || status === "partially_refunded") {
-    return { label: status === "refunded" ? "Refunded" : "Partially refunded", className: "ez-badge ez-badge--info" };
+    return { label: status === "refunded" ? "Refunded" : "Partially refunded", tone: "info" };
   }
-  return { label: status, className: "ez-badge ez-badge--neutral" };
+  return { label: status, tone: "neutral" };
 }
 
 /** Vendor payment record (V23) and payout statement (V24), from the receipt snapshot. */
@@ -91,23 +96,27 @@ export function VendorReceiptEzPage({ bookingId, load }: VendorReceiptEzPageProp
         description={`${receipt.receipt_number} · ${receipt.counterparty_name}, ${receipt.event_name}`}
         actions={
           <>
-            <span className={badge.className}>{badge.label}</span>
-            <button className="ez-btn ez-btn--secondary" type="button" disabled={downloading} onClick={() => void download()}>
-              <Download size={18} strokeWidth={1.75} aria-hidden />
+            <Badge tone={badge.tone}>{badge.label}</Badge>
+            <Button
+              variant="secondary"
+              disabled={downloading}
+              icon={<Download size={18} strokeWidth={1.75} aria-hidden />}
+              onClick={() => void download()}
+            >
               {downloading ? "Preparing…" : "Download"}
-            </button>
+            </Button>
           </>
         }
       />
 
       <div className="ez-split">
         <div className="ez-split__main ez-stack ez-stack--lg">
-          <div className="ez-card">
-            <div className="ez-card__head">
+          <Card>
+            <Card.Header>
               <span className="ez-h3">{statement ? "Payout" : "Payment"}</span>
-              <span className={badge.className}>{badge.label}</span>
-            </div>
-            <div className="ez-card__body">
+              <Badge tone={badge.tone}>{badge.label}</Badge>
+            </Card.Header>
+            <Card.Body>
               {statement ? (
                 <div className="ez-lines">
                   {receipt.line_items.map((line) => (
@@ -133,15 +142,15 @@ export function VendorReceiptEzPage({ bookingId, load }: VendorReceiptEzPageProp
                   ]}
                 />
               )}
-            </div>
-          </div>
+            </Card.Body>
+          </Card>
 
           {!statement ? (
-            <div className="ez-card">
-              <div className="ez-card__head">
+            <Card>
+              <Card.Header>
                 <span className="ez-h3">Breakdown</span>
-              </div>
-              <div className="ez-card__body">
+              </Card.Header>
+              <Card.Body>
                 <div className="ez-lines">
                   {receipt.line_items.map((line) => (
                     <div className="ez-lines__row" key={line.label}>
@@ -160,14 +169,14 @@ export function VendorReceiptEzPage({ bookingId, load }: VendorReceiptEzPageProp
                     <span>{receipt.total_label}</span>
                   </div>
                 </div>
-              </div>
-            </div>
+              </Card.Body>
+            </Card>
           ) : (
-            <div className="ez-card">
-              <div className="ez-card__head">
+            <Card>
+              <Card.Header>
                 <span className="ez-h3">Timeline</span>
-              </div>
-              <div className="ez-card__body">
+              </Card.Header>
+              <Card.Body>
                 <div className="ez-timeline">
                   {receipt.paid_at ? (
                     <div className="ez-tl-item ez-tl-item--done">
@@ -188,17 +197,17 @@ export function VendorReceiptEzPage({ bookingId, load }: VendorReceiptEzPageProp
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </Card.Body>
+            </Card>
           )}
         </div>
 
         <div className="ez-split__aside ez-stack ez-stack--lg">
-          <div className="ez-card">
-            <div className="ez-card__head">
+          <Card>
+            <Card.Header>
               <span className="ez-h3">{statement ? "Details" : "Your side"}</span>
-            </div>
-            <div className="ez-card__body">
+            </Card.Header>
+            <Card.Body>
               {statement ? (
                 <DescriptionList
                   items={[
@@ -229,28 +238,28 @@ export function VendorReceiptEzPage({ bookingId, load }: VendorReceiptEzPageProp
                   </div>
                 </div>
               )}
-              {receipt.status_note ? <p className="ez-caption" style={{ marginTop: 10 }}>{receipt.status_note}</p> : null}
+              {receipt.status_note ? <p className="ez-caption mt-2.5">{receipt.status_note}</p> : null}
               {statement ? null : (
-                <div style={{ marginTop: 12 }}>
-                  <Link className="ez-btn ez-btn--secondary" href={`/vendor/bookings/${bookingId}/payout-statement`}>
+                <div className="mt-3">
+                  <ButtonLink variant="secondary" href={`/vendor/bookings/${bookingId}/payout-statement`}>
                     View payout statement
-                  </Link>
+                  </ButtonLink>
                 </div>
               )}
-            </div>
-          </div>
-          <div className="ez-card">
-            <div className="ez-card__body">
+            </Card.Body>
+          </Card>
+          <Card>
+            <Card.Body>
               <p className="ez-small">
                 {statement
                   ? "Keep this statement for your records. Questions? Open Help and mention the booking reference."
                   : "The service fee is added on top of your price, so it never reduces what you receive."}
               </p>
-              <Link className="ez-btn ez-btn--ghost" href="/vendor/help">
+              <ButtonLink variant="ghost" href="/vendor/help">
                 Contact support
-              </Link>
-            </div>
-          </div>
+              </ButtonLink>
+            </Card.Body>
+          </Card>
         </div>
       </div>
     </div>

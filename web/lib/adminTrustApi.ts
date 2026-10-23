@@ -4,12 +4,11 @@ import api from "@/lib/axios";
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 export type AdminDisputeCase = components["schemas"]["AdminDisputeCase"];
 
-export const ADMIN_DISPUTES_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
 
 export async function fetchAdminDisputesPage(
   status = "all",
   offset = 0,
-  limit = ADMIN_DISPUTES_PAGE_SIZE,
+  limit = DEFAULT_LIST_PAGE_SIZE,
   search?: string | null,
 ): Promise<{
   disputes: AdminDisputeCase[];
@@ -27,12 +26,6 @@ export async function fetchAdminDisputesPage(
     offset: data.offset ?? offset,
     limit: data.limit ?? limit,
   };
-}
-
-/** Loads the first page only; prefer {@link fetchAdminDisputesPage} for list screens. */
-export async function fetchAdminDisputes(status = "all"): Promise<AdminDisputeCase[]> {
-  const page = await fetchAdminDisputesPage(status, 0, 200);
-  return page.disputes;
 }
 
 export async function patchAdminDispute(
