@@ -35,18 +35,18 @@ export function BrowsePricingPackagesSection({
           ? flush
             ? "min-w-0 pb-0 pt-0"
             : "min-w-0 px-5 pb-5 pt-4"
-          : "min-w-0 border-t border-neutral-100 px-5 pb-5 pt-4"
+          : "min-w-0 border-t border-line px-5 pb-5 pt-4"
       }
       aria-labelledby="vendor-pricing-packages-heading"
     >
       <h4
         id="vendor-pricing-packages-heading"
-        className="mb-3 text-sm font-semibold text-neutral-900"
+        className="mb-3 text-sm font-semibold text-ink"
       >
         Packages
       </h4>
-      <div className="overflow-hidden rounded-xl border border-neutral-100 bg-neutral-50">
-        <ul className={`divide-y divide-neutral-200/60 ${listClassName}`.trim()}>
+      <div className="overflow-hidden rounded-xl border border-line bg-surface-3">
+        <ul className={`divide-y divide-line/60 ${listClassName}`.trim()}>
           {safeOptions.map((opt) => (
             <li key={opt.id} className={`min-w-0 ${getItemClassName?.(opt) ?? "px-4 py-4"}`}>
               {children(opt)}

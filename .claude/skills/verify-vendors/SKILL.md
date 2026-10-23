@@ -62,3 +62,4 @@ Then read the stored row: `vendors.approval_status`, `listing_override` and its 
 - The shell has no Node: export the nvm PATH above. Web has no `ci` script; lint has inherited errors.
 - Storage is off locally (no AWS keys): uploads answer 503, so Level 3 upload checks need keys or are not proven; say which.
 - Unit tests only exist for some vendor modules; the `tests/http/test_vendor*.py` glob in OWNERS.md currently matches only the admin detail test, so profile routes are proven by Level 2.
+- Screen work (web only): run `scripts/design-diff/run.mjs` per screen id on a branch dev server and on a `main` worktree, one run at a time (each re-seeds the vendor and sign-in is rate limited, so flush Redis between screens). A `TimeoutError` or a "Loading..." screenshot is the dev server or browser, not the change: rerun that id. Compare status, percentage and geometry lines against main, not the budget. If Playwright's browsers vanished, `npx playwright install chromium`.

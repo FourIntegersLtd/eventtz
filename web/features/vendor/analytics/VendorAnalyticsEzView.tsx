@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Link from "next/link";
 import type { VendorAnalytics } from "@/lib/vendorAnalyticsApi";
 import type { AdminPeriodDays } from "@/lib/commercePeriod";
 import { EzAreaChart } from "@/components/charts/EzAreaChart";
@@ -20,6 +19,8 @@ import {
 } from "@/features/vendor/analytics/vendorAnalyticsModel";
 import { EzPeriodFilterButton } from "@/components/ui/EzPeriodFilterButton";
 import { formatCount, formatGbp } from "@/lib/money";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Card } from "@/components/ui/Card";
 
 type VendorAnalyticsEzViewProps = {
   data: VendorAnalytics;
@@ -144,21 +145,21 @@ function ChartCard({
   children: ReactNode;
 }) {
   return (
-    <div className="ez-card">
-      <div className="ez-card__head">
+    <Card>
+      <Card.Header>
         <div>
           <span className="ez-h3">{title}</span>
           <p className="ez-caption">{subtitle}</p>
         </div>
-      </div>
-      <div className="ez-card__body">{children}</div>
+      </Card.Header>
+      <Card.Body>{children}</Card.Body>
       {footerHref && footerLabel ? (
-        <div className="ez-card__foot">
-          <Link className="ez-btn ez-btn--ghost" href={footerHref}>
+        <Card.Footer>
+          <ButtonLink variant="ghost" href={footerHref}>
             {footerLabel}
-          </Link>
-        </div>
+          </ButtonLink>
+        </Card.Footer>
       ) : null}
-    </div>
+    </Card>
   );
 }

@@ -112,7 +112,7 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
       <div className="ez-stack text-sm">
         {error ? <LottieFailureInline message={error} /> : null}
         <div>
-          <label className="text-sm font-medium text-neutral-700">Decision</label>
+          <label className="text-sm font-medium text-ink-2">Decision</label>
           <select
             value={action}
             onChange={(e) => setAction(e.target.value as typeof action)}
@@ -127,7 +127,7 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
         </div>
         {action === "partial_refund" ? (
           <div>
-            <label className="text-sm font-medium text-neutral-700">Refund amount (£)</label>
+            <label className="text-sm font-medium text-ink-2">Refund amount (£)</label>
             <input
               type="number"
               min={0.01}
@@ -140,10 +140,10 @@ export function DisputeResolveModal({ dispute, onClose, onResolved }: DisputeRes
           </div>
         ) : null}
         <div>
-          <label className="text-sm font-medium text-neutral-700">
+          <label className="text-sm font-medium text-ink-2">
             Outcome message (client and vendor)
           </label>
-          <p className="mt-0.5 text-xs text-neutral-500">
+          <p className="mt-0.5 text-xs text-ink-3">
             Shown to both parties on their dispute page.
           </p>
           <textarea

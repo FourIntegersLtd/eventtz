@@ -1,9 +1,9 @@
 "use client";
 
 function scoreRingColor(score: number): string {
-  if (score >= 75) return "text-emerald-600";
-  if (score >= 50) return "text-amber-600";
-  return "text-red-600";
+  if (score >= 75) return "text-success";
+  if (score >= 50) return "text-warning";
+  return "text-danger";
 }
 
 function scoreTrackColor(score: number): string {
@@ -43,7 +43,7 @@ export function GrowthScoreRing({ score, size = "default" }: Props) {
           r={radius}
           fill="none"
           strokeWidth={strokeWidth}
-          className="stroke-neutral-200"
+          className="stroke-line"
         />
         <circle
           cx={center}
@@ -60,7 +60,7 @@ export function GrowthScoreRing({ score, size = "default" }: Props) {
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className={`tabular-nums ${scoreClass} ${scoreRingColor(score)}`}>{score}</span>
         {!compact ? (
-          <span className="text-[10px] font-medium uppercase tracking-wide text-neutral-500">
+          <span className="text-[10px] font-medium uppercase tracking-wide text-ink-3">
             Score
           </span>
         ) : null}

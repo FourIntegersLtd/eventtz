@@ -77,7 +77,7 @@ export function AdminBookingDetailMainContent({
   return (
     <div className="ez-stack ez-stack--lg min-w-0">
       <DetailSection title="Request lifecycle">
-        <div className="ez-between" style={{ marginBottom: "12px" }}>
+        <div className="ez-between mb-3">
           <span className="ez-small">Booking request status</span>
           <StatusBadge status={status} />
         </div>
@@ -85,7 +85,7 @@ export function AdminBookingDetailMainContent({
       </DetailSection>
 
       <DetailSection title="Payment lifecycle">
-        <div className="ez-between" style={{ marginBottom: "12px" }}>
+        <div className="ez-between mb-3">
           <span className="ez-small">Money status</span>
           <PaymentStatusBadge status={paymentStatus} />
         </div>
@@ -151,7 +151,7 @@ export function AdminBookingDetailMainContent({
             <ExpandableId value={booking.vendor_stripe_account_id} label="vendor account" />
           </dd>
         </dl>
-        <p className="ez-caption" style={{ marginTop: "12px" }}>
+        <p className="ez-caption mt-3">
           Ids are masked. Open in Stripe for the full value.
         </p>
       </DetailSection>

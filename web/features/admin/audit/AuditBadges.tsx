@@ -52,6 +52,6 @@ function getEntityRingClass(entityType: string): string {
     case "financials":
       return "bg-lime-50 text-lime-900 ring-lime-200";
     default:
-      return "bg-neutral-50 text-neutral-700 ring-neutral-200";
+      return "bg-surface-2 text-ink-2 ring-line";
   }
 }

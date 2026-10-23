@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
@@ -65,9 +66,9 @@ export function VendorReferralDetailView({ bookingId }: VendorReferralDetailView
         title="Referral not found"
         description="This booking is not on your referral list."
         action={
-          <Link className="ez-btn ez-btn--secondary" href="/vendor/settings?tab=referrals">
+          <ButtonLink variant="secondary" href="/vendor/settings?tab=referrals">
             Back to referrals
-          </Link>
+          </ButtonLink>
         }
       />
     );
@@ -80,13 +81,13 @@ export function VendorReferralDetailView({ bookingId }: VendorReferralDetailView
         title={row.client_display_name || "Referral"}
         description={row.event_name}
         actions={
-          <Link className="ez-btn ez-btn--ghost" href="/vendor/settings?tab=referrals">
+          <ButtonLink variant="ghost" href="/vendor/settings?tab=referrals">
             All referrals
-          </Link>
+          </ButtonLink>
         }
       />
-      <div className="ez-card">
-        <div className="ez-card__body">
+      <Card>
+        <Card.Body>
           <div className="ez-lines">
             <div className="ez-lines__row">
               <span>Client</span>
@@ -121,13 +122,13 @@ export function VendorReferralDetailView({ bookingId }: VendorReferralDetailView
               <span>{formatGbp(row.referral_fee_discount_gbp, { roundToPence: true })}</span>
             </div>
           </div>
-        </div>
-        <div className="ez-card__foot">
-          <Link className="ez-btn ez-btn--secondary" href={`/vendor/bookings/${row.booking_request_id}`}>
+        </Card.Body>
+        <Card.Footer>
+          <ButtonLink variant="secondary" href={`/vendor/bookings/${row.booking_request_id}`}>
             Open booking
-          </Link>
-        </div>
-      </div>
+          </ButtonLink>
+        </Card.Footer>
+      </Card>
     </div>
   );
 }

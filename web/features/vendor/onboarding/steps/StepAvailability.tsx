@@ -132,8 +132,7 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
             <Minus size={16} strokeWidth={1.75} aria-hidden />
           </button>
           <input
-            className="ez-input"
-            style={{ width: 84, textAlign: "center" }}
+            className="ez-input w-[84px] text-center"
             type="number"
             min={MIN_BOOKINGS_PER_DAY}
             max={MAX_BOOKINGS_PER_DAY}
@@ -189,16 +188,13 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
               const classes = ["ez-cal__day"];
               if (cell.outsideMonth) classes.push("ez-cal__day--muted");
               if (blocked) classes.push("ez-cal__day--blocked");
+              classes.push("border-0 cursor-pointer");
+              if (!blocked) classes.push("bg-transparent");
               return (
                 <button
                   key={cell.iso}
                   type="button"
                   className={classes.join(" ")}
-                  style={{
-                    border: 0,
-                    cursor: "pointer",
-                    background: blocked ? undefined : "none",
-                  }}
                   aria-pressed={blocked}
                   aria-label={cell.iso}
                   disabled={isPastIsoDate(cell.iso)}
@@ -212,11 +208,11 @@ export function StepAvailability({ data, update }: StepAvailabilityProps) {
         </div>
         <div className="ez-legend">
           <span>
-            <i style={{ background: "var(--ez-surface-3)" }} />
+            <i className="bg-[var(--ez-surface-3)]" />
             Blocked
           </span>
           <span>
-            <i style={{ background: "var(--ez-brand-100)" }} />
+            <i className="bg-primary-soft" />
             Booked
           </span>
         </div>

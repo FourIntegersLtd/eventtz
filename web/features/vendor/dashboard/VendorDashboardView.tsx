@@ -208,25 +208,25 @@ export function VendorDashboardView() {
         zIndexClassName="z-[75]"
       >
         {!selectedDayKey ? (
-          <p className="text-sm text-neutral-600">Select a day to see bookings.</p>
+          <p className="text-sm text-ink-2">Select a day to see bookings.</p>
         ) : (bookingsByDate[selectedDayKey] ?? []).length === 0 ? (
-          <p className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-6 text-center text-sm text-neutral-700">
+          <p className="rounded-xl border border-line bg-surface-3 px-4 py-6 text-center text-sm text-ink-2">
             No bookings on this day.
           </p>
         ) : (
-          <ul className="divide-y divide-neutral-100">
+          <ul className="divide-y divide-line">
             {(bookingsByDate[selectedDayKey] ?? []).map((b) => (
               <li key={b.booking_request_id} className="py-3 first:pt-0 last:pb-0">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-neutral-900">{b.event_name}</p>
-                    <p className="mt-0.5 text-sm text-neutral-600">
+                    <p className="truncate text-sm font-semibold text-ink">{b.event_name}</p>
+                    <p className="mt-0.5 text-sm text-ink-2">
                       {b.client_email ? b.client_email : "Client"}
                     </p>
                     {/* The modal title already states the selected date - only show
                         an end date here, for events that span more than one day. */}
                     {b.event_end_date ? (
-                      <p className="mt-0.5 text-xs text-neutral-500">
+                      <p className="mt-0.5 text-xs text-ink-3">
                         Runs to {formatEventDate(b.event_end_date)}
                       </p>
                     ) : null}

@@ -19,7 +19,7 @@ export function AbbaChatEmptyState({ embedded = false, onAskFocus }: Props) {
       className={
         embedded
           ? "flex min-h-[min(20rem,50vh)] flex-col items-center justify-center py-4 text-center"
-          : "rounded-xl border border-dashed border-neutral-200 bg-neutral-50 px-4 py-5 text-center"
+          : "rounded-xl border border-dashed border-line bg-surface-3 px-4 py-5 text-center"
       }
     >
       <LottieIllustration
@@ -30,10 +30,10 @@ export function AbbaChatEmptyState({ embedded = false, onAskFocus }: Props) {
       />
 
       {loading ? (
-        <p className="mt-4 text-sm text-neutral-500">Loading your brief…</p>
+        <p className="mt-4 text-sm text-ink-3">Loading your brief…</p>
       ) : brief ? (
         <>
-          <p className="mt-4 max-w-[16rem] text-sm leading-relaxed text-neutral-700">{brief.greeting}</p>
+          <p className="mt-4 max-w-[16rem] text-sm leading-relaxed text-ink-2">{brief.greeting}</p>
           <div className="mt-4">
             <GrowthScoreRing score={brief.growth_score} size="compact" />
           </div>
@@ -41,19 +41,19 @@ export function AbbaChatEmptyState({ embedded = false, onAskFocus }: Props) {
             <button
               type="button"
               onClick={() => onAskFocus(`Help me with: ${topAction.title}`)}
-              className="mt-4 w-full max-w-xs rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left transition hover:border-primary/30 hover:bg-primary/[0.03]"
+              className="mt-4 w-full max-w-xs rounded-xl border border-line bg-white px-4 py-3 text-left transition hover:border-primary/30 hover:bg-primary/[0.03]"
             >
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
                 Today&apos;s focus
               </p>
-              <p className="mt-1 text-sm font-semibold text-neutral-900">{topAction.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-neutral-600">{topAction.rationale}</p>
+              <p className="mt-1 text-sm font-semibold text-ink">{topAction.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-ink-2">{topAction.rationale}</p>
             </button>
           ) : null}
         </>
       ) : null}
 
-      <p className="mt-4 text-xs text-neutral-500">{VENDOR_COPILOT.chatEmptyHint}</p>
+      <p className="mt-4 text-xs text-ink-3">{VENDOR_COPILOT.chatEmptyHint}</p>
     </div>
   );
 }

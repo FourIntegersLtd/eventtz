@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { depositAwardError } from "@/features/bookings/bookingTerms";
@@ -48,9 +49,7 @@ export function AdminDepositClaimCard({ bookingId, booking, canDecide, onResolve
   };
 
   return (
-    <section className="ez-banner ez-banner--warning">
-      <div className="ez-banner__body">
-        <h2 className="ez-banner__title">Deposit claim</h2>
+    <Banner tone="warning" title="Deposit claim">
         <p>Vendor is claiming {formatGbp(claim)}.</p>
         {note ? <p className="whitespace-pre-wrap">{note}</p> : null}
         {canDecide ? (
@@ -62,7 +61,7 @@ export function AdminDepositClaimCard({ bookingId, booking, canDecide, onResolve
                 inputMode="decimal"
                 value={award}
                 onChange={(event) => setAward(event.target.value)}
-                className="mt-1 block w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm"
+                className="mt-1 block w-full rounded-lg border border-line bg-white px-3 py-2 text-sm"
               />
             </label>
             {formError ? <p className="text-xs">{formError}</p> : null}
@@ -73,7 +72,6 @@ export function AdminDepositClaimCard({ bookingId, booking, canDecide, onResolve
         ) : (
           <p className="ez-small">Only super admins can decide deposit claims.</p>
         )}
-      </div>
-    </section>
+    </Banner>
   );
 }

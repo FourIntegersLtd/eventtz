@@ -7,6 +7,7 @@ import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { COULD_NOT_RESTORE_STRIPE_CONNECT } from "@/lib/admin-messages";
+import { Card } from "@/components/ui/Card";
 
 type Props = {
   vendor: AdminVendorRow;
@@ -49,8 +50,8 @@ export function VendorStripeConnectSection({ vendor, busy, onRestoreStripe }: Pr
   };
 
   return (
-    <section className="ez-card overflow-hidden">
-      <div className="ez-card__head">
+    <Card as="section" className="overflow-hidden">
+      <Card.Header>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="ez-h3">Stripe Connect</h2>
@@ -60,32 +61,32 @@ export function VendorStripeConnectSection({ vendor, busy, onRestoreStripe }: Pr
           </div>
           <VendorPayoutStatusBadge verified={vendor.payouts_verified} />
         </div>
-      </div>
+      </Card.Header>
       <dl className="grid gap-3 px-4 py-4 text-sm sm:grid-cols-2 sm:px-5">
         <div>
-          <dt className="text-xs font-medium text-neutral-500">Account ID</dt>
-          <dd className="mt-0.5 font-mono text-neutral-900">{maskAccountId(vendor.stripe_account_id)}</dd>
+          <dt className="text-xs font-medium text-ink-3">Account ID</dt>
+          <dd className="mt-0.5 font-mono text-ink">{maskAccountId(vendor.stripe_account_id)}</dd>
         </div>
         <div>
-          <dt className="text-xs font-medium text-neutral-500">Charges enabled</dt>
-          <dd className="mt-0.5 text-neutral-900">
+          <dt className="text-xs font-medium text-ink-3">Charges enabled</dt>
+          <dd className="mt-0.5 text-ink">
             {vendor.stripe_charges_enabled ? "Yes" : "No"}
           </dd>
         </div>
         <div>
-          <dt className="text-xs font-medium text-neutral-500">Payouts enabled</dt>
-          <dd className="mt-0.5 text-neutral-900">
+          <dt className="text-xs font-medium text-ink-3">Payouts enabled</dt>
+          <dd className="mt-0.5 text-ink">
             {vendor.stripe_payouts_enabled ? "Yes" : "No"}
           </dd>
         </div>
       </dl>
-      <div className="border-t border-neutral-100 bg-neutral-50/60 px-4 py-3 sm:px-5">
-        <p className="text-xs leading-relaxed text-neutral-600">
+      <div className="border-t border-line bg-surface-3/60 px-4 py-3 sm:px-5">
+        <p className="text-xs leading-relaxed text-ink-2">
           Hiding a listing does not remove Stripe Connect. If the account ID is missing after a
           payout, restore it from the booking transfer (super admin).
         </p>
         {restoreError ? (
-          <p className="mt-2 text-xs font-medium text-red-700">{restoreError}</p>
+          <p className="mt-2 text-xs font-medium text-danger">{restoreError}</p>
         ) : null}
         {restoreSuccess ? (
           <p className="mt-2 text-xs font-medium text-primary">{restoreSuccess}</p>
@@ -103,6 +104,6 @@ export function VendorStripeConnectSection({ vendor, busy, onRestoreStripe }: Pr
           </Button>
         ) : null}
       </div>
-    </section>
+    </Card>
   );
 }

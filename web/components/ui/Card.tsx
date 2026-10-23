@@ -1,10 +1,10 @@
-import type { ElementType, ReactNode } from "react";
+import type { ComponentPropsWithoutRef, ElementType, ReactNode } from "react";
 import { CARD_PADDING, CARD_SURFACE } from "@/components/ui/tokens";
 
 export type CardVariant = "portal" | "portal-inset" | "admin" | "muted" | "callout" | "raised";
 export type CardPadding = "none" | "md" | "lg";
 
-type CardProps<T extends ElementType = "div"> = {
+type CardProps<T extends ElementType = "div"> = Omit<ComponentPropsWithoutRef<T>, "className" | "children"> & {
   as?: T;
   variant?: CardVariant;
   padding?: CardPadding;
@@ -38,10 +38,12 @@ function CardRoot<T extends ElementType = "div">({
   padding = "none",
   className = "",
   children,
+  ...rest
 }: CardProps<T>) {
   const Component = as ?? "div";
   return (
     <Component
+      {...rest}
       className={`${VARIANT_CLASSES[variant]} ${PADDING_CLASSES[padding]} ${className}`.trim()}
     >
       {children}
@@ -49,21 +51,37 @@ function CardRoot<T extends ElementType = "div">({
   );
 }
 
-type CardSlotProps = { className?: string; children: ReactNode };
+/** Slots take a class name and any plain div attribute (`id`, `data-*`, `aria-*`). */
+type CardSlotProps = Omit<ComponentPropsWithoutRef<"div">, "className" | "children"> & {
+  className?: string;
+  children: ReactNode;
+};
 
 /** Top slot of a Card: title row with a hairline below (`ez-card__head`). */
-export function CardHeader({ className = "", children }: CardSlotProps) {
-  return <div className={`ez-card__head ${className}`.trim()}>{children}</div>;
+export function CardHeader({ className = "", children, ...rest }: CardSlotProps) {
+  return (
+    <div {...rest} className={`ez-card__head ${className}`.trim()}>
+      {children}
+    </div>
+  );
 }
 
 /** Main slot of a Card, 20px padding (`ez-card__body`). */
-export function CardBody({ className = "", children }: CardSlotProps) {
-  return <div className={`ez-card__body ${className}`.trim()}>{children}</div>;
+export function CardBody({ className = "", children, ...rest }: CardSlotProps) {
+  return (
+    <div {...rest} className={`ez-card__body ${className}`.trim()}>
+      {children}
+    </div>
+  );
 }
 
 /** Bottom slot of a Card: action row with a hairline above (`ez-card__foot`). */
-export function CardFooter({ className = "", children }: CardSlotProps) {
-  return <div className={`ez-card__foot ${className}`.trim()}>{children}</div>;
+export function CardFooter({ className = "", children, ...rest }: CardSlotProps) {
+  return (
+    <div {...rest} className={`ez-card__foot ${className}`.trim()}>
+      {children}
+    </div>
+  );
 }
 
 export const Card = Object.assign(CardRoot, {

@@ -45,7 +45,7 @@ export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 border-t border-neutral-100 pt-3">
+      <div className="flex flex-wrap gap-2 border-t border-line pt-3">
         <button
           type="button"
           onClick={() => void generate("accept")}
@@ -54,11 +54,11 @@ export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
           <Sparkles className="h-3.5 w-3.5" aria-hidden />
           Draft accept message
         </button>
-        <span className="text-neutral-300">·</span>
+        <span className="text-ink-3">·</span>
         <button
           type="button"
           onClick={() => void generate("clarify")}
-          className="text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:underline"
+          className="text-xs font-medium text-ink-2 hover:text-ink hover:underline"
         >
           Draft questions
         </button>
@@ -72,12 +72,12 @@ export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
         zIndexClassName="z-[80]"
       >
         {loading ? (
-          <p className="text-sm text-neutral-600">Drafting your message…</p>
+          <p className="text-sm text-ink-2">Drafting your message…</p>
         ) : error ? (
-          <p className="text-sm text-red-700">{error}</p>
+          <p className="text-sm text-danger">{error}</p>
         ) : (
           <div className="space-y-4">
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-ink-3">
               Review before sending. AI can make mistakes. This is a suggestion only.
             </p>
             <textarea
@@ -87,7 +87,7 @@ export function VendorDraftReplyPanel({ bookingId, onUseDraft }: Props) {
               className={formControlClass("rounded-xl focus:ring-2 focus:ring-primary/30")}
             />
             {tips.length > 0 ? (
-              <ul className="list-disc space-y-1 pl-4 text-xs text-neutral-600">
+              <ul className="list-disc space-y-1 pl-4 text-xs text-ink-2">
                 {tips.map((tip, i) => (
                   <li key={i}>{tip}</li>
                 ))}

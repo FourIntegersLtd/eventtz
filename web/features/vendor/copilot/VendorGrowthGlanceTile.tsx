@@ -27,9 +27,9 @@ export function VendorGrowthGlanceTile() {
         className={`flex min-w-0 w-full flex-col justify-between overflow-hidden sm:col-span-2 lg:col-span-1 ${CARD_SURFACE} ${CARD_PADDING}`}
         aria-hidden
       >
-        <p className="text-base font-medium text-neutral-500">{VENDOR_COPILOT.glanceTitle}</p>
-        <div className="mt-4 h-14 w-14 animate-pulse rounded-full bg-neutral-100" />
-        <div className="mt-2 h-4 w-full max-w-[12rem] animate-pulse rounded bg-neutral-100" />
+        <p className="text-base font-medium text-ink-3">{VENDOR_COPILOT.glanceTitle}</p>
+        <div className="mt-4 h-14 w-14 animate-pulse rounded-full bg-surface-3" />
+        <div className="mt-2 h-4 w-full max-w-[12rem] animate-pulse rounded bg-surface-3" />
       </div>
     );
   }
@@ -39,8 +39,8 @@ export function VendorGrowthGlanceTile() {
       <div
         className={`flex min-w-0 w-full flex-col justify-between overflow-hidden sm:col-span-2 lg:col-span-1 ${CARD_SURFACE} ${CARD_PADDING}`}
       >
-        <p className="text-base font-medium text-neutral-500">{VENDOR_COPILOT.glanceTitle}</p>
-        <p className="mt-4 text-sm text-neutral-600">Score unavailable</p>
+        <p className="text-base font-medium text-ink-3">{VENDOR_COPILOT.glanceTitle}</p>
+        <p className="mt-4 text-sm text-ink-2">Score unavailable</p>
       </div>
     );
   }
@@ -70,12 +70,12 @@ export function VendorGrowthGlanceTile() {
             />
           </span>
           <div className="min-w-0 pt-0.5">
-            <p className="text-base font-medium text-neutral-900">{VENDOR_COPILOT.glanceTitle}</p>
-            <p className="mt-0.5 text-sm text-neutral-500">{VENDOR_COPILOT.glanceSubtitle}</p>
+            <p className="text-base font-medium text-ink">{VENDOR_COPILOT.glanceTitle}</p>
+            <p className="mt-0.5 text-sm text-ink-3">{VENDOR_COPILOT.glanceSubtitle}</p>
           </div>
         </div>
         <ChevronRight
-          className="mt-1 h-5 w-5 shrink-0 text-neutral-400 transition group-hover:translate-x-0.5 group-hover:text-primary"
+          className="mt-1 h-5 w-5 shrink-0 text-ink-3 transition group-hover:translate-x-0.5 group-hover:text-primary"
           aria-hidden
         />
       </div>
@@ -84,9 +84,9 @@ export function VendorGrowthGlanceTile() {
         <GrowthScoreRing score={brief.growth_score} size="compact" />
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-2 border-t border-neutral-100 pt-3">
-        <p className="min-w-0 line-clamp-1 text-sm text-neutral-600">
-          <span className="font-medium text-neutral-800">Today:</span> {focusLine}
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3">
+        <p className="min-w-0 line-clamp-1 text-sm text-ink-2">
+          <span className="font-medium text-ink">Today:</span> {focusLine}
         </p>
         <span className="shrink-0 text-xs font-semibold text-primary underline decoration-primary underline-offset-2">
           {revalidating ? "Updating…" : VENDOR_COPILOT.briefLink}

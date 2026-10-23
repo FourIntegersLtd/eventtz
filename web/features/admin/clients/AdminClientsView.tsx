@@ -1,7 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
+import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import { ADMIN_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
@@ -15,8 +17,9 @@ import { EzListFilterToolbar } from "@/components/ui/EzListFilterToolbar";
 import type { EzFilterOption } from "@/components/ui/ezFilterTypes";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
-import { useAdminClients } from "@/features/admin/clients/useAdminClients";
+import { useAdminClients, type ClientSuspendedFilter } from "@/features/admin/clients/useAdminClients";
 import { useAdminPermissions } from "@/features/admin/useAdminPermissions";
+import { DescriptionList } from "@/components/ui/DescriptionList";
 import { DataTable } from "@/components/ui/DataTable";
 import { formatDate } from "@/lib/dateFormat";
 
@@ -38,8 +41,6 @@ function clientDisplayName(email: string | null | undefined): string {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
-
-type ClientSuspendedFilter = "" | "true" | "false";
 
 const CLIENT_STATUS_FILTER_OPTIONS: EzFilterOption<ClientSuspendedFilter>[] = [
   { id: "", title: "All clients" },
@@ -66,7 +67,8 @@ export function AdminClientsView() {
     total,
     offset,
     limit,
-    setOffset,
+    goNext,
+    goPrevious,
     loading,
     error,
     search,
@@ -89,7 +91,6 @@ export function AdminClientsView() {
   const hasActiveFilters = Boolean(search.trim()) || Boolean(suspendedFilter);
 
   const clearFilters = () => {
-    setOffset(0);
     setSearch("");
     setSuspendedFilter("");
     setSelectedId(null);
@@ -123,7 +124,6 @@ export function AdminClientsView() {
         <EzListFilterToolbar
           searchValue={search}
           onSearchChange={(value) => {
-            setOffset(0);
             setSearch(value);
             setSelectedId(null);
           }}
@@ -134,9 +134,8 @@ export function AdminClientsView() {
           summary={
             suspendedFilter
               ? {
-                  label: clientStatusFilterLabel(suspendedFilter as ClientSuspendedFilter),
+                  label: clientStatusFilterLabel(suspendedFilter),
                   onClear: () => {
-                    setOffset(0);
                     setSuspendedFilter("");
                     setSelectedId(null);
                   },
@@ -151,9 +150,8 @@ export function AdminClientsView() {
           title="Filter clients"
           description="Narrow the directory by account status. Search still applies on top."
           options={CLIENT_STATUS_FILTER_OPTIONS}
-          value={suspendedFilter as ClientSuspendedFilter}
+          value={suspendedFilter}
           onChange={(id) => {
-            setOffset(0);
             setSuspendedFilter(id);
             setSelectedId(null);
           }}
@@ -162,7 +160,7 @@ export function AdminClientsView() {
           resetLabel="Show all"
         />
 
-        {loading ? (
+        {loading && rows.length === 0 ? (
           <AdminLoadingState label="Loading clients…" />
         ) : rows.length === 0 ? (
           <EmptyState
@@ -170,9 +168,9 @@ export function AdminClientsView() {
             lottie="searchNoResults"
             action={
               hasActiveFilters ? (
-                <button type="button" className="ez-btn ez-btn--secondary" onClick={clearFilters}>
+                <Button variant="secondary" onClick={clearFilters}>
                   Clear filters
-                </button>
+                </Button>
               ) : undefined
             }
           />
@@ -192,7 +190,7 @@ export function AdminClientsView() {
                   kind: "strong",
                   className: "min-w-[12rem]",
                   cell: (row) => (
-                    <div className="ez-hrow" style={{ flexWrap: "nowrap", gap: "10px" }}>
+                    <div className="ez-hrow flex-nowrap gap-2.5">
                       <span className="ez-avatar ez-avatar--sm">{clientInitials(row.email)}</span>
                       <div className="min-w-0 flex-1">
                         <div className="ez-strong truncate">{clientDisplayName(row.email)}</div>
@@ -222,8 +220,8 @@ export function AdminClientsView() {
               limit={limit}
               total={total}
               pageRowCount={rows.length}
-              onPrevious={() => setOffset(Math.max(0, offset - limit))}
-              onNext={() => setOffset(offset + limit)}
+              onPrevious={goPrevious}
+              onNext={goNext}
             />
           </>
         )}
@@ -231,11 +229,11 @@ export function AdminClientsView() {
 
       <div className="ez-split__aside ez-stack ez-stack--lg">
         {selected ? (
-          <section className="ez-card">
-            <div className="ez-card__head">
+          <Card as="section">
+            <Card.Header>
               <h2 className="ez-h3">{clientDisplayName(selected.email)}</h2>
-            </div>
-            <div className="ez-card__body">
+            </Card.Header>
+            <Card.Body>
               <div className="ez-stack">
                 <div className="ez-hrow">
                   <span className="ez-avatar ez-avatar--lg">{clientInitials(selected.email)}</span>
@@ -244,50 +242,48 @@ export function AdminClientsView() {
                     <div className="ez-caption">{selected.email ?? "-"}</div>
                   </div>
                 </div>
-                <dl className="ez-dl" style={{ margin: 0 }}>
-                  <dt>Joined</dt>
-                  <dd>{joinedLabel(selected.created_at)}</dd>
-                  <dt>Bookings</dt>
-                  <dd>{selected.booking_count}</dd>
-                </dl>
+                <DescriptionList
+                  items={[
+                    { label: "Joined", value: joinedLabel(selected.created_at) },
+                    { label: "Bookings", value: selected.booking_count },
+                  ]}
+                />
                 <hr className="ez-divider" />
                 <div className="ez-hrow">
-                  <Link
+                  <ButtonLink
+                    variant="secondary"
+                    size="sm"
                     href={`/admin/commerce?tab=bookings&q=${encodeURIComponent(selected.email ?? "")}`}
-                    className="ez-btn ez-btn--secondary ez-btn--sm"
                   >
                     View bookings
-                  </Link>
-                  <Link
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="secondary"
+                    size="sm"
                     href={`/admin/messages?tab=compose&to=${encodeURIComponent(selected.user_id)}`}
-                    className="ez-btn ez-btn--secondary ez-btn--sm"
                   >
                     Message
-                  </Link>
+                  </ButtonLink>
                   {canSuspendClients ? (
-                    <button
-                      type="button"
+                    <Button
+                      size="sm"
+                      variant={selected.account_suspended ? "secondary" : "destructive"}
                       disabled={busyId === selected.user_id}
                       onClick={() => setConfirmTarget(selected)}
-                      className={
-                        selected.account_suspended
-                          ? "ez-btn ez-btn--secondary ez-btn--sm"
-                          : "ez-btn ez-btn--danger-quiet ez-btn--sm"
-                      }
                     >
                       {selected.account_suspended ? "Reinstate" : "Suspend"}
-                    </button>
+                    </Button>
                   ) : null}
                 </div>
               </div>
-            </div>
-          </section>
+            </Card.Body>
+          </Card>
         ) : (
-          <section className="ez-card">
-            <div className="ez-card__body">
+          <Card as="section">
+            <Card.Body>
               <p className="ez-small">Select a client to see account actions.</p>
-            </div>
-          </section>
+            </Card.Body>
+          </Card>
         )}
       </div>
 

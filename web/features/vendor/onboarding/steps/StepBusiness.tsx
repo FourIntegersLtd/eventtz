@@ -172,7 +172,7 @@ export function StepBusiness({
             <button
               type="button"
               onClick={() => setWaitlistModalOpen(false)}
-              className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+              className="rounded-xl border border-line bg-white px-4 py-2.5 text-sm font-medium text-ink-2 hover:bg-surface-3"
             >
               Close
             </button>
@@ -190,11 +190,11 @@ export function StepBusiness({
         }
       >
         <LottieIllustration asset="launchingSoon" className="mb-4 h-28 w-28" />
-        <p className="text-sm leading-relaxed text-neutral-700">
+        <p className="text-sm leading-relaxed text-ink-2">
           We&apos;re not onboarding vendors in unlisted categories yet. Join the waitlist and
           we&apos;ll be in touch.
         </p>
-        <p className="mt-3 text-sm text-neutral-600">
+        <p className="mt-3 text-sm text-ink-2">
           To continue now, pick the closest listed category.
         </p>
       </Modal>

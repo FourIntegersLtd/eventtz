@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import { ChevronRight } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import { useServerList } from "@/lib/useServerList";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { fetchAdminAuditLog, type AdminAuditLogItem } from "@/lib/adminPlatformApi";
@@ -25,16 +25,27 @@ import {
 } from "./auditFormatters";
 import { AuditBadge, AuditEntityBadge } from "./AuditBadges";
 
-const PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
-
+/** Activity log filtered by category; the api pages it (default 25 per page). */
 export function AdminAuditView() {
-  const [entries, setEntries] = useState<AdminAuditLogItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<AuditCategory>("all");
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const {
+    items: entries,
+    total,
+    offset,
+    limit,
+    loading,
+    error,
+    goNext,
+    goPrevious,
+  } = useServerList<AdminAuditLogItem, { category: AuditCategory }>({
+    filters: { category: categoryFilter },
+    errorMessage: "Could not load activity log.",
+    fetchPage: async ({ offset: pageOffset, limit: pageLimit, filters }) => {
+      const page = await fetchAdminAuditLog(pageOffset, pageLimit, filters.category);
+      return { items: page.entries, total: page.total };
+    },
+  });
 
   const auditCategoryOptions: EzFilterOption<AuditCategory>[] = AUDIT_CATEGORIES.map((category) => ({
     id: category.id,
@@ -43,28 +54,6 @@ export function AdminAuditView() {
 
   const categoryLabel =
     AUDIT_CATEGORIES.find((category) => category.id === categoryFilter)?.label ?? "Category";
-
-  const load = useCallback(async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const { entries: e, total: t } = await fetchAdminAuditLog(
-        offset,
-        PAGE_SIZE,
-        categoryFilter,
-      );
-      setEntries(e);
-      setTotal(t);
-    } catch {
-      setError("Could not load activity log.");
-    } finally {
-      setLoading(false);
-    }
-  }, [offset, categoryFilter]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   if (loading && entries.length === 0) {
     return <AdminLoadingState label="Loading activity log…" />;
@@ -81,10 +70,7 @@ export function AdminAuditView() {
           categoryFilter !== "all"
             ? {
                 label: categoryLabel,
-                onClear: () => {
-                  setCategoryFilter("all");
-                  setOffset(0);
-                },
+                onClear: () => setCategoryFilter("all"),
               }
             : null
         }
@@ -97,10 +83,7 @@ export function AdminAuditView() {
         description="Show everything or focus on one area of the platform."
         options={auditCategoryOptions}
         value={categoryFilter}
-        onChange={(id) => {
-          setCategoryFilter(id);
-          setOffset(0);
-        }}
+        onChange={setCategoryFilter}
         listAriaLabel="Activity category"
         resetValue="all"
         resetLabel="All activity"
@@ -119,13 +102,13 @@ export function AdminAuditView() {
               {
                 key: "when",
                 header: "When",
-                className: "whitespace-nowrap text-sm text-neutral-600",
+                className: "whitespace-nowrap text-sm text-ink-2",
                 cell: (entry) => formatAuditWhen(entry.created_at),
               },
               {
                 key: "admin",
                 header: "Admin",
-                className: "text-sm text-neutral-700",
+                className: "text-sm text-ink-2",
                 cell: (entry) => entry.admin_email ?? "-",
               },
               {
@@ -135,8 +118,8 @@ export function AdminAuditView() {
                   const summary = formatAuditSummary(entry);
                   return (
                     <>
-                      <p className="text-sm font-medium text-neutral-900">{formatAuditActionLabel(entry.action)}</p>
-                      {summary ? <p className="mt-1.5 line-clamp-2 text-xs text-neutral-500">{summary}</p> : null}
+                      <p className="text-sm font-medium text-ink">{formatAuditActionLabel(entry.action)}</p>
+                      {summary ? <p className="mt-1.5 line-clamp-2 text-xs text-ink-3">{summary}</p> : null}
                     </>
                   );
                 },
@@ -185,12 +168,12 @@ export function AdminAuditView() {
 
           <TablePagination
             offset={offset}
-            limit={PAGE_SIZE}
+            limit={limit}
             total={total}
             pageRowCount={entries.length}
             loading={loading}
-            onPrevious={() => setOffset((value) => Math.max(0, value - PAGE_SIZE))}
-            onNext={() => setOffset((value) => value + PAGE_SIZE)}
+            onPrevious={goPrevious}
+            onNext={goNext}
           />
         </>
       )}

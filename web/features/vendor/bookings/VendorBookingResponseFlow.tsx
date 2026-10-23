@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/Button";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
@@ -103,13 +104,13 @@ export function VendorBookingResponseFlow({
         <p className="ez-small">
           Waiting for them to accept your new price ({currentTotal}).
         </p>
-        <button
+        <Button
           type="button"
-          className="ez-btn ez-btn--secondary ez-btn--block"
+          variant="secondary" className="ez-btn--block"
           onClick={() => openAdjust(draftsFromDetail(detail))}
         >
           Edit price
-        </button>
+        </Button>
       </div>
     );
   }
@@ -162,38 +163,38 @@ export function VendorBookingResponseFlow({
             The client declined your new price. The buttons below are for the original price.
           </p>
         ) : null}
-        <button
+        <Button
           type="button"
-          className="ez-btn ez-btn--primary ez-btn--block"
+          className="ez-btn--block"
           disabled={actionBusy || adjustmentSaving || !!checkingDecision || payoutsLoading}
           onClick={() => void requestAcceptDecision()}
         >
           {checkingDecision === "accept" ? "Checking…" : "Accept request"}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="ez-btn ez-btn--secondary ez-btn--block"
+          variant="secondary" className="ez-btn--block"
           disabled={actionBusy || adjustmentSaving || !!checkingDecision}
           onClick={() => openAdjust([])}
         >
           Adjust and accept
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="ez-btn ez-btn--secondary ez-btn--block"
+          variant="secondary" className="ez-btn--block"
           disabled={actionBusy || adjustmentSaving || !!checkingDecision}
           onClick={onOpenChat}
         >
           Message client
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="ez-btn ez-btn--danger-quiet ez-btn--block"
+          variant="destructive" className="ez-btn--block"
           disabled={actionBusy || adjustmentSaving || !!checkingDecision}
           onClick={() => void requestDecision("decline")}
         >
           Decline
-        </button>
+        </Button>
         <VendorDraftReplyPanel
           bookingId={detail.booking_request_id}
           onUseDraft={

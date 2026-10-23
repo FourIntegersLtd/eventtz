@@ -1,59 +1,45 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-import {
-  fetchAdminClients,
-  type AdminClientRow,
-  type AdminClientsQuery,
-} from "@/lib/adminPlatformApi";
+import { useState } from "react";
+import { fetchAdminClients, type AdminClientRow } from "@/lib/adminPlatformApi";
+import { useServerList } from "@/lib/useServerList";
 
+/** Account-status filter value: "" is every client, "true" suspended only, "false" active only. */
+export type ClientSuspendedFilter = "" | "true" | "false";
+
+/** The admin clients directory: server-paged rows plus the email search and status filter. */
 export function useAdminClients() {
-  const [rows, setRows] = useState<AdminClientRow[]>([]);
-  const [total, setTotal] = useState(0);
-  const [offset, setOffset] = useState(0);
-  const [limit] = useState(DEFAULT_LIST_PAGE_SIZE);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [suspendedFilter, setSuspendedFilter] = useState<"" | "true" | "false">("");
+  const [suspendedFilter, setSuspendedFilter] = useState<ClientSuspendedFilter>("");
 
-  const load = useCallback(async () => {
-    setError(null);
-    try {
-      const q: AdminClientsQuery = {
+  const list = useServerList<AdminClientRow, { suspended: ClientSuspendedFilter }>({
+    filters: { suspended: suspendedFilter },
+    search,
+    errorMessage: "Could not load clients.",
+    fetchPage: async ({ offset, limit, filters, search: query }) => {
+      const page = await fetchAdminClients({
         offset,
         limit,
-        q: search.trim() || undefined,
-        suspended:
-          suspendedFilter === "true" ? true : suspendedFilter === "false" ? false : undefined,
-      };
-      const res = await fetchAdminClients(q);
-      setRows(res.clients);
-      setTotal(res.total);
-    } catch {
-      setError("Could not load clients.");
-    } finally {
-      setLoading(false);
-    }
-  }, [offset, limit, search, suspendedFilter]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+        q: query || undefined,
+        suspended: filters.suspended === "" ? undefined : filters.suspended === "true",
+      });
+      return { items: page.clients, total: page.total };
+    },
+  });
 
   return {
-    rows,
-    total,
-    offset,
-    limit,
-    setOffset,
-    loading,
-    error,
+    rows: list.items,
+    total: list.total,
+    offset: list.offset,
+    limit: list.limit,
+    loading: list.loading,
+    error: list.error,
+    goNext: list.goNext,
+    goPrevious: list.goPrevious,
+    reload: list.reload,
     search,
     setSearch,
     suspendedFilter,
     setSuspendedFilter,
-    reload: load,
   };
 }

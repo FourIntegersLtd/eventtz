@@ -23,7 +23,7 @@ function statusCopy(vendor: AdminVendorRow): {
   if (banned) {
     return {
       label: "Banned",
-      labelClass: "text-red-700 bg-red-50 ring-red-200/80",
+      labelClass: "text-danger bg-danger-soft ring-danger-line/80",
       headline: "Not on the marketplace",
       detail: "Banned vendors cannot appear in explore or use their portal.",
     };
@@ -31,7 +31,7 @@ function statusCopy(vendor: AdminVendorRow): {
   if (listingVisible) {
     return {
       label: "Live",
-      labelClass: "text-emerald-700 bg-emerald-50 ring-emerald-200/80",
+      labelClass: "text-success bg-success-soft ring-success-line/80",
       headline: "Clients can find and book this vendor",
       detail:
         override === "visible"
@@ -44,7 +44,7 @@ function statusCopy(vendor: AdminVendorRow): {
   if (!approved) {
     return {
       label: "Hidden",
-      labelClass: "text-amber-800 bg-amber-50 ring-amber-200/80",
+      labelClass: "text-warning bg-warning-soft ring-warning-line/80",
       headline: "Not visible to clients",
       detail: "Approve this vendor before they can go live.",
     };
@@ -52,7 +52,7 @@ function statusCopy(vendor: AdminVendorRow): {
   if (override === "hidden") {
     return {
       label: "Hidden",
-      labelClass: "text-amber-800 bg-amber-50 ring-amber-200/80",
+      labelClass: "text-warning bg-warning-soft ring-warning-line/80",
       headline: "Listing hidden by admin",
       detail: vendor.listing_override_reason ?? "The vendor account stays open.",
     };
@@ -60,7 +60,7 @@ function statusCopy(vendor: AdminVendorRow): {
   if (!payoutsVerified) {
     return {
       label: "Hidden",
-      labelClass: "text-amber-800 bg-amber-50 ring-amber-200/80",
+      labelClass: "text-warning bg-warning-soft ring-warning-line/80",
       headline: "Approved, waiting on Stripe",
       detail: vendor.stripe_account_id
         ? "Stripe hasn't verified payouts yet. They go live automatically once it does."
@@ -69,7 +69,7 @@ function statusCopy(vendor: AdminVendorRow): {
   }
   return {
     label: "Hidden",
-    labelClass: "text-amber-800 bg-amber-50 ring-amber-200/80",
+    labelClass: "text-warning bg-warning-soft ring-warning-line/80",
     headline: "Not visible to clients",
     detail: "Check approval and listing settings below.",
   };
@@ -81,8 +81,8 @@ export function VendorMarketplaceStatusBanner({ vendor }: Props) {
   return (
     <div className="ez-banner flex items-start justify-between gap-4">
       <div className="min-w-0">
-        <p className="font-medium text-neutral-900">{headline}</p>
-        <p className="mt-0.5 text-sm leading-relaxed text-neutral-600">{detail}</p>
+        <p className="font-medium text-ink">{headline}</p>
+        <p className="mt-0.5 text-sm leading-relaxed text-ink-2">{detail}</p>
       </div>
       <span
         className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${labelClass}`}

@@ -17,19 +17,19 @@ export function VendorCopilotWidget() {
       <div
         role="dialog"
         aria-label={VENDOR_COPILOT.name}
-        className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:inset-auto sm:bottom-20 sm:right-5 sm:h-[min(640px,calc(100vh-10rem))] sm:w-[min(420px,calc(100vw-2.5rem))] sm:rounded-2xl sm:border sm:border-neutral-200 sm:pt-0 sm:pb-0 sm:shadow-[0_12px_40px_rgba(0,0,0,0.14)]"
+        className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:inset-auto sm:bottom-20 sm:right-5 sm:h-[min(640px,calc(100vh-10rem))] sm:w-[min(420px,calc(100vw-2.5rem))] sm:rounded-2xl sm:border sm:border-line sm:pt-0 sm:pb-0 sm:shadow-[0_12px_40px_rgba(0,0,0,0.14)]"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 px-4 py-3 sm:rounded-t-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-line px-4 py-3 sm:rounded-t-2xl">
           <div>
-            <p className="text-sm font-semibold text-neutral-900">{VENDOR_COPILOT.meetHeading}</p>
+            <p className="text-sm font-semibold text-ink">{VENDOR_COPILOT.meetHeading}</p>
             {view.name === "home" ? (
-              <p className="text-xs text-neutral-500">{VENDOR_COPILOT.tagline}</p>
+              <p className="text-xs text-ink-3">{VENDOR_COPILOT.tagline}</p>
             ) : null}
           </div>
           <button
             type="button"
             onClick={closeCopilot}
-            className="rounded-md p-1.5 text-neutral-500 transition hover:bg-neutral-100"
+            className="rounded-md p-1.5 text-ink-3 transition hover:bg-surface-3"
             aria-label="Close"
           >
             <X className="h-4 w-4" aria-hidden />

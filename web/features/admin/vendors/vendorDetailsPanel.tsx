@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Card } from "@/components/ui/Card";
 
 /** Admin vendor review cards, using the design-system card instead of the shared portal card. */
 
@@ -12,9 +13,9 @@ export function VendorPanelCard({
   className?: string;
 }) {
   return (
-    <div className={`ez-card ${className}`.trim()}>
-      <div className="ez-card__body">{children}</div>
-    </div>
+    <Card className={className}>
+      <Card.Body>{children}</Card.Body>
+    </Card>
   );
 }
 
@@ -33,15 +34,15 @@ export function VendorWizardSectionCard({
   className?: string;
 }) {
   return (
-    <section id={id} className={`ez-card overflow-hidden ${className}`.trim()}>
-      <div className="ez-card__head">
+    <Card as="section" id={id} className={`overflow-hidden ${className}`.trim()}>
+      <Card.Header>
         <div>
           <h2 className="ez-h3">{title}</h2>
           {description ? <p className="ez-small">{description}</p> : null}
         </div>
-      </div>
-      <div className="ez-card__body flex min-w-0 flex-col gap-4">{children}</div>
-    </section>
+      </Card.Header>
+      <Card.Body className="flex min-w-0 flex-col gap-4">{children}</Card.Body>
+    </Card>
   );
 }
 

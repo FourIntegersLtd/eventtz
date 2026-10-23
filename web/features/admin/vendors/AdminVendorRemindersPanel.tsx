@@ -25,16 +25,16 @@ export function AdminVendorRemindersPanel({
   onNudgePayout,
 }: AdminVendorRemindersPanelProps) {
   return (
-    <div className="border-t border-neutral-100 pt-6">
-      <h3 className="text-sm font-medium text-neutral-900">Reminder emails</h3>
-      <p className="ez-small mt-1 text-neutral-600">
+    <div className="border-t border-line pt-6">
+      <h3 className="text-sm font-medium text-ink">Reminder emails</h3>
+      <p className="ez-small mt-1 text-ink-2">
         Use the checkboxes in the table, then send a one-off reminder.
       </p>
 
-      <p className="ez-small mt-3 text-neutral-700">
+      <p className="ez-small mt-3 text-ink-2">
         {selectedCount > 0 ? (
           <>
-            <span className="font-medium text-neutral-900">{selectedCount} selected</span>
+            <span className="font-medium text-ink">{selectedCount} selected</span>
             {selectedDraftCount > 0 ? (
               <span>{` · ${selectedDraftCount} draft`}</span>
             ) : null}
@@ -43,27 +43,29 @@ export function AdminVendorRemindersPanel({
             ) : null}
           </>
         ) : (
-          <span className="text-neutral-500">No vendors selected yet</span>
+          <span className="text-ink-3">No vendors selected yet</span>
         )}
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           type="button"
-          className="ez-btn ez-btn--ghost ez-btn--sm"
+
           onClick={onSelectAllOnPage}
-          disabled={nudgeBusy}
-        >
+          disabled={nudgeBusy}>
           Select all on page
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           type="button"
-          className="ez-btn ez-btn--ghost ez-btn--sm"
+
           onClick={onClearPage}
-          disabled={nudgeBusy || selectedCount === 0}
-        >
+          disabled={nudgeBusy || selectedCount === 0}>
           Clear selection
-        </button>
+        </Button>
       </div>
 
       <div className="mt-3 flex flex-col gap-2">

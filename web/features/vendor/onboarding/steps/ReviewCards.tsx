@@ -10,6 +10,8 @@ import { Check, Pencil, TriangleAlert } from "lucide-react";
 import { buildReviewCards } from "../reviewSummary";
 import type { VendorOnboardingData, VendorOnboardingUpdate } from "../../../../lib/vendorOnboarding/types";
 import { Checkbox } from "../../../../components/ui/Checkbox";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 
 /** Inline svgs sit on the text baseline in the artboard; Tailwind preflight would make them block. */
 const INLINE_ICON_STYLE = { display: "inline", verticalAlign: "baseline" } as const;
@@ -29,8 +31,8 @@ export function ReviewCards({
   return (
     <div className="ez-stack">
       {cards.map((card) => (
-        <div className="ez-card" key={card.title}>
-          <div className="ez-card__head">
+        <Card key={card.title}>
+          <Card.Header>
             <div className="ez-hrow">
               <span className={`ez-icon-tile ez-icon-tile--${card.incomplete ? "warning" : "success"}`}>
                 {card.incomplete ? (
@@ -41,20 +43,21 @@ export function ReviewCards({
               </span>
               <span className="ez-h3">{card.title}</span>
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               type="button"
-              className="ez-btn ez-btn--ghost ez-btn--sm"
-              onClick={() => onNavigateToStep(card.step)}
-            >
+
+              onClick={() => onNavigateToStep(card.step)}>
               <Pencil size={16} strokeWidth={1.75} aria-hidden style={INLINE_ICON_STYLE} />
               Edit
-              <span style={{ position: "absolute", left: -9999 }}> {card.title}</span>
-            </button>
-          </div>
-          <div className="ez-card__body">
+              <span className="absolute -left-2499.75"> {card.title}</span>
+            </Button>
+          </Card.Header>
+          <Card.Body>
             <DescriptionList items={card.rows} />
-          </div>
-        </div>
+          </Card.Body>
+        </Card>
       ))}
       <Checkbox
         checked={confirmed}

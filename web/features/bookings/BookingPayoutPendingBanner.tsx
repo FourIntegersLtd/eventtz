@@ -32,8 +32,8 @@ export function BookingPayoutPendingBanner({
         <div className="flex min-w-0 items-start gap-3">
           <LottieIllustration asset="pendingReview" className="h-16 w-16 shrink-0" ariaLabel="" />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-neutral-900">{copy.title}</p>
-            <p className="mt-1 text-[13px] text-neutral-600">{copy.body}</p>
+            <p className="text-sm font-semibold text-ink">{copy.title}</p>
+            <p className="mt-1 text-[13px] text-ink-2">{copy.body}</p>
           </div>
         </div>
         {viewer === "vendor" && onRetryRelease ? (

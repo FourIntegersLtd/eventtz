@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ChevronDown, Info, Mail } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/ui/Toast";
+import { Banner } from "@/components/ui/Banner";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Select";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
@@ -152,12 +155,9 @@ export function AdminEmailTestingView() {
 
   if (!canUse) {
     return (
-      <div className="ez-banner ez-banner--warning">
-        <div className="ez-banner__body">
-          <div className="ez-banner__title">Super admin only</div>
-          <p className="ez-small">Only super admins can send test emails.</p>
-        </div>
-      </div>
+      <Banner tone="warning" title="Super admin only">
+        <p className="ez-small">Only super admins can send test emails.</p>
+      </Banner>
     );
   }
 
@@ -167,32 +167,27 @@ export function AdminEmailTestingView() {
 
   return (
     <div className="w-full min-w-0 max-w-3xl ez-stack ez-stack--lg">
-      <div className="ez-banner ez-banner--neutral">
-        <div className="ez-banner__body">
-          <div className="ez-banner__title">Super admin only</div>
-          <p className="ez-small">
-            This page shows delivery data and the suppression list. Admins do not see it in the menu.
-          </p>
-        </div>
-      </div>
+      <Banner tone="neutral" title="Super admin only">
+        <p className="ez-small">
+          This page shows delivery data and the suppression list. Admins do not see it in the menu.
+        </p>
+      </Banner>
 
       {error ? <AdminErrorBanner message={error} onRetry={() => void load()} /> : null}
       {success ? (
-        <div className="ez-banner ez-banner--success">
-          <div className="ez-banner__body">
-            <p className="ez-small">{success}</p>
-          </div>
-        </div>
+        <Banner tone="success">
+          <p className="ez-small">{success}</p>
+        </Banner>
       ) : null}
 
-      <section className="ez-card overflow-hidden">
-        <div className="ez-card__head">
+      <Card as="section" className="overflow-hidden">
+        <Card.Header>
           <h2 className="ez-h3">Send a test email</h2>
           <p className="ez-small">
             No deliverability dashboard yet. Use this to preview layouts and confirm Resend delivery.
           </p>
-        </div>
-        <div className="ez-card__body ez-stack ez-stack--lg">
+        </Card.Header>
+        <Card.Body className="ez-stack ez-stack--lg">
           <label className="ez-field" htmlFor="admin-email-test-to">
             <span className="ez-label">Send to</span>
             <span className="ez-caption">{EMAIL_HEALTH_FIELD_HINTS.sendTo}</span>
@@ -209,13 +204,9 @@ export function AdminEmailTestingView() {
                 className="ez-input min-w-0 flex-1"
               />
               {toEmail ? (
-                <button
-                  type="button"
-                  onClick={() => setToEmail("")}
-                  className="ez-btn ez-btn--secondary ez-btn--sm shrink-0"
-                >
+                <Button variant="secondary" size="sm" onClick={() => setToEmail("")}>
                   Clear
-                </button>
+                </Button>
               ) : null}
             </div>
           </label>
@@ -234,18 +225,20 @@ export function AdminEmailTestingView() {
               middleSlot={
                 <>
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
+                    <Button
+                      variant="secondary"
                       onClick={() => setShowAdvanced((open) => !open)}
-                      className="ez-btn ez-btn--secondary flex min-w-0 flex-1 justify-between"
+                      className="flex min-w-0 flex-1 justify-between"
                       aria-expanded={showAdvanced}
+                      icon={
+                        <ChevronDown
+                          className={`h-4 w-4 shrink-0 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
+                          aria-hidden
+                        />
+                      }
                     >
-                      <span>Advanced: email layout</span>
-                      <ChevronDown
-                        className={`h-4 w-4 shrink-0 transition-transform ${showAdvanced ? "rotate-180" : ""}`}
-                        aria-hidden
-                      />
-                    </button>
+                      Advanced: email layout
+                    </Button>
                     <Tooltip hint={EMAIL_HEALTH_FIELD_HINTS.layout} widthClassName="w-64">
                       <button
                         type="button"
@@ -278,33 +271,31 @@ export function AdminEmailTestingView() {
                           </optgroup>
                         ))}
                       </Select>
-                      <p className="text-[13px] text-neutral-500">
+                      <p className="text-[13px] text-ink-3">
                         {emailHealthLayoutInfo(templateId).tooltip}
                       </p>
                     </div>
                   ) : null}
 
                   <div className="ez-callout">
-                    <p className="text-sm font-medium text-neutral-900">{layoutInfo.title}</p>
-                    <p className="mt-1 text-[13px] leading-relaxed text-neutral-600">{layoutInfo.summary}</p>
+                    <p className="text-sm font-medium text-ink">{layoutInfo.title}</p>
+                    <p className="mt-1 text-[13px] leading-relaxed text-ink-2">{layoutInfo.summary}</p>
                   </div>
                 </>
               }
               footerActions={
-                <button
-                  type="button"
-                  className="ez-btn ez-btn--primary"
+                <Button
+                  icon={<Mail className="h-4 w-4" aria-hidden />}
                   disabled={sending || !toEmail.trim() || !isSupportDraftValid(messageDraft.textLength)}
                   onClick={() => void sendTest()}
                 >
-                  <Mail className="h-4 w-4" aria-hidden />
                   {sending ? "Sending…" : "Send test"}
-                </button>
+                </Button>
               }
             />
           </div>
-        </div>
-      </section>
+        </Card.Body>
+      </Card>
     </div>
   );
 }
