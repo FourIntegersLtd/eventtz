@@ -28,7 +28,6 @@ const ALLOW_LISTED_FILES: string[] = [
   "features/bookings/BookingDateChangeCard.tsx",
   "features/bookings/VendorBookingDetailEzPanel.tsx",
   "features/chat/VendorMessagesEzView.tsx",
-  "features/client/planner/BudgetBreakdown.tsx",
   "features/disputes/VendorDisputesEzView.tsx",
   "features/help/VendorHelpEzView.tsx",
   "features/vendor/analytics/VendorAnalyticsEzView.tsx",
