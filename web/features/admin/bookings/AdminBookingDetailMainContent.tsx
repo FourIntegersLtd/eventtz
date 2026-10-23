@@ -3,9 +3,8 @@
 import { DescriptionList } from "@/components/ui/DescriptionList";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import { PaymentStatusBadge } from "@/components/badges/PaymentStatusBadge";
-import type { BookingLineItemRow, BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
+import type { BookingLineItemRow } from "@/features/bookings/BookingPricingBreakdown";
 import { BookingReviewPanel } from "@/features/reviews/BookingReviewPanel";
-import type { BookingReviewDisplay } from "@/lib/reviewTypes";
 import { AdminBookingTimeline } from "./AdminBookingTimeline";
 import {
   buildPaymentLifecycleTimeline,
@@ -17,57 +16,13 @@ import { formatGbp } from "@/lib/money";
 type Props = {
   booking: Record<string, unknown>;
   lineItems: BookingLineItemRow[];
-  pricing: BookingPricing | null;
   quoteTotalLabel: string;
-  reviewVendor: BookingReviewDisplay | null;
 };
-
-function moneyLines(pricing: BookingPricing | null, quoteTotalLabel: string) {
-  if (!pricing) {
-    return (
-      <div className="ez-lines">
-        <div className="ez-lines__row">
-          <span>Total</span>
-          <span>{quoteTotalLabel}</span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="ez-lines">
-      {pricing.line_items_subtotal_label ? (
-        <div className="ez-lines__row">
-          <span>Vendor quote</span>
-          <span>{pricing.line_items_subtotal_label}</span>
-        </div>
-      ) : null}
-      {pricing.service_fee_label ? (
-        <div className="ez-lines__row">
-          <span>Service fee (client)</span>
-          <span>{pricing.service_fee_label}</span>
-        </div>
-      ) : null}
-      <div className="ez-lines__total">
-        <span>Client pays</span>
-        <span>{quoteTotalLabel}</span>
-      </div>
-      {pricing.vendor_portion_label ? (
-        <div className="ez-lines__row">
-          <span>Vendor payout</span>
-          <span>{pricing.vendor_portion_label}</span>
-        </div>
-      ) : null}
-    </div>
-  );
-}
 
 export function AdminBookingDetailMainContent({
   booking,
   lineItems,
-  pricing,
   quoteTotalLabel,
-  reviewVendor,
 }: Props) {
   const requestTimeline = buildRequestLifecycleTimeline(booking);
   const paymentTimeline = buildPaymentLifecycleTimeline(booking);
@@ -92,7 +47,14 @@ export function AdminBookingDetailMainContent({
         <AdminBookingTimeline items={paymentTimeline} />
       </DetailSection>
 
-      <DetailSection title="Money breakdown">{moneyLines(pricing, quoteTotalLabel)}</DetailSection>
+      <DetailSection title="Money breakdown">
+        <div className="ez-lines">
+          <div className="ez-lines__row">
+            <span>Total</span>
+            <span>{quoteTotalLabel}</span>
+          </div>
+        </div>
+      </DetailSection>
 
       {lineItems.length > 0 ? (
         <DetailSection title="Line items">
@@ -159,7 +121,7 @@ export function AdminBookingDetailMainContent({
       <DetailSection title="Review">
         <BookingReviewPanel
           title="Client review of vendor"
-          review={reviewVendor}
+          review={null} // the admin detail response carries no review today
           emptyLabel="No review yet."
         />
       </DetailSection>

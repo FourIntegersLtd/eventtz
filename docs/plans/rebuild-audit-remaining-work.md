@@ -90,9 +90,10 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   narrows a field); `lib/noHandWrittenApiShapes.test.ts` fails on a hand-written type named like a schema.
   Still hand-narrowed because the API types them as free-form dicts (candidates for pydantic models):
   vendor analytics (`overview`, `funnel`, `*_by_month`), admin marketplace analytics, chat `metadata`,
-  admin booking `booking` and `support.open_dispute`, admin vendor insights `bookings_by_month`, copilot
-  `package_feedback`, `profile_form_data`. Drift found: the planner vendor card and `chat_included_for_review`
-  on disputes are read by screens but not sent by the API; `message_role` on help/copilot history is sent
+  ~~admin booking `booking` and `support.open_dispute`~~ (typed), admin vendor insights `bookings_by_month`, copilot
+  `package_feedback`, `profile_form_data`. Drift found: the planner vendor card is read by screens but not sent by the API (~~`chat_included_for_review`~~
+  was already sent; the hand-narrowing is gone; `support.open_dispute` was always null and is now filled; the admin booking
+  screen read `pricing`, `review_vendor` and `client_total_label`, which the API never sends: those reads are removed); `message_role` on help/copilot history is sent
   while the schema shows its `role` alias; `addressApi.ts` is only partly aliased (module disabled).
 
 **Phase 4: dead code and docs** (PR "Rebuild audit Phase 4", except `test_list_pagination.py`, which Phase 3 owns).
