@@ -84,6 +84,19 @@ async def open_dispute(
     return await _to_public(session, dispute, booking=booking, viewer_user_id=user_id)
 
 
+async def wake_parties_after_chat_reply(session: AsyncSession, conversation_id: str) -> None:
+    """Tell both parties' dispute screens to re-read when their chat thread has an active dispute.
+
+    Called by chat after it stores a message. The event goes out after commit, so a
+    rejected send wakes nobody; a thread with no active dispute wakes nobody.
+    """
+    for client_user_id, vendor_user_id in await repository.active_dispute_party_ids_on_conversation(
+        session, conversation_id
+    ):
+        for party_user_id in (client_user_id, vendor_user_id):
+            publish_after_commit(session, user_topic(party_user_id), domain.DISPUTE_CHANGED)
+
+
 async def list_disputes_on_booking(
     session: AsyncSession, *, user_id: str, booking_id: str
 ) -> list[DisputePublic]:

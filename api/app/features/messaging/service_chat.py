@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
 from app.core.events import publish_after_commit, user_topic
+from app.features.disputes import service_participant as disputes
 from app.features.identity import service as identity
 from app.features.marketplace import service_events as marketplace_events
 from app.features.messaging import domain, repository, repository_bookings
@@ -234,6 +235,8 @@ async def send_message(
     for recipient_id in recipients:
         if recipient_id:
             publish_after_commit(session, user_topic(recipient_id), domain.CHAT_UNREAD_CHANGED)
+    if not domain.is_support(thread):
+        await disputes.wake_parties_after_chat_reply(session, thread.id)
     return MessageRow(
         id=message.id,
         sender_user_id=message.sender_user_id,

@@ -25,6 +25,7 @@ from app.core.ports import mailer_port
 from app.core.settings import get_settings
 from app.features.bookings import repository as bookings_repository
 from app.features.identity import repository as identity_repository
+from app.features.messaging import repository as messaging_repository
 from tests.conftest import MakeActor
 from tests.support.fakes import FakeMailer
 
@@ -232,3 +233,44 @@ async def test_a_failing_mailer_does_not_stop_a_dispute_opening(
     vendor_id, _ = await _account(db_session, "vendor@example.com", "vendor")
     booking_id = await _booking(db_session, client_id, vendor_id)
     assert await _open_dispute(client, client_headers, booking_id)
+
+
+async def test_a_reply_in_the_dispute_chat_wakes_the_dispute_screens_of_both_parties(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    client_id, client_headers = await _account(db_session, "client@example.com", "client")
+    vendor_id, vendor_headers = await _account(db_session, "vendor@example.com", "vendor")
+    bystander_id, _ = await _account(db_session, "bystander@example.com", "client")
+    booking_id = await _booking(db_session, client_id, vendor_id)
+    thread = await messaging_repository.get_or_insert_dm(
+        db_session, client_user_id=client_id, vendor_user_id=vendor_id
+    )
+    await _open_dispute(client, client_headers, booking_id)
+
+    async with listening(client_id, vendor_id, bystander_id) as streams:
+        reply = await client.post(
+            f"/api/v1/chat/conversations/{thread.id}/messages",
+            json={"body": "Here is my side of it."},
+            headers=vendor_headers,
+        )
+        assert reply.status_code == 200, reply.text
+        assert "dispute_changed" in await heard(streams[client_id])
+        assert "dispute_changed" in await heard(streams[vendor_id])
+        assert await heard(streams[bystander_id]) == []
+
+
+async def test_a_chat_message_without_a_dispute_does_not_wake_dispute_screens(
+    client: AsyncClient, db_session: AsyncSession
+) -> None:
+    client_id, client_headers = await _account(db_session, "client@example.com", "client")
+    vendor_id, _ = await _account(db_session, "vendor@example.com", "vendor")
+    thread = await messaging_repository.get_or_insert_dm(
+        db_session, client_user_id=client_id, vendor_user_id=vendor_id
+    )
+
+    async with listening(vendor_id) as streams:
+        sent = await client.post(
+            f"/api/v1/chat/conversations/{thread.id}/messages", json={"body": "Hello"}, headers=client_headers
+        )
+        assert sent.status_code == 200, sent.text
+        assert "dispute_changed" not in await heard(streams[vendor_id])

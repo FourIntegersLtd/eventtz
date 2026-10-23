@@ -232,6 +232,25 @@ async def has_active_dispute(session: AsyncSession, booking_id: str) -> bool:
     return bool(result.scalar())
 
 
+async def active_dispute_party_ids_on_conversation(
+    session: AsyncSession, conversation_id: str
+) -> list[tuple[str, str]]:
+    """(client, vendor) user ids of each open or under-review dispute stored against this chat thread."""
+    conversation_uuid = as_uuid(conversation_id)
+    if conversation_uuid is None:
+        return []
+    result = await session.execute(
+        select(_booking_requests.c.client_user_id, _booking_requests.c.vendor_user_id)
+        .select_from(
+            DisputeCase.__table__.join(
+                _booking_requests, _booking_requests.c.id == DisputeCase.booking_request_id
+            )
+        )
+        .where(DisputeCase.conversation_id == conversation_uuid, DisputeCase.status.in_(ACTIVE_STATUSES))
+    )
+    return [(str(client_id), str(vendor_id)) for client_id, vendor_id in result.all()]
+
+
 async def insert_dispute(
     session: AsyncSession,
     *,
