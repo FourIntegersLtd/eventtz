@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useState } from "react";
 import { AlertTriangle, ChevronRight, type LucideIcon } from "lucide-react";
+import { Banner } from "@/components/ui/Banner";
+import { Card } from "@/components/ui/Card";
+import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { Tooltip } from "@/components/ui/Tooltip";
 import type { AdminBookingSupportMeta } from "@/lib/adminPlatformApi";
 import { shortId } from "./adminBookingDetailUtils";
@@ -10,12 +13,12 @@ import { formatDate } from "@/lib/dateFormat";
 
 export function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="ez-card">
-      <div className="ez-card__head">
+    <Card as="section">
+      <Card.Header>
         <h2 className="ez-h3">{title}</h2>
-      </div>
-      <div className="ez-card__body">{children}</div>
-    </section>
+      </Card.Header>
+      <Card.Body>{children}</Card.Body>
+    </Card>
   );
 }
 
@@ -32,25 +35,18 @@ export function maskStripeId(value: unknown): string | null {
 export function ExpandableId({ value, label }: { value: unknown; label: string }) {
   const full = value != null ? String(value).trim() : "";
   const [open, setOpen] = useState(false);
-  if (!full) return <span className="text-neutral-400">-</span>;
+  if (!full) return <span className="text-ink-3">-</span>;
   const compact = maskStripeId(full) ?? shortId(full) ?? full;
   return (
     <div className="text-left">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="font-mono text-sm text-neutral-800 hover:text-primary"
+        className="font-mono text-sm text-ink hover:text-primary"
         aria-expanded={open}
         aria-label={open ? `Hide full ${label}` : `Show full ${label}`}
       >
-        <code
-          style={{
-            fontSize: "13px",
-            background: "var(--ez-surface-3)",
-            padding: "2px 8px",
-            borderRadius: "6px",
-          }}
-        >
+        <code className="rounded-md bg-surface-3 px-2 py-0.5 text-[13px]">
           {open ? full : compact}
         </code>
       </button>
@@ -59,7 +55,7 @@ export function ExpandableId({ value, label }: { value: unknown; label: string }
 }
 
 export function formatTs(v: unknown): React.ReactNode {
-  if (v == null) return <span className="text-neutral-400">-</span>;
+  if (v == null) return <span className="text-ink-3">-</span>;
   const d = new Date(String(v));
   if (Number.isNaN(d.getTime())) return String(v);
   return formatDate(d, "dateTimeMedium");
@@ -96,11 +92,10 @@ export function CompactActionRow({
         type="button"
         disabled={busy}
         onClick={() => onSelect(action)}
-        className={
-          action.destructive
-            ? "ez-btn ez-btn--danger-quiet w-full justify-start"
-            : "ez-btn ez-btn--secondary w-full justify-start"
-        }
+        className={getButtonClassName({
+          variant: action.destructive ? "destructive" : "secondary",
+          className: "w-full justify-start",
+        })}
       >
         <Icon className="h-4 w-4 shrink-0" aria-hidden />
         <span className="min-w-0 flex-1 truncate text-left">{action.title}</span>
@@ -119,22 +114,22 @@ export function NeedsAttentionBanner({
 }) {
   const hasCritical = support.needs_attention.some((f) => f.severity === "critical");
   return (
-    <div className={hasCritical ? "ez-banner ez-banner--danger" : "ez-banner ez-banner--warning"}>
-      <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
-      <div className="ez-banner__body">
-        <p className="ez-banner__title">Needs attention</p>
-        <ul>
-          {support.needs_attention.map((flag) => (
-            <li key={flag.code}>{flag.label}</li>
-          ))}
-        </ul>
-        {support.next_action ? <p>Try next: {support.next_action}</p> : null}
-        {openDispute ? (
-          <Link href={`/admin/commerce?tab=disputes&dispute=${openDispute.id}`} className="ez-link">
-            View open dispute
-          </Link>
-        ) : null}
-      </div>
-    </div>
+    <Banner
+      tone={hasCritical ? "danger" : "warning"}
+      icon={<AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />}
+      title="Needs attention"
+    >
+      <ul>
+        {support.needs_attention.map((flag) => (
+          <li key={flag.code}>{flag.label}</li>
+        ))}
+      </ul>
+      {support.next_action ? <p>Try next: {support.next_action}</p> : null}
+      {openDispute ? (
+        <Link href={`/admin/commerce?tab=disputes&dispute=${openDispute.id}`} className="ez-link">
+          View open dispute
+        </Link>
+      ) : null}
+    </Banner>
   );
 }

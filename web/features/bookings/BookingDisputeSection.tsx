@@ -3,6 +3,7 @@
 import { ChevronRight, CircleHelp } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { Drawer } from "@/components/ui/Drawer";
 import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -20,6 +21,7 @@ import {
 import {
   canOpenDisputeForBookingStatus,
 } from "@/lib/bookingDisputeHelpers";
+import { useRealtimeRefresh } from "@/lib/realtimeHooks";
 import { ParticipantDisputeStatusBadge } from "@/components/badges/ParticipantDisputeStatusBadge";
 import type { PortalRole } from "@/lib/portalRole";
 import { portalRoute } from "@/components/portal-shell/portalNav";
@@ -27,8 +29,6 @@ import { BOOKING_CONFIRM_COPY } from "@/features/bookings/bookingConfirmCopy";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 import { disputeSummarySchema, parseForm } from "@/lib/validation";
 import { formatDateTimeSeconds } from "@/lib/dateFormat";
-
-const POLL_MS = 50_000;
 
 type Props = {
   bookingId: string;
@@ -87,10 +87,8 @@ export function BookingDisputeSection({
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [load]);
 
-  useEffect(() => {
-    const id = window.setInterval(() => void load(), POLL_MS);
-    return () => window.clearInterval(id);
-  }, [load]);
+  // A dispute opened or patched elsewhere reaches this screen through the SSE `dispute_changed` event.
+  useRealtimeRefresh("disputes:refresh", () => void load(), [load]);
 
   const hasActive = disputes.some((d) => d.status === "open" || d.status === "under_review");
   const statusAllowsNewDispute = canOpenDisputeForBookingStatus(bookingStatus);
@@ -144,18 +142,18 @@ export function BookingDisputeSection({
                 return (
                 <li
                   key={d.id}
-                  className="rounded-xl border border-neutral-200 bg-white/80 px-3 py-2.5 text-sm"
+                  className="rounded-xl border border-line bg-white/80 px-3 py-2.5 text-sm"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <ParticipantDisputeStatusBadge status={d.status} />
-                    <span className="text-xs text-neutral-500">
+                    <span className="text-xs text-ink-3">
                       {d.created_at ? formatDateTimeSeconds(new Date(d.created_at)) : ""}
                     </span>
                   </div>
-                  <p className="mt-1 text-xs text-neutral-700 line-clamp-3">{d.summary}</p>
+                  <p className="mt-1 text-xs text-ink-2 line-clamp-3">{d.summary}</p>
                   {d.resolution_note ? (
-                    <p className="mt-2 border-t border-neutral-100 pt-2 text-xs text-neutral-600">
-                      <span className="font-semibold text-neutral-800">
+                    <p className="mt-2 border-t border-line pt-2 text-xs text-ink-2">
+                      <span className="font-semibold text-ink">
                         {d.status === "resolved" || d.status === "closed" ? "Outcome: " : "Update: "}
                       </span>
                       {d.resolution_note}
@@ -183,10 +181,10 @@ export function BookingDisputeSection({
                   rows={3}
                   maxLength={4000}
                   placeholder="Describe what happened…"
-                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
+                  className="w-full rounded-xl border border-line bg-white px-3 py-2 text-base text-ink placeholder:text-ink-3 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 md:text-sm"
                 />
               </label>
-              <button
+              <Button
                 type="button"
                 disabled={busy || !summary.trim()}
                 onClick={() => {
@@ -198,10 +196,9 @@ export function BookingDisputeSection({
                   setError(null);
                   setSubmitConfirmOpen(true);
                 }}
-                className="rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {busy ? "Submitting…" : "Open a dispute"}
-              </button>
+              </Button>
             </div>
           ) : null}
         </>
@@ -228,11 +225,11 @@ export function BookingDisputeSection({
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-neutral-600 transition hover:bg-neutral-100 hover:text-neutral-900"
+          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-ink-2 transition hover:bg-surface-3 hover:text-ink"
           aria-label="Help and disputes"
         >
           {loading ? (
-            <LoadingSpinner size="sm" className="text-neutral-400" />
+            <LoadingSpinner size="sm" className="text-ink-3" />
           ) : (
             <CircleHelp className="h-4 w-4 shrink-0" aria-hidden />
           )}
@@ -243,7 +240,7 @@ export function BookingDisputeSection({
             </span>
           ) : null}
           {!loading && !hasActive && disputes.length > 0 ? (
-            <span className="text-[11px] font-medium tabular-nums text-neutral-400">
+            <span className="text-[11px] font-medium tabular-nums text-ink-3">
               {disputes.length}
             </span>
           ) : null}
@@ -274,14 +271,14 @@ export function BookingDisputeSection({
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-neutral-100 bg-white px-5 py-4 text-left transition hover:bg-neutral-50/80"
+          className="flex w-full items-center justify-between gap-3 rounded-2xl border border-line bg-white px-5 py-4 text-left transition hover:bg-surface-3"
         >
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-neutral-900">Help &amp; disputes</p>
-            <p className="mt-0.5 text-[13px] text-neutral-500">
+            <p className="text-sm font-semibold text-ink">Help &amp; disputes</p>
+            <p className="mt-0.5 text-[13px] text-ink-3">
               {loading ? (
                 <span className="inline-flex items-center gap-1.5">
-                  <LoadingSpinner size="sm" className="text-neutral-400" />
+                  <LoadingSpinner size="sm" className="text-ink-3" />
                   Loading…
                 </span>
               ) : hasActive ? (
@@ -295,11 +292,11 @@ export function BookingDisputeSection({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {!loading && disputes.length > 0 ? (
-              <span className="text-[13px] font-medium tabular-nums text-neutral-600">
+              <span className="text-[13px] font-medium tabular-nums text-ink-2">
                 {disputes.length}
               </span>
             ) : null}
-            <ChevronRight className="h-5 w-5 text-neutral-400" aria-hidden />
+            <ChevronRight className="h-5 w-5 text-ink-3" aria-hidden />
           </div>
         </button>
         <Drawer isOpen={drawerOpen} onClose={closeDrawer} title="Help & disputes">
@@ -324,8 +321,8 @@ export function BookingDisputeSection({
         onCancel={() => setSubmitConfirmOpen(false)}
         onConfirm={() => void submitDispute()}
       />
-      <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-white px-5 py-4">
-        <h3 className="text-sm font-semibold text-neutral-900">Help &amp; disputes</h3>
+      <section className="overflow-hidden rounded-2xl border border-line bg-white px-5 py-4">
+        <h3 className="text-sm font-semibold text-ink">Help &amp; disputes</h3>
         {body}
       </section>
     </>

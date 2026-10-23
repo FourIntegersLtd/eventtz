@@ -1,5 +1,6 @@
 "use client";
 
+import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import {
@@ -49,22 +50,20 @@ export function BookingCompletionBanner({
 
   if (viewer === "vendor") {
     return (
-      <div className="ez-banner ez-banner--brand">
-        <div className="ez-banner__body">
-          <div className="ez-banner__title">{copy.title}</div>
-          <p className="ez-small" style={{ color: "inherit" }}>
-            {copy.body}
-            {release ? ` ${release}` : ""}
-          </p>
-        </div>
-        {showConfirm ? (
-          <div className="ez-banner__actions">
-            <button className="ez-btn ez-btn--primary" type="button" disabled={confirmDisabled} onClick={() => onConfirm?.()}>
+      <Banner
+        tone="brand"
+        title={copy.title}
+        action={
+          showConfirm ? (
+            <Button type="button" disabled={confirmDisabled} onClick={() => onConfirm?.()}>
               Mark as complete
-            </button>
-          </div>
-        ) : null}
-      </div>
+            </Button>
+          ) : null
+        }
+      >
+        {copy.body}
+        {release ? ` ${release}` : ""}
+      </Banner>
     );
   }
 
@@ -78,10 +77,10 @@ export function BookingCompletionBanner({
             ariaLabel=""
           />
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-neutral-900">{copy.title}</p>
-            <p className="mt-1 text-[13px] text-neutral-600">{copy.body}</p>
+            <p className="text-sm font-semibold text-ink">{copy.title}</p>
+            <p className="mt-1 text-[13px] text-ink-2">{copy.body}</p>
             {autoReleaseAt ? (
-              <p className="mt-1.5 text-[13px] text-neutral-400">
+              <p className="mt-1.5 text-[13px] text-ink-3">
                 {autoReleaseLine(autoReleaseAt, viewer)}
               </p>
             ) : null}

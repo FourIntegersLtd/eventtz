@@ -1,11 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import {
-  ADMIN_DISPUTES_PAGE_SIZE,
-  fetchAdminDisputesPage,
-  type AdminDisputeCase,
-} from "@/lib/adminPlatformApi";
+import { useEffect, useState } from "react";
+import { fetchAdminDisputesPage, type AdminDisputeCase } from "@/lib/adminPlatformApi";
+import { useServerList } from "@/lib/useServerList";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
@@ -14,38 +11,30 @@ import { DisputeResolveModal } from "./DisputeResolveModal";
 import { DisputesTable } from "./DisputesTable";
 
 export function AdminDisputesView() {
-  const [rows, setRows] = useState<AdminDisputeCase[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [managing, setManaging] = useState<AdminDisputeCase | null>(null);
   const [resolving, setResolving] = useState<AdminDisputeCase | null>(null);
   const [statusFilter, setStatusFilter] = useState("open");
   const [search, setSearch] = useState("");
-  const [offset, setOffset] = useState(0);
-  const [total, setTotal] = useState(0);
 
-  const load = useCallback(async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const page = await fetchAdminDisputesPage(
-        statusFilter,
-        offset,
-        ADMIN_DISPUTES_PAGE_SIZE,
-        search,
-      );
-      setRows(page.disputes);
-      setTotal(page.total);
-    } catch {
-      setError("Could not load disputes.");
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, offset, search]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const {
+    items: rows,
+    total,
+    offset,
+    limit,
+    loading,
+    error,
+    goNext,
+    goPrevious,
+    reload: load,
+  } = useServerList({
+    filters: { statusFilter },
+    search,
+    errorMessage: "Could not load disputes.",
+    fetchPage: async ({ offset: pageOffset, limit: pageLimit, filters, search: searchText }) => {
+      const page = await fetchAdminDisputesPage(filters.statusFilter, pageOffset, pageLimit, searchText);
+      return { items: page.disputes, total: page.total };
+    },
+  });
 
   useEffect(() => {
     if (!managing) return;
@@ -85,25 +74,19 @@ export function AdminDisputesView() {
       <DisputesTable
         rows={rows}
         statusFilter={statusFilter}
-        onStatusFilterChange={(value) => {
-          setStatusFilter(value);
-          setOffset(0);
-        }}
+        onStatusFilterChange={setStatusFilter}
         search={search}
-        onSearchChange={(value) => {
-          setSearch(value);
-          setOffset(0);
-        }}
+        onSearchChange={setSearch}
         onManage={setManaging}
       />
 
       <TablePagination
         offset={offset}
-        limit={ADMIN_DISPUTES_PAGE_SIZE}
+        limit={limit}
         total={total}
         loading={loading}
-        onPrevious={() => setOffset((current) => Math.max(0, current - ADMIN_DISPUTES_PAGE_SIZE))}
-        onNext={() => setOffset((current) => current + ADMIN_DISPUTES_PAGE_SIZE)}
+        onPrevious={goPrevious}
+        onNext={goNext}
       />
     </div>
   );
