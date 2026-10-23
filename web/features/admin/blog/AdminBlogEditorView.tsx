@@ -235,14 +235,14 @@ export function AdminBlogEditorView({ postId, onRegisterPageHead }: AdminBlogEdi
               {savedHint ? <p className="ez-caption">{savedHint}</p> : null}
               <Button
                 variant="secondary"
-                className="ez-btn--block"
+                block
                 disabled={saving}
                 onClick={() => void save()}
               >
                 {saving ? "Saving…" : isPublished ? "Update" : "Save draft"}
               </Button>
               <Button
-                className="ez-btn--block"
+                block
                 disabled={publishing}
                 onClick={() => void togglePublish()}
               >
@@ -252,19 +252,19 @@ export function AdminBlogEditorView({ postId, onRegisterPageHead }: AdminBlogEdi
                 <ButtonLink
                   href={`/blog/${post.slug}`}
                   variant="secondary"
-                  className="ez-btn--block"
+                  block
                   target="_blank"
                 >
                   Preview
                 </ButtonLink>
               ) : (
-                <Button variant="secondary" className="ez-btn--block" disabled>
+                <Button variant="secondary" block disabled>
                   Preview
                 </Button>
               )}
               <Button
                 variant="secondary"
-                className="ez-btn--block"
+                block
                 icon={<Trash2 className="h-4 w-4" aria-hidden />}
                 onClick={() => void remove()}
               >

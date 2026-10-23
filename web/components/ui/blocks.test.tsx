@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
+import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { OptionCard } from "@/components/ui/OptionCard";
@@ -53,6 +54,11 @@ describe("ui building blocks emit canvas markup", () => {
     expect(renderToStaticMarkup(<Card variant="raised">x</Card>)).toBe('<div class="ez-card ez-card--raised">x</div>');
     expect(renderToStaticMarkup(<Card.Header>h</Card.Header>)).toBe('<div class="ez-card__head">h</div>');
     expect(renderToStaticMarkup(<Card.Footer>f</Card.Footer>)).toBe('<div class="ez-card__foot">f</div>');
+  });
+
+  it("a block button carries ez-btn--block and a normal one does not", () => {
+    expect(getButtonClassName({ block: true })).toContain("ez-btn ez-btn--primary ez-btn--block");
+    expect(getButtonClassName()).not.toContain("ez-btn--block");
   });
 
   it("Tabs render ez-tab with the active modifier and a capped count", () => {

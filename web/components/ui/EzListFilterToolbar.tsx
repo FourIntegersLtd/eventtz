@@ -17,7 +17,8 @@ type EzListFilterToolbarProps = {
   onOpenFilter?: () => void;
   /** How many filter dimensions are active (badge on the Filter button). */
   activeFilterCount?: number;
-  summary?: { label: string; onClear: () => void } | null;
+  /** What the list is showing; `onClear` adds a Clear link, left out when the default is showing. */
+  summary?: { label: string; onClear?: () => void } | null;
   trailing?: ReactNode;
 };
 
@@ -85,15 +86,17 @@ export function EzListFilterToolbar({
         ) : null}
       </div>
       {summary ? (
-        <p className="ez-small text-neutral-600">
+        <p className="ez-small text-ink-2">
           Showing: <span className="font-medium text-neutral-800">{summary.label}</span>
-          <button
-            type="button"
-            className="ml-2 font-medium text-primary underline decoration-primary/40 underline-offset-2"
-            onClick={summary.onClear}
-          >
-            Clear
-          </button>
+          {summary.onClear ? (
+            <button
+              type="button"
+              className="ml-2 font-medium text-primary underline decoration-primary/40 underline-offset-2"
+              onClick={summary.onClear}
+            >
+              Clear
+            </button>
+          ) : null}
         </p>
       ) : null}
     </div>

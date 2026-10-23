@@ -15,17 +15,12 @@ const RAW_EZ_CLASS = /(?<![\w-])ez-(?:btn|card|badge|banner|pagehead|kpi)(?![A-Z
 
 /** Files under `features/` and `app/` that still use a raw class, to be moved onto the blocks (plan: Phase 2.7 follow-ups). */
 const ALLOW_LISTED_FILES: string[] = [
-  "features/admin/blog/AdminBlogEditorView.tsx",
-  "features/admin/blog/BlogRichTextEditor.tsx",
-  "features/admin/layout/AdminConsolePage.tsx",
-  "features/admin/report-bug/AdminReportBugView.tsx",
   "features/admin/team/AdminTeamView.tsx",
   "features/bookings/BookingDateChangeCard.tsx",
   "features/bookings/VendorBookingDetailEzPanel.tsx",
   "features/chat/VendorMessagesEzView.tsx",
   "features/client/planner/BudgetBreakdown.tsx",
   "features/disputes/VendorDisputesEzView.tsx",
-  "features/help/VendorHelpEzView.tsx",
   "features/vendor/bookings/VendorBookingDetailExtras.tsx",
   "features/vendor/bookings/VendorBookingResponseFlow.tsx",
 ];

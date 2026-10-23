@@ -322,3 +322,12 @@ For local testing without Docker:
   New guard `components/ui/rawEzClassGuard.test.ts` (meta-tests, stale-entry check) fails on raw
   `ez-btn|card|badge|banner|pagehead|kpi` in `features/**` and `app/**`. Left: the 23 allow-listed files, to be moved onto the blocks and removed from `ALLOW_LISTED_FILES` in
   `rawEzClassGuard.test.ts` (the list lives there).
+
+- **Done (PR "Platform design follow-ups").** The blog editor, `BlogRichTextEditor`, report-bug view, `AdminConsolePage`
+  and `VendorHelpEzView` are on the ui blocks and left `ALLOW_LISTED_FILES`; `Button`, `ButtonLink` and
+  `getButtonClassName` gained a tested `block` prop; the `Ez*` filter text moved from `neutral-600` to `ink-2`. design-diff
+  V30-Help: 0.43% on main and on the branch (the only screen in `screens.json` these files render). The api's four
+  `SessionExpired(REFRESH_EXPIRED_MESSAGE)` sites are one `refresh_expired()` factory, and
+  `lib/noHandWrittenApiShapes.test.ts` now also flags a copy of a schema under another name (same field names, 3 or more);
+  its seven existing hits in other owners' `*Api.ts` files sit in `KNOWN_RENAMED_COPIES` to be aliased and removed.
+  Raw `ez-*` left in 18 other allow-listed files, owned by other agents. eslint 103 errors, same as main.
