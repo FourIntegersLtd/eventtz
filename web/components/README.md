@@ -1,4 +1,4 @@
-# `frontend/components/` — shared UI and shells
+# `web/components/`: shared UI and shells
 
 Reusable UI and cross-cutting chrome only. **Product screens and domain widgets live in [`features/`](../features/)**; routes live in [`app/`](../app/README.md).
 

@@ -10,12 +10,12 @@ import { describe, expect, it } from "vitest";
 const webRoot = path.resolve(__dirname, "../..");
 
 /** Hex colour literal (#abc, #abcd, #aabbcc, #aabbccdd), not part of a word, URL or entity. */
-export const HEX_COLOUR = /(?<![\w&/])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![\w-])/;
+const HEX_COLOUR = /(?<![\w&/])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![\w-])/;
 /** Tailwind violet/purple palette utilities: brand purple is `primary`, `primary-soft`, ... */
-export const OFF_BRAND_PURPLE = /(?<![\w-])(?:[a-z-]+:)*[a-z]+-(?:violet|purple)-\d{2,3}\b/;
+const OFF_BRAND_PURPLE = /(?<![\w-])(?:[a-z-]+:)*[a-z]+-(?:violet|purple)-\d{2,3}\b/;
 
 /** Lines of `source` that break a rule, as `{ line, rule }`. */
-export function findTokenViolations(source: string): { line: number; rule: "hex" | "purple" }[] {
+function findTokenViolations(source: string): { line: number; rule: "hex" | "purple" }[] {
   const violations: { line: number; rule: "hex" | "purple" }[] = [];
   source.split("\n").forEach((text, index) => {
     if (HEX_COLOUR.test(text)) violations.push({ line: index + 1, rule: "hex" });
