@@ -1,98 +1,35 @@
+import type { components } from "@/lib/api-schema";
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 
-export type PlannerVendorCard = {
-  user_id: string;
-  business_name: string;
+/**
+ * The vendor card fields below the schema's own are read by the planner screens but the API does
+ * not send them today (they render empty); candidates for the pydantic model.
+ */
+export type PlannerVendorCard = components["schemas"]["PlannerVendorCard"] & {
   services: string[];
   review_average: number | null;
   review_count: number;
   completed_bookings: number;
   avg_response_seconds: number | null;
   conversion_rate: number | null;
-  min_list_price_gbp: number | null;
   base_city: string | null;
   cover_image_url: string | null;
-  unavailable: boolean;
-  price_on_request: boolean;
 };
 
-export type PlannerRecommendation = {
-  need_id: string;
-  label: string;
-  service_key: string;
-  optional: boolean;
-  primary: PlannerVendorCard | null;
-  alternatives: PlannerVendorCard[];
-  estimated_cost_gbp: number | null;
-  why_selected: string;
-  empty_reason: string | null;
-};
+export type PlannerRecommendation = WithFields<
+  components["schemas"]["PlanRecommendation"],
+  { primary: PlannerVendorCard | null; alternatives: PlannerVendorCard[] }
+>;
 
-export type CelebrationBrief = {
-  event_type: string | null;
-  event_kind: "funeral" | "corporate" | "standard";
-  location: string | null;
-  related_locations: string[];
-  guest_count: number | null;
-  budget_gbp: number | null;
-  preferred_date: string | null;
-  preferred_date_invalid: boolean;
-  indoor_outdoor: string | null;
-  cuisine_notes: string | null;
-  music_notes: string | null;
-  special_requirements: string | null;
-  excluded_needs: string[];
-  currency_assumed_gbp: boolean;
-  raw_prompt: string;
-  unsupported_categories_mentioned: string[];
-};
+export type CelebrationBrief = components["schemas"]["CelebrationBrief"];
 
-export type CelebrationPlanResponse = {
-  success: boolean;
-  plan_id: string;
-  status: string;
-  client_event_id?: string | null;
-  celebration: {
-    title: string;
-    event_type: string | null;
-    location: string | null;
-    guest_count: number | null;
-    budget_gbp: number | null;
-    preferred_date: string | null;
-    summary: string;
-  };
-  brief: CelebrationBrief;
-  confidence: { score: number; reasons: string[] };
-  budget: {
-    lines: {
-      need_id: string;
-      label: string;
-      amount_gbp: number;
-      allocated_gbp: number | null;
-      assumption: string | null;
-    }[];
-    total_estimated_gbp: number | null;
-    remaining_budget_gbp: number | null;
-    user_budget_gbp: number | null;
-    over_budget: boolean;
-    assumptions: string[];
-  };
-  recommendations: PlannerRecommendation[];
-  next_steps: string[];
-  created_at: string | null;
-  updated_at: string | null;
-};
+export type CelebrationPlanResponse = WithFields<
+  components["schemas"]["PlanDetailResponse"],
+  { recommendations: PlannerRecommendation[] }
+>;
 
-export type CelebrationPlanListItem = {
-  plan_id: string;
-  title: string;
-  event_type: string | null;
-  location: string | null;
-  confidence_score: number | null;
-  status: string;
-  created_at: string | null;
-  updated_at: string | null;
-};
+export type CelebrationPlanListItem = components["schemas"]["PlanListItem"];
 
 export async function createCelebrationPlan(prompt: string): Promise<CelebrationPlanResponse> {
   const { data } = await api.post<CelebrationPlanResponse>("/api/v1/client/planner/plans", {
@@ -102,7 +39,7 @@ export async function createCelebrationPlan(prompt: string): Promise<Celebration
 }
 
 export async function listClientPlans(): Promise<CelebrationPlanListItem[]> {
-  const { data } = await api.get<{ success: boolean; plans: CelebrationPlanListItem[] }>(
+  const { data } = await api.get<components["schemas"]["PlanListResponse"]>(
     "/api/v1/client/planner/plans",
   );
   return data.plans;
@@ -131,15 +68,7 @@ export async function archiveCelebrationPlan(planId: string): Promise<void> {
   await api.post(`/api/v1/client/planner/plans/${encodeURIComponent(planId)}/archive`);
 }
 
-export type EnsurePlanEventResponse = {
-  success: boolean;
-  plan_id: string;
-  event_id: string;
-  title: string;
-  event_date: string;
-  event_address: string | null;
-  event_postcode: string | null;
-};
+export type EnsurePlanEventResponse = components["schemas"]["EnsureEventResponse"];
 
 /** Create or return the client_events row for this plan (before first booking). */
 export async function ensurePlanClientEvent(planId: string): Promise<EnsurePlanEventResponse> {

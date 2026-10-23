@@ -1,9 +1,8 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
-export type BookingNotificationsUnreadResponse = {
-  success: boolean;
-  unread_count: number;
-};
+export type BookingNotificationsUnreadResponse =
+  components["schemas"]["BookingNotificationsUnreadResponse"];
 
 export async function fetchVendorBookingNotificationsUnreadCount(): Promise<number> {
   const { data } = await api.get<BookingNotificationsUnreadResponse>(
@@ -15,4 +14,3 @@ export async function fetchVendorBookingNotificationsUnreadCount(): Promise<numb
 export async function markAllVendorBookingNotificationsRead(): Promise<void> {
   await api.post("/api/v1/vendor/notifications/bookings/mark-all-read");
 }
-

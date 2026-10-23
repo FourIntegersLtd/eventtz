@@ -1,16 +1,8 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-export type NotificationFeedItem = {
-  kind: "booking_update" | "dispute_update" | "chat_unread_summary";
-  created_at: string | null;
-  title: string;
-  body: string | null;
-  notification_id: string | null;
-  booking_id: string | null;
-  href: string | null;
-  unread: boolean | null;
-};
+export type NotificationFeedItem = components["schemas"]["NotificationFeedItem"];
 
 export type NotificationFeedReadState = "all" | "unread";
 export type NotificationFeedTopic = "all" | "bookings" | "payments" | "messages";
@@ -25,13 +17,7 @@ async function fetchNotificationsFeedPage(
   readState: NotificationFeedReadState = "all",
   topic: NotificationFeedTopic = "all",
 ): Promise<{ items: NotificationFeedItem[]; total: number; offset: number; limit: number }> {
-  const { data } = await api.get<{
-    success: boolean;
-    items: NotificationFeedItem[];
-    total: number;
-    offset: number;
-    limit: number;
-  }>(path, { params: { offset, limit, read_state: readState, topic } });
+  const { data } = await api.get<components["schemas"]["NotificationFeedResponse"]>(path, { params: { offset, limit, read_state: readState, topic } });
   return {
     items: data.items ?? [],
     total: data.total ?? 0,

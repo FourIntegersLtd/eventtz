@@ -1,44 +1,14 @@
+import type { components } from "@/lib/api-schema";
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 
-export type AdminDashboardSummary = {
-  success: boolean;
-  users_client: number;
-  users_vendor: number;
-  users_admin: number;
-  vendors_pending: number;
-  vendors_approved: number;
-  vendors_banned: number;
-  bookings_pending: number;
-  bookings_accepted: number;
-  bookings_completed: number;
-  bookings_declined: number;
-  bookings_cancelled: number;
-  bookings_paid_count: number;
-  bookings_needing_support: number;
-  conversations_count: number;
-  reviews_count: number;
-};
+export type AdminDashboardSummary = components["schemas"]["AdminDashboardSummary"];
 
-export type AdminDashboardTimeBucket = {
-  date: string;
-  count: number;
-  gmv_gbp: number;
-};
+export type AdminDashboardTimeBucket = components["schemas"]["AdminDashboardTimeBucket"];
 
-export type AdminDashboardSignupBucket = {
-  date: string;
-  clients: number;
-  vendors: number;
-};
+export type AdminDashboardSignupBucket = components["schemas"]["AdminDashboardSignupBucket"];
 
-export type AdminDashboardMetrics = {
-  success: boolean;
-  period_days: number;
-  bookings_created: AdminDashboardTimeBucket[];
-  bookings_paid: AdminDashboardTimeBucket[];
-  signups: AdminDashboardSignupBucket[];
-  open_disputes_count: number;
-};
+export type AdminDashboardMetrics = components["schemas"]["AdminDashboardMetrics"];
 
 export async function fetchAdminDashboardSummary(): Promise<AdminDashboardSummary> {
   const { data } = await api.get<AdminDashboardSummary>("/api/v1/admin/dashboard-summary");
@@ -52,28 +22,30 @@ export async function fetchAdminDashboardMetrics(days = 30): Promise<AdminDashbo
   return data;
 }
 
-export type AdminMarketplaceAnalytics = {
-  success: boolean;
-  from_date: string;
-  to_date: string;
+type AdminMarketplaceCategoryRow = {
+  key: string;
+  enquiries: number;
+  accepted: number;
+  paid: number;
+  completed: number;
+  failed: number;
+  conversion_rate: number;
+  avg_booking_value_gbp: number;
+  revenue_gbp: number;
+};
+
+/**
+ * The API types every series and the overview of the marketplace analytics as free-form dicts,
+ * so those fields are narrowed by hand here until the pydantic response model names them.
+ */
+export type AdminMarketplaceAnalytics = WithFields<
+  components["schemas"]["AdminMarketplaceAnalyticsResponse"],
+  {
   overview: Record<string, number | null>;
   enquiries_by_month: { month: string; count: number }[];
   completed_by_month: { month: string; count: number }[];
-  by_category: {
-    key: string;
-    enquiries: number;
-    accepted: number;
-    paid: number;
-    completed: number;
-    failed: number;
-    conversion_rate: number;
-    avg_booking_value_gbp: number;
-    revenue_gbp: number;
-  }[];
-  by_category_chart?: AdminMarketplaceAnalytics["by_category"];
-  by_category_total?: number;
-  category_offset?: number;
-  category_limit?: number;
+  by_category: AdminMarketplaceCategoryRow[];
+  by_category_chart: AdminMarketplaceCategoryRow[];
   by_location: {
     key: string;
     enquiries: number;
@@ -94,7 +66,8 @@ export type AdminMarketplaceAnalytics = {
     categories: { category: string; enquiries: number; failed: number; message: string }[];
     locations: { location: string; enquiries: number; failed: number; message: string }[];
   };
-};
+}
+>;
 
 export async function fetchAdminMarketplaceAnalytics(params?: {
   from_date?: string;

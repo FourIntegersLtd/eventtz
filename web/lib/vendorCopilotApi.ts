@@ -1,3 +1,5 @@
+import type { components } from "@/lib/api-schema";
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "./axios";
 import { getApiErrorDetail } from "./api-errors";
 
@@ -9,59 +11,28 @@ export type CopilotActionKind =
   | "open_messages"
   | "apply_package_patch";
 
-export type CopilotAction = {
-  action_type: CopilotActionKind;
-  title: string;
-  rationale: string;
-  action_data?: Record<string, unknown>;
-  href?: string | null;
-};
+export type CopilotAction = components["schemas"]["CopilotAction"];
 
-export type GrowthScoreLever = {
-  metric_key: string;
-  label: string;
-  score: number;
-  max_score: number;
-  status: "good" | "ok" | "needs_work";
-  tip: string;
-};
+export type GrowthScoreLever = components["schemas"]["GrowthScoreLever"];
 
-export type GrowthScoreResult = {
-  score: number;
-  levers: GrowthScoreLever[];
-  listing_visible: boolean;
-  payouts_verified: boolean;
-};
+export type GrowthScoreResult = components["schemas"]["GrowthScoreResponse"];
 
-export type MarketDemandInsight = {
-  headline: string;
-  detail: string;
-  service_category?: string | null;
-};
+export type MarketDemandInsight = components["schemas"]["MarketDemandInsight"];
 
-export type VendorCopilotBrief = {
-  greeting: string;
-  summary_markdown: string;
-  growth_score: number;
-  suggested_actions: CopilotAction[];
-  demand_insights: MarketDemandInsight[];
-  generated_at: string;
-  context_fingerprint: string;
-  narration_cached?: boolean;
-};
+export type VendorCopilotBrief = components["schemas"]["VendorCopilotBriefResponse"];
 
+/**
+ * Request bodies stay hand-written: the API accepts these under validation aliases
+ * (`message_role`, `booking_request_id`) that the generated request schema does not show.
+ */
 export type CopilotAskMessage = {
   message_role: "user" | "assistant" | string;
   content: string;
 };
 
-export type CopilotAskResult = {
-  answer_markdown: string;
-  suggested_actions: CopilotAction[];
-  escalate_to_human: boolean;
-  escalate_reason: string | null;
-};
+export type CopilotAskResult = components["schemas"]["CopilotAskResponse"];
 
+/** `package_feedback` rows are free-form dicts in the API schema; narrowed by hand. */
 export type CopilotPackageFeedback = {
   package_id?: string | null;
   package_title: string;
@@ -71,16 +42,12 @@ export type CopilotPackageFeedback = {
   suggested_duration?: string | null;
 };
 
-export type CopilotReviewPackagesResult = {
-  overall_ok: boolean;
-  summary: string;
-  package_feedback: CopilotPackageFeedback[];
-};
+export type CopilotReviewPackagesResult = WithFields<
+  components["schemas"]["CopilotReviewPackagesResponse"],
+  { package_feedback: CopilotPackageFeedback[] }
+>;
 
-export type CopilotDraftReplyResult = {
-  draft_message: string;
-  tips: string[];
-};
+export type CopilotDraftReplyResult = components["schemas"]["CopilotDraftReplyResponse"];
 
 type BriefUiCacheEntry = {
   userId: string;

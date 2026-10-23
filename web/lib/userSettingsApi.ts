@@ -1,14 +1,10 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
-export type ContactSharingSettings = {
-  contact_phone: string | null;
-  share_email: boolean;
-  share_phone: boolean;
-  share_address: boolean;
-};
+export type ContactSharingSettings = components["schemas"]["ContactSharingSettings"];
 
 export async function fetchContactSharingSettings(): Promise<ContactSharingSettings> {
-  const { data } = await api.get<{ settings: ContactSharingSettings }>(
+  const { data } = await api.get<components["schemas"]["ContactSharingSettingsResponse"]>(
     "/api/v1/user/contact-settings",
   );
   return data.settings;
@@ -17,7 +13,7 @@ export async function fetchContactSharingSettings(): Promise<ContactSharingSetti
 export async function updateContactSharingSettings(
   patch: Partial<ContactSharingSettings>,
 ): Promise<ContactSharingSettings> {
-  const { data } = await api.put<{ settings: ContactSharingSettings }>(
+  const { data } = await api.put<components["schemas"]["ContactSharingSettingsResponse"]>(
     "/api/v1/user/contact-settings",
     patch,
   );
@@ -25,9 +21,10 @@ export async function updateContactSharingSettings(
 }
 
 export async function deleteOwnAccount(password: string): Promise<string> {
-  const { data } = await api.post<{ success: boolean; message: string }>(
+  const body: components["schemas"]["AccountDeletionRequest"] = { password };
+  const { data } = await api.post<components["schemas"]["AccountDeletionResponse"]>(
     "/api/v1/user/account/deletion",
-    { password },
+    body,
   );
   return data.message;
 }

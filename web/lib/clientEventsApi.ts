@@ -1,22 +1,17 @@
+import type { components } from "@/lib/api-schema";
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 
-export type ClientEventSummary = {
-  id: string;
-  title: string;
-  event_date: string;
-  event_end_date: string | null;
-  event_address: string | null;
-  event_postcode: string | null;
-  status: "active" | "archived";
-  booking_count: number;
-  active_booking_count: number;
-  updated_at: string | null;
-};
+/** The API types `status` as a plain string; the screens narrow it to the two values it takes. */
+export type ClientEventSummary = WithFields<
+  components["schemas"]["ClientEventSummary"],
+  { status: "active" | "archived" }
+>;
 
-export type ClientEventsListResponse = {
-  success: boolean;
-  events: ClientEventSummary[];
-};
+export type ClientEventsListResponse = WithFields<
+  components["schemas"]["ClientEventListResponse"],
+  { events: ClientEventSummary[] }
+>;
 
 export async function fetchClientEvents(
   status: "active" | "archived" | "all" = "active",
@@ -27,10 +22,10 @@ export async function fetchClientEvents(
   return data.events ?? [];
 }
 
-export type ClientEventDetailResponse = {
-  success: boolean;
-  event: ClientEventSummary & { created_at: string | null };
-};
+export type ClientEventDetailResponse = WithFields<
+  components["schemas"]["ClientEventDetailResponse"],
+  { event: ClientEventSummary & Pick<components["schemas"]["ClientEventDetail"], "created_at"> }
+>;
 
 export async function fetchClientEventById(eventId: string): Promise<ClientEventSummary | null> {
   try {

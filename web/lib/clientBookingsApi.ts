@@ -1,5 +1,6 @@
 import type { components } from "@/lib/api-schema";
 import type { BookingReviewDisplay } from "@/lib/reviewTypes";
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 import type {
   BookingInitiator,
@@ -92,16 +93,17 @@ export const CLIENT_BOOKINGS_PAGE_SIZE = DEFAULT_LIST_PAGE_SIZE;
  * The api types `line_items` as free-form dicts (real row shape: `BookingLineItem`), and the review form
  * hands back a `BookingReviewDisplay` whose `image_urls` may be absent.
  */
-export type ClientBookingDetail = Omit<components["schemas"]["ClientBookingDetail"], "line_items" | "review"> & {
-  line_items: BookingLineItem[];
-  review: BookingReviewDisplay | null;
-};
+export type ClientBookingDetail = WithFields<
+  components["schemas"]["ClientBookingDetail"],
+  { line_items: BookingLineItem[]; review: BookingReviewDisplay | null }
+>;
 
 export type ClientCancellationPreview = NonNullable<ClientBookingDetail["cancellation_preview"]>;
 
-export type ClientBookingDetailResponse = Omit<components["schemas"]["ClientBookingDetailResponse"], "booking"> & {
-  booking: ClientBookingDetail;
-};
+export type ClientBookingDetailResponse = WithFields<
+  components["schemas"]["ClientBookingDetailResponse"],
+  { booking: ClientBookingDetail }
+>;
 
 export type ClientBookingsListParamsWithPage = ClientBookingsListParams & {
   offset?: number;

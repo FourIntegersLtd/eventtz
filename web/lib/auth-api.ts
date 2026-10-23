@@ -1,34 +1,20 @@
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 import type { components } from "@/lib/api-schema";
 import type { UserType } from "@/lib/domain-types";
 
-export type AuthUser = {
-  id: string;
-  email: string | null;
-  /** From public.users when synced; defaults to client in local mode. */
-  user_type?: UserType;
-  /** Present for admin accounts: super_admin can manage the team. */
-  admin_role?: "super_admin" | "admin" | null;
-  account_suspended?: boolean;
-  email_verified?: boolean;
-  /** Client accounts: what they want to be called (shown to vendors). */
-  preferred_name?: string | null;
-  /** Client accounts: first-visit portal onboarding done (or skipped). */
-  client_onboarding_completed?: boolean;
-  /** The Terms version currently in force (from the API). */
-  terms_version?: string | null;
-  /** The Terms version this user last accepted, or null. */
-  terms_accepted_version?: string | null;
-  terms_accepted_at?: string | null;
-  user_metadata: Record<string, unknown>;
-  app_metadata: Record<string, unknown>;
-};
+/** Narrowed by hand where the API types a field as a plain string or a free-form dict. */
+export type AuthUser = WithFields<
+  components["schemas"]["AuthUser"],
+  {
+    user_type?: UserType;
+    admin_role?: "super_admin" | "admin" | null;
+    user_metadata: Record<string, unknown>;
+    app_metadata: Record<string, unknown>;
+  }
+>;
 
-type AuthSession = {
-  access_token: string;
-  refresh_token: string;
-  expires_at?: number;
-};
+type AuthSession = components["schemas"]["AuthSession"];
 
 type AuthResponse = {
   success: boolean;
@@ -72,7 +58,9 @@ export async function refreshSession(): Promise<AuthResponse> {
 }
 
 export async function getMe(): Promise<AuthUser> {
-  const { data } = await api.get<Omit<components["schemas"]["MeResponse"], "user"> & { user: AuthUser }>("/api/v1/auth/me");
+  const { data } = await api.get<WithFields<components["schemas"]["MeResponse"], { user: AuthUser }>>(
+    "/api/v1/auth/me",
+  );
   return data.user;
 }
 

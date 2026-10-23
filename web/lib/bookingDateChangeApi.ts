@@ -1,24 +1,19 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
-/**
- * Rescheduling fields the booking detail responses carry (`BookingTermsFields` on the API).
- * Declared here, not in the generated types, until `npm run api:types` is next run.
- */
-export type BookingDateChangeFields = {
-  proposed_event_date?: string | null;
-  proposed_event_end_date?: string | null;
-  date_change_requested_by?: "client" | "vendor" | null;
-  date_change_requested_at?: string | null;
-  date_change_note?: string | null;
-};
+/** Rescheduling fields the booking detail responses carry (`BookingTermsFields` on the API). */
+export type BookingDateChangeFields = Pick<
+  components["schemas"]["ClientBookingDetail"],
+  | "proposed_event_date"
+  | "proposed_event_end_date"
+  | "date_change_requested_by"
+  | "date_change_requested_at"
+  | "date_change_note"
+>;
 
 export type DateChangeRole = "client" | "vendor";
 
-export type DateChangeRequestPayload = {
-  new_event_date: string;
-  new_event_end_date: string | null;
-  note: string | null;
-};
+export type DateChangeRequestPayload = components["schemas"]["DateChangeRequestBody"];
 
 function dateChangePath(role: DateChangeRole, bookingId: string, suffix = ""): string {
   return `/api/v1/${role}/booking-requests/${encodeURIComponent(bookingId)}/date-change${suffix}`;
@@ -37,7 +32,7 @@ export async function respondToDateChange(
   bookingId: string,
   accept: boolean,
 ): Promise<void> {
-  await api.post(dateChangePath(role, bookingId, "/respond"), { accept });
+  await api.post(dateChangePath(role, bookingId, "/respond"), { accept } satisfies components["schemas"]["DateChangeRespondBody"]);
 }
 
 export async function withdrawDateChange(role: DateChangeRole, bookingId: string): Promise<void> {

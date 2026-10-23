@@ -1,18 +1,9 @@
+import type { components } from "@/lib/api-schema";
+import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-export type ChatConversation = {
-  id: string;
-  client_user_id: string;
-  vendor_user_id: string;
-  peer_user_id: string;
-  peer_display_name: string;
-  kind?: "dm" | "support";
-  support_user_id?: string | null;
-  created_at: string | null;
-  last_message_at: string | null;
-  unread_count: number;
-};
+export type ChatConversation = components["schemas"]["ConversationRow"];
 
 export type ChatQuoteMetadata = {
   kind: "quote";
@@ -21,23 +12,24 @@ export type ChatQuoteMetadata = {
   total_label: string;
 };
 
-export type ChatMessage = {
-  id: string;
-  sender_user_id: string;
-  body: string;
-  created_at: string | null;
-  /** Staff label on support threads (e.g. Eventtz Admin) — never a personal email. */
-  sender_display_name?: string | null;
-  /** Present for system cards (e.g. a sent quote) - render a rich card instead of plain text. */
-  metadata: ChatQuoteMetadata | Record<string, unknown> | null;
-};
+/**
+ * `metadata` is a free-form dict in the API schema; the thread view narrows it to a quote card
+ * (`ChatQuoteMetadata`) when `kind === "quote"`.
+ */
+export type ChatMessage = WithFields<
+  components["schemas"]["MessageRow"],
+  {
+    /** Present for system cards (e.g. a sent quote) - render a rich card instead of plain text. */
+    metadata: ChatQuoteMetadata | Record<string, unknown> | null;
+  }
+>;
 
 function chatPrefix() {
   return "/api/v1/chat";
 }
 
 export async function fetchChatUnreadCount(): Promise<number> {
-  const { data } = await api.get<{ unread_count: number }>(
+  const { data } = await api.get<components["schemas"]["ChatUnreadCountResponse"]>(
     `${chatPrefix()}/unread-count`,
   );
   return data.unread_count ?? 0;
@@ -57,12 +49,7 @@ export async function fetchConversationsPage(
   limit = CHAT_CONVERSATIONS_PAGE_SIZE,
   kind?: "dm" | "support",
 ): Promise<ChatConversationsPage> {
-  const { data } = await api.get<{
-    conversations: ChatConversation[];
-    total?: number;
-    offset?: number;
-    limit?: number;
-  }>(`${chatPrefix()}/conversations`, {
+  const { data } = await api.get<components["schemas"]["ConversationsListResponse"]>(`${chatPrefix()}/conversations`, {
     params: {
       offset,
       limit,
@@ -84,31 +71,31 @@ export async function fetchConversations(): Promise<ChatConversation[]> {
 }
 
 export async function postConversation(peerUserId: string): Promise<ChatConversation> {
-  const { data } = await api.post<{ conversation: ChatConversation }>(
+  const { data } = await api.post<components["schemas"]["ConversationCreateResponse"]>(
     `${chatPrefix()}/conversations`,
-    { peer_user_id: peerUserId },
+    { peer_user_id: peerUserId } satisfies components["schemas"]["ConversationCreateBodyShared"],
   );
   return data.conversation;
 }
 
 export async function fetchConversation(conversationId: string): Promise<ChatConversation> {
-  const { data } = await api.get<{ conversation: ChatConversation }>(
+  const { data } = await api.get<components["schemas"]["ConversationDetailResponse"]>(
     `${chatPrefix()}/conversations/${conversationId}`,
   );
   return data.conversation;
 }
 
 export async function fetchMessages(conversationId: string): Promise<ChatMessage[]> {
-  const { data } = await api.get<{ messages: ChatMessage[] }>(
+  const { data } = await api.get<components["schemas"]["MessagesListResponse"]>(
     `${chatPrefix()}/conversations/${conversationId}/messages`,
   );
   return data.messages ?? [];
 }
 
 export async function postMessage(conversationId: string, body: string): Promise<ChatMessage> {
-  const { data } = await api.post<{ message: ChatMessage }>(
+  const { data } = await api.post<components["schemas"]["MessageCreateResponse"]>(
     `${chatPrefix()}/conversations/${conversationId}/messages`,
-    { body },
+    { body } satisfies components["schemas"]["MessageCreateBody"],
   );
   return data.message;
 }

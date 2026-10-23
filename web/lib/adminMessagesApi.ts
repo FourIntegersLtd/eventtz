@@ -1,39 +1,18 @@
+import type { components } from "@/lib/api-schema";
 import api from "@/lib/axios";
 
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-export type AdminMessageAudience = "clients" | "vendors" | "users";
+export type AdminMessageAudience = NonNullable<
+  components["schemas"]["AdminMessageSendBody"]["audience"]
+>;
 
-export type AdminMessageSendBody = {
-  body: string;
-  audience?: AdminMessageAudience;
-  recipient_user_ids?: string[];
-};
+export type AdminMessageSendBody = components["schemas"]["AdminMessageSendBody"];
 
-export type AdminMessageSendResult = {
-  success: boolean;
-  sent: number;
-  conversation_ids: string[];
-  failures?: { user_id: string; error: string }[] | null;
-};
+export type AdminMessageSendResult = components["schemas"]["AdminMessageSendResponse"];
 
-export type AdminSupportConversation = {
-  id: string;
-  kind: "support";
-  support_user_id: string;
-  peer_user_id: string;
-  peer_display_name: string;
-  created_at: string | null;
-  last_message_at: string | null;
-  unread_count: number;
-};
+export type AdminSupportConversation = components["schemas"]["AdminSupportConversationRow"];
 
-export type AdminSupportMessage = {
-  id: string;
-  sender_user_id: string;
-  body: string;
-  created_at: string | null;
-  metadata: Record<string, unknown> | null;
-};
+export type AdminSupportMessage = components["schemas"]["AdminSupportMessageRow"];
 
 function prefix() {
   return "/api/v1/admin/messages";
@@ -55,12 +34,9 @@ export async function fetchAdminSupportConversationsPage(
   offset: number;
   limit: number;
 }> {
-  const { data } = await api.get<{
-    conversations: AdminSupportConversation[];
-    total: number;
-    offset: number;
-    limit: number;
-  }>(`${prefix()}/conversations`, { params: { offset, limit } });
+  const { data } = await api.get<
+    components["schemas"]["AdminSupportConversationsListResponse"]
+  >(`${prefix()}/conversations`, { params: { offset, limit } });
   return {
     conversations: data.conversations ?? [],
     total: data.total ?? 0,
@@ -77,7 +53,7 @@ export async function fetchAdminSupportConversations(): Promise<AdminSupportConv
 export async function fetchAdminSupportMessages(
   conversationId: string,
 ): Promise<AdminSupportMessage[]> {
-  const { data } = await api.get<{ messages: AdminSupportMessage[] }>(
+  const { data } = await api.get<components["schemas"]["AdminSupportMessagesListResponse"]>(
     `${prefix()}/conversations/${encodeURIComponent(conversationId)}/messages`,
   );
   return data.messages ?? [];
@@ -87,7 +63,7 @@ export async function postAdminSupportMessage(
   conversationId: string,
   body: string,
 ): Promise<AdminSupportMessage> {
-  const { data } = await api.post<{ message: AdminSupportMessage }>(
+  const { data } = await api.post<components["schemas"]["AdminSupportMessageCreateResponse"]>(
     `${prefix()}/conversations/${encodeURIComponent(conversationId)}/messages`,
     { body },
   );
@@ -99,7 +75,7 @@ export async function patchAdminSupportMessage(
   messageId: string,
   body: string,
 ): Promise<AdminSupportMessage> {
-  const { data } = await api.patch<{ message: AdminSupportMessage }>(
+  const { data } = await api.patch<components["schemas"]["AdminSupportMessageEditResponse"]>(
     `${prefix()}/conversations/${encodeURIComponent(conversationId)}/messages/${encodeURIComponent(messageId)}`,
     { body },
   );
