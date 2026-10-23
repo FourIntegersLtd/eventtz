@@ -161,7 +161,8 @@ def test_vendor_without_a_profile_has_no_referral_programme(
     """No `vendors` row: nothing to show, nothing to set, and an empty bookings list.
 
     Post-freeze additive fields (c21acdf, ADR 0011): the referral bookings table pages on the
-    server, so the list also carries `total`/`offset`/`limit` (default page 25).
+    server, so the list also carries `total`/`offset`/`limit` (default page 25). The "Accepted" tile
+    total (`accepted_total`, 0 here) is a later additive field of the same kind.
     """
     info = as_vendor.get(REFERRAL_URL)
     assert info.status_code == 404
@@ -174,6 +175,7 @@ def test_vendor_without_a_profile_has_no_referral_programme(
     assert bookings.json() == {
         "success": True,
         "total_referral_bookings": 0,
+        "accepted_total": 0,
         "total_fee_savings_gbp": 0.0,
         "bookings": [],
         "total": 0,

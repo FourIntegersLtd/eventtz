@@ -120,7 +120,7 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   `VendorReferralsTab.tsx` on `useServerList`). Raw `ez-card/btn/banner/dl`, inline `style` and `neutral-*` in the
   touched admin, auth and settings files moved to ui blocks and tokens; register terms box is the `Checkbox`
   block (new `required` prop); `Tabs` takes an optional per-tab `href` (settings tabs stay links). Deviation: the
-  empty referral list shows a sentence instead of an empty table. Left: the referrals "Accepted" tile counts the page (as on main).
+  empty referral list shows a sentence instead of an empty table. The referrals "Accepted" tile uses the server `accepted_total` (money-owner follow-up).
 - **Bookings screens (PR "Rebuild audit: bookings screens on the design system and server lists").** Booking
   detail, quotes, date changes, disputes, reviews and the admin bookings/disputes/reviews screens use Card, Banner,
   Button, PageHeader (new optional `meta`) and tokens; no inline styles or `neutral-*` remain. Participant, vendor

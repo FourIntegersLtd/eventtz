@@ -193,18 +193,38 @@ def _due(accepted_at: datetime) -> datetime | None:
     )
 
 
-def test_payment_is_capped_48_hours_before_the_event_starts() -> None:
-    """Accepted 28 May noon: 72h would be 31 May noon, but the cap is 30 May 00:00 (event start - 48h)."""
-    assert _due(datetime(2030, 5, 28, 12, 0, tzinfo=UTC)) == datetime(2030, 5, 30, 0, 0, tzinfo=UTC)
+def test_payment_is_capped_48_hours_before_the_london_event_start_in_bst() -> None:
+    """1 June 2030 starts at London midnight = 31 May 23:00 UTC, so the cap is 29 May 23:00 UTC."""
+    assert _due(datetime(2030, 5, 28, 12, 0, tzinfo=UTC)) == datetime(2030, 5, 29, 23, 0, tzinfo=UTC)
 
 
-def test_a_booking_accepted_inside_the_48_hour_cap_is_due_at_the_event_start() -> None:
-    """Accepted 31 May 06:00 the cap (30 May) is already past, so it falls back to 1 June 00:00."""
-    assert _due(datetime(2030, 5, 31, 6, 0, tzinfo=UTC)) == datetime(2030, 6, 1, 0, 0, tzinfo=UTC)
+def test_a_booking_accepted_inside_the_48_hour_cap_is_due_at_the_london_event_start() -> None:
+    """Accepted 31 May 06:00 UTC the cap is past, so it falls back to 31 May 23:00 UTC (1 June London)."""
+    assert _due(datetime(2030, 5, 31, 6, 0, tzinfo=UTC)) == datetime(2030, 5, 31, 23, 0, tzinfo=UTC)
     # Accepted exactly at the cap moment counts as inside it.
-    assert _due(datetime(2030, 5, 30, 0, 0, tzinfo=UTC)) == datetime(2030, 6, 1, 0, 0, tzinfo=UTC)
+    assert _due(datetime(2030, 5, 29, 23, 0, tzinfo=UTC)) == datetime(2030, 5, 31, 23, 0, tzinfo=UTC)
     # One second before the cap moment, the cap itself applies.
-    assert _due(datetime(2030, 5, 29, 23, 59, 59, tzinfo=UTC)) == datetime(2030, 5, 30, 0, 0, tzinfo=UTC)
+    assert _due(datetime(2030, 5, 29, 22, 59, 59, tzinfo=UTC)) == datetime(2030, 5, 29, 23, 0, tzinfo=UTC)
+
+
+def test_payment_cap_in_gmt_is_unchanged_from_utc_midnight() -> None:
+    """15 January 2030 is GMT: London midnight is UTC midnight, so the cap is 13 January 00:00 UTC."""
+    due_at = domain_policy.payment_due_at(
+        accepted_at=datetime(2030, 1, 12, 12, 0, tzinfo=UTC),
+        event_date=date(2030, 1, 15),
+        deadline_hours=72,
+    )
+    assert due_at == datetime(2030, 1, 13, 0, 0, tzinfo=UTC)
+
+
+def test_payment_cap_counts_real_hours_across_the_spring_clock_change() -> None:
+    """1 April 2030 starts 31 March 23:00 UTC (BST began 31 March); 48 real hours before is 29 March 23:00."""
+    due_at = domain_policy.payment_due_at(
+        accepted_at=datetime(2030, 3, 29, 12, 0, tzinfo=UTC),
+        event_date=date(2030, 4, 1),
+        deadline_hours=72,
+    )
+    assert due_at == datetime(2030, 3, 29, 23, 0, tzinfo=UTC)
 
 
 def test_no_deadline_without_an_acceptance_time_or_an_event_date() -> None:

@@ -9710,6 +9710,11 @@ export interface components {
          * @description Every referral booking for the vendor and the clients' total savings.
          */
         VendorReferralBookingsResponse: {
+            /**
+             * Accepted Total
+             * @default 0
+             */
+            accepted_total: number;
             /** Bookings */
             bookings: components["schemas"]["VendorReferralBookingRow"][];
             /**

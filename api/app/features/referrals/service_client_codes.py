@@ -282,6 +282,7 @@ async def referral_bookings_page(
     views, _page_saved = await _referral_booking_rows(session, page_bookings)
     return VendorReferralBookingsResponse(
         total_referral_bookings=total,
+        accepted_total=await repository.count_accepted_referral_bookings(session, vendor_user_id),
         total_fee_savings_gbp=round(total_saved, 2),
         bookings=views,
         total=total,
