@@ -10,7 +10,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 # --- blog ---------------------------------------------------------------------------------------
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PagedResponse
 
 BlogPostStatus = Literal["draft", "published"]
 
@@ -45,14 +45,11 @@ class BlogPostAdminDetail(BlogPostListItem):
     author_admin_user_id: str | None = None
 
 
-class BlogPostsListResponse(BaseModel):
+class BlogPostsListResponse(PagedResponse):
     """A list of posts."""
 
     success: bool = True
     posts: list[BlogPostListItem]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class BlogPostPublicDetailResponse(BaseModel):

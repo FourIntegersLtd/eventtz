@@ -10,13 +10,6 @@ from __future__ import annotations
 from app.core.errors import Conflict, InvalidInput, NotFound
 
 
-class NoFieldsToUpdate(InvalidInput):
-    """A PATCH body with every field left out; there is nothing to change."""
-
-    code = "no_fields_to_update"
-    default_message = "No fields to update"
-
-
 class InvalidEmailAddress(InvalidInput):
     """An email address that does not look like one (invite, client search, email test-send)."""
 

@@ -16,6 +16,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_value
+from app.core.pagination import LIKE_ESCAPE
 from app.features.identity.models import (
     EmailVerificationToken,
     PasswordResetToken,
@@ -167,7 +168,9 @@ async def user_ids_of_type_with_email_like(
 ) -> list[str]:
     """Accounts of `user_type` whose email matches the ILIKE `pattern`, at most `limit` of them."""
     result = await session.scalars(
-        select(User.id).where(User.user_type == user_type, User.email.ilike(pattern)).limit(limit)
+        select(User.id)
+        .where(User.user_type == user_type, User.email.ilike(pattern, escape=LIKE_ESCAPE))
+        .limit(limit)
     )
     return [str(user_id) for user_id in result]
 

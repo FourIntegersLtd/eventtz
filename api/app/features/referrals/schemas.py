@@ -8,7 +8,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 # --- creator partners --------------------------------------------------------------------------
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PagedResponse
 
 # Re-exported for the admin router's `shoutout` query parameter.
 from app.features.referrals.domain import ShoutoutFilter as ShoutoutFilter
@@ -28,14 +28,11 @@ class ReferralPartnerRow(BaseModel):
     updated_at: str | None = None
 
 
-class ReferralPartnerListResponse(BaseModel):
+class ReferralPartnerListResponse(PagedResponse):
     """Every partner, newest first."""
 
     success: bool = True
     partners: list[ReferralPartnerRow]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class CreateReferralPartnerRequest(BaseModel):
@@ -85,15 +82,12 @@ class ReferralVendorSignupRow(BaseModel):
     explore_path: str | None = None
 
 
-class ReferralSignupListResponse(BaseModel):
+class ReferralSignupListResponse(PagedResponse):
     """One page of a partner's sign-ups."""
 
     success: bool = True
     partner: ReferralPartnerRow
     signups: list[ReferralVendorSignupRow]
-    total: int
-    offset: int
-    limit: int
 
 
 class UpdateReferralShoutoutRequest(BaseModel):
@@ -168,13 +162,10 @@ class VendorReferralBookingRow(BaseModel):
     created_at: str | None = None
 
 
-class VendorReferralBookingsResponse(BaseModel):
+class VendorReferralBookingsResponse(PagedResponse):
     """Every referral booking for the vendor and the clients' total savings."""
 
     success: bool = True
     total_referral_bookings: int
     total_fee_savings_gbp: float
     bookings: list[VendorReferralBookingRow]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT

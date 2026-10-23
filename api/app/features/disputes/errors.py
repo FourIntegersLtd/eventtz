@@ -22,13 +22,6 @@ from app.features.bookings.errors import (
 )
 
 
-class InvalidBookingId(InvalidInput):
-    """A booking id in the URL isn't a UUID, rejected before any lookup."""
-
-    code = "invalid_booking_id"
-    default_message = "Invalid booking id."
-
-
 class InvalidDisputeId(InvalidInput):
     """A dispute id in the URL isn't a UUID, rejected before any lookup."""
 
@@ -84,13 +77,6 @@ class DisputeStatusFilterInvalid(InvalidInput):
 
     code = "dispute_status_filter_invalid"
     default_message = "status must be all, open, under_review, resolved, or closed"
-
-
-class NoFieldsToUpdate(InvalidInput):
-    """An admin patch body set nothing at all."""
-
-    code = "no_fields_to_update"
-    default_message = "No fields to update"
 
 
 class DisputeFinancialResolutionSuperAdminOnly(Forbidden):

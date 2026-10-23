@@ -10,7 +10,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PagedResponse
 from app.features.bookings.domain_financials import DISCLAIMER
 from app.features.bookings.schemas_terms import BookingTermsFields
 
@@ -43,14 +43,11 @@ class AdminBookingListItem(BaseModel):
     support: AdminBookingListSupportSummary | None = None
 
 
-class AdminBookingsListResponse(BaseModel):
+class AdminBookingsListResponse(PagedResponse):
     """A page of the admin bookings list."""
 
     success: bool = True
     bookings: list[AdminBookingListItem]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminBookingNeedsAttentionFlag(BaseModel):
@@ -155,14 +152,11 @@ class AdminFinancialsDailyBucket(BaseModel):
     vendor_portion_gbp: float = 0.0
 
 
-class AdminFinancialsDailyListResponse(BaseModel):
+class AdminFinancialsDailyListResponse(PagedResponse):
     """One page of daily buckets for the financials table."""
 
     success: bool = True
     daily: list[AdminFinancialsDailyBucket] = Field(default_factory=list)
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminFinancialsSummary(BaseModel):

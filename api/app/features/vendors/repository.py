@@ -27,6 +27,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
+from app.core.pagination import LIKE_ESCAPE, contains_pattern, paged
 from app.features.vendors.models import Vendor
 from app.features.vendors.rows import ListedVendorRow, VendorNameRow, VendorRow
 
@@ -122,7 +123,9 @@ async def business_name_owner(
 async def vendor_ids_with_business_name_like(session: AsyncSession, pattern: str) -> list[str]:
     """Vendors whose normalised business name matches the ILIKE `pattern`."""
     result = await session.scalars(
-        select(Vendor.user_id).where(Vendor.business_name_normalized.ilike(pattern)).limit(SEARCH_MATCH_LIMIT)
+        select(Vendor.user_id)
+        .where(Vendor.business_name_normalized.ilike(pattern, escape=LIKE_ESCAPE))
+        .limit(SEARCH_MATCH_LIMIT)
     )
     return [str(user_id) for user_id in result]
 
@@ -156,16 +159,16 @@ async def list_vendors(
         filters.append(Vendor.status == status)
     if returned_for_edits is not None:
         filters.append(_returned_for_edits_filter(returned_for_edits))
-    total = await session.scalar(select(func.count()).select_from(Vendor).where(*filters))
-    result = await session.execute(
-        select(*_VENDOR_COLUMNS)
-        .where(*filters)
-        .order_by(Vendor.updated_at.desc(), Vendor.created_at.desc(), Vendor.id.desc())
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(*_VENDOR_COLUMNS).where(*filters),
+        order_by=[Vendor.updated_at.desc(), Vendor.created_at.desc()],
+        tie_breaker=Vendor.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(Vendor).where(*filters),
     )
-    found = [VendorRow.model_validate(plain_row(row)) for row in result]
-    return found, int(total or 0)
+    return [VendorRow.model_validate(plain_row(row)) for row in found_rows], total
 
 
 async def vendor_name_rows(session: AsyncSession, user_ids: list[str]) -> list[VendorNameRow]:
@@ -237,7 +240,7 @@ async def marketplace_vendors(
     if service_types:
         filters.append(Vendor.services_offered.overlap(service_types))
     if city_query:
-        filters.append(Vendor.base_city_normalized.ilike(f"%{city_query}%"))
+        filters.append(Vendor.base_city_normalized.ilike(contains_pattern(city_query), escape=LIKE_ESCAPE))
     result = await session.execute(
         select(
             Vendor.user_id,

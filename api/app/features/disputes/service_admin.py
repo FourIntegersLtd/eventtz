@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import Principal
 from app.core.db import as_uuid
+from app.core.errors import NoFieldsToUpdate
 from app.core.events import publish_after_commit, user_topic
 from app.core.ports import Mailer, PaymentGateway
 from app.features.bookings import service_payments
@@ -26,7 +27,6 @@ from app.features.disputes.errors import (
     DisputeNotFoundPlain,
     DisputeRefundAmountSuperAdminOnly,
     InvalidDisputeId,
-    NoFieldsToUpdate,
 )
 from app.features.disputes.rows import DisputeRow
 from app.features.disputes.schemas import AdminDisputeCase, AdminDisputePatchBody

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import ROLE_ERRORS, CurrentVendor
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PageDep
 from app.core.ports import PaymentGatewayDependency, PaymentGatewayError, PaymentsUnavailable
 from app.features.payments import service
 from app.features.payments.errors import (
@@ -67,8 +67,7 @@ async def get_vendor_stripe_connect_status(
 async def get_payout_history(
     session: SessionDep,
     vendor: CurrentVendor,
-    offset: int = Query(0, ge=0),
-    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
+    page: PageDep,
 ) -> VendorPayoutHistoryResponse:
     """Vendor earnings ledger: their share only, not the client total Eventtz charged."""
-    return await service.payout_history(session, vendor.id, offset=offset, limit=limit)
+    return await service.payout_history(session, vendor.id, offset=page.offset, limit=page.limit)

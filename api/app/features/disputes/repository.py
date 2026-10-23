@@ -30,6 +30,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.db import as_uuid, plain_row
+from app.core.pagination import LIKE_ESCAPE, contains_pattern, paged
 from app.features.disputes.domain import ACTIVE_STATUSES
 from app.features.disputes.models import DisputeCase
 from app.features.disputes.rows import DisputeBookingRow, DisputeRow, UserRoleRow
@@ -135,17 +136,16 @@ async def list_disputes_for_party_page(
     if user_uuid is None:
         return [], 0
     joined, is_party = _party_disputes_base(user_uuid)
-    total = (await session.execute(select(func.count()).select_from(joined).where(is_party))).scalar_one()
-    result = await session.execute(
-        select(*_DISPUTE_COLUMNS)
-        .select_from(joined)
-        .where(is_party)
-        .order_by(DisputeCase.created_at.desc())
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(*_DISPUTE_COLUMNS).select_from(joined).where(is_party),
+        order_by=[DisputeCase.created_at.desc()],
+        tie_breaker=DisputeCase.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(joined).where(is_party),
     )
-    rows = [_dispute_row(found) for found in result]
-    return rows, int(total)
+    return [_dispute_row(found) for found in found_rows], total
 
 
 async def count_open_disputes_for_party(session: AsyncSession, user_id: str) -> int:
@@ -173,11 +173,11 @@ def _admin_dispute_filters(statuses: tuple[str, ...] | None, search: str | None)
         clauses.append(DisputeCase.status.in_(statuses))
     needle = (search or "").strip()
     if needle:
-        pattern = f"%{needle}%"
+        pattern = contains_pattern(needle)
         clauses.append(
             or_(
-                DisputeCase.summary.ilike(pattern),
-                func.cast(DisputeCase.booking_request_id, Text).ilike(pattern),
+                DisputeCase.summary.ilike(pattern, escape=LIKE_ESCAPE),
+                func.cast(DisputeCase.booking_request_id, Text).ilike(pattern, escape=LIKE_ESCAPE),
             )
         )
     return clauses
@@ -204,15 +204,20 @@ async def list_disputes_for_admin_page(
     """One page of staff disputes plus total count."""
     filters = _admin_dispute_filters(statuses, search)
     count_query = select(func.count()).select_from(DisputeCase)
-    if filters:
-        count_query = count_query.where(*filters)
-    total = (await session.execute(count_query)).scalar_one()
     query = select(*_DISPUTE_COLUMNS)
     if filters:
+        count_query = count_query.where(*filters)
         query = query.where(*filters)
-    result = await session.execute(query.order_by(DisputeCase.created_at.desc()).offset(offset).limit(limit))
-    rows = [_dispute_row(found) for found in result]
-    return rows, int(total)
+    found_rows, total = await paged(
+        session,
+        query,
+        order_by=[DisputeCase.created_at.desc()],
+        tie_breaker=DisputeCase.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=count_query,
+    )
+    return [_dispute_row(found) for found in found_rows], total
 
 
 async def has_active_dispute(session: AsyncSession, booking_id: str) -> bool:

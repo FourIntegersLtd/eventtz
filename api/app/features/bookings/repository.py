@@ -31,6 +31,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.db import as_uuid, plain_row
+from app.core.pagination import LIKE_ESCAPE, contains_pattern, paged
 from app.features.bookings import domain
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.rows import BookingRow, ClientReviewRow, VendorReviewRow
@@ -234,15 +235,15 @@ def _booking_party_search_clause(
     search exactly what the list shows before payment (the display name, which for a client with
     no preferred name is derived from the email's local part: see `_friendly_name_sql`).
     """
-    pattern = f"%{term}%"
-    parts: list[ColumnElement[bool]] = [BookingRequest.event_name.ilike(pattern)]
+    pattern = contains_pattern(term)
+    parts: list[ColumnElement[bool]] = [BookingRequest.event_name.ilike(pattern, escape=LIKE_ESCAPE)]
     if vendor_user_id is not None:
         parts.append(
             exists(
                 select(1).where(
                     _users.c.id == BookingRequest.client_user_id,
                     _users.c.deleted_at.is_(None),
-                    _client_name_vendors_see_sql().ilike(pattern),
+                    _client_name_vendors_see_sql().ilike(pattern, escape=LIKE_ESCAPE),
                 )
             )
         )
@@ -252,7 +253,7 @@ def _booking_party_search_clause(
             exists(
                 select(1).where(
                     _vendors.c.user_id == BookingRequest.vendor_user_id,
-                    vendor_business_name.ilike(pattern),
+                    vendor_business_name.ilike(pattern, escape=LIKE_ESCAPE),
                 )
             )
         )
@@ -356,15 +357,16 @@ async def list_bookings_page(
         search=search,
         conversation_id=conversation_id,
     )
-    total = (
-        await session.execute(select(func.count()).select_from(BookingRequest).where(*filters))
-    ).scalar_one()
-    query = (
-        select(*BOOKING_COLUMNS).where(*filters).order_by(*_booking_list_order()).offset(offset).limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(*BOOKING_COLUMNS).where(*filters),
+        order_by=_booking_list_order()[:-1],
+        tie_breaker=BookingRequest.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(BookingRequest).where(*filters),
     )
-    result = await session.execute(query)
-    rows = [BookingRow.model_validate(plain_row(found)) for found in result]
-    return rows, int(total)
+    return [BookingRow.model_validate(plain_row(found)) for found in found_rows], total
 
 
 async def open_booking_dates(session: AsyncSession, vendor_user_id: str) -> list[tuple[str, str | None]]:

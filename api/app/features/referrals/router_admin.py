@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PageDep, PageParams, page_params
 from app.features.referrals import service_partners
 from app.features.referrals.errors import (
     DisplayNameEmpty,
@@ -40,12 +42,11 @@ MAX_SIGNUPS_PAGE = 200
 async def list_partners(
     session: SessionDep,
     principal: CurrentStaff,
-    offset: int = Query(0, ge=0),
-    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
+    page: PageDep,
 ) -> ReferralPartnerListResponse:
     """Every partner, newest first, with the link each one shares."""
-    partners, total = await service_partners.list_partners_page(session, offset=offset, limit=limit)
-    return ReferralPartnerListResponse(partners=partners, total=total, offset=offset, limit=limit)
+    partners, total = await service_partners.list_partners_page(session, offset=page.offset, limit=page.limit)
+    return ReferralPartnerListResponse(partners=partners, total=total, offset=page.offset, limit=page.limit)
 
 
 @router.post(
@@ -83,13 +84,12 @@ async def list_signups(
     session: SessionDep,
     principal: CurrentStaff,
     partner_id: str,
-    offset: int = Query(0, ge=0),
-    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=MAX_SIGNUPS_PAGE),
+    page: Annotated[PageParams, Depends(page_params(max_limit=MAX_SIGNUPS_PAGE))],
     shoutout: ShoutoutFilter = "all",
 ) -> ReferralSignupListResponse:
     """One page of the vendors a partner brought in, newest first, optionally by shout-out state."""
     return await service_partners.list_signups(
-        session, partner_id, shoutout=shoutout, offset=offset, limit=limit
+        session, partner_id, shoutout=shoutout, offset=page.offset, limit=page.limit
     )
 
 

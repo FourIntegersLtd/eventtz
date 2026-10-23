@@ -6,11 +6,14 @@ only the actions it records (most of which are) are.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query
 
 from app.core.auth import ROLE_ERRORS, CurrentStaff
 from app.core.db import SessionDep
 from app.core.errors import error_responses
+from app.core.pagination import PageParams, page_params
 from app.features.staff import service as staff
 from app.features.staff.errors import AuditEntryNotFound
 from app.features.staff.schemas import AdminAuditLogDetailResponse, AdminAuditLogResponse
@@ -22,15 +25,14 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 async def list_audit_log(
     session: SessionDep,
     principal: CurrentStaff,
-    offset: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=500),
+    page: Annotated[PageParams, Depends(page_params(max_limit=500))],
     category: str = Query(
         "all",
         description="all | bookings | clients | vendors | disputes | reviews | chat | financials | team",
     ),
 ) -> AdminAuditLogResponse:
     """A page of the audit trail, most recent first, optionally narrowed to one category."""
-    return await staff.list_audit_log(session, offset=offset, limit=limit, category=category)
+    return await staff.list_audit_log(session, offset=page.offset, limit=page.limit, category=category)
 
 
 @router.get(

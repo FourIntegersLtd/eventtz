@@ -18,6 +18,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row, plain_value
+from app.core.pagination import LIKE_ESCAPE, contains_pattern, paged
 from app.features.staff.models import AdminAuditLog
 from app.features.staff.rows import AdminAuditLogRow, AdminClientRow, AdminTeamMemberRow
 
@@ -69,16 +70,16 @@ async def list_admin_team(
 ) -> tuple[list[AdminTeamMemberRow], int]:
     """One page of admin accounts, oldest first, and how many match in total."""
     conditions = [_users.c.user_type == "admin"]
-    total = int(await session.scalar(select(func.count()).select_from(_users).where(*conditions)) or 0)
-    result = await session.execute(
-        select(*_TEAM_COLUMNS)
-        .where(*conditions)
-        .order_by(_users.c.created_at.asc())
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(*_TEAM_COLUMNS).where(*conditions),
+        order_by=[_users.c.created_at.asc()],
+        tie_breaker=_users.c.id.asc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(_users).where(*conditions),
     )
-    members = [_team_row(plain_row(found)) for found in result]
-    return members, total
+    return [_team_row(plain_row(found)) for found in found_rows], total
 
 
 async def find_admin_by_id(session: AsyncSession, user_id: str) -> AdminTeamMemberRow | None:
@@ -196,19 +197,21 @@ async def list_clients(
     conditions: list[Any] = [_users.c.user_type == "client"]
     search_term = (search_email or "").strip()
     if search_term:
-        conditions.append(_users.c.email.ilike(f"%{search_term}%"))
+        conditions.append(_users.c.email.ilike(contains_pattern(search_term), escape=LIKE_ESCAPE))
     if suspended is not None:
         conditions.append(_users.c.account_suspended == suspended)
-    count_result = await session.execute(select(func.count()).select_from(_users).where(*conditions))
-    total = int(count_result.scalar_one())
-    result = await session.execute(
-        select(_users.c.id, _users.c.email, _users.c.created_at, _users.c.account_suspended)
-        .where(*conditions)
-        .order_by(_users.c.created_at.desc())
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(_users.c.id, _users.c.email, _users.c.created_at, _users.c.account_suspended).where(
+            *conditions
+        ),
+        order_by=[_users.c.created_at.desc()],
+        tie_breaker=_users.c.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(_users).where(*conditions),
     )
-    rows = [plain_row(found) for found in result]
+    rows = [plain_row(found) for found in found_rows]
     counts = await _booking_counts_by_client(session, [str(row["id"]) for row in rows])
     return [
         AdminClientRow(
@@ -289,16 +292,16 @@ async def list_audit_log(
         conditions.append(or_(*(AdminAuditLog.action.like(f"{prefix}%") for prefix in prefixes)))
     elif normalised_category not in ("", "all"):
         return [], 0
-    count_result = await session.execute(select(func.count()).select_from(AdminAuditLog).where(*conditions))
-    total = int(count_result.scalar_one())
-    result = await session.execute(
-        select(AdminAuditLog)
-        .where(*conditions)
-        .order_by(AdminAuditLog.created_at.desc())
-        .offset(offset)
-        .limit(limit)
+    found_rows, total = await paged(
+        session,
+        select(AdminAuditLog).where(*conditions),
+        order_by=[AdminAuditLog.created_at.desc()],
+        tie_breaker=AdminAuditLog.id.desc(),
+        offset=offset,
+        limit=limit,
+        count_query=select(func.count()).select_from(AdminAuditLog).where(*conditions),
     )
-    return [_audit_row(entry) for entry in result.scalars().all()], total
+    return [_audit_row(entry) for (entry,) in found_rows], total
 
 
 async def get_audit_log_entry(session: AsyncSession, entry_id: str) -> AdminAuditLogRow | None:

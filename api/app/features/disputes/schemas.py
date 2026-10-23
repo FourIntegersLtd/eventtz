@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PagedResponse
 
 
 class CreateDisputeBody(BaseModel):
@@ -40,13 +40,10 @@ class DisputePublic(BaseModel):
     counterparty_label: str | None = None
 
 
-class DisputesListResponse(BaseModel):
+class DisputesListResponse(PagedResponse):
     """A participant's disputes, most recently opened first."""
 
     disputes: list[DisputePublic]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
     open_count: int = 0
 
 
@@ -95,13 +92,10 @@ class AdminDisputeCase(BaseModel):
     opened_by_display_name: str | None = None
 
 
-class AdminDisputesListResponse(BaseModel):
+class AdminDisputesListResponse(PagedResponse):
     """Every dispute matching the admin list's status filter."""
 
     disputes: list[AdminDisputeCase]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminDisputePatchBody(BaseModel):

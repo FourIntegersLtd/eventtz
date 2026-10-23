@@ -146,6 +146,32 @@ async def test_client_notifications_feed_read_state_total(client: AsyncClient, m
     assert len(body["items"]) <= 5
 
 
+async def test_team_pages_hold_exactly_limit_rows_and_never_overlap(
+    client: AsyncClient, make_actor: Any
+) -> None:
+    """Seed limit+1 rows: page one is full, page two holds the single remainder, none repeat."""
+    token = await make_actor("page-exact-0@example.com", user_type="admin", admin_role="admin")
+    for index in range(1, 3):
+        await make_actor(f"page-exact-{index}@example.com", user_type="admin", admin_role="admin")
+    headers = {"Authorization": f"Bearer {token}"}
+    first = (await client.get("/api/v1/admin/team", headers=headers, params={"limit": 2})).json()
+    later = {"limit": 2, "offset": 2}
+    second = (await client.get("/api/v1/admin/team", headers=headers, params=later)).json()
+    assert (first["total"], first["offset"], first["limit"], len(first["members"])) == (3, 0, 2, 2)
+    assert (second["total"], second["offset"], second["limit"], len(second["members"])) == (3, 2, 2, 1)
+    seen = [member["user_id"] for member in first["members"] + second["members"]]
+    assert len(set(seen)) == 3
+
+
+async def test_a_limit_above_the_maximum_is_rejected(client: AsyncClient, make_actor: Any) -> None:
+    """The shared cap answers 422 instead of returning an unbounded page."""
+    token = await make_actor("page-max@example.com", user_type="admin", admin_role="admin")
+    response = await client.get(
+        "/api/v1/admin/team", headers={"Authorization": f"Bearer {token}"}, params={"limit": 100000}
+    )
+    assert response.status_code == 422
+
+
 async def test_client_dashboard_endpoint(client: AsyncClient, make_actor: Any) -> None:
     client_token = await make_actor("pagination-dashboard-client@example.com", user_type="client")
     response = await client.get(

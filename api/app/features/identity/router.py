@@ -8,7 +8,14 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from app.core.auth import AUTH_ERRORS, AnyAccount, CurrentUser, OptionalUser
+from app.core.auth import (
+    AUTH_ERRORS,
+    AccountDeleted,
+    AnyAccount,
+    CurrentUser,
+    OptionalUser,
+    SessionExpired,
+)
 from app.core.db import SessionDep
 from app.core.errors import AppError, Forbidden, error_responses
 from app.core.ports import MailerDependency
@@ -16,12 +23,10 @@ from app.core.rate_limit import CallerKey
 from app.features.identity import service_passwords, service_session, service_signup
 from app.features.identity.errors import (
     CurrentPasswordIncorrect,
-    DeletedAtSignIn,
     EmailAlreadyRegistered,
     EmailNotVerified,
     PasswordUnchanged,
     PasswordUpdateFailed,
-    RefreshExpired,
     RefreshTokenReused,
     ResetLinkInvalid,
     ResetLinkUsed,
@@ -77,7 +82,7 @@ async def sign_up(
     "/signin",
     response_model=SignInResponse,
     responses=error_responses(
-        TooManySignIns, WrongCredentials, SuspendedAtSignIn, DeletedAtSignIn, EmailNotVerified
+        TooManySignIns, WrongCredentials, SuspendedAtSignIn, AccountDeleted, EmailNotVerified
     ),
 )
 async def sign_in(body: SignInRequest, session: SessionDep, caller: CallerKey) -> SignInResponse:
@@ -99,7 +104,7 @@ async def sign_out(
 @router.post(
     "/refresh",
     response_model=RefreshSessionResponse,
-    responses=error_responses(RefreshExpired, RefreshTokenReused),
+    responses=error_responses(SessionExpired, RefreshTokenReused),
 )
 async def refresh_session(body: RefreshSessionRequest, session: SessionDep) -> RefreshSessionResponse:
     """Swap the refresh token for a new session."""

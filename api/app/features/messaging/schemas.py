@@ -6,7 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PagedResponse
 
 
 class ChatUnreadCountResponse(BaseModel):
@@ -37,14 +37,11 @@ class ConversationRow(BaseModel):
     unread_count: int = 0
 
 
-class ConversationsListResponse(BaseModel):
+class ConversationsListResponse(PagedResponse):
     """The caller's threads, newest activity first."""
 
     success: bool = True
     conversations: list[ConversationRow]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class ConversationDetailResponse(BaseModel):
@@ -138,14 +135,11 @@ class AdminSupportConversationRow(BaseModel):
     unread_count: int = 0
 
 
-class AdminSupportConversationsListResponse(BaseModel):
+class AdminSupportConversationsListResponse(PagedResponse):
     """The newest support threads."""
 
     success: bool = True
     conversations: list[AdminSupportConversationRow]
-    total: int = 0
-    offset: int = 0
-    limit: int = DEFAULT_LIST_LIMIT
 
 
 class AdminSupportConversationDetailResponse(BaseModel):

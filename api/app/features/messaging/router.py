@@ -9,7 +9,7 @@ from fastapi import APIRouter, Query
 from app.core.auth import AUTH_ERRORS, CurrentUser
 from app.core.db import SessionDep
 from app.core.errors import error_responses
-from app.core.pagination import DEFAULT_LIST_LIMIT
+from app.core.pagination import PageDep
 from app.features.messaging import service_chat
 from app.features.messaging.errors import (
     ChatPortalOnly,
@@ -54,18 +54,19 @@ async def get_chat_unread_count(session: SessionDep, principal: CurrentUser) -> 
 async def list_conversations(
     session: SessionDep,
     principal: CurrentUser,
+    page: PageDep,
     kind: Annotated[str | None, Query(description="all (default) | dm | support")] = None,
-    offset: int = Query(0, ge=0),
-    limit: int = Query(DEFAULT_LIST_LIMIT, ge=1, le=200),
 ) -> ConversationsListResponse:
     """The caller's threads, newest activity first."""
     normalized_kind = (kind or "").strip().lower() or None
     if normalized_kind == "all":
         normalized_kind = None
     conversations, total = await service_chat.list_conversations_page(
-        session, principal, kind=normalized_kind, offset=offset, limit=limit
+        session, principal, kind=normalized_kind, offset=page.offset, limit=page.limit
     )
-    return ConversationsListResponse(conversations=conversations, total=total, offset=offset, limit=limit)
+    return ConversationsListResponse(
+        conversations=conversations, total=total, offset=page.offset, limit=page.limit
+    )
 
 
 @router.post(

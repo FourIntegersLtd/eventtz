@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import Principal, issue_access_token
+from app.core.auth import AccountDeleted, Principal, SessionExpired, issue_access_token
 from app.core.errors import AppError
 from app.core.logging import get_logger
 from app.core.settings import get_settings
@@ -20,9 +20,9 @@ from app.features.identity import repository
 from app.features.identity.domain_accounts import hash_token, needs_email_verification, normalise_email
 from app.features.identity.domain_sessions import RefreshChainState, use_refresh_token
 from app.features.identity.errors import (
-    DeletedAtSignIn,
+    DELETED_AT_SIGN_IN_MESSAGE,
+    REFRESH_EXPIRED_MESSAGE,
     EmailNotVerified,
-    RefreshExpired,
     RefreshTokenReused,
     SuspendedAtSignIn,
     TooManySignIns,
@@ -83,7 +83,7 @@ def _sign_in_refusal(profile: UserProfileRow) -> AppError | None:
     if profile.account_suspended:
         return SuspendedAtSignIn()
     if profile.deleted_at:
-        return DeletedAtSignIn()
+        return AccountDeleted(DELETED_AT_SIGN_IN_MESSAGE)
     if profile.user_type in ("client", "vendor") and needs_email_verification(
         user_type=profile.user_type, profile_exists=True, verified_at=profile.email_verified_at
     ):
@@ -126,16 +126,16 @@ async def sign_in(session: AsyncSession, body: SignInRequest, *, caller: str) ->
 async def refresh(session: AsyncSession, refresh_token: str | None) -> RefreshSessionResponse:
     """Swap a refresh token for a new pair, rotating the chain.
 
-    Raises `RefreshExpired` for a missing, unknown, revoked or expired token,
+    Raises `SessionExpired` for a missing, unknown, revoked or expired token,
     and `RefreshTokenReused` (after revoking the chain) for one already spent.
     """
     if not refresh_token:
-        raise RefreshExpired()
+        raise SessionExpired(REFRESH_EXPIRED_MESSAGE)
     now = datetime.now(UTC)
     token = await repository.refresh_token_by_hash(session, hash_token(refresh_token))
     chain = await repository.refresh_chain_by_id(session, token.chain_id) if token is not None else None
     if token is None or chain is None:
-        raise RefreshExpired()
+        raise SessionExpired(REFRESH_EXPIRED_MESSAGE)
     decision = use_refresh_token(
         RefreshChainState(expires_at=chain.expires_at, revoked_at=chain.revoked_at),
         token_already_spent=token.used_at is not None,
@@ -146,10 +146,10 @@ async def refresh(session: AsyncSession, refresh_token: str | None) -> RefreshSe
             await repository.revoke_refresh_chain(session, chain_id=chain.id, at=now, reason="reuse_detected")
             log.warning("refresh token reused; chain revoked user_id=%s", chain.user_id)
             raise RefreshTokenReused()
-        raise RefreshExpired()
+        raise SessionExpired(REFRESH_EXPIRED_MESSAGE)
     profile = await repository.get_profile(session, chain.user_id)
     if profile is None or profile.deleted_at:
-        raise RefreshExpired()
+        raise SessionExpired(REFRESH_EXPIRED_MESSAGE)
     raw_refresh_token, refresh_token_hash = new_refresh_token()
     rotated = await repository.spend_and_issue(
         session, token_id=token.id, chain_id=chain.id, token_hash=refresh_token_hash, at=now

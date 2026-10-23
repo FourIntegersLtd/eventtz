@@ -10,7 +10,7 @@ from fastapi import APIRouter
 
 from app.core.auth import ROLE_ERRORS, CurrentSuperAdmin
 from app.core.db import SessionDep
-from app.core.errors import error_responses
+from app.core.errors import InvalidBookingId, error_responses
 from app.core.ports import MailerDependency, PaymentGatewayDependency
 from app.features.bookings import errors, service_admin_recovery
 from app.features.bookings.schemas import (
@@ -23,7 +23,7 @@ from app.features.bookings.schemas import (
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 # Every tool refuses a malformed or missing booking id the same way.
-_BOOKING_ERRORS = (*ROLE_ERRORS, errors.InvalidBookingId, errors.RecoveryBookingNotFound)
+_BOOKING_ERRORS = (*ROLE_ERRORS, InvalidBookingId, errors.RecoveryBookingNotFound)
 _PAYOUT_ERRORS = (
     *_BOOKING_ERRORS,
     errors.RecoveryOnlyPaidPayoutRelease,
