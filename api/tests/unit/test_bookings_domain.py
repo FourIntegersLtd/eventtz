@@ -7,6 +7,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from app.features.bookings import domain
+from app.features.bookings.domain_maintenance import format_release_date
 from app.features.bookings.errors import (
     AdjustmentAmountInvalid,
     BookingAlreadyRefunded,
@@ -37,18 +38,37 @@ def _booking(**overrides: object) -> BookingRow:
     return BookingRow.model_validate(values)
 
 
-def test_the_event_day_is_over_at_utc_midnight_after_its_last_day() -> None:
-    """A multi-day event ends after its last day, not its first."""
+def test_the_event_day_is_over_at_london_midnight_after_its_last_day() -> None:
+    """A multi-day event ends after its last day, not its first; in summer London midnight is 23:00 UTC."""
     booking = _booking(event_end_date="2099-06-03")
-    assert not domain.event_day_over(booking, datetime(2099, 6, 3, 23, 59, tzinfo=UTC))
-    assert domain.event_day_over(booking, datetime(2099, 6, 4, 0, 0, tzinfo=UTC))
+    assert not domain.event_day_over(booking, datetime(2099, 6, 3, 22, 59, tzinfo=UTC))
+    assert domain.event_day_over(booking, datetime(2099, 6, 3, 23, 0, tzinfo=UTC))
     assert not domain.event_day_over(_booking(event_date="not a date"), datetime(2100, 1, 1, tzinfo=UTC))
+
+
+def test_a_summer_event_is_still_on_at_23_30_uk_time_and_over_at_uk_midnight() -> None:
+    """1 June 2099 (BST): 23:30 UK is 22:30 UTC, still the event day; 00:00 UK on 2 June is 23:00 UTC."""
+    booking = _booking(event_date="2099-06-01")
+    assert not domain.event_day_over(booking, datetime(2099, 6, 1, 22, 30, tzinfo=UTC))
+    assert not domain.event_day_over(booking, datetime(2099, 6, 1, 22, 59, 59, tzinfo=UTC))
+    assert domain.event_day_over(booking, datetime(2099, 6, 1, 23, 0, tzinfo=UTC))
+
+
+def test_a_winter_event_ends_at_utc_midnight_because_london_is_on_utc() -> None:
+    """15 January 2099 (GMT): 23:30 UK is 23:30 UTC, still the event day; the day ends at 00:00 UTC."""
+    booking = _booking(event_date="2099-01-15")
+    assert not domain.event_day_over(booking, datetime(2099, 1, 15, 23, 30, tzinfo=UTC))
+    assert domain.event_day_over(booking, datetime(2099, 1, 16, 0, 0, tzinfo=UTC))
 
 
 def test_the_payout_releases_automatically_only_for_paid_accepted_bookings() -> None:
     """The release time is the end of the event plus the configured hours."""
     assert domain.payout_auto_release_at(_booking(), hours_after_event=48) == datetime(
-        2099, 6, 4, 0, 0, tzinfo=UTC
+        2099, 6, 3, 23, 0, tzinfo=UTC
+    )
+    winter = _booking(event_date="2099-01-15")
+    assert domain.payout_auto_release_at(winter, hours_after_event=48) == datetime(
+        2099, 1, 18, 0, 0, tzinfo=UTC
     )
     assert domain.payout_auto_release_at(_booking(payment_status="unpaid"), hours_after_event=48) is None
     assert domain.payout_auto_release_at(_booking(status="completed"), hours_after_event=48) is None
@@ -205,3 +225,9 @@ def test_the_capacity_trigger_message_becomes_the_friendly_error() -> None:
     assert mapped is not None
     assert "maximum number of bookings (2) on 2099-06-01" in mapped.message
     assert domain.capacity_error_from_db("duplicate key value violates unique constraint") is None
+
+
+def test_the_release_date_in_reminders_is_the_london_day_not_the_utc_day() -> None:
+    """23:00 UTC on 3 June is 00:00 BST on 4 June, so the reminder names Thursday 4 June."""
+    assert format_release_date(datetime(2020, 6, 3, 23, 0, tzinfo=UTC)) == "Thursday 4 June"
+    assert format_release_date(datetime(2020, 1, 15, 23, 30, tzinfo=UTC)) == "Wednesday 15 January"

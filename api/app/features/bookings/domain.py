@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import math
 import uuid
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any, Literal
 
+from app.features.bookings import domain_policy
 from app.features.bookings.errors import (
     AdjustmentAmountInvalid,
     AdjustmentOutOfRange,
@@ -67,29 +68,19 @@ MAX_REVIEW_IMAGES = 5
 # --- completion --------------------------------------------------------------------------------------
 
 
-def _event_day_end_utc(booking: BookingRow) -> datetime | None:
-    """UTC midnight at the start of the day after the event's last day, or `None` for a bad date."""
-    last_day = (booking.event_end_date or booking.event_date or "")[:10]
-    try:
-        event_day = datetime.strptime(last_day, "%Y-%m-%d").replace(tzinfo=UTC)
-    except ValueError:
-        return None
-    return event_day + timedelta(days=1)
-
-
 def payout_auto_release_at(booking: BookingRow, *, hours_after_event: float) -> datetime | None:
     """When the held payment is released to the vendor without both confirmations, if it will be."""
     if booking.status != "accepted" or booking.payment_status != "paid":
         return None
-    day_end = _event_day_end_utc(booking)
+    day_end = domain_policy.event_over_at(booking)
     # A booking whose category needs longer to spot a problem (rentals, decor) carries its own window.
     window_hours = booking.report_window_hours or hours_after_event
     return day_end + timedelta(hours=window_hours) if day_end is not None else None
 
 
 def event_day_over(booking: BookingRow, now: datetime) -> bool:
-    """True once the event's last day has ended (UTC)."""
-    day_end = _event_day_end_utc(booking)
+    """True once the event's last day has ended (London midnight)."""
+    day_end = domain_policy.event_over_at(booking)
     return day_end is not None and now >= day_end
 
 
