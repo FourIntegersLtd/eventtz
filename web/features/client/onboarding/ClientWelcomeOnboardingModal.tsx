@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { TextField } from "@/components/ui/TextField";
 import { FOCUS_RING, TOUCH_TARGET } from "@/components/ui/tokens";
 import { AnimatedStepItem } from "@/components/ui/AnimatedStepItem";
@@ -52,18 +53,18 @@ function FeatureHero({
         <p className="mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-accent-violet">{eyebrow}</p>
       </AnimatedStepItem>
       <AnimatedStepItem index={2}>
-        <h2 className="font-heading mt-3 text-2xl font-semibold leading-tight text-neutral-900 sm:text-3xl">
+        <h2 className="font-heading mt-3 text-2xl font-semibold leading-tight text-ink sm:text-3xl">
           {headline}
         </h2>
       </AnimatedStepItem>
       <AnimatedStepItem index={3}>
-        <p className="mt-4 max-w-lg text-base leading-relaxed text-neutral-600">{body}</p>
+        <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-2">{body}</p>
       </AnimatedStepItem>
       {highlights && highlights.length > 0 ? (
         <AnimatedStepItem index={4}>
-          <ul className="mt-8 w-full max-w-md space-y-3 rounded-2xl bg-neutral-50 px-5 py-4 text-left ring-1 ring-neutral-200/60">
+          <ul className="mt-8 w-full max-w-md space-y-3 rounded-2xl bg-surface-3 px-5 py-4 text-left ring-1 ring-line">
             {highlights.map((line) => (
-              <li key={line} className="flex items-start gap-3 text-sm text-neutral-700">
+              <li key={line} className="flex items-start gap-3 text-sm text-ink-2">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
                 <span>{line}</span>
               </li>
@@ -166,23 +167,20 @@ export function ClientWelcomeOnboardingModal() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="client-onboarding-title"
-        className="relative flex max-h-[min(92dvh,820px)] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
+        className="relative flex max-h-[min(92dvh,820px)] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-surface shadow-2xl sm:rounded-3xl"
       >
-        <div className="h-1.5 shrink-0 bg-neutral-100">
-          <div
-            className="h-full bg-primary transition-all duration-300 ease-out"
-            style={{ width: `${progressPct}%` }}
-          />
+        <div className="shrink-0">
+          <ProgressBar percent={progressPct} />
         </div>
 
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-neutral-100 px-5 py-3 sm:px-6">
-          <p className="text-xs font-medium text-neutral-500">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line px-5 py-3 sm:px-6">
+          <p className="text-xs font-medium text-ink-3">
             Step {currentIdx + 1} of {totalSteps}
           </p>
           <button
             type="button"
             onClick={close}
-            className={`inline-flex shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 ${TOUCH_TARGET} ${FOCUS_RING}`}
+            className={`inline-flex shrink-0 items-center justify-center rounded-lg text-ink-3 hover:bg-surface-3 hover:text-ink-2 ${TOUCH_TARGET} ${FOCUS_RING}`}
           >
             <X className="h-5 w-5" />
           </button>
@@ -220,7 +218,7 @@ export function ClientWelcomeOnboardingModal() {
                 </h2>
               </AnimatedStepItem>
               <AnimatedStepItem index={3}>
-                <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-neutral-600">
+                <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-ink-2">
                   {copy.welcome.body}
                 </p>
               </AnimatedStepItem>
@@ -238,12 +236,12 @@ export function ClientWelcomeOnboardingModal() {
                 </p>
               </AnimatedStepItem>
               <AnimatedStepItem index={2}>
-                <h2 className="font-heading mt-3 text-2xl font-semibold text-neutral-900 sm:text-3xl">
+                <h2 className="font-heading mt-3 text-2xl font-semibold text-ink sm:text-3xl">
                   {copy.name.headline}
                 </h2>
               </AnimatedStepItem>
               <AnimatedStepItem index={3}>
-                <p className="mt-3 max-w-md text-base leading-relaxed text-neutral-600">{copy.name.body}</p>
+                <p className="mt-3 max-w-md text-base leading-relaxed text-ink-2">{copy.name.body}</p>
               </AnimatedStepItem>
               <AnimatedStepItem index={4}>
                 <div className="mt-8 w-full max-w-sm text-left">
@@ -288,22 +286,22 @@ export function ClientWelcomeOnboardingModal() {
                 </p>
               </AnimatedStepItem>
               <AnimatedStepItem index={2}>
-                <h2 className="font-heading mt-3 text-2xl font-semibold text-neutral-900 sm:text-3xl">
+                <h2 className="font-heading mt-3 text-2xl font-semibold text-ink sm:text-3xl">
                   {copy.finish.headline}
                 </h2>
               </AnimatedStepItem>
               <AnimatedStepItem index={3}>
-                <p className="mt-4 max-w-lg text-base leading-relaxed text-neutral-600">{copy.finish.body}</p>
+                <p className="mt-4 max-w-lg text-base leading-relaxed text-ink-2">{copy.finish.body}</p>
               </AnimatedStepItem>
               <AnimatedStepItem index={4}>
                 <div className="mt-8 grid w-full max-w-md gap-3 sm:grid-cols-2">
                   {CLIENT_ONBOARDING_FINISH_CHIPS.map(({ visual, label }) => (
                     <div
                       key={label}
-                      className="flex items-center gap-3 rounded-xl bg-neutral-50 px-3 py-3 ring-1 ring-neutral-200/60"
+                      className="flex items-center gap-3 rounded-xl bg-surface-3 px-3 py-3 ring-1 ring-line"
                     >
                       <OnboardingIconBadge visual={visual} size="md" />
-                      <span className="text-sm font-medium text-neutral-800">{label}</span>
+                      <span className="text-sm font-medium text-ink">{label}</span>
                     </div>
                   ))}
                 </div>
@@ -312,7 +310,7 @@ export function ClientWelcomeOnboardingModal() {
           ) : null}
         </div>
 
-        <div className="shrink-0 border-t border-neutral-100 px-5 py-4 sm:px-6">
+        <div className="shrink-0 border-t border-line px-5 py-4 sm:px-6">
           {step === "finish" ? (
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Button variant="secondary" className="w-full sm:w-auto" onClick={() => finish()}>

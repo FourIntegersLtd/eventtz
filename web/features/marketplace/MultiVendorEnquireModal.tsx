@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
-import { DateInput } from "@/components/ui/DateInput";
+import { TextArea } from "@/components/ui/TextArea";
+import { TextField } from "@/components/ui/TextField";
 import { LottieFailureInline } from "@/components/ui/LottieFailureInline";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { buildBookingRequestPayload } from "@/lib/bookingEnquireSubmit";
@@ -320,58 +321,48 @@ export function MultiVendorEnquireModal({
             onNewEvent={dismissForNewEvent}
           />
         ) : null}
-        <label className="block text-sm">
-          <span className="font-medium text-neutral-800">Event name</span>
-          <input
-            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-base md:text-sm"
-            value={eventName}
-            onChange={(e) => setEventName(e.target.value)}
-            placeholder="e.g. Summer garden party"
-            maxLength={500}
-          />
-        </label>
+        <TextField
+          id="multi-enquire-event-name"
+          label="Event name"
+          value={eventName}
+          onChange={(e) => setEventName(e.target.value)}
+          placeholder="e.g. Summer garden party"
+          maxLength={500}
+        />
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block text-sm">
-            <span className="font-medium text-neutral-800">Event date</span>
-            <DateInput
-              id="multi-enquire-event-date"
-              min={todayIsoDate()}
-              value={eventDate}
-              onChange={(e) => setEventDate(e.target.value)}
-              shellClassName="mt-1"
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="font-medium text-neutral-800">End date (optional)</span>
-            <DateInput
-              id="multi-enquire-event-end"
-              allowEmpty
-              min={eventDate.trim() || todayIsoDate()}
-              value={eventEndDate}
-              onChange={(e) => setEventEndDate(e.target.value)}
-              shellClassName="mt-1"
-            />
-          </label>
+          <TextField
+            id="multi-enquire-event-date"
+            label="Event date"
+            type="date"
+            min={todayIsoDate()}
+            value={eventDate}
+            onChange={(e) => setEventDate(e.target.value)}
+          />
+          <TextField
+            id="multi-enquire-event-end"
+            label="End date (optional)"
+            type="date"
+            allowEmpty
+            min={eventDate.trim() || todayIsoDate()}
+            value={eventEndDate}
+            onChange={(e) => setEventEndDate(e.target.value)}
+          />
         </div>
-        <label className="block text-sm">
-          <span className="font-medium text-neutral-800">Venue address (optional)</span>
-          <input
-            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-base md:text-sm"
-            value={venueAddress}
-            onChange={(e) => setVenueAddress(e.target.value)}
-            maxLength={500}
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="font-medium text-neutral-800">Notes (optional)</span>
-          <textarea
-            className="mt-1 w-full rounded-xl border border-neutral-200 px-3 py-2.5 text-base md:text-sm"
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            maxLength={CLIENT_BOOKING_NOTES_MAX_LENGTH}
-          />
-        </label>
+        <TextField
+          id="multi-enquire-venue"
+          label="Venue address (optional)"
+          value={venueAddress}
+          onChange={(e) => setVenueAddress(e.target.value)}
+          maxLength={500}
+        />
+        <TextArea
+          id="multi-enquire-notes"
+          label="Notes (optional)"
+          rows={3}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          maxLength={CLIENT_BOOKING_NOTES_MAX_LENGTH}
+        />
       </div>
     </Modal>
   );

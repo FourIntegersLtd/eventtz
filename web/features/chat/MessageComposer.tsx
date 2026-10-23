@@ -58,8 +58,8 @@ export function MessageComposer({
 
   const defaultTextarea =
     variant === "compose"
-      ? "w-full resize-y rounded-xl border border-neutral-200 bg-neutral-50/80 px-3 py-2.5 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60 md:text-sm"
-      : "min-h-[72px] w-full min-w-0 flex-1 resize-none rounded-xl bg-neutral-50 px-4 py-3 text-base text-neutral-900 placeholder:text-neutral-400 ring-1 ring-neutral-200/60 transition focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:opacity-60 md:text-sm";
+      ? "w-full resize-y rounded-xl border border-line bg-surface-3 px-3 py-2.5 text-base text-ink placeholder:text-ink-3 focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-60 md:text-sm"
+      : "min-h-[72px] w-full min-w-0 flex-1 resize-none rounded-xl bg-surface-3 px-4 py-3 text-base text-ink placeholder:text-ink-3 ring-1 ring-line transition focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:opacity-60 md:text-sm";
 
   return (
     <div className={className}>
@@ -89,7 +89,7 @@ export function MessageComposer({
         />
         {variant === "compose" ? (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-neutral-400">
+            <span className="text-xs text-ink-3">
               {value.length}/{MESSAGE_MAX_LEN}
             </span>
             {showSendButton ? (
@@ -119,7 +119,7 @@ export function MessageComposer({
         ) : null}
       </div>
       {variant === "thread" ? (
-        <p className="mt-1.5 text-right text-[11px] tabular-nums text-neutral-400">
+        <p className="mt-1.5 text-right text-[11px] tabular-nums text-ink-3">
           {value.length}/{MESSAGE_MAX_LEN}
         </p>
       ) : null}

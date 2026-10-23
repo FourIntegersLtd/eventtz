@@ -5,6 +5,11 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Done
 
+**Comms screens, comms-owned part** (PR "Rebuild audit: comms screens on the design system and server lists").
+- Client and vendor notifications are one `NotificationsPageView` (`portal` prop): the vendor keeps its header, topic `Tabs` and "Mark all as read"; the client page keeps its own header and still marks notices read on open. `VendorNotificationsEzView` is deleted. The client list now uses the vendor's `ez-list-row` look (a deliberate small visual change).
+- Admin messages inbox, vendor messages and the client/vendor chat portal conversation lists are on `useServerList` (rows stay on screen while a realtime refresh reloads them). Inline `style`, `neutral-*` and raw `ez-card`/`ez-badge` markup in `features/{chat,notifications}` and `features/admin/{chat,messages}` are replaced by `Card`, `Badge` and design tokens.
+- Left because owned by platform-owner: `HelpWidget`, `HelpAssistantThread` and `portalTheme.ts` (`features/help`, `components/`), and `AdminShell`'s unread badge, which still calls the `limit: 200` wrapper `fetchAdminSupportConversations` (kept in `lib/adminMessagesApi.ts` for it; delete both together). The admin Compose-tab badge in `AdminMessagesPageContent` now counts the first page of threads only.
+
 **Admin console screens, platform-owned part** (PR "Rebuild audit: admin screens on the design system and server lists").
 - `OWNERS.md` gives platform-owner only admin blog, dashboard, report-bug, settings, layout and components. Blog list is now on `useServerList`; `fetchAdminBlogPosts` (the `limit: 200` wrapper, no callers) is deleted. Cards, buttons, badges and the success banner in those folders use `Card`, `Button`/`ButtonLink`, `Badge`, `Banner`; the last inline `style` and `neutral-*` classes are gone.
 - Two-server comparison (seeded 40 posts, pages 1 and 2, desktop and 390px) and dashboard, report-bug, settings and editor screenshots against main: at most 0.012% mismatching pixels.
@@ -279,6 +284,16 @@ For local testing without Docker:
   Follow-ups from review: give `useServerList` a `meta` field for the three side-channel `fetchPage` captures; render the
   client payments toolbar outside `PaymentsListSection` so a failed load can still change the filter.
 
+- **Done (PR "Rebuild audit: marketplace screens on the design system and server lists").** The booking modal, client
+  dashboard, onboarding modal, multi-vendor enquiry modal, planner (hero, budget, generating state, saved plans, vendor
+  cards) and admin marketplace analytics use the ui blocks and tokens (no `style={{}}`, `neutral-*` or raw `ez-*` left in
+  the area's feature dirs). New: `ProgressBar` block and `Card` `raised` variant (tested). Explore and favourites were
+  already server-paged card grids and the category table already had `TablePagination`, so no list moved. Two-server
+  screenshot comparison (no marketplace screen in `screens.json`): dashboard, browse, favourites, vendor profile, planner
+  and analytics identical bar lottie frames; the booking modal keeps main's uppercase labels, venue box and note sizes
+  (plain inputs on tokens, `DateInput`), 0.05% apart at 1280 and 390 bar the dev badge. eslint 121 errors, same as main.
+  Follow-ups from review: move the booking and onboarding overlays onto `Modal`; extract one ranked-list card for admin
+  "Top locations" and "Top vendors"; vendor onboarding (`WizardAside`, `StepPortfolio`) still hand-roll `ez-progress`.
 - **Done (PR "Rebuild audit: vendors screens on the design system and server lists").** Vendor onboarding, profile,
   dashboard, analytics, co-pilot, vendor directory and admin vendor screens use the ui blocks and tokens (no
   `style={{}}`, `neutral-*` or raw palette classes left, except dynamic widths and the status dot colour). `Card` now

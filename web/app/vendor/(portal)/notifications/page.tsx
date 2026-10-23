@@ -1,7 +1,8 @@
 "use client";
 
-import { VendorNotificationsEzView } from "@/features/notifications/VendorNotificationsEzView";
+import { NotificationsPageView } from "@/features/notifications/NotificationsPageView";
 
+/** Vendor notification history (shared view with the client page). */
 export default function VendorNotificationsPage() {
-  return <VendorNotificationsEzView />;
+  return <NotificationsPageView portal="vendor" />;
 }

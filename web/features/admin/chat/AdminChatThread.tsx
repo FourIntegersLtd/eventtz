@@ -42,7 +42,7 @@ function ParticipantAvatar({
       <div className={`flex h-9 w-9 items-center justify-center rounded-full border-2 ${ring}`} aria-hidden>
         <Icon className="h-4 w-4" strokeWidth={2} />
       </div>
-      <span className="max-w-[4.5rem] truncate text-center text-[9px] font-medium text-neutral-500">
+      <span className="max-w-[4.5rem] truncate text-center text-[9px] font-medium text-ink-3">
         {label}
       </span>
     </div>
@@ -125,17 +125,17 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
                 <User className="h-4 w-4" strokeWidth={2} aria-hidden />
               </span>
               <div className="min-w-0">
-                <p className="text-xs text-neutral-500">Client</p>
-                <p className="truncate font-medium text-neutral-900">
+                <p className="text-xs text-ink-3">Client</p>
+                <p className="truncate font-medium text-ink">
                   {clientEmail ?? `${clientUserId.slice(0, 8)}…`}
                 </p>
               </div>
             </div>
-            <div className="hidden h-8 w-px shrink-0 bg-neutral-200 sm:block" aria-hidden />
+            <div className="hidden h-8 w-px shrink-0 bg-line sm:block" aria-hidden />
             <div className="flex min-w-0 items-center gap-2 text-sm sm:justify-end">
               <div className="min-w-0 text-right sm:text-left">
-                <p className="text-xs text-neutral-500">Vendor</p>
-                <p className="truncate font-medium text-neutral-900">
+                <p className="text-xs text-ink-3">Vendor</p>
+                <p className="truncate font-medium text-ink">
                   {vendorName ?? "Vendor"} · {vendorUserId.slice(0, 8)}…
                 </p>
               </div>
@@ -150,23 +150,23 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
       ) : null}
 
       <div
-        className={`flex w-full flex-1 flex-col overflow-y-auto rounded-lg border border-neutral-200 bg-neutral-50/80 p-3 ${
+        className={`flex w-full flex-1 flex-col overflow-y-auto rounded-lg border border-line bg-surface-3 p-3 ${
           compact ? "max-h-[min(45vh,360px)] min-h-[160px]" : "max-h-[min(60vh,520px)] min-h-[200px]"
         }`}
         aria-label="Conversation messages"
       >
         {messages.length === 0 ? (
-          <p className="py-8 text-center text-sm text-neutral-500">No messages in this thread.</p>
+          <p className="py-8 text-center text-sm text-ink-3">No messages in this thread.</p>
         ) : !clientUserId || !vendorUserId ? (
           <ul className="space-y-3">
             {messages.map((m) => (
               <li key={m.id} className={`${CARD_SURFACE} px-3 py-2 text-sm`}>
-                <p className="font-mono text-[10px] text-neutral-500">{m.sender_user_id}</p>
+                <p className="font-mono text-[10px] text-ink-3">{m.sender_user_id}</p>
                 <LinkifyMessageBody
                   body={m.body}
-                  className="mt-1 whitespace-pre-wrap break-words text-neutral-900"
+                  className="mt-1 whitespace-pre-wrap break-words text-ink"
                 />
-                <p className="mt-1.5 text-[10px] text-neutral-400">{formatTime(m.created_at)}</p>
+                <p className="mt-1.5 text-[10px] text-ink-3">{formatTime(m.created_at)}</p>
               </li>
             ))}
           </ul>
@@ -181,7 +181,7 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
                 : "Client";
               const vendorLabel = vendorName?.trim() ? vendorName : "Vendor";
               const bubbleSurface = chatBubbleClass(!fromClient);
-              const headerClass = "text-neutral-600";
+              const headerClass = "text-ink-2";
 
               return (
                 <li
@@ -206,9 +206,9 @@ export function AdminChatThread({ conversationId, className = "", compact = fals
                       </p>
                       <LinkifyMessageBody
                   body={m.body}
-                  className="mt-1 whitespace-pre-wrap break-words text-neutral-900"
+                  className="mt-1 whitespace-pre-wrap break-words text-ink"
                 />
-                      <p className="mt-1.5 font-mono text-[10px] text-neutral-400">
+                      <p className="mt-1.5 font-mono text-[10px] text-ink-3">
                         {formatTime(m.created_at)}
                       </p>
                     </div>

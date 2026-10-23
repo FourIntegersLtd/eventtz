@@ -4,7 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pencil, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useToast } from "@/components/ui/Toast";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Card, CardFooter, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AdminErrorBanner } from "@/components/ui/AdminErrorBanner";
 import { AdminLoadingState } from "@/features/admin/components/AdminLoadingState";
@@ -18,8 +20,8 @@ import { isHtmlMessage, MessageBody } from "@/lib/renderMessageBody";
 import { formatDateTime } from "@/lib/dateFormat";
 import { getApiErrorDetail } from "@/lib/api-errors";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { useServerList } from "@/lib/useServerList";
 import {
-  ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE,
   fetchAdminSupportConversationsPage,
   fetchAdminSupportMessages,
   patchAdminSupportMessage,
@@ -59,20 +61,37 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
   const { showToast } = useToast();
   const adminId = user?.id ?? "";
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [conversations, setConversations] = useState<AdminSupportConversation[]>([]);
+  const [actionError, setActionError] = useState<string | null>(null);
+  // Threads opened since the last reload: their unread count shows 0 before the server confirms it.
+  const [openedIds, setOpenedIds] = useState<ReadonlySet<string>>(new Set());
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<AdminSupportMessage[]>([]);
   const [threadDraft, setThreadDraft] = useState<SupportRichTextChange>(emptySupportDraft());
   const [threadComposerKey, setThreadComposerKey] = useState(0);
   const [threadSending, setThreadSending] = useState(false);
-  const [convOffset, setConvOffset] = useState(0);
-  const [convTotal, setConvTotal] = useState(0);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<SupportRichTextChange>(emptySupportDraft());
   const [editComposerKey, setEditComposerKey] = useState(0);
   const [editSaving, setEditSaving] = useState(false);
+
+  const list = useServerList<AdminSupportConversation>({
+    filters: {},
+    errorMessage: "Could not load support threads.",
+    fetchPage: async ({ offset, limit }) => {
+      const page = await fetchAdminSupportConversationsPage(offset, limit);
+      setOpenedIds(new Set());
+      return { items: page.conversations, total: page.total };
+    },
+  });
+  const conversations = useMemo(
+    () =>
+      list.items.map((conversation) =>
+        openedIds.has(conversation.id) ? { ...conversation, unread_count: 0 } : conversation,
+      ),
+    [list.items, openedIds],
+  );
+  const error = actionError ?? list.error;
+  const loading = list.loading && list.items.length === 0;
 
   const unreadTotal = useMemo(
     () => conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0),
@@ -86,23 +105,6 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
     }
   }, [unreadTotal, onUnreadTotalChange]);
 
-  const loadInbox = useCallback(async (opts?: { silent?: boolean }) => {
-    if (!opts?.silent) setLoading(true);
-    setError(null);
-    try {
-      const page = await fetchAdminSupportConversationsPage(
-        convOffset,
-        ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE,
-      );
-      setConversations(page.conversations);
-      setConvTotal(page.total);
-    } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not load support threads.");
-    } finally {
-      if (!opts?.silent) setLoading(false);
-    }
-  }, [convOffset]);
-
   const refreshActiveMessages = useCallback(async () => {
     if (!activeId) return;
     try {
@@ -113,14 +115,11 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
     }
   }, [activeId]);
 
+  const reloadInbox = list.reload;
   const refreshAll = useCallback(() => {
-    void loadInbox({ silent: true });
+    reloadInbox();
     void refreshActiveMessages();
-  }, [loadInbox, refreshActiveMessages]);
-
-  useEffect(() => {
-    void loadInbox();
-  }, [loadInbox]);
+  }, [reloadInbox, refreshActiveMessages]);
 
   useEffect(() => {
     const onVisibility = () => {
@@ -146,28 +145,26 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
       const msgs = await fetchAdminSupportMessages(id);
       setMessages(msgs);
       await postAdminSupportConversationRead(id);
-      setConversations((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, unread_count: 0 } : c)),
-      );
+      setOpenedIds((previous) => new Set(previous).add(id));
     } catch (e: unknown) {
-      setError(getApiErrorDetail(e) ?? "Could not load thread.");
+      setActionError(getApiErrorDetail(e) ?? "Could not load thread.");
     }
   };
 
   const reply = async () => {
     if (!activeId || !isSupportDraftValid(threadDraft.textLength) || threadSending) return;
     setThreadSending(true);
-    setError(null);
+    setActionError(null);
     try {
       const msg = await postAdminSupportMessage(activeId, threadDraft.html);
       setMessages((prev) => [...prev, msg]);
       setThreadDraft(emptySupportDraft());
       setThreadComposerKey((k) => k + 1);
       showToast({ title: "Reply sent", tone: "success" });
-      void loadInbox({ silent: true });
+      reloadInbox();
     } catch (e: unknown) {
       const message = getApiErrorDetail(e) ?? "Could not send reply.";
-      setError(message);
+      setActionError(message);
       showToast({ title: "Reply not sent", description: message, tone: "error" });
     } finally {
       setThreadSending(false);
@@ -177,7 +174,7 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
   const saveEdit = async () => {
     if (!activeId || !editingId || !isSupportDraftValid(editDraft.textLength) || editSaving) return;
     setEditSaving(true);
-    setError(null);
+    setActionError(null);
     try {
       const updated = await patchAdminSupportMessage(activeId, editingId, editDraft.html);
       setMessages((prev) => prev.map((m) => (m.id === editingId ? updated : m)));
@@ -185,7 +182,7 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
       showToast({ title: "Message updated", tone: "success" });
     } catch (e: unknown) {
       const message = getApiErrorDetail(e) ?? "Could not save edit.";
-      setError(message);
+      setActionError(message);
       showToast({ title: "Edit not saved", description: message, tone: "error" });
     } finally {
       setEditSaving(false);
@@ -197,8 +194,7 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
   return (
     <div className="ez-split min-h-[min(100dvh-14rem,100%)]">
       <div
-        className="ez-split__aside flex max-h-[42dvh] min-h-0 flex-col overflow-hidden lg:max-h-none"
-        style={{ flex: "1 1 340px", maxWidth: 420 }}
+        className="ez-split__aside flex max-h-[42dvh] min-h-0 flex-col overflow-hidden !max-w-[420px] !flex-[1_1_340px] lg:max-h-none"
       >
         {loading ? (
           <div className="p-4">
@@ -222,8 +218,7 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
                   key={c.id}
                   type="button"
                   onClick={() => void openThread(c.id)}
-                  className={`ez-list-row w-full text-left ${active ? "ez-list-row--active" : ""} ${unread && !active ? "ez-list-row--unread" : ""}`}
-                  style={{ flexWrap: "nowrap" }}
+                  className={`ez-list-row w-full text-left ${active ? "ez-list-row--active" : ""} ${unread && !active ? "ez-list-row--unread" : ""} !flex-nowrap`}
                 >
                   <span className="ez-avatar ez-avatar--sm">{peerInitials(c.peer_display_name)}</span>
                   <div className="ez-list-row__main">
@@ -244,16 +239,12 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
             })}
           </div>
           <TablePagination
-            offset={convOffset}
-            limit={ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE}
-            total={convTotal}
-            loading={loading}
-            onPrevious={() =>
-              setConvOffset((current) =>
-                Math.max(0, current - ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE),
-              )
-            }
-            onNext={() => setConvOffset((current) => current + ADMIN_SUPPORT_CONVERSATIONS_PAGE_SIZE)}
+            offset={list.offset}
+            limit={list.limit}
+            total={list.total}
+            loading={list.loading}
+            onPrevious={list.goPrevious}
+            onNext={list.goNext}
           />
           </>
         )}
@@ -266,17 +257,15 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
           </div>
         ) : null}
         {!activeConv ? (
-          <div className="ez-card flex flex-1 items-center justify-center p-6 text-sm text-neutral-500">
+          <Card className="flex flex-1 items-center justify-center p-6 text-sm text-ink-3">
             Select a thread to read and reply.
-          </div>
+          </Card>
         ) : (
-          <section className="ez-card flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="ez-card__head">
+          <Card as="section" className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <CardHeader>
               <h2 className="ez-h3">{activeConv.peer_display_name}</h2>
-              {activeConv.unread_count > 0 ? (
-                <span className="ez-badge ez-badge--brand">Open</span>
-              ) : null}
-            </div>
+              {activeConv.unread_count > 0 ? <Badge tone="brand">Open</Badge> : null}
+            </CardHeader>
 
             <div className="ez-stack min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
               {activeConv.created_at ? (
@@ -337,7 +326,7 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
                             setEditDraft({ html: m.body, textLength: 0 });
                             setEditComposerKey((k) => k + 1);
                           }}
-                          className="absolute right-2 top-2 rounded p-1 text-neutral-400 opacity-0 transition hover:bg-neutral-900/5 group-hover:opacity-100"
+                          className="absolute right-2 top-2 rounded p-1 text-ink-3 opacity-0 transition hover:bg-surface-3 group-hover:opacity-100"
                           aria-label="Edit message"
                         >
                           <Pencil className="h-3.5 w-3.5" aria-hidden />
@@ -363,17 +352,14 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
               })}
             </div>
 
-            <div
-              className="ez-card__foot"
-              style={{ justifyContent: "stretch", flexWrap: "nowrap" }}
-            >
+            <CardFooter className="!flex-nowrap !justify-stretch">
               {editingId ? (
-                <div className="flex w-full items-center justify-between gap-2 text-sm text-neutral-600">
+                <div className="flex w-full items-center justify-between gap-2 text-sm text-ink-2">
                   <span>Editing a message. Save or cancel above.</span>
                   <button
                     type="button"
                     onClick={cancelEdit}
-                    className="rounded p-1 text-neutral-500 hover:bg-neutral-200 hover:text-neutral-800"
+                    className="rounded p-1 text-ink-3 hover:bg-surface-3 hover:text-ink-2"
                     aria-label="Cancel edit"
                   >
                     <X className="h-4 w-4" aria-hidden />
@@ -394,8 +380,8 @@ export function AdminMessagesInboxView({ onUnreadTotalChange }: AdminMessagesInb
                   />
                 </div>
               )}
-            </div>
-          </section>
+            </CardFooter>
+          </Card>
         )}
       </div>
     </div>
