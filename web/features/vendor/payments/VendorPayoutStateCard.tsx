@@ -2,6 +2,8 @@
 
 import { ArrowUpRight, Check, Circle, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import type { Tone } from "@/lib/tone";
 import type { VendorPaymentsStatus } from "@/lib/vendorPaymentsApi";
 import { isVendorPayoutsReady } from "@/features/vendor/payments/useVendorPayoutsReady";
@@ -64,16 +66,15 @@ export function VendorPayoutStateCard({ variant, connecting, onConnect }: Vendor
           ? "Opening Stripe…"
           : "Connect with Stripe";
 
-  const btnClass = variant === "ready" ? "ez-btn ez-btn--secondary" : "ez-btn ez-btn--primary";
   const PrimaryIcon = variant === "not_started" ? ExternalLink : variant === "in_progress" ? ArrowUpRight : ExternalLink;
 
   return (
-    <div className="ez-card">
-      <div className="ez-card__head">
+    <Card>
+      <Card.Header>
         <span className="ez-eyebrow">{head.eyebrow}</span>
         <Badge tone={head.badgeTone}>{head.badge}</Badge>
-      </div>
-      <div className="ez-card__body">
+      </Card.Header>
+      <Card.Body>
         <div className="ez-stack">
           <h3 className="ez-h3">{title}</h3>
           <p className="ez-small">{body}</p>
@@ -86,14 +87,18 @@ export function VendorPayoutStateCard({ variant, connecting, onConnect }: Vendor
             ))}
           </div>
         </div>
-      </div>
-      <div className="ez-card__foot">
-        <button className={btnClass} type="button" disabled={connecting} onClick={onConnect}>
-          <PrimaryIcon size={18} strokeWidth={1.75} aria-hidden />
+      </Card.Body>
+      <Card.Footer>
+        <Button
+          variant={variant === "ready" ? "secondary" : "primary"}
+          disabled={connecting}
+          icon={<PrimaryIcon size={18} strokeWidth={1.75} aria-hidden />}
+          onClick={onConnect}
+        >
           {primaryLabel}
-        </button>
-      </div>
-    </div>
+        </Button>
+      </Card.Footer>
+    </Card>
   );
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -18,6 +18,7 @@ import {
   type ReferralPartner,
 } from "@/lib/adminReferralsApi";
 import { TablePagination } from "@/components/ui/TablePagination";
+import { useServerList } from "@/lib/useServerList";
 import { copyToClipboard } from "@/lib/copyToClipboard";
 import { formatDate } from "@/lib/dateFormat";
 
@@ -29,61 +30,48 @@ function formatDay(iso: string | null): string {
 }
 
 export function AdminReferralsView() {
-  const [partners, setPartners] = useState<ReferralPartner[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [copyNote, setCopyNote] = useState<string | null>(null);
-  const [offset, setOffset] = useState(0);
-  const [total, setTotal] = useState(0);
+  // "Active creators" is counted by the api over every page, so it is kept beside the rows of the page.
+  const [activeTotal, setActiveTotal] = useState(0);
 
-  const load = useCallback(async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const page = await fetchReferralPartnersPage(offset, ADMIN_REFERRAL_PARTNERS_PAGE_SIZE);
-      setPartners(page.partners);
-      setTotal(page.total);
-    } catch {
-      setError("Could not load creator links.");
-    } finally {
-      setLoading(false);
-    }
-  }, [offset]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const list = useServerList<ReferralPartner>({
+    pageSize: ADMIN_REFERRAL_PARTNERS_PAGE_SIZE,
+    errorMessage: "Could not load creator links.",
+    filters: {},
+    fetchPage: async ({ offset, limit }) => {
+      const page = await fetchReferralPartnersPage(offset, limit);
+      setActiveTotal(page.activeTotal);
+      return { items: page.partners, total: page.total };
+    },
+  });
+  const partners = list.items;
+  const total = list.total;
 
   const onLinkCopied = (partnerName: string) => {
     setCopyNote(`Link copied for ${partnerName}.`);
   };
 
-  if (loading && partners.length === 0) {
+  if (list.loading && partners.length === 0 && !list.error) {
     return <AdminLoadingState label="Loading referrals…" />;
   }
 
   return (
     <div className="ez-stack">
-      {error ? <AdminErrorBanner message={error} /> : null}
+      {list.error ? <AdminErrorBanner message={list.error} /> : null}
       {copyNote ? <AdminSuccessBanner message={copyNote} /> : null}
 
       {total > 0 ? (
         <div className="ez-grid-4">
-          <StatTile
-            label="Active creators"
-            value={partners.filter((p) => p.is_active).length}
-          />
+          <StatTile label="Active creators" value={activeTotal} />
           <StatTile label="Creator links" value={total} />
         </div>
       ) : null}
 
       <div className="flex justify-end">
-        <div className="ez-pagehead__actions">
-          <Button icon={<Plus className="h-4 w-4" aria-hidden />} onClick={() => setCreateOpen(true)}>
-            Create creator link
-          </Button>
-        </div>
+        <Button icon={<Plus className="h-4 w-4" aria-hidden />} onClick={() => setCreateOpen(true)}>
+          Create creator link
+        </Button>
       </div>
 
       <AdminCreateReferralPartnerModal
@@ -92,7 +80,7 @@ export function AdminReferralsView() {
         onCreated={(partner) => {
           void copyToClipboard(partner.referral_link);
           setCopyNote(`Link copied for ${partner.display_name}.`);
-          void load();
+          list.reload();
         }}
       />
 
@@ -116,7 +104,7 @@ export function AdminReferralsView() {
             {
               key: "creator",
               header: "Creator",
-              className: "font-medium text-neutral-900",
+              className: "font-medium text-ink",
               cell: (partner) => partner.display_name,
             },
             { key: "instagram", header: "Instagram", cell: (partner) => partner.instagram_handle || "-" },
@@ -126,7 +114,7 @@ export function AdminReferralsView() {
               headerClassName: "min-w-[16rem]",
               cell: (partner) => (
                 <div className="flex min-w-0 items-center gap-1">
-                  <span className="min-w-0 truncate text-xs text-neutral-600" title={partner.referral_link}>
+                  <span className="min-w-0 truncate text-xs text-ink-2" title={partner.referral_link}>
                     {partner.referral_link}
                   </span>
                   <CopyReferralLinkButton
@@ -160,14 +148,12 @@ export function AdminReferralsView() {
       )}
 
       <TablePagination
-        offset={offset}
-        limit={ADMIN_REFERRAL_PARTNERS_PAGE_SIZE}
+        offset={list.offset}
+        limit={list.limit}
         total={total}
-        loading={loading}
-        onPrevious={() =>
-          setOffset((current) => Math.max(0, current - ADMIN_REFERRAL_PARTNERS_PAGE_SIZE))
-        }
-        onNext={() => setOffset((current) => current + ADMIN_REFERRAL_PARTNERS_PAGE_SIZE)}
+        loading={list.loading}
+        onPrevious={list.goPrevious}
+        onNext={list.goNext}
       />
     </div>
   );

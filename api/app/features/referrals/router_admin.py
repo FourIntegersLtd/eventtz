@@ -40,7 +40,13 @@ async def list_partners(
 ) -> ReferralPartnerListResponse:
     """Every partner, newest first, with the link each one shares."""
     partners, total = await service_partners.list_partners_page(session, offset=page.offset, limit=page.limit)
-    return ReferralPartnerListResponse(partners=partners, total=total, offset=page.offset, limit=page.limit)
+    return ReferralPartnerListResponse(
+        partners=partners,
+        total=total,
+        offset=page.offset,
+        limit=page.limit,
+        active_total=await service_partners.count_active_partners(session),
+    )
 
 
 @router.post(

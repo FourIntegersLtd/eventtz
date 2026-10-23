@@ -34,3 +34,6 @@ class VendorPayoutLedger(BaseModel):
     paid_out_last_30_days_label: str = "GBP 0"
     total_awaiting_gbp: float = 0.0
     total_awaiting_label: str = "GBP 0"
+    # The held payout whose event comes first, across the whole ledger (not just this page).
+    next_release_event_date: str | None = None
+    next_release_label: str | None = None

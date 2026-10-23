@@ -40,7 +40,7 @@ export function AdminFinancialsCharts({ summary }: AdminFinancialsChartsProps) {
       >
         <div className="grid gap-6 sm:grid-cols-2 sm:gap-4">
           <div className="min-w-0">
-            <p className="mb-2 text-xs font-medium text-neutral-600">Platform fee</p>
+            <p className="mb-2 text-xs font-medium text-ink-2">Platform fee</p>
             {hasFee ? (
               <EzAreaChart data={feeData} valueLabel="Platform fee (GBP)" />
             ) : (
@@ -48,7 +48,7 @@ export function AdminFinancialsCharts({ summary }: AdminFinancialsChartsProps) {
             )}
           </div>
           <div className="min-w-0">
-            <p className="mb-2 text-xs font-medium text-neutral-600">Paid bookings</p>
+            <p className="mb-2 text-xs font-medium text-ink-2">Paid bookings</p>
             {hasCounts ? (
               <EzBarChart data={countData} valueLabel="Bookings" color="var(--ez-chart-2)" />
             ) : (

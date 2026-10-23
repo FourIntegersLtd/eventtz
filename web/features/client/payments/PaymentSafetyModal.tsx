@@ -44,7 +44,7 @@ export function PaymentSafetyModal({
         </div>
       }
     >
-      <div className="space-y-3 text-sm leading-relaxed text-neutral-700">
+      <div className="space-y-3 text-sm leading-relaxed text-ink-2">
         <LottieIllustration asset="paymentSecure" size="status" className="mb-1" />
         <p>{PAYMENT_SAFETY_COPY.intro}</p>
         <ul className="list-disc space-y-2 pl-5">
@@ -53,8 +53,8 @@ export function PaymentSafetyModal({
           ))}
         </ul>
         {cancellationPolicyLabel ? (
-          <div className="rounded-xl bg-neutral-50 px-4 py-3">
-            <p className="font-semibold text-neutral-900">
+          <div className="rounded-xl bg-surface-3 px-4 py-3">
+            <p className="font-semibold text-ink">
               {PAYMENT_SAFETY_COPY.cancellationPolicyHeading(cancellationPolicyLabel)}
             </p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px]">

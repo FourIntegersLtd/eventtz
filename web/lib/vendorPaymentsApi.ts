@@ -39,7 +39,3 @@ export async function fetchVendorPayoutHistoryPage(
   });
   return data;
 }
-
-export async function fetchVendorPayoutHistory(): Promise<VendorPayoutHistory> {
-  return fetchVendorPayoutHistoryPage(0, 200);
-}
