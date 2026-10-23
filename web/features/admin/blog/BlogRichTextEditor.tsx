@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import type { Editor } from "@tiptap/core";
+import { Card } from "@/components/ui/Card";
 import { uploadImage } from "@/lib/mediaApi";
 import { BlogImage } from "@/features/admin/blog/blogImageExtension";
 
@@ -168,7 +169,7 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
   const uploading = uploadingCount > 0;
 
   return (
-    <div className="ez-card overflow-hidden text-left">
+    <Card className="overflow-hidden text-left">
       <div className="flex flex-wrap items-center gap-0.5 border-b border-line px-2 py-1.5">
         <ToolbarButton
           label="Heading 1"
@@ -263,6 +264,6 @@ export function BlogRichTextEditor({ initialJson, onChange }: BlogEditorProps) {
       >
         <EditorContent editor={editor} />
       </div>
-    </div>
+    </Card>
   );
 }

@@ -71,6 +71,11 @@ DELETED_AT_SIGN_IN_MESSAGE = (
 REFRESH_EXPIRED_MESSAGE = "Your session has expired. Please sign in again."
 
 
+def refresh_expired() -> SessionExpired:
+    """The `SessionExpired` the refresh exchange raises, worded for a refresh token."""
+    return SessionExpired(REFRESH_EXPIRED_MESSAGE)
+
+
 class EmailNotVerified(Forbidden):
     """A client or vendor who has not clicked the verification link tried to sign in."""
 

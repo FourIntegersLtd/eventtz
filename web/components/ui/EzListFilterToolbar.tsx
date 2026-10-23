@@ -86,7 +86,7 @@ export function EzListFilterToolbar({
         ) : null}
       </div>
       {summary ? (
-        <p className="ez-small text-neutral-600">
+        <p className="ez-small text-ink-2">
           Showing: <span className="font-medium text-neutral-800">{summary.label}</span>
           {summary.onClear ? (
             <button
