@@ -8278,14 +8278,14 @@
             "title": "Content",
             "type": "string"
           },
-          "role": {
+          "message_role": {
             "description": "user or assistant",
-            "title": "Role",
+            "title": "Message Role",
             "type": "string"
           }
         },
         "required": [
-          "role",
+          "message_role",
           "content"
         ],
         "title": "CopilotAskMessage",
@@ -8899,6 +8899,11 @@
             "title": "Booking Request Id",
             "type": "string"
           },
+          "chat_included_for_review": {
+            "default": false,
+            "title": "Chat Included For Review",
+            "type": "boolean"
+          },
           "client_label": {
             "anyOf": [
               {
@@ -9077,6 +9082,7 @@
         "required": [
           "booking_lifecycle_status",
           "booking_request_id",
+          "chat_included_for_review",
           "client_label",
           "conversation_id",
           "counterparty_label",
@@ -10120,20 +10126,20 @@
         "type": "object"
       },
       "HelpAskMessage": {
-        "description": "One earlier turn of the help chat. The web app sends it as `role`.",
+        "description": "One earlier turn of the help chat: `message_role` from the web app, or the baseline's `role`.",
         "properties": {
           "content": {
             "title": "Content",
             "type": "string"
           },
-          "role": {
+          "message_role": {
             "description": "user or assistant",
-            "title": "Role",
+            "title": "Message Role",
             "type": "string"
           }
         },
         "required": [
-          "role",
+          "message_role",
           "content"
         ],
         "title": "HelpAskMessage",
@@ -11250,6 +11256,28 @@
       "PlannerVendorCard": {
         "description": "A vendor as the planner shows it: enough to decide, never a full profile.",
         "properties": {
+          "avg_response_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Response Seconds"
+          },
+          "base_city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base City"
+          },
           "business_name": {
             "title": "Business Name",
             "type": "string"
@@ -11264,6 +11292,33 @@
               }
             ],
             "title": "City"
+          },
+          "completed_bookings": {
+            "default": 0,
+            "title": "Completed Bookings",
+            "type": "integer"
+          },
+          "conversion_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversion Rate"
+          },
+          "cover_image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Image Url"
           },
           "min_list_price_gbp": {
             "anyOf": [
@@ -11281,6 +11336,29 @@
             "title": "Price On Request",
             "type": "boolean"
           },
+          "review_average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Average"
+          },
+          "review_count": {
+            "default": 0,
+            "title": "Review Count",
+            "type": "integer"
+          },
+          "services": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Services",
+            "type": "array"
+          },
           "unavailable": {
             "default": false,
             "title": "Unavailable",
@@ -11292,10 +11370,18 @@
           }
         },
         "required": [
+          "avg_response_seconds",
+          "base_city",
           "business_name",
           "city",
+          "completed_bookings",
+          "conversion_rate",
+          "cover_image_url",
           "min_list_price_gbp",
           "price_on_request",
+          "review_average",
+          "review_count",
+          "services",
           "unavailable",
           "user_id"
         ],

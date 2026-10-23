@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.time import uk_today
 from app.features.vendors import repository
 from app.features.vendors.domain_insurance import has_valid_insurance
+from app.features.vendors.domain_listing_media import listing_cover_image_url
 from app.features.vendors.domain_profile_form import vendor_display_name
 from app.features.vendors.rows import ListedVendorRow
 from app.features.vendors.schemas import ListedVendor
@@ -72,6 +73,11 @@ async def listed_vendors(
         city_query=city,
     )
     return _listed(rows)
+
+
+def cover_image_url(vendor: ListedVendor) -> str | None:
+    """The photo a card shows for a listed vendor: the first one their listing displays."""
+    return listing_cover_image_url(vendor.payload)
 
 
 async def listed_vendor(session: AsyncSession, user_id: str) -> ListedVendor | None:

@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 CopilotActionKind = Literal[
     "edit_profile",
@@ -81,7 +81,9 @@ class CopilotAskMessage(BaseModel):
 
     model_config = ConfigDict(populate_by_name=True)
 
-    message_role: str = Field(description="user or assistant", validation_alias="role")
+    message_role: str = Field(
+        description="user or assistant", validation_alias=AliasChoices("message_role", "role")
+    )
     content: str
 
 

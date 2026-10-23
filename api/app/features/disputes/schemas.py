@@ -32,6 +32,7 @@ class DisputePublic(BaseModel):
     booking_lifecycle_status: str | None = None
     payment_status: str | None = None
     conversation_id: str | None = None
+    chat_included_for_review: bool = False
     opened_by_role: Literal["client", "vendor"] | None = None
     opened_by_you: bool = False
     opened_by_display_name: str | None = None

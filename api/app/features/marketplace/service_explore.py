@@ -15,10 +15,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.auth import Principal
 from app.core.settings import get_settings
 from app.features.marketplace import repository_explore, service_events
-from app.features.marketplace.domain_metrics import VendorSignals, vendor_signals
+from app.features.marketplace.domain_metrics import VendorSignals as VendorSignals
 
 # Re-exported: bookings names a booking's reviewer the way public reviews do.
 from app.features.marketplace.domain_metrics import reviewer_display as reviewer_display
+from app.features.marketplace.domain_metrics import vendor_signals
 from app.features.marketplace.domain_search import vendor_available_on
 from app.features.marketplace.errors import InvalidVendorId, VendorNotListed
 from app.features.marketplace.schemas import ExploreVendorRow, PublicReviewItem, VendorPublicReviewsResponse

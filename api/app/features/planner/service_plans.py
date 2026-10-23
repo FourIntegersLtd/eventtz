@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging import get_logger
 from app.core.ports import ChatMessage, LanguageModel
 from app.core.time import uk_today
-from app.features.marketplace import service_search
+from app.features.marketplace import service_explore, service_search
 from app.features.planner import domain, repository
 from app.features.planner.errors import (
     DescribeCelebration,
@@ -132,7 +132,9 @@ def _why_messages(*, business_name: str, city: str | None, need_label: str) -> l
     ]
 
 
-def _vendor_card(listed: ListedVendor | None, *, fallback_user_id: str) -> PlannerVendorCard:
+def _vendor_card(
+    listed: ListedVendor | None, signals: service_explore.VendorSignals | None, *, fallback_user_id: str
+) -> PlannerVendorCard:
     """A `PlannerVendorCard` from a listing lookup, or an "unavailable" placeholder without one."""
     if listed is None:
         return PlannerVendorCard(
@@ -140,10 +142,19 @@ def _vendor_card(listed: ListedVendor | None, *, fallback_user_id: str) -> Plann
         )
     payload = listed.payload or {}
     price = payload.get("min_list_price_gbp")
+    found = signals or service_explore.VendorSignals()
     return PlannerVendorCard(
         user_id=listed.user_id,
         business_name=str(payload.get("businessName") or "Vendor"),
         city=payload.get("baseCity"),
+        services=[str(service) for service in payload.get("servicesOffered") or []],
+        base_city=payload.get("baseCity"),
+        cover_image_url=service_listing.cover_image_url(listed),
+        review_average=found.review_average,
+        review_count=found.review_count,
+        completed_bookings=found.completed_bookings,
+        avg_response_seconds=found.avg_response_seconds,
+        conversion_rate=found.conversion_rate,
         min_list_price_gbp=price,
         unavailable=False,
         price_on_request=price is None,
@@ -367,13 +378,20 @@ async def list_plans(session: AsyncSession, client_user_id: str) -> PlanListResp
 async def _recommendation_for_item(session: AsyncSession, item: CelebrationPlanItemRow) -> PlanRecommendation:
     """Build a plan item's recommendation card, re-checking the primary vendor's listing."""
     primary_card: PlannerVendorCard | None = None
+    shown_ids = [
+        *([item.primary_vendor_user_id] if item.primary_vendor_user_id else []),
+        *item.alternative_vendor_user_ids,
+    ]
+    signals = await service_explore.signals_for(session, shown_ids)
     if item.primary_vendor_user_id:
         listed = await service_listing.listed_vendor(session, item.primary_vendor_user_id)
-        primary_card = _vendor_card(listed, fallback_user_id=item.primary_vendor_user_id)
+        primary_card = _vendor_card(
+            listed, signals.get(item.primary_vendor_user_id), fallback_user_id=item.primary_vendor_user_id
+        )
     alternative_cards = []
     for vendor_id in item.alternative_vendor_user_ids:
         listed = await service_listing.listed_vendor(session, vendor_id)
-        alternative_cards.append(_vendor_card(listed, fallback_user_id=vendor_id))
+        alternative_cards.append(_vendor_card(listed, signals.get(vendor_id), fallback_user_id=vendor_id))
     return PlanRecommendation(
         need_id=item.need_id,
         label=item.label,

@@ -127,6 +127,15 @@ async def test_generate_plan_recommends_a_listed_vendor_for_a_need(
     assert primary is not None
     assert primary["business_name"] == VENDOR_BUSINESS_NAME
     assert primary["unavailable"] is False
+    # The card the screen draws: city, services and trust signals (none on record for a new vendor).
+    assert primary["base_city"] == VENDOR_CITY
+    assert primary["services"] == ["hair_styling"]
+    assert primary["review_count"] == 0
+    assert primary["review_average"] is None
+    assert primary["completed_bookings"] == 0
+    assert primary["avg_response_seconds"] is None
+    assert primary["conversion_rate"] is None
+    assert primary["cover_image_url"] is None
     # A budget was stated, so the list ends with the profile step then the budget step.
     assert body["next_steps"][-2:] == [
         "Open a vendor profile to request a booking - nothing is booked until you confirm.",

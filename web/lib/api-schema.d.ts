@@ -7075,10 +7075,10 @@ export interface components {
             /** Content */
             content: string;
             /**
-             * Role
+             * Message Role
              * @description user or assistant
              */
-            role: string;
+            message_role: string;
         };
         /**
          * CopilotAskRequest
@@ -7322,6 +7322,11 @@ export interface components {
             booking_lifecycle_status: string | null;
             /** Booking Request Id */
             booking_request_id: string;
+            /**
+             * Chat Included For Review
+             * @default false
+             */
+            chat_included_for_review: boolean;
             /** Client Label */
             client_label: string | null;
             /** Conversation Id */
@@ -7827,16 +7832,16 @@ export interface components {
         };
         /**
          * HelpAskMessage
-         * @description One earlier turn of the help chat. The web app sends it as `role`.
+         * @description One earlier turn of the help chat: `message_role` from the web app, or the baseline's `role`.
          */
         HelpAskMessage: {
             /** Content */
             content: string;
             /**
-             * Role
+             * Message Role
              * @description user or assistant
              */
-            role: string;
+            message_role: string;
         };
         /**
          * HelpAskRequest
@@ -8270,10 +8275,23 @@ export interface components {
          * @description A vendor as the planner shows it: enough to decide, never a full profile.
          */
         PlannerVendorCard: {
+            /** Avg Response Seconds */
+            avg_response_seconds: number | null;
+            /** Base City */
+            base_city: string | null;
             /** Business Name */
             business_name: string;
             /** City */
             city: string | null;
+            /**
+             * Completed Bookings
+             * @default 0
+             */
+            completed_bookings: number;
+            /** Conversion Rate */
+            conversion_rate: number | null;
+            /** Cover Image Url */
+            cover_image_url: string | null;
             /** Min List Price Gbp */
             min_list_price_gbp: number | null;
             /**
@@ -8281,6 +8299,15 @@ export interface components {
              * @default false
              */
             price_on_request: boolean;
+            /** Review Average */
+            review_average: number | null;
+            /**
+             * Review Count
+             * @default 0
+             */
+            review_count: number;
+            /** Services */
+            services: string[];
             /**
              * Unavailable
              * @default false
