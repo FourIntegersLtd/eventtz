@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { loginPathWithNext } from "@/features/auth/authRouting";
-import { ChangePasswordModal } from "@/features/settings/ChangePasswordModal";
+import { ChangePasswordModal } from "@/components/auth/ChangePasswordModal";
 import { AdminTestAccountsPanel } from "@/features/admin/settings/AdminTestAccountsPanel";
 
 /** Admin settings: account password and QA test accounts (A22; no platform-fee API on this page). */

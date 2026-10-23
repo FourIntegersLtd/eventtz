@@ -3,7 +3,7 @@
 import { useRef, type MouseEvent, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/Card";
-import { LANDING_NAV_STICKY_ASIDE_TOP_CLASS, LANDING_SCROLL_MT_DESCENDANTS_CLASS } from "@/features/landing/landingSectionStyles";
+import { LANDING_NAV_STICKY_ASIDE_TOP_CLASS, LANDING_SCROLL_MT_DESCENDANTS_CLASS } from "@/components/landing/landingSectionStyles";
 import { useComplianceSections, type ComplianceSection } from "@/components/compliances/useComplianceSections";
 
 type ComplianceReaderProps = {

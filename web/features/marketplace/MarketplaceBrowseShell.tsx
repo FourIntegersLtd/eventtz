@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { LandingNav } from "@/features/landing/LandingNav";
+import { LandingNav } from "@/components/landing/LandingNav";
 
 type MarketplaceBrowseShellProps = {
   children: ReactNode;
