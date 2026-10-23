@@ -1,9 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Badge } from "@/components/ui/Badge";
+import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { ButtonLink } from "@/components/ui/ButtonLink";
-import { Banner } from "@/components/ui/Banner";
+import { getButtonClassName } from "@/components/ui/buttonStyles";
 import { Card } from "@/components/ui/Card";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { OptionCard } from "@/components/ui/OptionCard";
@@ -29,18 +30,6 @@ describe("ui building blocks emit canvas markup", () => {
     );
   });
 
-  it("Badge plain drops the status dot", () => {
-    expect(renderToStaticMarkup(<Badge plain>Flexible</Badge>)).toBe(
-      '<span class="ez-badge ez-badge--neutral shrink-0 ez-badge--plain">Flexible</span>',
-    );
-  });
-
-  it("Button and ButtonLink block add the full-width modifier", () => {
-    expect(renderToStaticMarkup(<Button block>Go</Button>)).toContain("ez-btn--block");
-    expect(renderToStaticMarkup(<ButtonLink href="/x" block>Go</ButtonLink>)).toContain("ez-btn--block");
-    expect(renderToStaticMarkup(<Button>Go</Button>)).not.toContain("ez-btn--block");
-  });
-
   it("Banner is an ez-banner with a body, title and actions", () => {
     expect(
       renderToStaticMarkup(
@@ -53,12 +42,23 @@ describe("ui building blocks emit canvas markup", () => {
     );
   });
 
+  it("Banner plain is the untoned ez-banner", () => {
+    expect(renderToStaticMarkup(<Banner plain>Hi</Banner>)).toBe(
+      '<div role="status" class="ez-banner"><div class="ez-banner__body"><div>Hi</div></div></div>',
+    );
+  });
+
   it("Card maps variants and slots onto ez-card classes", () => {
     expect(renderToStaticMarkup(<Card padding="md">x</Card>)).toBe('<div class="ez-card shadow-xs p-5">x</div>');
     expect(renderToStaticMarkup(<Card variant="muted">x</Card>)).toBe('<div class="ez-card ez-card--flat">x</div>');
     expect(renderToStaticMarkup(<Card variant="raised">x</Card>)).toBe('<div class="ez-card ez-card--raised">x</div>');
     expect(renderToStaticMarkup(<Card.Header>h</Card.Header>)).toBe('<div class="ez-card__head">h</div>');
     expect(renderToStaticMarkup(<Card.Footer>f</Card.Footer>)).toBe('<div class="ez-card__foot">f</div>');
+  });
+
+  it("a block button carries ez-btn--block and a normal one does not", () => {
+    expect(getButtonClassName({ block: true })).toContain("ez-btn ez-btn--primary ez-btn--block");
+    expect(getButtonClassName()).not.toContain("ez-btn--block");
   });
 
   it("Tabs render ez-tab with the active modifier and a capped count", () => {
@@ -173,6 +173,27 @@ describe("ui building blocks emit canvas markup", () => {
     const markup = renderToStaticMarkup(<DescriptionRow layout="review" label="Email" value="a@b.co" />);
     expect(markup).toContain("data-review-field");
     expect(markup).toContain('<dd class="min-w-0 text-sm font-medium text-neutral-900 sm:text-right">a@b.co</dd>');
+  });
+
+  it("StatTile caption renders an ez-caption line", () => {
+    expect(renderToStaticMarkup(<StatTile label="A" value="1" caption="3 pending" />)).toContain(
+      '<span class="ez-caption">3 pending</span>',
+    );
+  });
+
+  it("Badge accepts the canvas gold accent", () => {
+    expect(renderToStaticMarkup(<Badge tone="gold">Assistant</Badge>)).toBe(
+      '<span class="ez-badge ez-badge--gold shrink-0">Assistant</span>',
+    );
+  });
+
+  it("Badge plain drops the dot and Button block goes full width", () => {
+    expect(renderToStaticMarkup(<Badge plain>Cover</Badge>)).toBe(
+      '<span class="ez-badge ez-badge--neutral ez-badge--plain shrink-0">Cover</span>',
+    );
+    expect(renderToStaticMarkup(<Button block>Go</Button>)).toContain("ez-btn--block");
+    expect(renderToStaticMarkup(<Button>Go</Button>)).not.toContain("ez-btn--block");
+    expect(renderToStaticMarkup(<ButtonLink href="/x" block>Go</ButtonLink>)).toContain("ez-btn--block");
   });
 
   it("StatTile compact is a bordered card, not an ez-kpi", () => {

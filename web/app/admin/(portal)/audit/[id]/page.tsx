@@ -13,7 +13,7 @@ export default function AdminAuditDetailPage() {
       {id ? (
         <AdminAuditDetailView entryId={id} />
       ) : (
-        <p className="text-sm text-neutral-600">Invalid id.</p>
+        <p className="text-sm text-ink-2">Invalid id.</p>
       )}
     </AdminConsolePage>
   );

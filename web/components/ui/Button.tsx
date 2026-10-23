@@ -15,9 +15,9 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
   shape?: ButtonShape;
-  loading?: boolean;
-  /** Full width (`ez-btn--block`). */
+  /** Full width of the container. */
   block?: boolean;
+  loading?: boolean;
   /** Icon-only or icon+label leading element. */
   icon?: React.ReactNode;
 };
@@ -34,8 +34,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     variant = "primary",
     size = "md",
     shape = "default",
-    loading = false,
     block = false,
+    loading = false,
     icon,
     disabled,
     className = "",

@@ -22,7 +22,7 @@ export function EzFilterDateField({
     <label
       className={`grid w-full min-w-0 max-w-full grid-cols-1 text-sm lg:w-auto lg:min-w-[12.5rem] ${className}`.trim()}
     >
-      <span className="text-neutral-600">
+      <span className="text-ink-2">
         {label}
         {optional ? <span className="text-neutral-400"> · optional</span> : null}
       </span>

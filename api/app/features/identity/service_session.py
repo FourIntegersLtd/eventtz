@@ -12,7 +12,7 @@ from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import AccountDeleted, Principal, SessionExpired, issue_access_token
+from app.core.auth import AccountDeleted, Principal, issue_access_token
 from app.core.errors import AppError
 from app.core.logging import get_logger
 from app.core.settings import get_settings
@@ -21,12 +21,12 @@ from app.features.identity.domain_accounts import hash_token, needs_email_verifi
 from app.features.identity.domain_sessions import RefreshChainState, use_refresh_token
 from app.features.identity.errors import (
     DELETED_AT_SIGN_IN_MESSAGE,
-    REFRESH_EXPIRED_MESSAGE,
     EmailNotVerified,
     RefreshTokenReused,
     SuspendedAtSignIn,
     TooManySignIns,
     WrongCredentials,
+    refresh_expired,
 )
 from app.features.identity.rows import UserProfileRow
 from app.features.identity.schemas import (
@@ -130,12 +130,12 @@ async def refresh(session: AsyncSession, refresh_token: str | None) -> RefreshSe
     and `RefreshTokenReused` (after revoking the chain) for one already spent.
     """
     if not refresh_token:
-        raise SessionExpired(REFRESH_EXPIRED_MESSAGE)
+        raise refresh_expired()
     now = datetime.now(UTC)
     token = await repository.refresh_token_by_hash(session, hash_token(refresh_token))
     chain = await repository.refresh_chain_by_id(session, token.chain_id) if token is not None else None
     if token is None or chain is None:
-        raise SessionExpired(REFRESH_EXPIRED_MESSAGE)
+        raise refresh_expired()
     decision = use_refresh_token(
         RefreshChainState(expires_at=chain.expires_at, revoked_at=chain.revoked_at),
         token_already_spent=token.used_at is not None,
@@ -146,10 +146,10 @@ async def refresh(session: AsyncSession, refresh_token: str | None) -> RefreshSe
             await repository.revoke_refresh_chain(session, chain_id=chain.id, at=now, reason="reuse_detected")
             log.warning("refresh token reused; chain revoked user_id=%s", chain.user_id)
             raise RefreshTokenReused()
-        raise SessionExpired(REFRESH_EXPIRED_MESSAGE)
+        raise refresh_expired()
     profile = await repository.get_profile(session, chain.user_id)
     if profile is None or profile.deleted_at:
-        raise SessionExpired(REFRESH_EXPIRED_MESSAGE)
+        raise refresh_expired()
     raw_refresh_token, refresh_token_hash = new_refresh_token()
     rotated = await repository.spend_and_issue(
         session, token_id=token.id, chain_id=chain.id, token_hash=refresh_token_hash, at=now

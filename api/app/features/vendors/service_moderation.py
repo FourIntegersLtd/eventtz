@@ -26,7 +26,7 @@ from app.features.vendors import repository
 from app.features.vendors.domain_insurance import MIN_COVER_GBP
 from app.features.vendors.domain_listing_media import listing_cover_image_url, url_list, with_listing_media
 from app.features.vendors.domain_profile_form import ONBOARDING_FLOW_VERSION, normalize_payload_fields
-from app.features.vendors.domain_visibility import is_paused, listing_override_of
+from app.features.vendors.domain_visibility import is_paused, is_suspended, listing_override_of
 from app.features.vendors.errors import (
     InsuranceAlreadyExpired,
     InsuranceCertificateMissing,
@@ -312,6 +312,8 @@ async def _nudge(
     sent = 0
     skipped = 0
     failures: list[AdminVendorProfileNudgeFailure] = []
+    # A closed account is never reminded, whatever the screen offered; one lookup for the batch.
+    closed_ids = await identity.closed_account_ids(session, [raw_id.strip() for raw_id in user_ids])
     for raw_id in user_ids:
         user_id = raw_id.strip()
         if not user_id or user_id in seen:
@@ -323,7 +325,7 @@ async def _nudge(
                 AdminVendorProfileNudgeFailure(user_id=user_id, error=VendorProfileNotFound.default_message)
             )
             continue
-        if not is_eligible(vendor):
+        if not is_eligible(vendor) or is_suspended(vendor.approval_status) or user_id in closed_ids:
             skipped += 1
             continue
         try:

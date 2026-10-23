@@ -158,8 +158,7 @@ export function VendorMessagesEzView({ selectedConversationId }: VendorMessagesE
             <Card>
               <CardHeader>
                 <span className="ez-h3">Draft reply</span>
-                {/* The canvas has a gold badge tone that Badge's Tone type lacks; it follows brand in the css. */}
-                <Badge tone="brand" className="ez-badge--gold">Assistant</Badge>
+                <Badge tone="gold">Assistant</Badge>
               </CardHeader>
               <CardBody>
                 <VendorDraftReplyPanel bookingId={draftBookingId} />

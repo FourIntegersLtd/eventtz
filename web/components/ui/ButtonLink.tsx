@@ -11,7 +11,7 @@ export type ButtonLinkProps = Omit<ComponentProps<typeof Link>, "className"> & {
   variant?: ButtonVariant;
   size?: ButtonSize;
   shape?: ButtonShape;
-  /** Full width (`ez-btn--block`). */
+  /** Full width of the container. */
   block?: boolean;
   className?: string;
 };
