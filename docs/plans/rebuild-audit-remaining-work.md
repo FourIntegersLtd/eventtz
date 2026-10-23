@@ -5,6 +5,11 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 
 ## Done
 
+**Admin console screens, platform-owned part** (PR "Rebuild audit: admin screens on the design system and server lists").
+- `OWNERS.md` gives platform-owner only admin blog, dashboard, report-bug, settings, layout and components. Blog list is now on `useServerList`; `fetchAdminBlogPosts` (the `limit: 200` wrapper, no callers) is deleted. Cards, buttons, badges and the success banner in those folders use `Card`, `Button`/`ButtonLink`, `Badge`, `Banner`; the last inline `style` and `neutral-*` classes are gone.
+- Two-server comparison (seeded 40 posts, pages 1 and 2, desktop and 390px) and dashboard, report-bug, settings and editor screenshots against main: at most 0.012% mismatching pixels.
+- Not done here, owned by others (still to move onto `useServerList` / `DataTable`): audit, clients (incl. the raw `ez-dl` in `AdminClientsView`) and team (access-owner); bookings, disputes, reviews (bookings-owner); financials, referrals, referral signups (money-owner); marketplace analytics (marketplace-owner); messages inbox (comms-owner); vendors (vendors-owner).
+
 **Phase 3 item 5 (start) and Phase 2.3 (finish): shared list hook and the last duplicate components** (PR "Rebuild audit: shared list hook and the last duplicate components").
 - `web/lib/useServerList.ts` (offset/limit default 25, total, filters, search; offset resets when they change) with literal-value tests. The bookings scaffold is built on it.
 - Client and vendor bookings lists are one `BookingsEzList` with a `perspective` prop. `EzListFilterToolbar` takes `searchId`.

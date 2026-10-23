@@ -32,7 +32,7 @@ export function AdminInfoHint({ label, info }: AdminInfoHintProps) {
         onClick={() => setOpen(true)}
         aria-label={`Explain ${label}`}
         title="What is this?"
-        className={`-mr-1 inline-flex shrink-0 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-primary ${TOUCH_TARGET} ${FOCUS_RING}`}
+        className={`-mr-1 inline-flex shrink-0 items-center justify-center rounded-lg text-ink-3 transition hover:bg-surface-3 hover:text-primary ${TOUCH_TARGET} ${FOCUS_RING}`}
       >
         <CircleHelp className="h-4 w-4" aria-hidden />
       </button>
@@ -50,15 +50,15 @@ export function AdminInfoHint({ label, info }: AdminInfoHintProps) {
           </div>
         }
       >
-        <div className="ez-stack text-sm leading-relaxed text-neutral-700">
+        <div className="ez-stack text-sm leading-relaxed text-ink-2">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               What this shows
             </p>
             <p className="mt-1">{info.what}</p>
           </div>
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
               How we calculate it
             </p>
             <p className="mt-1">{info.how}</p>

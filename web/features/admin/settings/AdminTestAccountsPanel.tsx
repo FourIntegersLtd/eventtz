@@ -1,5 +1,6 @@
 "use client";
 
+import { Card } from "@/components/ui/Card";
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { copyToClipboard } from "@/lib/copyToClipboard";
@@ -67,18 +68,18 @@ function TestAccountRow({ account }: { account: AdminTestAccount }) {
 
 export function AdminTestAccountsPanel() {
   return (
-    <section className="ez-card overflow-hidden">
-      <div className="ez-card__head">
+    <Card as="section" className="overflow-hidden">
+      <Card.Header>
         <h2 className="ez-h3">Test accounts</h2>
         <p className="ez-small">
           Vendor and client QA sign-ins. Passwords stay hidden; use copy.
         </p>
-      </div>
-      <div className="ez-card__body ez-stack ez-stack--lg">
+      </Card.Header>
+      <Card.Body className="ez-stack ez-stack--lg">
         {ADMIN_TEST_ACCOUNTS.map((account) => (
           <TestAccountRow key={account.email} account={account} />
         ))}
-      </div>
-    </section>
+      </Card.Body>
+    </Card>
   );
 }
