@@ -4,7 +4,7 @@ Ported from the baseline's `enquiry_reminders.py` and `lifecycle_reminders.py`:
 
 - the client is nudged 24 hours after an enquiry the vendor never answered, with other vendors to try;
 - the client is reminded to pay 24 hours after the vendor accepted;
-- both sides are reminded the day before a paid event (UTC calendar day);
+- both sides are reminded the day before a paid event (London calendar day);
 - an approved vendor without ready payouts is nudged 24 hours after approval.
 
 Each reminder is claimed by its marker column with a conditional write BEFORE anything is
@@ -218,7 +218,7 @@ async def _remind_to_pay(
 
 
 async def send_event_tomorrow_reminders(session: AsyncSession, mailer: Mailer, *, now: datetime) -> int:
-    """Tell both sides of each paid booking whose event starts tomorrow (UTC); returns how many bookings."""
+    """Tell both sides of each paid booking whose event is tomorrow (London day); returns how many."""
     limit = domain_maintenance.MAINTENANCE_BATCH_LIMIT
     candidates = await repository_maintenance.paid_bookings_starting_on(
         session, domain_maintenance.tomorrow_uk(now), limit=limit * 3

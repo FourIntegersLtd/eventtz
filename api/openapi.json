@@ -14598,6 +14598,11 @@
       "VendorReferralBookingsResponse": {
         "description": "Every referral booking for the vendor and the clients' total savings.",
         "properties": {
+          "accepted_total": {
+            "default": 0,
+            "title": "Accepted Total",
+            "type": "integer"
+          },
           "bookings": {
             "items": {
               "$ref": "#/components/schemas/VendorReferralBookingRow"
@@ -14635,6 +14640,7 @@
           }
         },
         "required": [
+          "accepted_total",
           "bookings",
           "limit",
           "offset",

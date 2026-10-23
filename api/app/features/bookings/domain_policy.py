@@ -79,14 +79,15 @@ def payment_due_at(
     """When an accepted booking must be paid by, or None when no deadline applies.
 
     The earlier of `deadline_hours` after acceptance and PAYMENT_DEADLINE_HOURS_BEFORE_EVENT
-    before the start (UTC midnight of the event's first day;
-    not yet moved to London time like the delivery and deposit clocks). A booking accepted inside that
+    before the start (London midnight of the event's first day, like the delivery and deposit
+    clocks; hours are real elapsed hours). A booking accepted inside that
     window would otherwise be due before it was accepted, so it is due by the event start instead.
     """
     if accepted_at is None or event_date is None:
         return None
     accepted_utc = accepted_at.astimezone(UTC)
-    event_start = datetime(event_date.year, event_date.month, event_date.day, tzinfo=UTC)
+    # Converted to UTC before subtracting: arithmetic on a London-aware value counts wall-clock hours.
+    event_start = datetime.combine(event_date, time.min, tzinfo=HOME_TIMEZONE).astimezone(UTC)
     latest_due = event_start - timedelta(hours=PAYMENT_DEADLINE_HOURS_BEFORE_EVENT)
     if latest_due <= accepted_utc:
         latest_due = event_start

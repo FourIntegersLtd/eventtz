@@ -51,10 +51,13 @@ export function VendorReferralsTab() {
   const [referralError, setReferralError] = useState<string | null>(null);
   const [draftReferralCode, setDraftReferralCode] = useState("");
   const [referralSaving, setReferralSaving] = useState(false);
+  // Accepted referral bookings across every page, from the server (the list below holds one page).
+  const [acceptedTotal, setAcceptedTotal] = useState(0);
 
   const fetchPage = useCallback(async ({ offset, limit }: ServerListQuery<Record<string, never>>) => {
     try {
       const page = await fetchVendorReferralBookingsPage(offset, limit);
+      setAcceptedTotal(page.accepted_total);
       return { items: page.bookings, total: page.total ?? page.total_referral_bookings };
     } catch (err: unknown) {
       // A 404 means the listing is not approved yet; the share card explains it, so the list stays empty.
@@ -127,10 +130,6 @@ export function VendorReferralsTab() {
   };
 
   const hasReferralCode = Boolean(referral?.has_referral_code && referral.referral_code);
-  const approved = referralRows.filter((row) => {
-    const status = row.booking_status.toLowerCase();
-    return status === "accepted" || status === "completed";
-  }).length;
 
   return (
     <div className="vendor-referrals-layout">
@@ -138,7 +137,7 @@ export function VendorReferralsTab() {
         <SettingsCard title="Your referrals">
           <div className="ez-grid-2">
             <StatTile label="Bookings" value={total} />
-            <StatTile label="Accepted" value={approved} />
+            <StatTile label="Accepted" value={acceptedTotal} />
           </div>
           {referralRows.length === 0 ? (
             <p className="ez-small">No referral bookings yet. When a client books with your link, they show up here.</p>

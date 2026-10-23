@@ -169,5 +169,7 @@ class VendorReferralBookingsResponse(PagedResponse):
 
     success: bool = True
     total_referral_bookings: int
+    # Accepted or completed referral bookings across all pages (the "Accepted" tile).
+    accepted_total: int = 0
     total_fee_savings_gbp: float
     bookings: list[VendorReferralBookingRow]

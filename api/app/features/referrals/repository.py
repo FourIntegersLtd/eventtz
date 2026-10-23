@@ -344,6 +344,10 @@ async def save_vendor_code(session: AsyncSession, vendor_user_id: str, code: str
 REFERRAL_BOOKINGS_LIMIT = 200
 
 
+# Statuses the vendor's referrals screen counts as "Accepted" (the booking was taken up).
+ACCEPTED_REFERRAL_STATUSES = ("accepted", "completed")
+
+
 def _referral_bookings_where(vendor_uuid: object) -> tuple[ColumnElement[bool], ColumnElement[bool]]:
     """Bookings that used a vendor referral code."""
     bookings = _booking_requests.c
@@ -379,6 +383,21 @@ async def list_referral_bookings(session: AsyncSession, vendor_user_id: str) -> 
         session, vendor_user_id, offset=0, limit=REFERRAL_BOOKINGS_LIMIT
     )
     return rows
+
+
+async def count_accepted_referral_bookings(session: AsyncSession, vendor_user_id: str) -> int:
+    """How many of the vendor's referral bookings are accepted or completed, across all pages."""
+    parsed_id = as_uuid(vendor_user_id)
+    if parsed_id is None:
+        return 0
+    query = (
+        select(func.count())
+        .select_from(_booking_requests)
+        .where(
+            *_referral_bookings_where(parsed_id), _booking_requests.c.status.in_(ACCEPTED_REFERRAL_STATUSES)
+        )
+    )
+    return int((await session.execute(query)).scalar_one())
 
 
 async def list_referral_bookings_page(
