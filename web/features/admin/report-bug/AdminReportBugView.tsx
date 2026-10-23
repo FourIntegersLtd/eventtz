@@ -51,25 +51,27 @@ export function AdminReportBugView() {
           <Card.Header>
             <h2 className="ez-h3">What went wrong</h2>
           </Card.Header>
-          <form onSubmit={onSubmit} className="ez-card__body ez-stack ez-stack--lg">
-            {error ? <AdminErrorBanner message={error} /> : null}
-            <label htmlFor="admin-bug-message" className="ez-field">
-              <span className="ez-label">What did you tap, and what should have happened?</span>
-              <textarea
-                id="admin-bug-message"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={8}
-                className="ez-input ez-input--area"
-                placeholder="Describe the steps and the outcome you expected."
-              />
-            </label>
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button type="submit" disabled={busy}>
-                {busy ? "Sending…" : "Send bug report"}
-              </Button>
-            </div>
-          </form>
+          <Card.Body>
+            <form onSubmit={onSubmit} className="ez-stack ez-stack--lg">
+              {error ? <AdminErrorBanner message={error} /> : null}
+              <label htmlFor="admin-bug-message" className="ez-field">
+                <span className="ez-label">What did you tap, and what should have happened?</span>
+                <textarea
+                  id="admin-bug-message"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={8}
+                  className="ez-input ez-input--area"
+                  placeholder="Describe the steps and the outcome you expected."
+                />
+              </label>
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button type="submit" disabled={busy}>
+                  {busy ? "Sending…" : "Send bug report"}
+                </Button>
+              </div>
+            </form>
+          </Card.Body>
         </Card>
       </div>
 

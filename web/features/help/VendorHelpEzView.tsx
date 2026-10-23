@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Calendar, ChevronDown, ChevronRight, Search, Send, Shield, Wallet } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useToast } from "@/components/ui/Toast";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -101,7 +104,7 @@ export function VendorHelpEzView() {
   };
 
   return (
-    <div className="ez-stack ez-stack--lg" style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+    <div className="ez-stack ez-stack--lg min-h-0 flex-1 overflow-auto">
       <PageHeader descriptionSize="body"
         eyebrow="Account"
         title="Help"
@@ -125,13 +128,8 @@ export function VendorHelpEzView() {
         {TOPICS.map((item) => {
           const Icon = item.icon;
           return (
-            <button
-              key={item.title}
-              type="button"
-              className="ez-card"
-              onClick={() => setQuery(item.query)}
-            >
-              <div className="ez-card__body">
+            <Card as="button" key={item.title} type="button" onClick={() => setQuery(item.query)}>
+              <Card.Body>
                 <div className="ez-stack ez-stack--sm">
                   <span className="ez-icon-tile">
                     <Icon size={20} strokeWidth={1.75} aria-hidden />
@@ -139,19 +137,19 @@ export function VendorHelpEzView() {
                   <span className="ez-strong">{item.title}</span>
                   <span className="ez-small">{item.body}</span>
                 </div>
-              </div>
-            </button>
+              </Card.Body>
+            </Card>
           );
         })}
       </div>
 
       <div className="ez-split">
         <div className="ez-split__main ez-stack ez-stack--lg">
-          <div className="ez-card">
-            <div className="ez-card__head">
+          <Card>
+            <Card.Header>
               <span className="ez-h3">Popular questions</span>
-            </div>
-            <div className="ez-card__body">
+            </Card.Header>
+            <Card.Body>
               {questions.length === 0 ? (
                 <p className="ez-small">No questions match that search.</p>
               ) : (
@@ -161,8 +159,7 @@ export function VendorHelpEzView() {
                     <button
                       key={item.title}
                       type="button"
-                      className="ez-list-row"
-                      style={{ alignItems: "flex-start", width: "100%", textAlign: "left" }}
+                      className="ez-list-row w-full items-start text-left"
                       aria-expanded={open}
                       onClick={() => setOpenTitle(open ? "" : item.title)}
                     >
@@ -179,16 +176,16 @@ export function VendorHelpEzView() {
                   );
                 })
               )}
-            </div>
-          </div>
+            </Card.Body>
+          </Card>
         </div>
 
         <div className="ez-split__aside ez-stack ez-stack--lg">
-          <div className="ez-card">
-            <div className="ez-card__head">
+          <Card>
+            <Card.Header>
               <span className="ez-h3">Talk to us</span>
-            </div>
-            <div className="ez-card__body">
+            </Card.Header>
+            <Card.Body>
               <div className="ez-stack ez-stack--sm">
                 <span className="ez-small">We reply within one working day.</span>
                 {formError ? <LottieFailureInline message={formError} /> : null}
@@ -216,19 +213,22 @@ export function VendorHelpEzView() {
                     onChange={(event) => setMessage(event.target.value)}
                   />
                 </div>
-                <button className="ez-btn ez-btn--primary" type="button" disabled={sending} onClick={() => void send()}>
-                  <Send size={18} strokeWidth={1.75} aria-hidden />
+                <Button
+                  icon={<Send size={18} strokeWidth={1.75} aria-hidden />}
+                  disabled={sending}
+                  onClick={() => void send()}
+                >
                   {sending ? "Sending…" : "Send message"}
-                </button>
+                </Button>
               </div>
-            </div>
-          </div>
+            </Card.Body>
+          </Card>
 
-          <div className="ez-card">
-            <div className="ez-card__head">
+          <Card>
+            <Card.Header>
               <span className="ez-h3">Your conversations</span>
-            </div>
-            <div className="ez-card__body">
+            </Card.Header>
+            <Card.Body>
               {threads.length === 0 ? (
                 <EmptyState className="border-0" variant="support" title="No support conversations yet" />
               ) : (
@@ -243,12 +243,12 @@ export function VendorHelpEzView() {
                         {thread.unread_count > 0 ? `${thread.unread_count} unread` : "Eventtz Support"}
                       </span>
                     </div>
-                    {thread.unread_count > 0 ? <span className="ez-badge ez-badge--info">Open</span> : null}
+                    {thread.unread_count > 0 ? <Badge tone="info">Open</Badge> : null}
                   </Link>
                 ))
               )}
-            </div>
-          </div>
+            </Card.Body>
+          </Card>
         </div>
       </div>
     </div>
