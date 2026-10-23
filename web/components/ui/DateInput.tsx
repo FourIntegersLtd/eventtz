@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useId, useMemo, useState, type ChangeEvent, type InputHTMLAttributes } from "react";
-import { FORM_CONTROL, FORM_CONTROL_FOCUS, FOCUS_RING } from "@/components/ui/tokens";
+import { FORM_CONTROL } from "@/components/ui/tokens";
 import {
   dayOptions,
   isoToParts,
@@ -50,10 +50,10 @@ function emitChange(onChange: DateInputProps["onChange"], iso: string) {
 }
 
 const nativeInputClass = (className: string) =>
-  `${FORM_CONTROL} ${FORM_CONTROL_FOCUS} block h-11 [color-scheme:light] px-2 sm:px-3 ${FOCUS_RING} ${className}`.trim();
+  `${FORM_CONTROL} block h-11 [color-scheme:light] px-2 sm:px-3 ${className}`.trim();
 
 const selectClass = (className: string) =>
-  `${FORM_CONTROL} ${FORM_CONTROL_FOCUS} h-11 appearance-none px-2 sm:px-3 ${FOCUS_RING} ${className}`.trim();
+  `${FORM_CONTROL} h-11 appearance-none px-2 sm:px-3 ${className}`.trim();
 
 type SelectDateInputProps = {
   id?: string;

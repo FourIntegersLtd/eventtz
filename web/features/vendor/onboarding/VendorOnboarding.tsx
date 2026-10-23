@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ONBOARDING_STEP } from "../../../lib/vendorOnboarding/onboardingProgress";
 import { useEffect, useState } from "react";
-import { portalCard } from "@/components/portal-shell/portalTheme";
+import { CARD_SURFACE } from "@/components/ui/tokens";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -183,7 +183,7 @@ export function VendorOnboarding() {
 
   if (loadStatus === "error") {
     return (
-      <div className={`mx-auto w-full max-w-3xl ${portalCard} p-5 text-center text-sm text-red-800 ring-red-200/50`}>
+      <div className={`mx-auto w-full max-w-3xl ${CARD_SURFACE} p-5 text-center text-sm text-red-800 ring-red-200/50`}>
         We couldn&apos;t load your saved profile. Refresh the page or try again in a few minutes.
       </div>
     );

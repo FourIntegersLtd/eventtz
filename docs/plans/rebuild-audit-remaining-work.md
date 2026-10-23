@@ -29,6 +29,13 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 - **Freeze suite.** The fixes for the 9 acceptance tests that already failed on `main` ship with the
   Phase 1 PR.
 
+- **Phase 2.1 (tokens and blocks).** `globals.css` tokens are `var(--ez-*)`, `eventtz.css` loads in
+  `@layer components`, `ui/` blocks emit canvas `ez-*` markup (new `DataTable`, `TextField` absorbs
+  `EzClearableInput`), `adminTheme.ts` and `sectionBlockTokens.ts` are deleted. design-diff results are
+  identical to main (within 0.05%) on all 33 screens; the failures (P01, V01-V07, V13, V18, V19, V23, V24 and the
+  V11 `.ez-kpi` setup timeout) also fail on main. Deferred: `portalTheme.ts` (BookingDetailPanel, help views),
+  `AdminTable` and raw tables not yet on `DataTable`.
+
 ## Before the next deploy (yours, about 5 minutes)
 
 1. **Check live upload URLs.** Profile save now keeps only image URLs whose key starts with `users/<id>/`.

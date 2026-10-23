@@ -40,7 +40,11 @@ export const RADIUS = {
 /** Modal and drawer backdrop. */
 export const SCRIM = "bg-scrim";
 
-/** Semantic tone classes shared by Badge, Banner, StatTile deltas and anything else that signals meaning. */
+/**
+ * Semantic tone classes for anything that signals meaning. Badge and Banner use the canvas
+ * `ez-badge--<tone>` / `ez-banner--<tone>` modifiers; this map is for the text, background
+ * and line pieces that other callers colour on their own.
+ */
 export const TONE: Record<Tone, { text: string; background: string; line: string }> = {
   neutral: { text: "text-ink-2", background: "bg-surface-3", line: "border-line" },
   brand: { text: "text-primary", background: "bg-primary-soft", line: "border-primary-border" },
@@ -63,13 +67,19 @@ export const VIEWPORT_MIN = "min-h-dvh";
 /** Modal panel base width - max width comes from Modal's `maxWidthClassName`. */
 export const MODAL_PANEL = "w-full";
 
-/** Shared single-line / multi-line form control sizing (mobile-first 16px, 44px min height). */
-export const FORM_CONTROL =
-  "box-border w-full min-w-0 max-w-full min-h-11 rounded-control border border-line-strong bg-white px-3 py-2.5 text-base font-normal text-ink outline-none transition placeholder:text-ink-3 md:text-sm";
+/**
+ * Canvas surface for cards and panels (`ez-card`). The resting shadow keeps the
+ * look portal cards had before the canvas classes replaced Tailwind surfaces.
+ */
+export const CARD_SURFACE = "ez-card shadow-xs";
 
-export const FORM_CONTROL_FOCUS = "focus:border-primary focus:ring-2 focus:ring-primary/20";
+/** Default inner padding for a card without `CardBody` slots (20px). */
+export const CARD_PADDING = "p-5";
 
-/** Compose base + focus (+ optional extra) for raw inputs outside `components/ui/*`. */
+/** Shared single-line / multi-line form control (canvas `ez-input`, vertical padding for raw textareas). */
+export const FORM_CONTROL = "ez-input py-2.5";
+
+/** Compose the canvas input class (+ optional extra) for raw inputs outside `components/ui/*`. */
 export function formControlClass(extra = ""): string {
-  return `${FORM_CONTROL} ${FORM_CONTROL_FOCUS} ${extra}`.trim();
+  return `${FORM_CONTROL} ${extra}`.trim();
 }

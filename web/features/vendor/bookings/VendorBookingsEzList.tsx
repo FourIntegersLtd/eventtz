@@ -7,7 +7,7 @@ import { vendorBookingDetailHref } from "@/features/vendor/bookings/vendorBookin
 import { TablePagination } from "@/components/ui/TablePagination";
 import { VendorEzPageHead } from "@/components/ui/VendorEzPageHead";
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
-import { EzClearableInput } from "@/components/ui/EzClearableInput";
+import { TextField } from "@/components/ui/TextField";
 
 function statusBadgeClass(status: string): string {
   const normalized = status.toLowerCase();
@@ -76,13 +76,16 @@ export function VendorBookingsEzList({
       </div>
 
       <div className="ez-hrow">
-        <EzClearableInput
+        <TextField
           id="vendor-bookings-search"
+          type="search"
+          label="Search by client or event"
+          hideLabel
           value={listSearch}
           placeholder="Search by client or event"
-          aria-label="Search by client or event"
           wrapperStyle={{ width: "min(18rem, 100%)" }}
-          onChange={(value) => onListSearchChange?.(value)}
+          onChange={(event) => onListSearchChange?.(event.target.value)}
+          onClear={() => onListSearchChange?.("")}
         />
       </div>
 

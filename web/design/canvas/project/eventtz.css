@@ -70,6 +70,9 @@
   --ez-shadow-2: 0 6px 20px rgba(62, 25, 100, 0.06);
   --ez-shadow-3: 0 24px 56px rgba(32, 11, 53, 0.16);
 
+  /* Modal and drawer backdrop */
+  --ez-scrim: rgba(24, 21, 29, 0.36);
+
   /* Motion */
   --ez-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --ez-fast: 150ms;
@@ -140,6 +143,8 @@
 .ez-btn--danger { background: var(--ez-danger); color: #fff; }
 .ez-btn--danger-quiet { background: var(--ez-surface); color: var(--ez-danger); border-color: var(--ez-danger-line); }
 .ez-btn--inverse { background: #fff; color: var(--ez-brand-700); }
+.ez-btn--inverse-outline { background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.4); }
+.ez-btn--inverse-outline:hover { background: rgba(255, 255, 255, 0.1); }
 .ez-btn--lg { min-height: 52px; padding: 0 24px; font-size: 16px; }
 .ez-btn--sm { min-height: 36px; padding: 0 12px; font-size: 14px; }
 .ez-btn--pill { border-radius: var(--ez-r-pill); }

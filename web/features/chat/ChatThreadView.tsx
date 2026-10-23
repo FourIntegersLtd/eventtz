@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { DEFAULT_LIST_PAGE_SIZE } from "@/lib/listPageSize";
 import Link from "next/link";
 import { ChevronRight, FileText, MessageSquare, Receipt } from "lucide-react";
-import { portalCard } from "@/components/portal-shell/portalTheme";
+import { CARD_SURFACE } from "@/components/ui/tokens";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
@@ -223,7 +223,7 @@ export function ChatThreadView({
 
   if (loading) {
     return (
-      <div className={`${portalCard} px-5 py-8`}>
+      <div className={`${CARD_SURFACE} px-5 py-8`}>
         <LoadingState label="Loading conversation…" variant="centered" className="py-4" branded />
       </div>
     );
@@ -249,7 +249,7 @@ export function ChatThreadView({
 
   return (
     <div
-      className={`flex max-h-full flex-col overflow-hidden ${portalCard} ${
+      className={`flex max-h-full flex-col overflow-hidden ${CARD_SURFACE} ${
         isDrawer ? "h-full min-h-0 flex-1" : pageThreadShell
       }`}
     >

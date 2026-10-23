@@ -10,15 +10,13 @@ export type StatTileProps = {
   className?: string;
 };
 
-/** KPI tile: small label, large value and an optional toned delta. */
+/** KPI tile (`ez-kpi`): small label, large serif value and an optional toned delta. */
 export function StatTile({ label, value, delta, deltaTone = "neutral", className = "" }: StatTileProps) {
   return (
-    <div className={`rounded-2xl border border-line bg-white p-5 shadow-xs ${className}`.trim()}>
-      <p className="text-xs font-medium text-ink-3">{label}</p>
-      <p className="mt-1.5 font-heading text-2xl font-semibold tracking-tight text-ink">{value}</p>
-      {delta ? (
-        <p className={`mt-1 text-xs font-medium ${TONE[deltaTone].text}`}>{delta}</p>
-      ) : null}
+    <div className={`ez-kpi ${className}`.trim()}>
+      <span className="ez-kpi__label">{label}</span>
+      <span className="ez-kpi__value">{value}</span>
+      {delta ? <span className={`ez-kpi__delta ${TONE[deltaTone].text}`}>{delta}</span> : null}
     </div>
   );
 }

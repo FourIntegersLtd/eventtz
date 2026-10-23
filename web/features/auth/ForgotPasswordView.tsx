@@ -8,7 +8,6 @@ import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { Button } from "@/components/ui/Button";
 import { Banner } from "@/components/ui/Banner";
 import { TextField } from "@/components/ui/TextField";
-import { adminPageBg } from "@/components/admin-shell/adminTheme";
 import { loginPathWithNext } from "@/features/auth/authRouting";
 import { GENERIC_AUTH_ERROR } from "@/lib/auth-messages";
 import { forgotPassword } from "@/lib/auth-api";
@@ -32,7 +31,7 @@ export function ForgotPasswordView({ variant = "default" }: ForgotPasswordViewPr
   const [sentMessage, setSentMessage] = useState<string | null>(null);
 
   const signInHref = isAdmin ? loginPathWithNext("/admin/dashboard") : "/login";
-  const shellClassName = isAdmin ? adminPageBg : undefined;
+  const shellClassName = isAdmin ? "bg-neutral-50" : undefined;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { Sparkles, TrendingUp } from "lucide-react";
-import { portalCard, portalCardPadding } from "@/components/portal-shell/portalTheme";
+import { CARD_PADDING, CARD_SURFACE } from "@/components/ui/tokens";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { helpMarkdownProseClassName, helpMarkdownToHtml } from "@/features/help/helpContent";
 import { VENDOR_COPILOT } from "@/features/vendor/copilot/copilotBranding";
@@ -41,7 +41,7 @@ export function VendorGrowthBriefCard({ onOpenCopilot }: Props) {
 
   if (loading) {
     return (
-      <div className={`${portalCard} ${portalCardPadding}`}>
+      <div className={`${CARD_SURFACE} ${CARD_PADDING}`}>
         <div className="flex flex-col items-center py-4">
           <LottieIllustration asset="aiThinking" size="feature" ariaLabel="Loading growth brief" />
           <p className="mt-2 text-sm text-neutral-600">Preparing your growth brief…</p>
@@ -52,7 +52,7 @@ export function VendorGrowthBriefCard({ onOpenCopilot }: Props) {
 
   if (error || !brief) {
     return (
-      <div className={`${portalCard} ${portalCardPadding}`}>
+      <div className={`${CARD_SURFACE} ${CARD_PADDING}`}>
         <p className="text-sm text-neutral-600">
           {error ?? "Growth brief unavailable."}
         </p>
@@ -61,7 +61,7 @@ export function VendorGrowthBriefCard({ onOpenCopilot }: Props) {
   }
 
   return (
-    <div className={`overflow-hidden bg-white ${portalCard}`}>
+    <div className={`overflow-hidden bg-white ${CARD_SURFACE}`}>
       <div className="border-b border-primary/10 bg-gradient-to-br from-primary/[0.08] to-primary/[0.02] px-5 py-4 sm:px-6">
         <div className="flex items-start gap-4">
           <GrowthScoreRing score={brief.growth_score} />

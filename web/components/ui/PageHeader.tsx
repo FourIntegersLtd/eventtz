@@ -10,7 +10,7 @@ export type PageHeaderProps = {
   className?: string;
 };
 
-/** Page title block: eyebrow, serif title, description and an actions slot. */
+/** Page title block (`ez-pagehead`): eyebrow, serif title, description and an actions slot. */
 export function PageHeader({
   eyebrow,
   title,
@@ -19,19 +19,13 @@ export function PageHeader({
   className = "",
 }: PageHeaderProps) {
   return (
-    <header className={`flex flex-wrap items-start justify-between gap-4 ${className}`.trim()}>
-      <div className="min-w-0 flex-1">
-        {eyebrow ? (
-          <p className="mb-1 text-xs font-medium uppercase tracking-wide text-ink-3">{eyebrow}</p>
-        ) : null}
-        <h1 className="font-heading text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-          {title}
-        </h1>
-        {description ? (
-          <div className="mt-1.5 text-sm leading-relaxed text-ink-3">{description}</div>
-        ) : null}
+    <header className={`ez-pagehead ${className}`.trim()}>
+      <div className="ez-pagehead__text">
+        {eyebrow ? <span className="ez-eyebrow">{eyebrow}</span> : null}
+        <h1 className="ez-h1">{title}</h1>
+        {description ? <div className="ez-small">{description}</div> : null}
       </div>
-      {actions ? <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div> : null}
+      {actions ? <div className="ez-pagehead__actions">{actions}</div> : null}
     </header>
   );
 }

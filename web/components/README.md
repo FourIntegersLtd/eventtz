@@ -11,7 +11,7 @@ Reusable UI and cross-cutting chrome only. **Product screens and domain widgets 
 | [`badges/`](badges/) | Domain-labeled status badges (booking, payment, vendor, dispute, admin) |
 | [`auth/`](auth/) | `AuthProvider`, `Require*`, auth page shell |
 | [`portal-shell/`](portal-shell/) | Client + vendor portal chrome (`PortalShell`, nav, theme, `PortalFillHeight`) |
-| [`admin-shell/`](admin-shell/) | Admin console chrome (`AdminShell`, `adminTheme`) |
+| [`admin-shell/`](admin-shell/) | Admin console chrome (`AdminShell`) |
 | [`branding/`](branding/) | Logo and brand marks |
 | [`compliances/`](compliances/) | Legal page shell + static policy content |
 | [`media/`](media/) | Landing media wrappers |
@@ -79,10 +79,7 @@ Shells may compose feature widgets (e.g. `HelpWidget`, notification bell) — th
 
 ## Theme tokens
 
-- Portal cards/surfaces: [`portal-shell/portalTheme.ts`](portal-shell/portalTheme.ts)
-- Admin cards/surfaces: [`admin-shell/adminTheme.ts`](admin-shell/adminTheme.ts)
-
-Both build on shared surfaces in [`ui/sectionBlockTokens.ts`](ui/sectionBlockTokens.ts).
+Colours, radii and shadows are `--ez-*` tokens in `design/canvas/project/eventtz.css` (loaded in the `components` layer), re-exported to Tailwind by `app/globals.css`. Blocks in `ui/` emit `ez-*` classes; card surfaces come from `CARD_SURFACE` / `CARD_PADDING` in [`ui/tokens.ts`](ui/tokens.ts). `portal-shell/portalTheme.ts` remains only for `BookingDetailPanel` and the help views, pending their migration.
 
 ## Adding a new component
 

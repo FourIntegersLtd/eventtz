@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/Toast";
 import { Banner } from "@/components/ui/Banner";
 import { PasswordField } from "@/components/ui/PasswordField";
-import { adminPageBg } from "@/components/admin-shell/adminTheme";
 import { dashboardPathForUserType, loginPathWithNext } from "@/features/auth/authRouting";
 import { getMe, resetPassword } from "@/lib/auth-api";
 import { getApiErrorDetail } from "@/lib/api-errors";
@@ -43,7 +42,7 @@ export function ResetPasswordView({ variant = "default" }: ResetPasswordViewProp
 
   const forgotHref = isAdmin ? "/forgot-password?portal=admin" : "/forgot-password";
   const adminSignInHref = loginPathWithNext("/admin/dashboard");
-  const shellClassName = isAdmin ? adminPageBg : undefined;
+  const shellClassName = isAdmin ? "bg-neutral-50" : undefined;
   const schema = isAdmin ? adminResetPasswordSchema : resetPasswordSchema;
   const minLength = 6;
 

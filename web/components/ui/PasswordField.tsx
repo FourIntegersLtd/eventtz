@@ -2,7 +2,7 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import { forwardRef, useId, useState, type InputHTMLAttributes } from "react";
-import { FORM_CONTROL, FORM_CONTROL_FOCUS, FOCUS_RING, TOUCH_TARGET } from "@/components/ui/tokens";
+import { FORM_CONTROL, TOUCH_TARGET } from "@/components/ui/tokens";
 
 export type PasswordFieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
   label: string;
@@ -18,7 +18,7 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(fu
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const [visible, setVisible] = useState(false);
-  const inputClassName = `${FORM_CONTROL} ${FORM_CONTROL_FOCUS} pl-3 pr-11 ${FOCUS_RING} ${
+  const inputClassName = `${FORM_CONTROL} pl-3 pr-11 ${
     error ? "border-danger-line" : ""
   } ${className}`.trim();
 
