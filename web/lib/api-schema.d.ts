@@ -7174,9 +7174,7 @@ export interface components {
              */
             overall_ok: boolean;
             /** Package Feedback */
-            package_feedback: {
-                [key: string]: unknown;
-            }[];
+            package_feedback: components["schemas"]["PackageCoachPackageFeedback"][];
             /**
              * Summary
              * @default
@@ -8043,6 +8041,46 @@ export interface components {
              * @default true
              */
             success: boolean;
+        };
+        /**
+         * MonthlyEnquiries
+         * @description Enquiries received in one `YYYY-MM` month.
+         */
+        MonthlyEnquiries: {
+            /** Count */
+            count: number;
+            /** Month */
+            month: string;
+        };
+        /**
+         * MonthlyRating
+         * @description The average review rating left in one `YYYY-MM` month.
+         */
+        MonthlyRating: {
+            /** Avg Rating */
+            avg_rating: number | null;
+            /** Month */
+            month: string;
+        };
+        /**
+         * MonthlyResponseTime
+         * @description The vendor's average first-response time, in seconds, for one `YYYY-MM` month.
+         */
+        MonthlyResponseTime: {
+            /** Avg Seconds */
+            avg_seconds: number | null;
+            /** Month */
+            month: string;
+        };
+        /**
+         * MonthlyRevenue
+         * @description Revenue earned from jobs completed in one `YYYY-MM` month.
+         */
+        MonthlyRevenue: {
+            /** Month */
+            month: string;
+            /** Revenue Gbp */
+            revenue_gbp: number;
         };
         /**
          * NotificationFeedItem
@@ -8938,39 +8976,71 @@ export interface components {
             label: string;
         };
         /**
+         * VendorAnalyticsFunnel
+         * @description How many people reached each step from profile view to completed booking.
+         */
+        VendorAnalyticsFunnel: {
+            /** Accepted */
+            accepted: number;
+            /** Completed */
+            completed: number;
+            /** Enquiries */
+            enquiries: number;
+            /** Paid */
+            paid: number;
+            /** Profile Views */
+            profile_views: number;
+        };
+        /**
+         * VendorAnalyticsOverview
+         * @description The headline numbers at the top of the vendor's analytics screen.
+         */
+        VendorAnalyticsOverview: {
+            /** Avg Booking Value Gbp */
+            avg_booking_value_gbp: number;
+            /** Avg Customer Rating */
+            avg_customer_rating: number;
+            /** Avg Response Seconds */
+            avg_response_seconds: number | null;
+            /** Completed */
+            completed: number;
+            /** Conversion Rate */
+            conversion_rate: number;
+            /** Enquiries */
+            enquiries: number;
+            /** Expired Enquiries */
+            expired_enquiries: number;
+            /** Pending Enquiries */
+            pending_enquiries: number;
+            /** Profile Views */
+            profile_views: number;
+            /** Review Count */
+            review_count: number;
+            /** Total Revenue Gbp */
+            total_revenue_gbp: number;
+            /** Upcoming Bookings */
+            upcoming_bookings: number;
+        };
+        /**
          * VendorAnalyticsResponse
          * @description The vendor's analytics screen: headline numbers, the funnel and monthly series.
          */
         VendorAnalyticsResponse: {
             /** Enquiries By Month */
-            enquiries_by_month: {
-                [key: string]: unknown;
-            }[];
-            /** Funnel */
-            funnel: {
-                [key: string]: unknown;
-            };
-            /** Overview */
-            overview: {
-                [key: string]: unknown;
-            };
+            enquiries_by_month: components["schemas"]["MonthlyEnquiries"][];
+            funnel: components["schemas"]["VendorAnalyticsFunnel"];
+            overview: components["schemas"]["VendorAnalyticsOverview"];
             /**
              * Period Days
              * @default 90
              */
             period_days: number;
             /** Rating By Month */
-            rating_by_month: {
-                [key: string]: unknown;
-            }[];
+            rating_by_month: components["schemas"]["MonthlyRating"][];
             /** Response Time By Month */
-            response_time_by_month: {
-                [key: string]: unknown;
-            }[];
+            response_time_by_month: components["schemas"]["MonthlyResponseTime"][];
             /** Revenue By Month */
-            revenue_by_month: {
-                [key: string]: unknown;
-            }[];
+            revenue_by_month: components["schemas"]["MonthlyRevenue"][];
             /**
              * Success
              * @default true
