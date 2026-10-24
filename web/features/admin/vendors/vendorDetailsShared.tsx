@@ -4,22 +4,12 @@ import Link from "next/link";
 import { type ReactNode } from "react";
 import { ContentCard, SectionSubheading } from "@/components/ui/SectionBlock";
 import {
-  AlertTriangle,
-  Ban,
   BarChart3,
   Briefcase,
-  CalendarDays,
   CheckCircle2,
   ChevronRight,
-  Clock,
   ExternalLink,
-  Fingerprint,
-  Mail,
-  Package,
   Shield,
-  Star,
-  User,
-  Building2,
 } from "lucide-react";
 import { StatusBadge } from "@/components/badges/StatusBadge";
 import type { AdminVendorRow } from "@/lib/adminVendorsApi";
