@@ -35,6 +35,7 @@ import {
   toMarketplaceCompletedSeries,
   toMarketplaceDemandSeries,
 } from "@/features/admin/marketplace/marketplaceAnalyticsModel";
+import { RankedListCard } from "@/features/admin/marketplace/RankedListCard";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { formatGbp } from "@/lib/money";
 
@@ -269,85 +270,45 @@ export function AdminMarketplaceAnalyticsView() {
             )}
           </AdminChartCard>
 
-          <Card as="section" className="overflow-hidden">
-            <div className="flex items-center justify-between gap-2 border-b border-line px-5 py-3.5">
-              <div className="min-w-0">
-                <h2 className="text-sm font-semibold text-ink">Top locations</h2>
-                <p className="mt-0.5 text-xs text-ink-3">By enquiry volume</p>
-              </div>
-              <AdminInfoHint label="Top locations" info={MARKETPLACE_CHART_INFO.locations} />
-            </div>
-            {locations.length === 0 ? (
-              <p className="px-5 py-6 text-center text-sm text-ink-3">
-                No location data in this period.
-              </p>
-            ) : (
-              <ul className="divide-y divide-line">
-                {locations.map((r, i) => (
-                  <li
-                    key={r.key}
-                    className="flex items-center justify-between gap-3 px-5 py-2.5 text-sm"
-                  >
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="w-4 shrink-0 text-xs tabular-nums text-ink-3">
-                        {i + 1}
-                      </span>
-                      <span className="truncate text-ink">{r.key}</span>
-                    </div>
-                    <div className="shrink-0 text-right text-xs tabular-nums text-ink-3">
-                      <span className="font-medium text-ink">{r.enquiries}</span>
-                      <span className="mx-1 text-ink-3">·</span>
-                      {formatMarketplacePct(r.conversion_rate)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+          <RankedListCard
+            title="Top locations"
+            subtitle="By enquiry volume"
+            info={MARKETPLACE_CHART_INFO.locations}
+            emptyMessage="No location data in this period."
+            rows={locations.map((location) => ({
+              key: location.key,
+              title: location.key,
+              trailing: (
+                <p className="text-xs tabular-nums text-ink-3">
+                  <span className="font-medium text-ink">{location.enquiries}</span>
+                  <span className="mx-1 text-ink-3">·</span>
+                  {formatMarketplacePct(location.conversion_rate)}
+                </p>
+              ),
+            }))}
+          />
 
-          <Card as="section" className="overflow-hidden">
-            <div className="flex items-center justify-between gap-2 border-b border-line px-5 py-3.5">
-              <div className="min-w-0">
-                <h2 className="text-sm font-semibold text-ink">Top vendors</h2>
-                <p className="mt-0.5 text-xs text-ink-3">Completed bookings & revenue</p>
-              </div>
-              <AdminInfoHint label="Top vendors" info={MARKETPLACE_CHART_INFO.vendors} />
-            </div>
-            {vendors.length === 0 ? (
-              <p className="px-5 py-6 text-center text-sm text-ink-3">
-                No vendor data in this period.
-              </p>
-            ) : (
-              <ul className="divide-y divide-line">
-                {vendors.map((v, i) => (
-                  <li
-                    key={v.vendor_user_id}
-                    className="flex items-center justify-between gap-3 px-5 py-2.5 text-sm"
-                  >
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="w-4 shrink-0 text-xs tabular-nums text-ink-3">
-                        {i + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-ink">{v.business_name}</p>
-                        <p className="text-xs text-ink-3">
-                          {v.completed} completed · {formatMarketplaceSeconds(v.avg_response_seconds)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-sm font-medium tabular-nums text-ink">
-                        {formatGbp(v.revenue_gbp, { decimals: 0, grouping: false })}
-                      </p>
-                      <p className="text-xs tabular-nums text-ink-3">
-                        {formatMarketplacePct(v.conversion_rate)}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
+          <RankedListCard
+            title="Top vendors"
+            subtitle="Completed bookings & revenue"
+            info={MARKETPLACE_CHART_INFO.vendors}
+            emptyMessage="No vendor data in this period."
+            rows={vendors.map((vendor) => ({
+              key: vendor.vendor_user_id,
+              title: vendor.business_name,
+              subtitle: `${vendor.completed} completed · ${formatMarketplaceSeconds(vendor.avg_response_seconds)}`,
+              trailing: (
+                <>
+                  <p className="text-sm font-medium tabular-nums text-ink">
+                    {formatGbp(vendor.revenue_gbp, { decimals: 0, grouping: false })}
+                  </p>
+                  <p className="text-xs tabular-nums text-ink-3">
+                    {formatMarketplacePct(vendor.conversion_rate)}
+                  </p>
+                </>
+              ),
+            }))}
+          />
         </div>
       </div>
     </div>

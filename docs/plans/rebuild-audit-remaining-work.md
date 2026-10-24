@@ -301,8 +301,12 @@ For local testing without Docker:
   screenshot comparison (no marketplace screen in `screens.json`): dashboard, browse, favourites, vendor profile, planner
   and analytics identical bar lottie frames; the booking modal keeps main's uppercase labels, venue box and note sizes
   (plain inputs on tokens, `DateInput`), 0.05% apart at 1280 and 390 bar the dev badge. eslint 121 errors, same as main.
-  Follow-ups from review: move the booking and onboarding overlays onto `Modal`; extract one ranked-list card for admin
-  "Top locations" and "Top vendors"; vendor onboarding (`WizardAside`, `StepPortfolio`) still hand-roll `ez-progress`.
+  Follow-ups from review: vendor onboarding (`WizardAside`, `StepPortfolio`) still hand-roll `ez-progress` (vendors-owner).
+  Closed since: `BudgetBreakdown` is off raw `ez-btn--block` (allow-list entry deleted); the booking and client
+  onboarding overlays now render through `Modal`, which gained optional `header`, `panelClassName`,
+  `bodyPaddingClassName`, `footerClassName`, `scrimClassName` and `positionClassName` (defaults unchanged, tested in
+  `Modal.test.tsx`); admin "Top locations" and "Top vendors" share `RankedListCard`. Neither overlay had a focus trap
+  before and `Modal` has none, so none was lost; adding one to `Modal` would help every dialog.
 - **Done (PR "Rebuild audit: vendors screens on the design system and server lists").** Vendor onboarding, profile,
   dashboard, analytics, co-pilot, vendor directory and admin vendor screens use the ui blocks and tokens (no
   `style={{}}`, `neutral-*` or raw palette classes left, except dynamic widths and the status dot colour). `Card` now

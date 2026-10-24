@@ -67,7 +67,7 @@ export function BudgetBreakdown({
       </Card.Body>
       <Card.Footer className="flex-col">
         <Button
-          className="ez-btn--block"
+          className="w-full"
           disabled={enquiryDisabled || enquiryBusy || selectedCount === 0}
           onClick={onSendEnquiry}
           icon={<Send width={18} height={18} strokeWidth={1.75} aria-hidden />}
