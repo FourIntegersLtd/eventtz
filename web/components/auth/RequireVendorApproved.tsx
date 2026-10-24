@@ -46,7 +46,7 @@ export function RequireVendorApproved({ children }: RequireVendorApprovedProps) 
   if (state !== "approved") {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
-        <p className="text-sm text-neutral-600">Checking your vendor profile…</p>
+        <p className="text-sm text-ink-2">Checking your vendor profile…</p>
       </div>
     );
   }

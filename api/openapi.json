@@ -8485,8 +8485,7 @@
           },
           "package_feedback": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/PackageCoachPackageFeedback"
             },
             "title": "Package Feedback",
             "type": "array"
@@ -10566,6 +10565,96 @@
           "success"
         ],
         "title": "MessagesListResponse",
+        "type": "object"
+      },
+      "MonthlyEnquiries": {
+        "description": "Enquiries received in one `YYYY-MM` month.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "month"
+        ],
+        "title": "MonthlyEnquiries",
+        "type": "object"
+      },
+      "MonthlyRating": {
+        "description": "The average review rating left in one `YYYY-MM` month.",
+        "properties": {
+          "avg_rating": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Rating"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "avg_rating",
+          "month"
+        ],
+        "title": "MonthlyRating",
+        "type": "object"
+      },
+      "MonthlyResponseTime": {
+        "description": "The vendor's average first-response time, in seconds, for one `YYYY-MM` month.",
+        "properties": {
+          "avg_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Seconds"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "avg_seconds",
+          "month"
+        ],
+        "title": "MonthlyResponseTime",
+        "type": "object"
+      },
+      "MonthlyRevenue": {
+        "description": "Revenue earned from jobs completed in one `YYYY-MM` month.",
+        "properties": {
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "revenue_gbp": {
+            "title": "Revenue Gbp",
+            "type": "number"
+          }
+        },
+        "required": [
+          "month",
+          "revenue_gbp"
+        ],
+        "title": "MonthlyRevenue",
         "type": "object"
       },
       "NotificationFeedItem": {
@@ -12704,26 +12793,131 @@
         "title": "VendorAdjustmentItem",
         "type": "object"
       },
+      "VendorAnalyticsFunnel": {
+        "description": "How many people reached each step from profile view to completed booking.",
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "integer"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "enquiries": {
+            "title": "Enquiries",
+            "type": "integer"
+          },
+          "paid": {
+            "title": "Paid",
+            "type": "integer"
+          },
+          "profile_views": {
+            "title": "Profile Views",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "accepted",
+          "completed",
+          "enquiries",
+          "paid",
+          "profile_views"
+        ],
+        "title": "VendorAnalyticsFunnel",
+        "type": "object"
+      },
+      "VendorAnalyticsOverview": {
+        "description": "The headline numbers at the top of the vendor's analytics screen.",
+        "properties": {
+          "avg_booking_value_gbp": {
+            "title": "Avg Booking Value Gbp",
+            "type": "number"
+          },
+          "avg_customer_rating": {
+            "title": "Avg Customer Rating",
+            "type": "number"
+          },
+          "avg_response_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Response Seconds"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "conversion_rate": {
+            "title": "Conversion Rate",
+            "type": "number"
+          },
+          "enquiries": {
+            "title": "Enquiries",
+            "type": "integer"
+          },
+          "expired_enquiries": {
+            "title": "Expired Enquiries",
+            "type": "integer"
+          },
+          "pending_enquiries": {
+            "title": "Pending Enquiries",
+            "type": "integer"
+          },
+          "profile_views": {
+            "title": "Profile Views",
+            "type": "integer"
+          },
+          "review_count": {
+            "title": "Review Count",
+            "type": "integer"
+          },
+          "total_revenue_gbp": {
+            "title": "Total Revenue Gbp",
+            "type": "number"
+          },
+          "upcoming_bookings": {
+            "title": "Upcoming Bookings",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "avg_booking_value_gbp",
+          "avg_customer_rating",
+          "avg_response_seconds",
+          "completed",
+          "conversion_rate",
+          "enquiries",
+          "expired_enquiries",
+          "pending_enquiries",
+          "profile_views",
+          "review_count",
+          "total_revenue_gbp",
+          "upcoming_bookings"
+        ],
+        "title": "VendorAnalyticsOverview",
+        "type": "object"
+      },
       "VendorAnalyticsResponse": {
         "description": "The vendor's analytics screen: headline numbers, the funnel and monthly series.",
         "properties": {
           "enquiries_by_month": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MonthlyEnquiries"
             },
             "title": "Enquiries By Month",
             "type": "array"
           },
           "funnel": {
-            "additionalProperties": true,
-            "title": "Funnel",
-            "type": "object"
+            "$ref": "#/components/schemas/VendorAnalyticsFunnel"
           },
           "overview": {
-            "additionalProperties": true,
-            "title": "Overview",
-            "type": "object"
+            "$ref": "#/components/schemas/VendorAnalyticsOverview"
           },
           "period_days": {
             "default": 90,
@@ -12732,24 +12926,21 @@
           },
           "rating_by_month": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MonthlyRating"
             },
             "title": "Rating By Month",
             "type": "array"
           },
           "response_time_by_month": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MonthlyResponseTime"
             },
             "title": "Response Time By Month",
             "type": "array"
           },
           "revenue_by_month": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MonthlyRevenue"
             },
             "title": "Revenue By Month",
             "type": "array"

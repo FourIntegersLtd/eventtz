@@ -11,6 +11,8 @@ from typing import Any, Literal
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
+from app.features.vendors.schemas_ai import PackageCoachPackageFeedback
+
 CopilotActionKind = Literal[
     "edit_profile",
     "open_booking",
@@ -119,7 +121,7 @@ class CopilotReviewPackagesResponse(BaseModel):
 
     overall_ok: bool = True
     summary: str = ""
-    package_feedback: list[dict[str, Any]] = Field(default_factory=list)
+    package_feedback: list[PackageCoachPackageFeedback] = Field(default_factory=list)
 
 
 class CopilotDraftReplyBody(BaseModel):

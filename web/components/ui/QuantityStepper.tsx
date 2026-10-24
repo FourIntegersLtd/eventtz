@@ -36,7 +36,7 @@ export function QuantityStepper({
 
   return (
     <div
-      className={`inline-flex h-9 items-center rounded-lg border border-neutral-200 bg-white ${className}`.trim()}
+      className={`inline-flex h-9 items-center rounded-lg border border-line bg-white ${className}`.trim()}
       role="group"
       aria-label={aria["aria-label"]}
     >
@@ -52,11 +52,11 @@ export function QuantityStepper({
           }
           onChange(value - 1);
         }}
-        className={`inline-flex h-9 w-9 items-center justify-center rounded-l-lg text-neutral-700 transition enabled:hover:bg-neutral-50 disabled:text-neutral-300 ${FOCUS_RING}`}
+        className={`inline-flex h-9 w-9 items-center justify-center rounded-l-lg text-ink-2 transition enabled:hover:bg-surface-3 disabled:text-line-strong ${FOCUS_RING}`}
       >
         <Minus className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
       </button>
-      <span className="min-w-[2.25rem] px-1 text-center text-sm font-semibold tabular-nums text-neutral-900">
+      <span className="min-w-[2.25rem] px-1 text-center text-sm font-semibold tabular-nums text-ink">
         {value}
       </span>
       <button
@@ -71,7 +71,7 @@ export function QuantityStepper({
           if (max != null && value >= max) return;
           onChange(value + 1);
         }}
-        className={`inline-flex h-9 w-9 items-center justify-center rounded-r-lg text-neutral-700 transition enabled:hover:bg-neutral-50 disabled:text-neutral-300 ${FOCUS_RING}`}
+        className={`inline-flex h-9 w-9 items-center justify-center rounded-r-lg text-ink-2 transition enabled:hover:bg-surface-3 disabled:text-line-strong ${FOCUS_RING}`}
       >
         <Plus className="h-3.5 w-3.5" strokeWidth={2.5} aria-hidden />
       </button>

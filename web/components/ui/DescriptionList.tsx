@@ -50,12 +50,12 @@ export function DescriptionRow({
   tone = "default",
   layout,
 }: DescriptionItem & { layout: DescriptionRowLayout }) {
-  const valueTone = missing ? MISSING_VALUE : "text-neutral-800";
+  const valueTone = missing ? MISSING_VALUE : "text-ink";
   switch (layout) {
     case "split":
       return (
         <div className="flex flex-col gap-1.5 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between sm:gap-8">
-          <dt className="shrink-0 text-[13px] text-neutral-500 sm:max-w-[40%]">{label}</dt>
+          <dt className="shrink-0 text-[13px] text-ink-3 sm:max-w-[40%]">{label}</dt>
           <dd className={`min-w-0 text-sm leading-snug sm:text-right ${valueTone}`}>{value}</dd>
         </div>
       );
@@ -65,21 +65,21 @@ export function DescriptionRow({
           data-review-field
           className="flex flex-col gap-0.5 px-5 py-3.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 sm:px-6"
         >
-          <dt className="shrink-0 text-[13px] text-neutral-500">{label}</dt>
-          <dd className="min-w-0 text-sm font-medium text-neutral-900 sm:text-right">{value}</dd>
+          <dt className="shrink-0 text-[13px] text-ink-3">{label}</dt>
+          <dd className="min-w-0 text-sm font-medium text-ink sm:text-right">{value}</dd>
         </div>
       );
     case "stacked":
       return (
         <div className="py-1">
-          <dt className="text-[13px] text-neutral-500">{label}</dt>
+          <dt className="text-[13px] text-ink-3">{label}</dt>
           <dd className={`mt-1.5 text-sm leading-relaxed ${valueTone}`}>{value}</dd>
         </div>
       );
     case "block":
       return (
         <div className="py-4 first:pt-0 last:pb-0">
-          <dt className="text-[13px] text-neutral-500">{label}</dt>
+          <dt className="text-[13px] text-ink-3">{label}</dt>
           <dd className={`mt-2 w-full whitespace-pre-wrap text-sm leading-relaxed ${valueTone}`}>
             {value}
           </dd>
@@ -105,8 +105,8 @@ export function DescriptionRow({
 
 /** Dividers between rows for the layouts that stack full-width rows. */
 const LIST_CLASS: Record<DescriptionRowLayout, string> = {
-  split: "divide-y divide-neutral-100",
-  review: "divide-y divide-neutral-100",
+  split: "divide-y divide-line",
+  review: "divide-y divide-line",
   stacked: "",
   block: "",
   fact: "space-y-1",

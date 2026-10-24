@@ -77,7 +77,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               type="button"
               aria-label="Dismiss"
               onClick={() => dismiss(toast.id)}
-              className={`inline-flex shrink-0 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 ${TOUCH_TARGET} ${FOCUS_RING}`}
+              className={`inline-flex shrink-0 items-center justify-center rounded-lg text-ink-3 hover:bg-surface-3 hover:text-ink-2 ${TOUCH_TARGET} ${FOCUS_RING}`}
             >
               <X className="h-4 w-4" />
             </button>
