@@ -4723,22 +4723,16 @@ export interface components {
          */
         AdminMarketplaceAnalyticsResponse: {
             /** By Category */
-            by_category: {
-                [key: string]: unknown;
-            }[];
+            by_category: components["schemas"]["MarketplaceBreakdownRow"][];
             /** By Category Chart */
-            by_category_chart: {
-                [key: string]: unknown;
-            }[];
+            by_category_chart: components["schemas"]["MarketplaceBreakdownRow"][];
             /**
              * By Category Total
              * @default 0
              */
             by_category_total: number;
             /** By Location */
-            by_location: {
-                [key: string]: unknown;
-            }[];
+            by_location: components["schemas"]["MarketplaceBreakdownRow"][];
             /**
              * Category Limit
              * @default 25
@@ -4750,27 +4744,15 @@ export interface components {
              */
             category_offset: number;
             /** Completed By Month */
-            completed_by_month: {
-                [key: string]: unknown;
-            }[];
+            completed_by_month: components["schemas"]["MarketplaceMonthCount"][];
             /** Enquiries By Month */
-            enquiries_by_month: {
-                [key: string]: unknown;
-            }[];
+            enquiries_by_month: components["schemas"]["MarketplaceMonthCount"][];
             /** Failure Reasons */
-            failure_reasons: {
-                [key: string]: unknown;
-            }[];
+            failure_reasons: components["schemas"]["MarketplaceFailureReason"][];
             /** From Date */
             from_date: string;
-            /** Overview */
-            overview: {
-                [key: string]: unknown;
-            };
-            /** Recruitment Hints */
-            recruitment_hints: {
-                [key: string]: unknown;
-            };
+            overview: components["schemas"]["MarketplaceOverview"];
+            recruitment_hints: components["schemas"]["MarketplaceRecruitmentHints"];
             /**
              * Success
              * @default true
@@ -4779,9 +4761,7 @@ export interface components {
             /** To Date */
             to_date: string;
             /** Top Vendors */
-            top_vendors: {
-                [key: string]: unknown;
-            }[];
+            top_vendors: components["schemas"]["MarketplaceTopVendor"][];
         };
         /**
          * AdminMessageSendBody
@@ -7983,6 +7963,158 @@ export interface components {
             headline: string;
             /** Service Category */
             service_category: string | null;
+        };
+        /**
+         * MarketplaceBreakdownRow
+         * @description The funnel for one category or location (`key`).
+         */
+        MarketplaceBreakdownRow: {
+            /** Accept Rate */
+            accept_rate: number;
+            /** Accepted */
+            accepted: number;
+            /** Avg Booking Value Gbp */
+            avg_booking_value_gbp: number;
+            /** Completed */
+            completed: number;
+            /** Conversion Rate */
+            conversion_rate: number;
+            /** Enquiries */
+            enquiries: number;
+            /** Failed */
+            failed: number;
+            /** Key */
+            key: string;
+            /** Paid */
+            paid: number;
+            /** Revenue Gbp */
+            revenue_gbp: number;
+        };
+        /**
+         * MarketplaceCategoryHint
+         * @description A category with high demand and a high failure rate.
+         */
+        MarketplaceCategoryHint: {
+            /** Category */
+            category: string;
+            /** Enquiries */
+            enquiries: number;
+            /** Failed */
+            failed: number;
+            /** Message */
+            message: string;
+        };
+        /**
+         * MarketplaceFailureReason
+         * @description How many unfinished enquiries ended for one failure reason.
+         */
+        MarketplaceFailureReason: {
+            /** Count */
+            count: number;
+            /** Reason */
+            reason: string;
+        };
+        /**
+         * MarketplaceLocationHint
+         * @description A location with high demand and a high failure rate.
+         */
+        MarketplaceLocationHint: {
+            /** Enquiries */
+            enquiries: number;
+            /** Failed */
+            failed: number;
+            /** Location */
+            location: string;
+            /** Message */
+            message: string;
+        };
+        /**
+         * MarketplaceMonthCount
+         * @description A count of bookings in one `YYYY-MM` month.
+         */
+        MarketplaceMonthCount: {
+            /** Count */
+            count: number;
+            /** Month */
+            month: string;
+        };
+        /**
+         * MarketplaceOverview
+         * @description Headline funnel numbers; rates are fractions (0 to 1), money is pounds.
+         */
+        MarketplaceOverview: {
+            /** Acceptance To Payment Rate */
+            acceptance_to_payment_rate: number;
+            /** Accepted */
+            accepted: number;
+            /** Avg Booking Value Gbp */
+            avg_booking_value_gbp: number;
+            /** Avg Customer Rating */
+            avg_customer_rating: number;
+            /** Avg Vendor Response Seconds */
+            avg_vendor_response_seconds: number | null;
+            /** Completed */
+            completed: number;
+            /** Enquiries */
+            enquiries: number;
+            /** Enquiry Client Nudges */
+            enquiry_client_nudges: number;
+            /** Enquiry Multi Batches */
+            enquiry_multi_batches: number;
+            /** Enquiry To Acceptance Rate */
+            enquiry_to_acceptance_rate: number;
+            /** Enquiry Vendor Reminders */
+            enquiry_vendor_reminders: number;
+            /** Overall Conversion Rate */
+            overall_conversion_rate: number;
+            /** Paid */
+            paid: number;
+            /** Profile Views */
+            profile_views: number;
+            /** Reply Within 1H Rate */
+            reply_within_1h_rate: number | null;
+            /** Reply Within 24H Rate */
+            reply_within_24h_rate: number | null;
+            /** Reply Within 6H Rate */
+            reply_within_6h_rate: number | null;
+            /** Review Count */
+            review_count: number;
+            /** Unfulfilled */
+            unfulfilled: number;
+            /** Vendors Active */
+            vendors_active: number;
+            /** Vendors Total */
+            vendors_total: number;
+        };
+        /**
+         * MarketplaceRecruitmentHints
+         * @description Where Eventtz should recruit more vendors.
+         */
+        MarketplaceRecruitmentHints: {
+            /** Categories */
+            categories: components["schemas"]["MarketplaceCategoryHint"][];
+            /** Locations */
+            locations: components["schemas"]["MarketplaceLocationHint"][];
+        };
+        /**
+         * MarketplaceTopVendor
+         * @description One vendor's enquiry results in the range.
+         */
+        MarketplaceTopVendor: {
+            /** Avg Response Seconds */
+            avg_response_seconds: number | null;
+            /** Business Name */
+            business_name: string;
+            /** Completed */
+            completed: number;
+            /** Conversion Rate */
+            conversion_rate: number;
+            /** Enquiries */
+            enquiries: number;
+            /** Revenue Gbp */
+            revenue_gbp: number;
+            /** Vendor User Id */
+            vendor_user_id: string;
         };
         /**
          * MeResponse

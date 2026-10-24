@@ -2638,16 +2638,14 @@
         "properties": {
           "by_category": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MarketplaceBreakdownRow"
             },
             "title": "By Category",
             "type": "array"
           },
           "by_category_chart": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MarketplaceBreakdownRow"
             },
             "title": "By Category Chart",
             "type": "array"
@@ -2659,8 +2657,7 @@
           },
           "by_location": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MarketplaceBreakdownRow"
             },
             "title": "By Location",
             "type": "array"
@@ -2677,24 +2674,21 @@
           },
           "completed_by_month": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MarketplaceMonthCount"
             },
             "title": "Completed By Month",
             "type": "array"
           },
           "enquiries_by_month": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MarketplaceMonthCount"
             },
             "title": "Enquiries By Month",
             "type": "array"
           },
           "failure_reasons": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MarketplaceFailureReason"
             },
             "title": "Failure Reasons",
             "type": "array"
@@ -2704,14 +2698,10 @@
             "type": "string"
           },
           "overview": {
-            "additionalProperties": true,
-            "title": "Overview",
-            "type": "object"
+            "$ref": "#/components/schemas/MarketplaceOverview"
           },
           "recruitment_hints": {
-            "additionalProperties": true,
-            "title": "Recruitment Hints",
-            "type": "object"
+            "$ref": "#/components/schemas/MarketplaceRecruitmentHints"
           },
           "success": {
             "default": true,
@@ -2724,8 +2714,7 @@
           },
           "top_vendors": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MarketplaceTopVendor"
             },
             "title": "Top Vendors",
             "type": "array"
@@ -10403,6 +10392,379 @@
           "service_category"
         ],
         "title": "MarketDemandInsight",
+        "type": "object"
+      },
+      "MarketplaceBreakdownRow": {
+        "description": "The funnel for one category or location (`key`).",
+        "properties": {
+          "accept_rate": {
+            "title": "Accept Rate",
+            "type": "number"
+          },
+          "accepted": {
+            "title": "Accepted",
+            "type": "integer"
+          },
+          "avg_booking_value_gbp": {
+            "title": "Avg Booking Value Gbp",
+            "type": "number"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "conversion_rate": {
+            "title": "Conversion Rate",
+            "type": "number"
+          },
+          "enquiries": {
+            "title": "Enquiries",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "paid": {
+            "title": "Paid",
+            "type": "integer"
+          },
+          "revenue_gbp": {
+            "title": "Revenue Gbp",
+            "type": "number"
+          }
+        },
+        "required": [
+          "accept_rate",
+          "accepted",
+          "avg_booking_value_gbp",
+          "completed",
+          "conversion_rate",
+          "enquiries",
+          "failed",
+          "key",
+          "paid",
+          "revenue_gbp"
+        ],
+        "title": "MarketplaceBreakdownRow",
+        "type": "object"
+      },
+      "MarketplaceCategoryHint": {
+        "description": "A category with high demand and a high failure rate.",
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "enquiries": {
+            "title": "Enquiries",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "enquiries",
+          "failed",
+          "message"
+        ],
+        "title": "MarketplaceCategoryHint",
+        "type": "object"
+      },
+      "MarketplaceFailureReason": {
+        "description": "How many unfinished enquiries ended for one failure reason.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "reason"
+        ],
+        "title": "MarketplaceFailureReason",
+        "type": "object"
+      },
+      "MarketplaceLocationHint": {
+        "description": "A location with high demand and a high failure rate.",
+        "properties": {
+          "enquiries": {
+            "title": "Enquiries",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "enquiries",
+          "failed",
+          "location",
+          "message"
+        ],
+        "title": "MarketplaceLocationHint",
+        "type": "object"
+      },
+      "MarketplaceMonthCount": {
+        "description": "A count of bookings in one `YYYY-MM` month.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "month"
+        ],
+        "title": "MarketplaceMonthCount",
+        "type": "object"
+      },
+      "MarketplaceOverview": {
+        "description": "Headline funnel numbers; rates are fractions (0 to 1), money is pounds.",
+        "properties": {
+          "acceptance_to_payment_rate": {
+            "title": "Acceptance To Payment Rate",
+            "type": "number"
+          },
+          "accepted": {
+            "title": "Accepted",
+            "type": "integer"
+          },
+          "avg_booking_value_gbp": {
+            "title": "Avg Booking Value Gbp",
+            "type": "number"
+          },
+          "avg_customer_rating": {
+            "title": "Avg Customer Rating",
+            "type": "number"
+          },
+          "avg_vendor_response_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Vendor Response Seconds"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "enquiries": {
+            "title": "Enquiries",
+            "type": "integer"
+          },
+          "enquiry_client_nudges": {
+            "title": "Enquiry Client Nudges",
+            "type": "integer"
+          },
+          "enquiry_multi_batches": {
+            "title": "Enquiry Multi Batches",
+            "type": "integer"
+          },
+          "enquiry_to_acceptance_rate": {
+            "title": "Enquiry To Acceptance Rate",
+            "type": "number"
+          },
+          "enquiry_vendor_reminders": {
+            "title": "Enquiry Vendor Reminders",
+            "type": "integer"
+          },
+          "overall_conversion_rate": {
+            "title": "Overall Conversion Rate",
+            "type": "number"
+          },
+          "paid": {
+            "title": "Paid",
+            "type": "integer"
+          },
+          "profile_views": {
+            "title": "Profile Views",
+            "type": "integer"
+          },
+          "reply_within_1h_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply Within 1H Rate"
+          },
+          "reply_within_24h_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply Within 24H Rate"
+          },
+          "reply_within_6h_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reply Within 6H Rate"
+          },
+          "review_count": {
+            "title": "Review Count",
+            "type": "integer"
+          },
+          "unfulfilled": {
+            "title": "Unfulfilled",
+            "type": "integer"
+          },
+          "vendors_active": {
+            "title": "Vendors Active",
+            "type": "integer"
+          },
+          "vendors_total": {
+            "title": "Vendors Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "acceptance_to_payment_rate",
+          "accepted",
+          "avg_booking_value_gbp",
+          "avg_customer_rating",
+          "avg_vendor_response_seconds",
+          "completed",
+          "enquiries",
+          "enquiry_client_nudges",
+          "enquiry_multi_batches",
+          "enquiry_to_acceptance_rate",
+          "enquiry_vendor_reminders",
+          "overall_conversion_rate",
+          "paid",
+          "profile_views",
+          "reply_within_1h_rate",
+          "reply_within_24h_rate",
+          "reply_within_6h_rate",
+          "review_count",
+          "unfulfilled",
+          "vendors_active",
+          "vendors_total"
+        ],
+        "title": "MarketplaceOverview",
+        "type": "object"
+      },
+      "MarketplaceRecruitmentHints": {
+        "description": "Where Eventtz should recruit more vendors.",
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceCategoryHint"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "locations": {
+            "items": {
+              "$ref": "#/components/schemas/MarketplaceLocationHint"
+            },
+            "title": "Locations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "categories",
+          "locations"
+        ],
+        "title": "MarketplaceRecruitmentHints",
+        "type": "object"
+      },
+      "MarketplaceTopVendor": {
+        "description": "One vendor's enquiry results in the range.",
+        "properties": {
+          "avg_response_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Response Seconds"
+          },
+          "business_name": {
+            "title": "Business Name",
+            "type": "string"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "integer"
+          },
+          "conversion_rate": {
+            "title": "Conversion Rate",
+            "type": "number"
+          },
+          "enquiries": {
+            "title": "Enquiries",
+            "type": "integer"
+          },
+          "revenue_gbp": {
+            "title": "Revenue Gbp",
+            "type": "number"
+          },
+          "vendor_user_id": {
+            "title": "Vendor User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "avg_response_seconds",
+          "business_name",
+          "completed",
+          "conversion_rate",
+          "enquiries",
+          "revenue_gbp",
+          "vendor_user_id"
+        ],
+        "title": "MarketplaceTopVendor",
         "type": "object"
       },
       "MeResponse": {

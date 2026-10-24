@@ -93,11 +93,9 @@ export function AdminMarketplaceAnalyticsView() {
 
   if (!data) return null;
   const kpis = marketplaceOverviewKpis(data.overview);
-  const categoryChartRows = data.by_category_chart ?? data.by_category;
-  const revenueTotal =
-    kpis.revenueGbp > 0
-      ? kpis.revenueGbp
-      : categoryChartRows.reduce((sum, row) => sum + (Number(row.revenue_gbp) || 0), 0);
+  const categoryChartRows = data.by_category_chart;
+  // The overview carries no revenue total, so revenue is the sum over the categories.
+  const revenueTotal = categoryChartRows.reduce((sum, row) => sum + row.revenue_gbp, 0);
   const recruitCategoryKeys = new Set(
     data.recruitment_hints.categories.map((hint) => hint.category.toLowerCase()),
   );
@@ -192,7 +190,7 @@ export function AdminMarketplaceAnalyticsView() {
           <TablePagination
             offset={categoryOffset}
             limit={ADMIN_TABLE_PAGE_SIZE}
-            total={data.by_category_total ?? data.by_category.length}
+            total={data.by_category_total}
             pageRowCount={data.by_category.length}
             onPrevious={() =>
               setCategoryOffset((current) => Math.max(0, current - ADMIN_TABLE_PAGE_SIZE))
