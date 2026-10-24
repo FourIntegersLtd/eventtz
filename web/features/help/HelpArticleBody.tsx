@@ -10,7 +10,7 @@ import type { HelpArticleDetail, HelpRelatedArticle } from "@/lib/helpApi";
 import { MixpanelEvents, track } from "@/lib/mixpanelEvents";
 
 export const helpArticleBodyClassName =
-  "help-article-body font-sans [&_.help-callout-icon]:align-bottom [&_.help-callout_p]:text-[15px] sm:[&_.help-callout_p]:text-[14px] [&_.help-callout_strong]:font-semibold [&_.help-callout--note_strong]:text-sky-950 [&_.help-callout--warning_strong]:text-orange-950 [&_.help-callout--important_strong]:text-red-950 [&_.help-list-label+strong]:font-normal [&_h2]:font-heading [&_h2]:mt-9 [&_h2]:text-[1.125rem] [&_h2]:font-semibold [&_h2]:text-neutral-950 [&_h3]:font-heading [&_li]:text-[15px] [&_li]:leading-relaxed [&_li]:text-neutral-700 sm:[&_li]:text-[14px] [&_ol]:mt-3 [&_p]:mt-3 [&_p]:text-[15px] [&_p]:leading-relaxed [&_p]:text-neutral-700 sm:[&_p]:text-[14px] [&_ul]:mt-3";
+  "help-article-body font-sans [&_.help-callout-icon]:align-bottom [&_.help-callout_p]:text-[15px] sm:[&_.help-callout_p]:text-[14px] [&_.help-callout_strong]:font-semibold [&_.help-callout--note_strong]:text-sky-950 [&_.help-callout--warning_strong]:text-orange-950 [&_.help-callout--important_strong]:text-red-950 [&_.help-list-label+strong]:font-normal [&_h2]:font-heading [&_h2]:mt-9 [&_h2]:text-[1.125rem] [&_h2]:font-semibold [&_h2]:text-ink [&_h3]:font-heading [&_li]:text-[15px] [&_li]:leading-relaxed [&_li]:text-ink-2 sm:[&_li]:text-[14px] [&_ol]:mt-3 [&_p]:mt-3 [&_p]:text-[15px] [&_p]:leading-relaxed [&_p]:text-ink-2 sm:[&_p]:text-[14px] [&_ul]:mt-3";
 
 export function helpRelatedArticles(article: HelpArticleDetail): HelpRelatedArticle[] {
   if (article.related_articles && article.related_articles.length > 0) {
@@ -28,8 +28,8 @@ type RelatedProps = {
 function RelatedLinks({ items, onOpenRelated, relatedHref }: RelatedProps) {
   if (items.length === 0) return null;
   return (
-    <div className="mt-10 border-t border-neutral-100 pt-6">
-      <h2 className="text-[15px] font-semibold text-neutral-900">Related</h2>
+    <div className="mt-10 border-t border-line pt-6">
+      <h2 className="text-[15px] font-semibold text-ink">Related</h2>
       <ul className="mt-3 space-y-2">
         {items.map((item) => (
           <li key={item.slug}>
@@ -65,7 +65,7 @@ function HelpfulPrompt({
 }) {
   const [choice, setChoice] = useState<"up" | "down" | null>(null);
   return (
-    <div className="mt-10 flex items-center gap-3 text-[13px] text-neutral-500">
+    <div className="mt-10 flex items-center gap-3 text-[13px] text-ink-3">
       <span>Was this helpful?</span>
       <button
         type="button"
@@ -80,8 +80,8 @@ function HelpfulPrompt({
             helpful: true,
           });
         }}
-        className={`rounded-md p-1.5 transition hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-100 ${
-          choice === "up" ? "text-neutral-900" : ""
+        className={`rounded-md p-1.5 transition hover:bg-surface-3 hover:text-ink disabled:opacity-100 ${
+          choice === "up" ? "text-ink" : ""
         }`}
       >
         <ThumbsUp className="h-4 w-4" strokeWidth={1.75} aria-hidden />
@@ -99,8 +99,8 @@ function HelpfulPrompt({
             helpful: false,
           });
         }}
-        className={`rounded-md p-1.5 transition hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-100 ${
-          choice === "down" ? "text-neutral-900" : ""
+        className={`rounded-md p-1.5 transition hover:bg-surface-3 hover:text-ink disabled:opacity-100 ${
+          choice === "down" ? "text-ink" : ""
         }`}
       >
         <ThumbsDown className="h-4 w-4" strokeWidth={1.75} aria-hidden />
@@ -121,7 +121,7 @@ export function HelpArticleBody({ article, onOpenRelated, relatedHref }: Props) 
 
   return (
     <>
-      <h1 className="font-heading text-[1.5rem] font-semibold leading-snug tracking-tight text-neutral-950 sm:text-[1.375rem]">
+      <h1 className="font-heading text-[1.5rem] font-semibold leading-snug tracking-tight text-ink sm:text-[1.375rem]">
         {article.title}
       </h1>
       <div

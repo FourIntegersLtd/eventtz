@@ -195,7 +195,7 @@ export function UiKitView() {
       <Section title="Drawer">
         <Button onClick={() => setDrawerOpen(true)}>Open drawer</Button>
         <Drawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)} title="Preview drawer" subtitle="Focus-trapped, Escape to close">
-          <p className="text-sm text-neutral-600">Drawer content goes here.</p>
+          <p className="text-sm text-ink-2">Drawer content goes here.</p>
         </Drawer>
       </Section>
 

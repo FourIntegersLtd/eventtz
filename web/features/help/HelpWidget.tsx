@@ -52,7 +52,7 @@ type View =
 type Props = { audience: HelpAudience; /** Hide FAB while another overlay (e.g. mobile nav) is open. */ hidden?: boolean };
 
 const iconBtn =
-  "rounded-md p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900";
+  "rounded-md p-1.5 text-ink-3 transition hover:bg-surface-3 hover:text-ink";
 
 export function HelpWidget({ audience, hidden = false }: Props) {
   const pathname = usePathname();
@@ -148,7 +148,7 @@ export function HelpWidget({ audience, hidden = false }: Props) {
         <button
           type="button"
           onClick={() => openWidget({ name: "home" })}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-white shadow-lg transition hover:bg-neutral-800"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-ink text-white shadow-lg transition hover:bg-ink-2"
           aria-label="Open help"
         >
           <CircleHelp className="h-6 w-6" aria-hidden strokeWidth={2.25} />
@@ -160,11 +160,11 @@ export function HelpWidget({ audience, hidden = false }: Props) {
   return (
     <>
       <div
-        className={`fixed inset-0 z-40 flex flex-col overflow-hidden bg-white font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:inset-auto sm:bottom-20 sm:right-5 sm:rounded-2xl sm:border sm:border-neutral-200 sm:pt-0 sm:pb-0 sm:shadow-[0_12px_40px_rgba(0,0,0,0.14)] ${panelDesktopSize}`}
+        className={`fixed inset-0 z-40 flex flex-col overflow-hidden bg-white font-sans pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:inset-auto sm:bottom-20 sm:right-5 sm:rounded-2xl sm:border sm:border-line sm:pt-0 sm:pb-0 sm:shadow-[0_12px_40px_rgba(0,0,0,0.14)] ${panelDesktopSize}`}
         role="dialog"
         aria-label="Help"
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-neutral-100 px-2 py-1.5">
+        <div className="flex shrink-0 items-center justify-between border-b border-line px-2 py-1.5">
           {showBack ? (
             <button type="button" onClick={goBack} className={iconBtn} aria-label="Back">
               <ChevronLeft className="h-5 w-5" strokeWidth={1.75} />
@@ -259,7 +259,7 @@ export function HelpWidget({ audience, hidden = false }: Props) {
       <button
         type="button"
         onClick={minimizeWidget}
-        className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-40 hidden h-12 w-12 items-center justify-center rounded-full bg-neutral-900 text-white shadow-lg transition hover:bg-neutral-800 sm:flex"
+        className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-40 hidden h-12 w-12 items-center justify-center rounded-full bg-ink text-white shadow-lg transition hover:bg-ink-2 sm:flex"
         aria-label="Minimize help"
       >
         <ChevronDown className="h-6 w-6" aria-hidden strokeWidth={2.25} />
@@ -332,11 +332,11 @@ function HomePanel({
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-5 sm:pb-5 sm:pt-6">
-      <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
+      <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-ink sm:text-[1.25rem]">
         {heading}
       </h1>
 
-      <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200">
+      <div className="mt-5 overflow-hidden rounded-xl border border-line">
         <div className="flex items-center gap-1.5 border-b border-primary-border/60 bg-primary-soft px-3.5 py-2.5">
           <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden strokeWidth={1.75} />
           <p className="text-[13px] font-medium text-primary">
@@ -350,7 +350,7 @@ function HomePanel({
             onKeyDown={onAskKeyDown}
             placeholder="Ask a question..."
             rows={4}
-            className="min-h-[6.5rem] w-full resize-none bg-white px-3.5 py-3.5 text-base leading-relaxed text-neutral-900 outline-none placeholder:text-neutral-400 md:text-[15px]"
+            className="min-h-[6.5rem] w-full resize-none bg-white px-3.5 py-3.5 text-base leading-relaxed text-ink outline-none placeholder:text-ink-3 md:text-[15px]"
           />
         </form>
       </div>
@@ -359,17 +359,17 @@ function HomePanel({
         {links.map((item, index) => {
           const Icon = item.icon;
           const rowClass =
-            "flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-neutral-50";
+            "flex w-full items-center gap-3 py-3.5 text-left transition hover:bg-surface-3";
           const isLast = index === links.length - 1;
-          const liClass = isLast ? undefined : "border-b border-neutral-100";
+          const liClass = isLast ? undefined : "border-b border-line";
 
           if (item.kind === "action") {
             return (
               <li key={item.label} className={liClass}>
                 <button type="button" onClick={item.onClick} className={rowClass}>
-                  <Icon className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
-                  <span className="flex-1 text-[15px] text-neutral-900">{item.label}</span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
+                  <Icon className="h-[18px] w-[18px] shrink-0 text-ink-3" strokeWidth={1.75} />
+                  <span className="flex-1 text-[15px] text-ink">{item.label}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-ink-3" strokeWidth={1.75} />
                 </button>
               </li>
             );
@@ -384,9 +384,9 @@ function HomePanel({
                   rel="noopener noreferrer"
                   className={rowClass}
                 >
-                  <Icon className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
-                  <span className="flex-1 text-[15px] text-neutral-900">{item.label}</span>
-                  <ExternalLink className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
+                  <Icon className="h-[18px] w-[18px] shrink-0 text-ink-3" strokeWidth={1.75} />
+                  <span className="flex-1 text-[15px] text-ink">{item.label}</span>
+                  <ExternalLink className="h-4 w-4 shrink-0 text-ink-3" strokeWidth={1.75} />
                 </a>
               </li>
             );
@@ -395,9 +395,9 @@ function HomePanel({
           return (
             <li key={item.label} className={liClass}>
               <Link href={item.href} onClick={onContact} className={rowClass}>
-                <Icon className="h-[18px] w-[18px] shrink-0 text-neutral-500" strokeWidth={1.75} />
-                <span className="flex-1 text-[15px] text-neutral-900">{item.label}</span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" strokeWidth={1.75} />
+                <Icon className="h-[18px] w-[18px] shrink-0 text-ink-3" strokeWidth={1.75} />
+                <span className="flex-1 text-[15px] text-ink">{item.label}</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-ink-3" strokeWidth={1.75} />
               </Link>
             </li>
           );
@@ -438,16 +438,16 @@ function BrowsePanel({
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-4 sm:pb-5">
-      <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
+      <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-ink sm:text-[1.25rem]">
         Help Center
       </h1>
-      <p className="mt-1 text-[14px] text-neutral-500">
+      <p className="mt-1 text-[14px] text-ink-3">
         Find answers in our knowledge base
       </p>
 
-      <div className="mt-5 overflow-hidden rounded-xl border border-neutral-200 bg-white">
+      <div className="mt-5 overflow-hidden rounded-xl border border-line bg-white">
         <div className="border-b border-primary-border/60 bg-primary-soft/50 px-4 py-3">
-          <p className="text-[13px] font-medium text-neutral-900">Documentation</p>
+          <p className="text-[13px] font-medium text-ink">Documentation</p>
         </div>
         {loading ? (
           <LoadingState label="Loading topics…" variant="inline" className="px-4 py-8" />
@@ -459,7 +459,7 @@ function BrowsePanel({
               const Icon = helpCategoryIcon(cat.icon_key);
               const visual = helpCategoryIconVisual(cat.icon_key);
               return (
-                <li key={cat.id} className="border-b border-neutral-100 last:border-b-0">
+                <li key={cat.id} className="border-b border-line last:border-b-0">
                   <button
                     type="button"
                     onClick={() => onOpenCategory(cat.slug, cat.title, cat.description)}
@@ -469,10 +469,10 @@ function BrowsePanel({
                       <Icon className={`h-4 w-4 ${visual.icon}`} strokeWidth={1.75} aria-hidden />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[14px] font-medium text-neutral-900">
+                      <span className="block text-[14px] font-medium text-ink">
                         {cat.title}
                       </span>
-                      <span className="mt-0.5 block truncate text-[13px] text-neutral-500">
+                      <span className="mt-0.5 block truncate text-[13px] text-ink-3">
                         {cat.description}
                       </span>
                     </span>
@@ -546,10 +546,10 @@ function CategoryPanel({
           <Icon className={`h-4 w-4 ${visual.icon}`} strokeWidth={1.75} aria-hidden />
         </span>
         <div className="min-w-0 flex-1">
-          <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-neutral-950 sm:text-[1.25rem]">
+          <h1 className="font-heading text-[1.375rem] font-semibold tracking-tight text-ink sm:text-[1.25rem]">
             {heading}
           </h1>
-          {sub ? <p className="mt-1 text-[14px] text-neutral-500">{sub}</p> : null}
+          {sub ? <p className="mt-1 text-[14px] text-ink-3">{sub}</p> : null}
         </div>
       </div>
 
@@ -558,12 +558,12 @@ function CategoryPanel({
       ) : error ? (
         <p className="mt-6 text-sm text-red-700">{error}</p>
       ) : articles.length === 0 ? (
-        <p className="mt-6 text-sm text-neutral-600">No articles in this topic yet.</p>
+        <p className="mt-6 text-sm text-ink-2">No articles in this topic yet.</p>
       ) : (
         <div className="mt-5 overflow-hidden rounded-xl border border-primary-border/60">
           <div className="flex items-center gap-2 border-b border-primary-border/60 bg-primary-soft px-4 py-3">
             <Icon className={`h-4 w-4 ${visual.icon}`} strokeWidth={1.75} aria-hidden />
-            <p className="text-[14px] font-medium text-neutral-900">Articles</p>
+            <p className="text-[14px] font-medium text-ink">Articles</p>
           </div>
           <ul className="bg-white p-1.5">
             {articles.map((a) => (
@@ -571,7 +571,7 @@ function CategoryPanel({
                 <button
                   type="button"
                   onClick={() => onOpenArticle(a.slug)}
-                  className="w-full rounded-lg px-3 py-2.5 text-left text-[14px] text-neutral-800 transition hover:bg-neutral-100"
+                  className="w-full rounded-lg px-3 py-2.5 text-left text-[14px] text-ink transition hover:bg-surface-3"
                 >
                   <span className="block truncate">{a.title}</span>
                 </button>
@@ -643,13 +643,13 @@ function ArticlePanel({
 
       <form
         onSubmit={submitAsk}
-        className="shrink-0 border-t border-neutral-100 bg-white px-4 py-3"
+        className="shrink-0 border-t border-line bg-white px-4 py-3"
       >
         <input
           value={ask}
           onChange={(e) => setAsk(e.target.value)}
           placeholder="Search our help center or ask AI"
-          className="w-full rounded-xl bg-neutral-100 px-4 py-3 text-base text-neutral-900 outline-none placeholder:text-neutral-500 focus:ring-1 focus:ring-neutral-300 md:text-sm"
+          className="w-full rounded-xl bg-surface-3 px-4 py-3 text-base text-ink outline-none placeholder:text-ink-3 focus:ring-1 focus:ring-line-strong md:text-sm"
         />
       </form>
     </div>

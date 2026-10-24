@@ -67,12 +67,12 @@ export function ContactFormView({ role, embedded = false }: Props) {
 
   return (
     <div className="w-full min-w-0 max-w-3xl">
-      <section className="rounded-2xl border border-neutral-100 bg-white">
+      <section className="rounded-2xl border border-line bg-white">
         <div className="px-5 py-4 sm:px-6 sm:py-5">
-          <h2 className="text-[15px] font-semibold tracking-tight text-neutral-900">
+          <h2 className="text-[15px] font-semibold tracking-tight text-ink">
             Message the team
           </h2>
-          <p className="mt-0.5 text-[13px] text-neutral-400">
+          <p className="mt-0.5 text-[13px] text-ink-3">
             We usually reply by email within two working days.
             {embedded ? (
               <>
@@ -87,22 +87,22 @@ export function ContactFormView({ role, embedded = false }: Props) {
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="divide-y divide-neutral-100 border-t border-neutral-100">
+        <form onSubmit={onSubmit} className="divide-y divide-line border-t border-line">
           <div className="space-y-1.5 px-5 py-4 sm:px-6">
-            <label htmlFor="contact-email" className="block text-sm font-medium text-neutral-800">
+            <label htmlFor="contact-email" className="block text-sm font-medium text-ink">
               Your email
             </label>
             <input
               id="contact-email"
               readOnly
               value={user?.email ?? ""}
-              className={formControlClass("bg-neutral-50 text-neutral-700")}
+              className={formControlClass("bg-surface-3 text-ink-2")}
             />
           </div>
 
           <div className="space-y-1.5 px-5 py-4 sm:px-6">
-            <label htmlFor="contact-booking" className="block text-sm font-medium text-neutral-800">
-              Booking reference <span className="font-normal text-neutral-500">(optional)</span>
+            <label htmlFor="contact-booking" className="block text-sm font-medium text-ink">
+              Booking reference <span className="font-normal text-ink-3">(optional)</span>
             </label>
             <input
               id="contact-booking"
@@ -114,7 +114,7 @@ export function ContactFormView({ role, embedded = false }: Props) {
           </div>
 
           <div className="space-y-1.5 px-5 py-4 sm:px-6">
-            <label htmlFor="contact-message" className="block text-sm font-medium text-neutral-800">
+            <label htmlFor="contact-message" className="block text-sm font-medium text-ink">
               Message
             </label>
             <div className="relative">

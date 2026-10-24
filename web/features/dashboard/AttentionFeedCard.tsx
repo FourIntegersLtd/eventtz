@@ -19,7 +19,7 @@ const TONE_ICON: Record<AttentionTone, typeof AlertCircle> = {
 
 const TONE_ICON_CLASS: Record<AttentionTone, string> = {
   urgent: "bg-amber-100 text-amber-700",
-  info: "bg-neutral-100 text-neutral-600",
+  info: "bg-surface-3 text-ink-2",
   positive: "bg-primary/10 text-primary",
 };
 
@@ -50,11 +50,11 @@ export function AttentionFeedCard({
 
   return (
     <div className={`w-full min-w-0 overflow-hidden ${CARD_SURFACE}`}>
-      <div className="flex items-center justify-between gap-3 border-b border-neutral-100 px-5 py-4">
+      <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
         <div>
-          <p className="text-[15px] font-semibold tracking-tight text-neutral-900">To do</p>
+          <p className="text-[15px] font-semibold tracking-tight text-ink">To do</p>
           {!loading && sorted.length > 0 ? (
-            <p className="mt-0.5 text-[13px] text-neutral-400">
+            <p className="mt-0.5 text-[13px] text-ink-3">
               {sorted.length} item{sorted.length === 1 ? "" : "s"}
             </p>
           ) : null}
@@ -63,7 +63,7 @@ export function AttentionFeedCard({
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-neutral-600 transition hover:bg-neutral-50 hover:text-neutral-900"
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-ink-2 transition hover:bg-surface-3 hover:text-ink"
             aria-expanded={expanded}
           >
             {expanded ? "Show less" : `Show all ${sorted.length}`}
@@ -85,13 +85,13 @@ export function AttentionFeedCard({
           title="You're all caught up"
         />
       ) : (
-        <ul className="divide-y divide-neutral-100">
+        <ul className="divide-y divide-line">
           {visible.map((item, index) => {
             const Icon = TONE_ICON[item.tone];
             const iconAndText = (
               <>
                 {item.timestamp ? (
-                  <span className="hidden w-14 shrink-0 text-xs font-medium text-neutral-400 sm:inline">
+                  <span className="hidden w-14 shrink-0 text-xs font-medium text-ink-3 sm:inline">
                     {item.timestamp}
                   </span>
                 ) : null}
@@ -101,9 +101,9 @@ export function AttentionFeedCard({
                   <Icon className="h-4 w-4" strokeWidth={2} aria-hidden />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-neutral-900">{item.title}</p>
+                  <p className="truncate text-sm font-medium text-ink">{item.title}</p>
                   {item.subtitle ? (
-                    <p className="line-clamp-2 text-xs text-neutral-500 sm:truncate">{item.subtitle}</p>
+                    <p className="line-clamp-2 text-xs text-ink-3 sm:truncate">{item.subtitle}</p>
                   ) : null}
                 </div>
               </>
@@ -132,10 +132,10 @@ export function AttentionFeedCard({
                   <Link
                     href={item.href}
                     onClick={() => onItemClick?.(item)}
-                    className="flex w-full min-w-0 items-center gap-2 px-4 py-3.5 transition hover:bg-neutral-50/80 sm:gap-3 sm:px-5"
+                    className="flex w-full min-w-0 items-center gap-2 px-4 py-3.5 transition hover:bg-surface-3 sm:gap-3 sm:px-5"
                   >
                     {iconAndText}
-                    <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden />
+                    <ChevronRight className="h-4 w-4 shrink-0 text-ink-3" aria-hidden />
                   </Link>
                 )}
               </MotionStaggerItem>
