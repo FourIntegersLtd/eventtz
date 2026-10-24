@@ -64,7 +64,7 @@ export function InspirationMobileReel({
 
   return (
     <div
-      className={`relative overflow-hidden bg-neutral-950 ${className}`.trim()}
+      className={`relative overflow-hidden bg-ink ${className}`.trim()}
       aria-label={video.eventName}
     >
       <video

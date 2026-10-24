@@ -102,7 +102,7 @@ export function helpCategoryIconVisual(iconKey: string): HelpCategoryIconVisual 
 
 /** Tailwind prose classes for helpMarkdownToHtml output in co-pilot / help UI. */
 export const helpMarkdownProseClassName =
-  "[&_p]:mt-2 [&_p:first-child]:mt-0 [&_strong]:font-semibold [&_strong]:text-neutral-900 [&_h2]:mt-4 [&_h2]:text-base [&_h3]:mt-3 [&_h3]:text-sm [&_ul]:mt-2 [&_ol]:mt-2 [&_li]:leading-relaxed";
+  "[&_p]:mt-2 [&_p:first-child]:mt-0 [&_strong]:font-semibold [&_strong]:text-ink [&_h2]:mt-4 [&_h2]:text-base [&_h3]:mt-3 [&_h3]:text-sm [&_ul]:mt-2 [&_ol]:mt-2 [&_li]:leading-relaxed";
 
 type CalloutKind = "NOTE" | "WARNING" | "IMPORTANT";
 
@@ -151,7 +151,7 @@ function inline(text: string): string {
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(
       /`([^`]+)`/g,
-      '<code class="rounded bg-neutral-100 px-1 text-[0.9em]">$1</code>',
+      '<code class="rounded bg-surface-3 px-1 text-[0.9em]">$1</code>',
     );
 }
 
@@ -160,13 +160,13 @@ function formatListItemContent(text: string): string {
   if (insideBold) {
     const [, label, rest] = insideBold;
     const suffix = rest.trim() ? ` ${rest.trim()}` : "";
-    return `<span class="help-list-label font-semibold text-neutral-900">${escapeHtml(label)}</span>${inline(suffix)}`;
+    return `<span class="help-list-label font-semibold text-ink">${escapeHtml(label)}</span>${inline(suffix)}`;
   }
   const outsideBold = text.match(/^\*\*(.+?)\*\*([:.])(.*)$/);
   if (outsideBold) {
     const [, label, punct, rest] = outsideBold;
     const suffix = rest.trim() ? ` ${rest.trim()}` : "";
-    return `<span class="help-list-label font-semibold text-neutral-900">${escapeHtml(label)}${punct}</span>${inline(suffix)}`;
+    return `<span class="help-list-label font-semibold text-ink">${escapeHtml(label)}${punct}</span>${inline(suffix)}`;
   }
   return inline(text);
 }
@@ -247,7 +247,7 @@ export function helpMarkdownToHtml(md: string): string {
     if (step) {
       closeLists();
       html.push(
-        `<h3 class="mt-8 flex items-start gap-3 text-neutral-900"><span class="font-heading w-7 shrink-0 text-[1.75rem] font-semibold leading-none text-primary/25">${escapeHtml(step[1])}</span><span class="font-heading pt-0.5 text-base font-semibold">${inline(step[2])}</span></h3>`,
+        `<h3 class="mt-8 flex items-start gap-3 text-ink"><span class="font-heading w-7 shrink-0 text-[1.75rem] font-semibold leading-none text-primary/25">${escapeHtml(step[1])}</span><span class="font-heading pt-0.5 text-base font-semibold">${inline(step[2])}</span></h3>`,
       );
       i += 1;
       continue;
@@ -256,7 +256,7 @@ export function helpMarkdownToHtml(md: string): string {
     if (line.startsWith("### ")) {
       closeLists();
       html.push(
-        `<h3 class="font-heading mt-6 text-base font-semibold text-neutral-900">${inline(line.slice(4))}</h3>`,
+        `<h3 class="font-heading mt-6 text-base font-semibold text-ink">${inline(line.slice(4))}</h3>`,
       );
       i += 1;
       continue;
@@ -264,7 +264,7 @@ export function helpMarkdownToHtml(md: string): string {
     if (line.startsWith("## ")) {
       closeLists();
       html.push(
-        `<h2 class="font-heading mt-9 text-lg font-semibold text-neutral-900">${inline(line.slice(3))}</h2>`,
+        `<h2 class="font-heading mt-9 text-lg font-semibold text-ink">${inline(line.slice(3))}</h2>`,
       );
       i += 1;
       continue;
@@ -276,7 +276,7 @@ export function helpMarkdownToHtml(md: string): string {
         inUl = false;
       }
       if (!inOl) {
-        html.push('<ol class="mt-3 list-decimal space-y-2 pl-5 text-sm text-neutral-700">');
+        html.push('<ol class="mt-3 list-decimal space-y-2 pl-5 text-sm text-ink-2">');
         inOl = true;
       }
       html.push(`<li>${formatListItemContent(ol[1])}</li>`);
@@ -289,7 +289,7 @@ export function helpMarkdownToHtml(md: string): string {
         inOl = false;
       }
       if (!inUl) {
-        html.push('<ul class="mt-3 list-disc space-y-2.5 pl-5 text-sm text-neutral-700">');
+        html.push('<ul class="mt-3 list-disc space-y-2.5 pl-5 text-sm text-ink-2">');
         inUl = true;
       }
       html.push(`<li>${formatListItemContent(line.slice(2))}</li>`);
@@ -298,7 +298,7 @@ export function helpMarkdownToHtml(md: string): string {
     }
     closeLists();
     html.push(
-      `<p class="mt-3 text-[15px] leading-relaxed text-neutral-700 sm:text-[14px]">${inline(line.trim())}</p>`,
+      `<p class="mt-3 text-[15px] leading-relaxed text-ink-2 sm:text-[14px]">${inline(line.trim())}</p>`,
     );
     i += 1;
   }

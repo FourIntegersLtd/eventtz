@@ -95,17 +95,17 @@ export function BookingsCalendarCard<TItem extends { booking_request_id: string 
     <div className={`w-full min-w-0 overflow-hidden ${CARD_SURFACE} p-4 sm:p-5`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">{title}</p>
-          <p className="mt-1 font-heading text-lg font-semibold text-neutral-900">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">{title}</p>
+          <p className="mt-1 font-heading text-lg font-semibold text-ink">
             {labelMonth(monthCursor)}
           </p>
-          {subtitle ? <p className="mt-0.5 text-xs text-neutral-500">{subtitle}</p> : null}
+          {subtitle ? <p className="mt-0.5 text-xs text-ink-3">{subtitle}</p> : null}
         </div>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setMonthCursor((d) => addMonths(d, -1))}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-white text-ink-2 hover:bg-surface-3"
             aria-label="Previous month"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden />
@@ -113,7 +113,7 @@ export function BookingsCalendarCard<TItem extends { booking_request_id: string 
           <button
             type="button"
             onClick={() => setMonthCursor((d) => addMonths(d, 1))}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-line bg-white text-ink-2 hover:bg-surface-3"
             aria-label="Next month"
           >
             <ChevronRight className="h-4 w-4" aria-hidden />
@@ -125,7 +125,7 @@ export function BookingsCalendarCard<TItem extends { booking_request_id: string 
         {weekday.map((w) => (
           <div
             key={w}
-            className="px-1 py-1 text-center text-[10px] font-semibold uppercase tracking-wide text-neutral-400"
+            className="px-1 py-1 text-center text-[10px] font-semibold uppercase tracking-wide text-ink-3"
           >
             {w}
           </div>
@@ -144,8 +144,8 @@ export function BookingsCalendarCard<TItem extends { booking_request_id: string 
               className={`relative flex h-10 items-center justify-center rounded-xl border text-sm font-semibold transition ${
                 isToday
                   ? "border-primary/40 bg-primary/[0.06] text-primary"
-                  : "border-neutral-200 bg-white text-neutral-800"
-              } ${isActive ? "hover:bg-neutral-50" : "opacity-50"} disabled:cursor-default`}
+                  : "border-line bg-white text-ink"
+              } ${isActive ? "hover:bg-surface-3" : "opacity-50"} disabled:cursor-default`}
               aria-label={isActive ? `${cell.key} (${count} bookings)` : cell.key}
             >
               {cell.day}
@@ -153,7 +153,7 @@ export function BookingsCalendarCard<TItem extends { booking_request_id: string 
                 <span className="absolute bottom-1 left-1/2 flex -translate-x-1/2 items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                   {count > 1 ? (
-                    <span className="text-[10px] font-semibold text-neutral-500">{count}</span>
+                    <span className="text-[10px] font-semibold text-ink-3">{count}</span>
                   ) : null}
                 </span>
               ) : null}
@@ -162,9 +162,9 @@ export function BookingsCalendarCard<TItem extends { booking_request_id: string 
         })}
       </div>
 
-      <div className="mt-5 border-t border-neutral-100 pt-4">
+      <div className="mt-5 border-t border-line pt-4">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Upcoming</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-3">Upcoming</p>
           <Link
             href={viewAllHref}
             className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
@@ -174,16 +174,16 @@ export function BookingsCalendarCard<TItem extends { booking_request_id: string 
         </div>
 
         {agendaRows.length === 0 ? (
-          <p className="mt-3 rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-700">
+          <p className="mt-3 rounded-xl bg-surface-3 px-4 py-3 text-sm text-ink-2">
             No upcoming bookings yet.
           </p>
         ) : (
-          <ul className="mt-3 divide-y divide-neutral-100 rounded-xl bg-neutral-50">
+          <ul className="mt-3 divide-y divide-line rounded-xl bg-surface-3">
             {agendaRows.map((it) => (
               <li key={it.id} className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-neutral-900">{it.title}</p>
-                  <p className="mt-0.5 text-xs text-neutral-500">
+                  <p className="truncate text-sm font-semibold text-ink">{it.title}</p>
+                  <p className="mt-0.5 text-xs text-ink-3">
                     {labelShortDate(it.date_key)}
                     {it.subtitle ? ` · ${it.subtitle}` : ""}
                   </p>
