@@ -3,6 +3,10 @@ import type { components } from "@/lib/api-schema";
 /**
  * UK address lookup API - DISABLED (getAddress.io / OS Places commented out).
  * Venue addresses use free text via VenueAddressFields instead.
+ *
+ * Aliasing is complete for what the schema offers: `AddressAutocompleteItem` and the `AddressResolveResult` pick come
+ * from the generated types. `AddressAutocompleteResult` and `AddressFindResult` stay local on purpose: they are the
+ * camelCase shapes the (commented-out) fetchers return after mapping `provider_configured`, not response bodies.
  */
 
 export type AddressAutocompleteItem = components["schemas"]["AddressAutocompleteItem"];

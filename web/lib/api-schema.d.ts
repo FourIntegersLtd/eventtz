@@ -5288,9 +5288,7 @@ export interface components {
          */
         AdminVendorInsightsResponse: {
             /** Bookings By Month */
-            bookings_by_month: {
-                [key: string]: unknown;
-            }[];
+            bookings_by_month: components["schemas"]["AdminVendorMonthBookings"][];
             /** Bookings By Status */
             bookings_by_status: {
                 [key: string]: number;
@@ -5429,6 +5427,19 @@ export interface components {
             success: boolean;
             /** User Id */
             user_id: string;
+        };
+        /**
+         * AdminVendorMonthBookings
+         * @description One month of a vendor's bookings: the `month` (YYYY-MM) plus a count per booking status.
+         *
+         *     The status keys are open-ended (every status the vendor has ever had appears in every row),
+         *     so they ride as extra integer fields after `month`.
+         */
+        AdminVendorMonthBookings: {
+            /** Month */
+            month: string;
+        } & {
+            [key: string]: number;
         };
         /**
          * AdminVendorPauseBody
