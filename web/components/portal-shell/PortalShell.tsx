@@ -172,7 +172,7 @@ function UserFooter({
           {userInitials(user, roleFallback)}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="ez-strong truncate" style={{ fontSize: 14 }}>
+          <div className="ez-strong truncate text-[14px]">
             {displayName}
           </div>
           <div className="ez-caption truncate">{statusLine}</div>
@@ -180,8 +180,7 @@ function UserFooter({
         <button
           type="button"
           onClick={onSignOut}
-          className="ez-icon-btn shrink-0"
-          style={{ width: 36, height: 36 }}
+          className="ez-icon-btn h-9 w-9 shrink-0"
           aria-label="Sign out"
           title="Sign out"
         >

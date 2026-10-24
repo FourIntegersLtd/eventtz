@@ -149,7 +149,7 @@ export function LandingNav({
     <>
       {mobileOpen ? (
         <div
-          className={`fixed inset-0 z-[90] lg:hidden ${darkNav ? "bg-neutral-950" : "bg-white"}`}
+          className={`fixed inset-0 z-[90] lg:hidden ${darkNav ? "bg-ink" : "bg-white"}`}
           aria-hidden
         />
       ) : null}
@@ -158,7 +158,7 @@ export function LandingNav({
         className={`fixed top-0 left-0 right-0 z-[100] pt-[env(safe-area-inset-top)] transition-all duration-300 ${
           mobileOpen
             ? darkNav
-              ? "bg-neutral-950"
+              ? "bg-ink"
               : "bg-white shadow-xs"
             : navSolid
               ? "border-b border-line bg-white/90 shadow-xs backdrop-blur-xl"

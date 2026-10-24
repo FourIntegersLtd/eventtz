@@ -34,7 +34,7 @@ export function CopyToClipboardButton({
       type="button"
       aria-label={copied ? "Copied" : ariaLabel}
       title={copied ? "Copied" : ariaLabel}
-      className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-400 transition hover:bg-neutral-100 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${className}`.trim()}
+      className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-ink-3 transition hover:bg-surface-3 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${className}`.trim()}
       onClick={(event) => void handleCopy(event)}
     >
       {copied ? (

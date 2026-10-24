@@ -24,9 +24,9 @@ const VARIANT_CLASS: Record<LoadingStateVariant, string> = {
 };
 
 const LABEL_CLASS: Record<LoadingStateVariant, string> = {
-  inline: "text-xs text-neutral-500",
-  centered: "text-sm text-neutral-600",
-  page: "text-sm text-neutral-600",
+  inline: "text-xs text-ink-3",
+  centered: "text-sm text-ink-2",
+  page: "text-sm text-ink-2",
 };
 
 /** Spinner or branded Lottie + optional label for panels, pages, and list/detail loading shells. */

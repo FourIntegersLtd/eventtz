@@ -26,7 +26,7 @@ export function RequireAuth({
   if (loading || !isAuthenticated) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-[var(--page-bg)] px-4 py-10">
-        <div className="mx-auto max-w-3xl rounded-2xl border border-neutral-200 bg-white p-6">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-line bg-white p-6">
           <LoadingState
             label="Just a moment - checking you're signed in…"
             variant="centered"

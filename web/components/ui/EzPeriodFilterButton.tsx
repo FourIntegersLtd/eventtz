@@ -49,7 +49,7 @@ export function EzPeriodFilterButton<T extends string | number>({
         onClick={() => setOpen(true)}
         aria-haspopup="dialog"
       >
-        <CalendarDays className="h-3.5 w-3.5 text-neutral-500" aria-hidden />
+        <CalendarDays className="h-3.5 w-3.5 text-ink-3" aria-hidden />
         {selected.label}
       </button>
       <EzFilterOptionsModal

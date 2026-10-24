@@ -20,7 +20,7 @@ export function OptionCard({ type, name, checked, onChange, title, description }
   return (
     <label className={`ez-option${checked ? " ez-option--active" : ""}`} htmlFor={id}>
       <input type={type} id={id} name={name} checked={checked} onChange={onChange} />
-      <span className="ez-stack ez-stack--sm" style={{ flex: 1, minWidth: 0 }}>
+      <span className="ez-stack ez-stack--sm min-w-0 flex-1">
         <span className="ez-strong">{title}</span>
         {description ? <span className="ez-small">{description}</span> : null}
       </span>

@@ -68,8 +68,7 @@ export function EzDonutChart({
           y="50%"
           textAnchor="middle"
           dominantBaseline="middle"
-          className="text-sm font-semibold"
-          style={{ fill: "var(--ez-ink)" }}
+          className="fill-ink text-sm font-semibold"
         >
           {center}
         </text>

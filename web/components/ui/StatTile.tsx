@@ -38,13 +38,13 @@ export function StatTile({
   if (compact) {
     return (
       <div
-        className={`h-full rounded-xl border border-neutral-100 bg-white px-3.5 py-3 ${className}`.trim()}
+        className={`h-full rounded-xl border border-line bg-white px-3.5 py-3 ${className}`.trim()}
       >
-        <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+        <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-wide text-ink-3">
           {Icon ? <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden /> : null}
           {label}
         </div>
-        <p className="mt-1.5 text-base font-semibold tabular-nums tracking-tight text-neutral-900">
+        <p className="mt-1.5 text-base font-semibold tabular-nums tracking-tight text-ink">
           {value}
         </p>
       </div>

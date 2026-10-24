@@ -163,7 +163,7 @@ describe("ui building blocks emit canvas markup", () => {
     const markup = renderToStaticMarkup(
       <DescriptionList rowLayout="split" items={[{ label: "Bio", value: "-", missing: true }]} />,
     );
-    expect(markup).toContain('<dl class="divide-y divide-neutral-100">');
+    expect(markup).toContain('<dl class="divide-y divide-line">');
     expect(markup).toContain(
       '<dd class="min-w-0 text-sm leading-snug sm:text-right font-medium text-amber-800">-</dd>',
     );
@@ -172,7 +172,7 @@ describe("ui building blocks emit canvas markup", () => {
   it("DescriptionRow review layout marks the field for the compact review card", () => {
     const markup = renderToStaticMarkup(<DescriptionRow layout="review" label="Email" value="a@b.co" />);
     expect(markup).toContain("data-review-field");
-    expect(markup).toContain('<dd class="min-w-0 text-sm font-medium text-neutral-900 sm:text-right">a@b.co</dd>');
+    expect(markup).toContain('<dd class="min-w-0 text-sm font-medium text-ink sm:text-right">a@b.co</dd>');
   });
 
   it("StatTile caption renders an ez-caption line", () => {
@@ -192,7 +192,7 @@ describe("ui building blocks emit canvas markup", () => {
 
   it("StatTile compact is a bordered card, not an ez-kpi", () => {
     const markup = renderToStaticMarkup(<StatTile compact label="Rating" value="4.9" />);
-    expect(markup).toContain('class="h-full rounded-xl border border-neutral-100 bg-white px-3.5 py-3"');
+    expect(markup).toContain('class="h-full rounded-xl border border-line bg-white px-3.5 py-3"');
     expect(markup).not.toContain("ez-kpi");
   });
 
