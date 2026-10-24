@@ -89,12 +89,12 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   Phase 3.6b: every other `lib/*Api.ts` now aliases the generated schema (`lib/apiTypeHelpers.ts` `WithFields`
   narrows a field); `lib/noHandWrittenApiShapes.test.ts` fails on a hand-written type named like a schema.
   Still hand-narrowed because the API types them as free-form dicts (candidates for pydantic models):
-  vendor analytics (`overview`, `funnel`, `*_by_month`), admin marketplace analytics, chat `metadata` (kept a dict on purpose: three writers with disjoint key sets, quote card `kind/booking_request_id/event_name/total_label`, booking notes `source/booking_id`, staff `kind/format/edited_at`, plus legacy rows; an optional-fields model would emit nulls for absent keys and drop unknown ones, so the JSON would change),
-  ~~admin booking `booking` and `support.open_dispute`~~ (typed), admin vendor insights `bookings_by_month`, copilot
-  `package_feedback`, `profile_form_data`. Drift found: the planner vendor card is read by screens but not sent by the API (~~`chat_included_for_review`~~
+  ~~vendor analytics (`overview`, `funnel`, `*_by_month`)~~ (typed), admin marketplace analytics, chat `metadata` (kept a dict on purpose: three writers with disjoint key sets, quote card `kind/booking_request_id/event_name/total_label`, booking notes `source/booking_id`, staff `kind/format/edited_at`, plus legacy rows; an optional-fields model would emit nulls for absent keys and drop unknown ones, so the JSON would change),
+  ~~admin booking `booking` and `support.open_dispute`~~ (typed), admin vendor insights `bookings_by_month`, ~~copilot
+  `package_feedback`~~ (typed); `profile_form_data` stays a free-form dict on purpose (it is the vendor's open `vendors.payload` JSON). Drift found: the planner vendor card is read by screens but not sent by the API (~~`chat_included_for_review`~~
   was already sent; the hand-narrowing is gone; `support.open_dispute` was always null and is now filled; the admin booking
-  screen read `pricing`, `review_vendor` and `client_total_label`, which the API never sends: those reads are removed); `message_role` on help/copilot history is sent
-  while the schema shows its `role` alias; `addressApi.ts` is only partly aliased (module disabled).
+  screen read `pricing`, `review_vendor` and `client_total_label`, which the API never sends: those reads are removed); ~~`message_role` on help/copilot history is sent
+  while the schema shows its `role` alias~~ (the schema now lists `message_role`); `addressApi.ts` is only partly aliased (module disabled).
 
 **Phase 4: dead code and docs** (PR "Rebuild audit Phase 4", except `test_list_pagination.py`, which Phase 3 owns).
 - **Deleted web files with no importers (grep of every import form, then `npm run build`):**
@@ -301,8 +301,12 @@ For local testing without Docker:
   screenshot comparison (no marketplace screen in `screens.json`): dashboard, browse, favourites, vendor profile, planner
   and analytics identical bar lottie frames; the booking modal keeps main's uppercase labels, venue box and note sizes
   (plain inputs on tokens, `DateInput`), 0.05% apart at 1280 and 390 bar the dev badge. eslint 121 errors, same as main.
-  Follow-ups from review: move the booking and onboarding overlays onto `Modal`; extract one ranked-list card for admin
-  "Top locations" and "Top vendors"; vendor onboarding (`WizardAside`, `StepPortfolio`) still hand-roll `ez-progress`.
+  Follow-ups from review: vendor onboarding (`WizardAside`, `StepPortfolio`) still hand-roll `ez-progress` (vendors-owner).
+  Closed since: `BudgetBreakdown` is off raw `ez-btn--block` (allow-list entry deleted); the booking and client
+  onboarding overlays now render through `Modal`, which gained optional `header`, `panelClassName`,
+  `bodyPaddingClassName`, `footerClassName`, `scrimClassName` and `positionClassName` (defaults unchanged, tested in
+  `Modal.test.tsx`); admin "Top locations" and "Top vendors" share `RankedListCard`. Neither overlay had a focus trap
+  before and `Modal` has none, so none was lost; adding one to `Modal` would help every dialog.
 - **Done (PR "Rebuild audit: vendors screens on the design system and server lists").** Vendor onboarding, profile,
   dashboard, analytics, co-pilot, vendor directory and admin vendor screens use the ui blocks and tokens (no
   `style={{}}`, `neutral-*` or raw palette classes left, except dynamic widths and the status dot colour). `Card` now

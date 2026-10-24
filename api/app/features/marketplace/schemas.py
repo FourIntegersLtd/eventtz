@@ -214,14 +214,69 @@ class AddressFindResponse(BaseModel):
 # --- vendor analytics -----------------------------------------------------------------------------
 
 
+class VendorAnalyticsOverview(BaseModel):
+    """The headline numbers at the top of the vendor's analytics screen."""
+
+    enquiries: int
+    completed: int
+    total_revenue_gbp: float
+    avg_booking_value_gbp: float
+    avg_customer_rating: float
+    review_count: int
+    avg_response_seconds: float | None
+    conversion_rate: float
+    pending_enquiries: int
+    expired_enquiries: int
+    upcoming_bookings: int
+    profile_views: int
+
+
+class VendorAnalyticsFunnel(BaseModel):
+    """How many people reached each step from profile view to completed booking."""
+
+    profile_views: int
+    enquiries: int
+    accepted: int
+    paid: int
+    completed: int
+
+
+class MonthlyEnquiries(BaseModel):
+    """Enquiries received in one `YYYY-MM` month."""
+
+    month: str
+    count: int
+
+
+class MonthlyRevenue(BaseModel):
+    """Revenue earned from jobs completed in one `YYYY-MM` month."""
+
+    month: str
+    revenue_gbp: float
+
+
+class MonthlyResponseTime(BaseModel):
+    """The vendor's average first-response time, in seconds, for one `YYYY-MM` month."""
+
+    month: str
+    avg_seconds: float | None
+
+
+class MonthlyRating(BaseModel):
+    """The average review rating left in one `YYYY-MM` month."""
+
+    month: str
+    avg_rating: float | None
+
+
 class VendorAnalyticsResponse(BaseModel):
     """The vendor's analytics screen: headline numbers, the funnel and monthly series."""
 
     success: bool = True
     period_days: int = 90
-    overview: dict[str, Any] = Field(default_factory=dict)
-    funnel: dict[str, Any] = Field(default_factory=dict)
-    enquiries_by_month: list[dict[str, Any]] = Field(default_factory=list)
-    revenue_by_month: list[dict[str, Any]] = Field(default_factory=list)
-    response_time_by_month: list[dict[str, Any]] = Field(default_factory=list)
-    rating_by_month: list[dict[str, Any]] = Field(default_factory=list)
+    overview: VendorAnalyticsOverview
+    funnel: VendorAnalyticsFunnel
+    enquiries_by_month: list[MonthlyEnquiries] = Field(default_factory=list)
+    revenue_by_month: list[MonthlyRevenue] = Field(default_factory=list)
+    response_time_by_month: list[MonthlyResponseTime] = Field(default_factory=list)
+    rating_by_month: list[MonthlyRating] = Field(default_factory=list)

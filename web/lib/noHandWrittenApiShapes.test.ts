@@ -30,7 +30,6 @@ const KNOWN_RENAMED_COPIES = new Set([
   "clientExploreApi.ts:ExploreVendor",
   "clientExploreApi.ts:ExploreVendorSearchApiResponse",
   "vendorBookingsApi.ts:PostVendorQuoteBody",
-  "vendorCopilotApi.ts:CopilotPackageFeedback",
 ]);
 const SCHEMA_NAME = /^ {8}([A-Za-z0-9_]+): \{/gm;
 const HAND_WRITTEN_SHAPE =

@@ -130,14 +130,6 @@ export function VendorBookingModal({
     }
   }, [initialReferralCode]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   const minEventDate = todayIsoDate();
 
   const chosenDates = useMemo(() => {
@@ -287,20 +279,18 @@ export function VendorBookingModal({
           </div>
         ) : null}
       </Modal>
-      <div className="fixed inset-0 z-50">
-        <button
-          type="button"
-          aria-label="Close"
-          className="absolute inset-0 bg-scrim"
-          onClick={closeUnlessResult}
-        />
-        <div className="absolute inset-0 flex items-start justify-center overflow-y-auto p-4 pt-6 sm:pt-10">
-          <div
-            className="relative my-auto w-full max-w-lg rounded-card border border-line bg-surface shadow-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="booking-modal-title"
-          >
+      <Modal
+        isOpen
+        onClose={closeUnlessResult}
+        title="Request a booking"
+        maxWidthClassName="max-w-lg"
+        panelClassName="relative my-auto rounded-card border border-line bg-surface shadow-overlay"
+        positionClassName="items-start justify-center p-4 pt-6 sm:pt-10"
+        bodyMaxHeightClassName="max-h-[min(70vh,560px)]"
+        bodyPaddingClassName="space-y-4 px-5 py-4 sm:px-6"
+        footerClassName="border-t border-line px-5 py-4 sm:px-6"
+        header={
+          <>
             <button
               type="button"
               onClick={closeUnlessResult}
@@ -331,269 +321,266 @@ export function VendorBookingModal({
                 </p>
               ) : null}
             </div>
+          </>
+        }
+        footer={
+          <Button variant="primary" size="md" onClick={submit} loading={submitting} className="w-full py-3">
+            Send booking request
+          </Button>
+        }
+      >
+          {dateConflictMessage ? <Banner tone="warning">{dateConflictMessage}</Banner> : null}
+          {bannerVisible && pendingPrefill ? (
+            <ActiveEventPrefillBanner
+              prefill={pendingPrefill}
+              onUse={() => {
+                applyBannerPrefill();
+                setValidationError(null);
+              }}
+              onNewEvent={dismissForNewEvent}
+            />
+          ) : null}
+          <div>
+            <label htmlFor="booking-event-name" className={FIELD_LABEL_CLASS}>
+              Event name
+            </label>
+            <input
+              id="booking-event-name"
+              type="text"
+              value={eventName}
+              onChange={(e) => {
+                setEventName(e.target.value);
+                setValidationError(null);
+              }}
+              placeholder="e.g. Ade and Kemi - wedding reception"
+              className={FIELD_INPUT_CLASS}
+            />
+          </div>
 
-            <div className="max-h-[min(70vh,560px)] space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
-              {dateConflictMessage ? <Banner tone="warning">{dateConflictMessage}</Banner> : null}
-              {bannerVisible && pendingPrefill ? (
-                <ActiveEventPrefillBanner
-                  prefill={pendingPrefill}
-                  onUse={() => {
-                    applyBannerPrefill();
-                    setValidationError(null);
-                  }}
-                  onNewEvent={dismissForNewEvent}
-                />
-              ) : null}
-              <div>
-                <label htmlFor="booking-event-name" className={FIELD_LABEL_CLASS}>
-                  Event name
-                </label>
-                <input
-                  id="booking-event-name"
-                  type="text"
-                  value={eventName}
-                  onChange={(e) => {
-                    setEventName(e.target.value);
-                    setValidationError(null);
-                  }}
-                  placeholder="e.g. Ade and Kemi - wedding reception"
-                  className={FIELD_INPUT_CLASS}
-                />
-              </div>
-
-              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
-                <div className="min-w-0">
-                  <label htmlFor="booking-event-date" className={FIELD_LABEL_CLASS}>
-                    Event date
-                  </label>
-                  <DateInput
-                    id="booking-event-date"
-                    min={minEventDate}
-                    value={eventDate}
-                    onChange={(e) => {
-                      setEventDate(e.target.value);
-                      setValidationError(null);
-                    }}
-                    shellClassName="mt-1.5"
-                    className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <label htmlFor="booking-event-end" className={FIELD_LABEL_CLASS}>
-                    End date <span className="font-normal normal-case text-ink-3/65">(optional)</span>
-                  </label>
-                  <DateInput
-                    id="booking-event-end"
-                    allowEmpty
-                    min={eventDate.trim() || minEventDate}
-                    value={eventEndDate}
-                    onChange={(e) => {
-                      setEventEndDate(e.target.value);
-                      setValidationError(null);
-                    }}
-                    shellClassName="mt-1.5"
-                    className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-              </div>
-
-              {workingDaysSentence || blockedDatesSentence ? (
-                <div className="rounded-lg border border-line bg-surface-3 px-3 py-2 text-xs leading-relaxed text-ink-2">
-                  {workingDaysSentence ? <p>{workingDaysSentence}</p> : null}
-                  {blockedDatesSentence ? (
-                    <p className={workingDaysSentence ? "mt-1" : ""}>{blockedDatesSentence}</p>
-                  ) : null}
-                </div>
-              ) : null}
-
-              <div>
-                <label htmlFor="booking-venue-address" className={FIELD_LABEL_CLASS}>
-                  Venue location <span className="font-normal normal-case text-ink-3/65">(optional)</span>
-                </label>
-                <textarea
-                  id="booking-venue-address"
-                  rows={3}
-                  value={venueAddress}
-                  onChange={(e) => {
-                    setVenueAddress(e.target.value);
-                    setValidationError(null);
-                  }}
-                  placeholder="e.g. The Grand Hall, 12 Park Lane, London"
-                  className={`${FIELD_INPUT_CLASS} resize-y`}
-                />
-                <p className="mt-1 text-xs text-ink-3">Add before you pay.</p>
-              </div>
-
-              <div>
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="block text-xs font-semibold uppercase tracking-wide text-ink-3">Packages &amp; rates</p>
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                  >
-                    <Pencil className="h-3 w-3" strokeWidth={2.5} aria-hidden />
-                    Change
-                  </button>
-                </div>
-                <ul className="mt-2 divide-y divide-line rounded-lg border border-line">
-                  {selectedOptions.map((opt) => {
-                    const perUnit = opt.pricingMode === "per_unit";
-                    const qty = quantities[opt.id] ?? opt.minQuantity;
-                    const lineTotal = perUnit ? lineTotalGbp(opt.unitPriceGbp, qty) : opt.unitPriceGbp;
-                    const lineLabel = lineTotal != null ? formatGbp(lineTotal, { prefix: "GBP " }) : null;
-                    return (
-                      <li key={opt.id} className="space-y-2 px-3 py-2.5">
-                        <div className="flex flex-wrap items-baseline justify-between gap-2">
-                          <span className="text-sm font-medium text-ink">{opt.heading}</span>
-                          <div className="shrink-0 text-right">
-                            {lineLabel != null ? (
-                              <>
-                                {perUnit && opt.priceDisplay != null ? (
-                                  <p className="text-xs text-ink-3">
-                                    {qty} × GBP {opt.priceDisplay}
-                                    {opt.priceSuffix ? ` ${opt.priceSuffix}` : ""}
-                                  </p>
-                                ) : opt.compareAtDisplay ? (
-                                  <p className="text-xs text-ink-3 line-through">GBP {opt.compareAtDisplay}</p>
-                                ) : null}
-                                <p
-                                  className={`text-sm font-semibold ${
-                                    opt.compareAtDisplay && !perUnit ? "text-primary" : "text-ink"
-                                  }`}
-                                >
-                                  {lineLabel}
-                                </p>
-                                {opt.discountBadge ? (
-                                  <p className="mt-0.5 text-xs font-medium text-success">{opt.discountBadge}</p>
-                                ) : null}
-                              </>
-                            ) : (
-                              <span className="text-sm font-semibold text-ink">TBC</span>
-                            )}
-                          </div>
-                        </div>
-                        {perUnit ? (
-                          <QuantityStepper
-                            value={qty}
-                            min={opt.minQuantity}
-                            max={opt.maxQuantity}
-                            onChange={(next) => setPackageQuantity(opt.id, next)}
-                            aria-label={`Quantity for ${opt.heading}`}
-                          />
-                        ) : null}
-                      </li>
-                    );
-                  })}
-                  {estimate.autoLines.map((line) => (
-                    <li
-                      key={line.id}
-                      className="flex flex-wrap items-baseline justify-between gap-2 bg-success-soft px-3 py-2.5"
-                    >
-                      <span className="text-sm font-medium text-success">{line.heading}</span>
-                      <span className="shrink-0 text-sm font-semibold text-success">
-                        {line.unitPriceGbp != null
-                          ? formatGbp(Math.abs(line.unitPriceGbp), { prefix: "GBP " })
-                          : "TBC"}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <label htmlFor="booking-notes" className={FIELD_LABEL_CLASS}>
-                  Details for the vendor
-                </label>
-                <textarea
-                  id="booking-notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={4}
-                  maxLength={CLIENT_BOOKING_NOTES_MAX_LENGTH}
-                  placeholder="Guest count, venue, dietary needs, timeline, or questions…"
-                  className={`${FIELD_INPUT_CLASS} resize-y`}
-                />
-                <p className="mt-1 text-right text-xs text-ink-3">
-                  {notes.length}/{CLIENT_BOOKING_NOTES_MAX_LENGTH}
-                </p>
-              </div>
-
-              {referralFieldsOpen ? (
-                <div>
-                  <label htmlFor="booking-referral-code" className={FIELD_LABEL_CLASS}>
-                    Referral code <span className="font-normal normal-case text-ink-3/65">(optional)</span>
-                  </label>
-                  <input
-                    ref={referralInputRef}
-                    id="booking-referral-code"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={referralCode}
-                    onChange={(e) => setReferralCode(e.target.value)}
-                    onBlur={onReferralCodeBlur}
-                    autoComplete="off"
-                    placeholder="Up to 6 digits from the vendor"
-                    className={`${FIELD_INPUT_CLASS} font-mono`}
-                  />
-                  {referralValidating ? (
-                    <p className="mt-1 text-xs text-ink-3">Checking code…</p>
-                  ) : referralApplied ? (
-                    <p className="mt-1 text-xs font-medium text-success">
-                      Referral discount applied: {clientFeeBreakdown?.referralDiscountLabel?.replace("-", "")} off
-                      your Eventtz fee
-                    </p>
-                  ) : referralError ? (
-                    <p className="mt-1 text-xs text-danger">{referralError}</p>
-                  ) : null}
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setReferralFieldsOpen(true);
-                    window.setTimeout(() => referralInputRef.current?.focus(), 0);
-                  }}
-                  className="text-xs text-ink-2 underline underline-offset-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
-                >
-                  Referral code?
-                </button>
-              )}
-
-              <Card variant="muted" padding="md">
-                {clientFeeBreakdown ? (
-                  <ClientFeeBreakdownSummary
-                    breakdown={clientFeeBreakdown}
-                    footnote="The vendor may adjust the price before you pay."
-                  />
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-ink-2">Estimated total</span>
-                      <span className="font-heading text-lg font-semibold text-ink">
-                        {estimate.label.replace(/^GBP\s/, "£")}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-xs text-ink-3">The vendor may adjust the price before you pay.</p>
-                  </>
-                )}
-                {depositLine ? (
-                  <p className="mt-2 border-t border-line pt-2 text-xs text-ink-2">{depositLine}</p>
-                ) : null}
-              </Card>
-
-              {validationError ? <LottieFailureInline message={validationError} /> : null}
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="min-w-0">
+              <label htmlFor="booking-event-date" className={FIELD_LABEL_CLASS}>
+                Event date
+              </label>
+              <DateInput
+                id="booking-event-date"
+                min={minEventDate}
+                value={eventDate}
+                onChange={(e) => {
+                  setEventDate(e.target.value);
+                  setValidationError(null);
+                }}
+                shellClassName="mt-1.5"
+                className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
             </div>
-
-            <div className="border-t border-line px-5 py-4 sm:px-6">
-              <Button variant="primary" size="md" onClick={submit} loading={submitting} className="w-full py-3">
-                Send booking request
-              </Button>
+            <div className="min-w-0">
+              <label htmlFor="booking-event-end" className={FIELD_LABEL_CLASS}>
+                End date <span className="font-normal normal-case text-ink-3/65">(optional)</span>
+              </label>
+              <DateInput
+                id="booking-event-end"
+                allowEmpty
+                min={eventDate.trim() || minEventDate}
+                value={eventEndDate}
+                onChange={(e) => {
+                  setEventEndDate(e.target.value);
+                  setValidationError(null);
+                }}
+                shellClassName="mt-1.5"
+                className="focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
             </div>
           </div>
-        </div>
-      </div>
+
+          {workingDaysSentence || blockedDatesSentence ? (
+            <div className="rounded-lg border border-line bg-surface-3 px-3 py-2 text-xs leading-relaxed text-ink-2">
+              {workingDaysSentence ? <p>{workingDaysSentence}</p> : null}
+              {blockedDatesSentence ? (
+                <p className={workingDaysSentence ? "mt-1" : ""}>{blockedDatesSentence}</p>
+              ) : null}
+            </div>
+          ) : null}
+
+          <div>
+            <label htmlFor="booking-venue-address" className={FIELD_LABEL_CLASS}>
+              Venue location <span className="font-normal normal-case text-ink-3/65">(optional)</span>
+            </label>
+            <textarea
+              id="booking-venue-address"
+              rows={3}
+              value={venueAddress}
+              onChange={(e) => {
+                setVenueAddress(e.target.value);
+                setValidationError(null);
+              }}
+              placeholder="e.g. The Grand Hall, 12 Park Lane, London"
+              className={`${FIELD_INPUT_CLASS} resize-y`}
+            />
+            <p className="mt-1 text-xs text-ink-3">Add before you pay.</p>
+          </div>
+
+          <div>
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="block text-xs font-semibold uppercase tracking-wide text-ink-3">Packages &amp; rates</p>
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                <Pencil className="h-3 w-3" strokeWidth={2.5} aria-hidden />
+                Change
+              </button>
+            </div>
+            <ul className="mt-2 divide-y divide-line rounded-lg border border-line">
+              {selectedOptions.map((opt) => {
+                const perUnit = opt.pricingMode === "per_unit";
+                const qty = quantities[opt.id] ?? opt.minQuantity;
+                const lineTotal = perUnit ? lineTotalGbp(opt.unitPriceGbp, qty) : opt.unitPriceGbp;
+                const lineLabel = lineTotal != null ? formatGbp(lineTotal, { prefix: "GBP " }) : null;
+                return (
+                  <li key={opt.id} className="space-y-2 px-3 py-2.5">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <span className="text-sm font-medium text-ink">{opt.heading}</span>
+                      <div className="shrink-0 text-right">
+                        {lineLabel != null ? (
+                          <>
+                            {perUnit && opt.priceDisplay != null ? (
+                              <p className="text-xs text-ink-3">
+                                {qty} × GBP {opt.priceDisplay}
+                                {opt.priceSuffix ? ` ${opt.priceSuffix}` : ""}
+                              </p>
+                            ) : opt.compareAtDisplay ? (
+                              <p className="text-xs text-ink-3 line-through">GBP {opt.compareAtDisplay}</p>
+                            ) : null}
+                            <p
+                              className={`text-sm font-semibold ${
+                                opt.compareAtDisplay && !perUnit ? "text-primary" : "text-ink"
+                              }`}
+                            >
+                              {lineLabel}
+                            </p>
+                            {opt.discountBadge ? (
+                              <p className="mt-0.5 text-xs font-medium text-success">{opt.discountBadge}</p>
+                            ) : null}
+                          </>
+                        ) : (
+                          <span className="text-sm font-semibold text-ink">TBC</span>
+                        )}
+                      </div>
+                    </div>
+                    {perUnit ? (
+                      <QuantityStepper
+                        value={qty}
+                        min={opt.minQuantity}
+                        max={opt.maxQuantity}
+                        onChange={(next) => setPackageQuantity(opt.id, next)}
+                        aria-label={`Quantity for ${opt.heading}`}
+                      />
+                    ) : null}
+                  </li>
+                );
+              })}
+              {estimate.autoLines.map((line) => (
+                <li
+                  key={line.id}
+                  className="flex flex-wrap items-baseline justify-between gap-2 bg-success-soft px-3 py-2.5"
+                >
+                  <span className="text-sm font-medium text-success">{line.heading}</span>
+                  <span className="shrink-0 text-sm font-semibold text-success">
+                    {line.unitPriceGbp != null
+                      ? formatGbp(Math.abs(line.unitPriceGbp), { prefix: "GBP " })
+                      : "TBC"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <label htmlFor="booking-notes" className={FIELD_LABEL_CLASS}>
+              Details for the vendor
+            </label>
+            <textarea
+              id="booking-notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              maxLength={CLIENT_BOOKING_NOTES_MAX_LENGTH}
+              placeholder="Guest count, venue, dietary needs, timeline, or questions…"
+              className={`${FIELD_INPUT_CLASS} resize-y`}
+            />
+            <p className="mt-1 text-right text-xs text-ink-3">
+              {notes.length}/{CLIENT_BOOKING_NOTES_MAX_LENGTH}
+            </p>
+          </div>
+
+          {referralFieldsOpen ? (
+            <div>
+              <label htmlFor="booking-referral-code" className={FIELD_LABEL_CLASS}>
+                Referral code <span className="font-normal normal-case text-ink-3/65">(optional)</span>
+              </label>
+              <input
+                ref={referralInputRef}
+                id="booking-referral-code"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value)}
+                onBlur={onReferralCodeBlur}
+                autoComplete="off"
+                placeholder="Up to 6 digits from the vendor"
+                className={`${FIELD_INPUT_CLASS} font-mono`}
+              />
+              {referralValidating ? (
+                <p className="mt-1 text-xs text-ink-3">Checking code…</p>
+              ) : referralApplied ? (
+                <p className="mt-1 text-xs font-medium text-success">
+                  Referral discount applied: {clientFeeBreakdown?.referralDiscountLabel?.replace("-", "")} off
+                  your Eventtz fee
+                </p>
+              ) : referralError ? (
+                <p className="mt-1 text-xs text-danger">{referralError}</p>
+              ) : null}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setReferralFieldsOpen(true);
+                window.setTimeout(() => referralInputRef.current?.focus(), 0);
+              }}
+              className="text-xs text-ink-2 underline underline-offset-2 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
+            >
+              Referral code?
+            </button>
+          )}
+
+          <Card variant="muted" padding="md">
+            {clientFeeBreakdown ? (
+              <ClientFeeBreakdownSummary
+                breakdown={clientFeeBreakdown}
+                footnote="The vendor may adjust the price before you pay."
+              />
+            ) : (
+              <>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink-2">Estimated total</span>
+                  <span className="font-heading text-lg font-semibold text-ink">
+                    {estimate.label.replace(/^GBP\s/, "£")}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-ink-3">The vendor may adjust the price before you pay.</p>
+              </>
+            )}
+            {depositLine ? (
+              <p className="mt-2 border-t border-line pt-2 text-xs text-ink-2">{depositLine}</p>
+            ) : null}
+          </Card>
+
+          {validationError ? <LottieFailureInline message={validationError} /> : null}
+      </Modal>
     </>
   );
 }

@@ -1,5 +1,4 @@
 import type { components } from "@/lib/api-schema";
-import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "./axios";
 import { getApiErrorDetail } from "./api-errors";
 
@@ -21,31 +20,13 @@ export type MarketDemandInsight = components["schemas"]["MarketDemandInsight"];
 
 export type VendorCopilotBrief = components["schemas"]["VendorCopilotBriefResponse"];
 
-/**
- * Request bodies stay hand-written: the API accepts these under validation aliases
- * (`message_role`, `booking_request_id`) that the generated request schema does not show.
- */
-export type CopilotAskMessage = {
-  message_role: "user" | "assistant" | string;
-  content: string;
-};
+export type CopilotAskMessage = components["schemas"]["CopilotAskMessage"];
 
 export type CopilotAskResult = components["schemas"]["CopilotAskResponse"];
 
-/** `package_feedback` rows are free-form dicts in the API schema; narrowed by hand. */
-export type CopilotPackageFeedback = {
-  package_id?: string | null;
-  package_title: string;
-  items: string[];
-  suggested_title?: string | null;
-  suggested_details?: string | null;
-  suggested_duration?: string | null;
-};
+export type CopilotPackageFeedback = components["schemas"]["PackageCoachPackageFeedback"];
 
-export type CopilotReviewPackagesResult = WithFields<
-  components["schemas"]["CopilotReviewPackagesResponse"],
-  { package_feedback: CopilotPackageFeedback[] }
->;
+export type CopilotReviewPackagesResult = components["schemas"]["CopilotReviewPackagesResponse"];
 
 export type CopilotDraftReplyResult = components["schemas"]["CopilotDraftReplyResponse"];
 
