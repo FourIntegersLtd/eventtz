@@ -1,5 +1,4 @@
 import type { components } from "@/lib/api-schema";
-import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 
 export type AdminDashboardSummary = components["schemas"]["AdminDashboardSummary"];
@@ -22,52 +21,7 @@ export async function fetchAdminDashboardMetrics(days = 30): Promise<AdminDashbo
   return data;
 }
 
-type AdminMarketplaceCategoryRow = {
-  key: string;
-  enquiries: number;
-  accepted: number;
-  paid: number;
-  completed: number;
-  failed: number;
-  conversion_rate: number;
-  avg_booking_value_gbp: number;
-  revenue_gbp: number;
-};
-
-/**
- * The API types every series and the overview of the marketplace analytics as free-form dicts,
- * so those fields are narrowed by hand here until the pydantic response model names them.
- */
-export type AdminMarketplaceAnalytics = WithFields<
-  components["schemas"]["AdminMarketplaceAnalyticsResponse"],
-  {
-  overview: Record<string, number | null>;
-  enquiries_by_month: { month: string; count: number }[];
-  completed_by_month: { month: string; count: number }[];
-  by_category: AdminMarketplaceCategoryRow[];
-  by_category_chart: AdminMarketplaceCategoryRow[];
-  by_location: {
-    key: string;
-    enquiries: number;
-    failed: number;
-    conversion_rate: number;
-  }[];
-  failure_reasons: { reason: string; count: number }[];
-  top_vendors: {
-    vendor_user_id: string;
-    business_name: string;
-    enquiries: number;
-    completed: number;
-    conversion_rate: number;
-    avg_response_seconds: number | null;
-    revenue_gbp: number;
-  }[];
-  recruitment_hints: {
-    categories: { category: string; enquiries: number; failed: number; message: string }[];
-    locations: { location: string; enquiries: number; failed: number; message: string }[];
-  };
-}
->;
+export type AdminMarketplaceAnalytics = components["schemas"]["AdminMarketplaceAnalyticsResponse"];
 
 export async function fetchAdminMarketplaceAnalytics(params?: {
   from_date?: string;

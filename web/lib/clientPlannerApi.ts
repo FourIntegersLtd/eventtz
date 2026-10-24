@@ -2,20 +2,7 @@ import type { components } from "@/lib/api-schema";
 import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 
-/**
- * The vendor card fields below the schema's own are read by the planner screens but the API does
- * not send them today (they render empty); candidates for the pydantic model.
- */
-export type PlannerVendorCard = components["schemas"]["PlannerVendorCard"] & {
-  services: string[];
-  review_average: number | null;
-  review_count: number;
-  completed_bookings: number;
-  avg_response_seconds: number | null;
-  conversion_rate: number | null;
-  base_city: string | null;
-  cover_image_url: string | null;
-};
+export type PlannerVendorCard = components["schemas"]["PlannerVendorCard"];
 
 export type PlannerRecommendation = WithFields<
   components["schemas"]["PlanRecommendation"],
