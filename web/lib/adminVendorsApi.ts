@@ -1,5 +1,4 @@
 import type { components } from "@/lib/api-schema";
-import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 import type {
   VendorApprovalStatus,
@@ -149,16 +148,7 @@ export async function restoreAdminVendorStripeConnect(
   };
 }
 
-export type AdminVendorBookingsByMonthRow = {
-  month: string;
-  [status: string]: string | number;
-};
-
-/** `bookings_by_month` rows are free-form dicts in the API schema; narrowed by hand. */
-export type AdminVendorInsights = WithFields<
-  components["schemas"]["AdminVendorInsightsResponse"],
-  { bookings_by_month: AdminVendorBookingsByMonthRow[] }
->;
+export type AdminVendorInsights = components["schemas"]["AdminVendorInsightsResponse"];
 
 export async function fetchAdminVendorInsights(userId: string): Promise<AdminVendorInsights> {
   const { data } = await api.get<AdminVendorInsights>(`/api/v1/admin/vendors/${userId}/insights`);

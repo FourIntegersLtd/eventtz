@@ -3793,8 +3793,7 @@
         "properties": {
           "bookings_by_month": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/AdminVendorMonthBookings"
             },
             "title": "Bookings By Month",
             "type": "array"
@@ -4047,6 +4046,23 @@
           "user_id"
         ],
         "title": "AdminVendorListingOverrideResponse",
+        "type": "object"
+      },
+      "AdminVendorMonthBookings": {
+        "additionalProperties": {
+          "type": "integer"
+        },
+        "description": "One month of a vendor's bookings: the `month` (YYYY-MM) plus a count per booking status.\n\nThe status keys are open-ended (every status the vendor has ever had appears in every row),\nso they ride as extra integer fields after `month`.",
+        "properties": {
+          "month": {
+            "title": "Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "month"
+        ],
+        "title": "AdminVendorMonthBookings",
         "type": "object"
       },
       "AdminVendorPauseBody": {
