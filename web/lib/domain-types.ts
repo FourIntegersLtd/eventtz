@@ -101,7 +101,7 @@ export const VENDOR_LISTING_OVERRIDE_META: Record<
     override: "auto",
     label: "Automatic",
     description: "Stripe decides when they go live.",
-    badgeClassName: "bg-neutral-100 text-neutral-700",
+    badgeClassName: "bg-surface-3 text-ink-2",
   },
   visible: {
     override: "visible",

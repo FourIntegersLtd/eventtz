@@ -45,8 +45,8 @@ describe("design token guard", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("keeps Tailwind neutral-* classes out of components/ and features/ (use ink, line, surface tokens)", () => {
-    const offenders = ["components", "features"].flatMap((folder) =>
+  it("keeps Tailwind neutral-* classes out of components/, features/ and lib/ (use ink, line, surface tokens)", () => {
+    const offenders = ["components", "features", "lib"].flatMap((folder) =>
       featureSourceFiles(path.join(webRoot, folder)).filter((file) => NEUTRAL_CLASS.test(readFileSync(file, "utf8"))),
     );
     expect(offenders.map((file) => path.relative(webRoot, file))).toEqual([]);

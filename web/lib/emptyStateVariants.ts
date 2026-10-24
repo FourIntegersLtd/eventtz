@@ -17,7 +17,7 @@ type EmptyStateVariantConfig = {
   icon?: LucideIcon;
 };
 
-export const EMPTY_STATE_ICON_CLASS = "h-12 w-12 text-neutral-300";
+export const EMPTY_STATE_ICON_CLASS = "h-12 w-12 text-ink-3";
 
 export const EMPTY_STATE_VARIANTS: Record<EmptyStateVariant, EmptyStateVariantConfig> = {
   favorites: { icon: Heart },

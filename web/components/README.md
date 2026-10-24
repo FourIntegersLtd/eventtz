@@ -26,7 +26,7 @@ The canvas look stays: `design/canvas/project/eventtz.css` (the `--ez-*` tokens 
 stylesheet, and `components/ui` blocks are the only code that renders it. Screens (`features/`, `app/`) compose the
 blocks: `Card`, `Button`, `Badge`, `Banner`, `Tabs`, `Chip`, `PageHeader`, `StatTile`, `Avatar`, `DescriptionList`
 (and `DescriptionRow` for rows inside a custom `dl`), `Stepper`. A screen does not write `ez-btn`, `ez-card`,
-`ez-badge`, `ez-banner`, `ez-pagehead` or `ez-kpi` classes (guarded), nor inline `style={{}}` (by review) or `neutral-*` classes (guarded, here and in `features/`). Colours,
+`ez-badge`, `ez-banner`, `ez-pagehead` or `ez-kpi` classes (guarded), nor inline `style={{}}` (by review) or `neutral-*` classes (guarded, here, in `features/` and in `lib/`). Colours,
 shadows and radii come from the tokens in `app/globals.css`, surfaced by `ui/tokens.ts` (`TONE`, `SHADOW`, `RADIUS`,
 `FORM_CONTROL`). Preview everything at `/internal/ui-kit`.
 
