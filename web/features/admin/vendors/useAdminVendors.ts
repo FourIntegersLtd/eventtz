@@ -121,47 +121,43 @@ export function useAdminVendors(initialQueueTab: VendorQueueTab) {
     setSelectedUserIds((prev) => prev.filter((id) => !selectableSet.has(id)));
   }, [selectableUserIdsOnPage, setSelectedUserIds]);
 
-  const nudgeDraftVendors = useCallback(async (): Promise<
-    | { kind: "result"; result: AdminVendorProfileNudgeResult }
-    | { kind: "error"; message: string }
-    | null
-  > => {
-    if (selectedUserIds.length === 0) return null;
-    setNudgeBusy(true);
-    setNudgeError(null);
-    try {
-      const result = await postAdminVendorProfileNudge(selectedUserIds);
-      setSelectedUserIds(() => []);
-      return { kind: "result", result };
-    } catch (e) {
-      const message = getApiErrorDetail(e) ?? "Could not send profile reminder emails.";
-      setNudgeError(message);
-      return { kind: "error", message };
-    } finally {
-      setNudgeBusy(false);
-    }
-  }, [selectedUserIds, setSelectedUserIds]);
+  /** Sends one kind of reminder to the selected vendors, then clears the selection. */
+  const sendNudge = useCallback(
+    async (
+      post: (userIds: string[]) => Promise<AdminVendorProfileNudgeResult>,
+      fallbackMessage: string,
+    ): Promise<
+      | { kind: "result"; result: AdminVendorProfileNudgeResult }
+      | { kind: "error"; message: string }
+      | null
+    > => {
+      if (selectedUserIds.length === 0) return null;
+      setNudgeBusy(true);
+      setNudgeError(null);
+      try {
+        const result = await post(selectedUserIds);
+        setSelectedUserIds(() => []);
+        return { kind: "result", result };
+      } catch (e) {
+        const message = getApiErrorDetail(e) ?? fallbackMessage;
+        setNudgeError(message);
+        return { kind: "error", message };
+      } finally {
+        setNudgeBusy(false);
+      }
+    },
+    [selectedUserIds, setSelectedUserIds],
+  );
 
-  const nudgePayoutVendors = useCallback(async (): Promise<
-    | { kind: "result"; result: AdminVendorProfileNudgeResult }
-    | { kind: "error"; message: string }
-    | null
-  > => {
-    if (selectedUserIds.length === 0) return null;
-    setNudgeBusy(true);
-    setNudgeError(null);
-    try {
-      const result = await postAdminVendorPayoutNudge(selectedUserIds);
-      setSelectedUserIds(() => []);
-      return { kind: "result", result };
-    } catch (e) {
-      const message = getApiErrorDetail(e) ?? "Could not send payout reminder emails.";
-      setNudgeError(message);
-      return { kind: "error", message };
-    } finally {
-      setNudgeBusy(false);
-    }
-  }, [selectedUserIds, setSelectedUserIds]);
+  const nudgeDraftVendors = useCallback(
+    () => sendNudge(postAdminVendorProfileNudge, "Could not send profile reminder emails."),
+    [sendNudge],
+  );
+
+  const nudgePayoutVendors = useCallback(
+    () => sendNudge(postAdminVendorPayoutNudge, "Could not send payout reminder emails."),
+    [sendNudge],
+  );
 
   return {
     rows,

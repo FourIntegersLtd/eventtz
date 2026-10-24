@@ -42,6 +42,10 @@ from the baseline `backend/app/features/vendor_copilot/`.
 `POST /vendor/copilot/draft-reply`, `POST /vendor/copilot/review-packages`. All require a
 signed-in vendor.
 
+Note: the `package_feedback` field of the review-packages response reuses `PackageCoachPackageFeedback`
+from `vendors/schemas_ai.py` (imported in `schemas.py`), so a change to that vendors schema changes the
+copilot API; regenerate `openapi.json` when it moves.
+
 ## Hand-offs for the integrator
 - **Market demand insights** (`demand_insights` on the brief) are always `[]` here. The baseline
   computes them from cross-vendor marketplace aggregates (how many approved vendors offer a
