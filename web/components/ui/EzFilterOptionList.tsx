@@ -27,7 +27,7 @@ export function EzFilterOptionList<T extends string>({
 
   return (
     <ul
-      className="divide-y divide-neutral-100 overflow-hidden rounded-xl border border-neutral-100 bg-white"
+      className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-white"
       role="listbox"
       aria-label={listAriaLabel}
     >
@@ -40,7 +40,7 @@ export function EzFilterOptionList<T extends string>({
               role="option"
               aria-selected={selected}
               className={`flex w-full items-start gap-3 px-4 py-3.5 text-left transition ${
-                selected ? "bg-primary/[0.04]" : "hover:bg-neutral-50"
+                selected ? "bg-primary/[0.04]" : "hover:bg-surface-3"
               }`}
               onClick={() => pick(option.id)}
             >
@@ -51,9 +51,9 @@ export function EzFilterOptionList<T extends string>({
                 {selected ? <Check className="h-4 w-4" strokeWidth={2.5} /> : null}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-medium text-neutral-900">{option.title}</span>
+                <span className="block text-sm font-medium text-ink">{option.title}</span>
                 {option.subtitle ? (
-                  <span className="mt-0.5 block text-xs leading-snug text-neutral-500">
+                  <span className="mt-0.5 block text-xs leading-snug text-ink-3">
                     {option.subtitle}
                   </span>
                 ) : null}

@@ -30,7 +30,7 @@ export function RotatingTypewriterPlaceholder({
   visible,
   compact = false,
   className = "",
-  textClassName = "text-neutral-400",
+  textClassName = "text-ink-3",
   align = "center",
   wrap = false,
   typeMs = DEFAULT_TYPE_MS,
@@ -105,7 +105,7 @@ export function RotatingTypewriterPlaceholder({
       <span className={`block ${textWrapClass} ${textClassName}`}>
         {shown}
         {!reduceMotion ? (
-          <span className="ml-0.5 inline-block h-[1.05em] w-px translate-y-[0.12em] bg-neutral-400 align-baseline animate-search-caret" />
+          <span className="ml-0.5 inline-block h-[1.05em] w-px translate-y-[0.12em] bg-ink-3 align-baseline animate-search-caret" />
         ) : null}
       </span>
     </span>

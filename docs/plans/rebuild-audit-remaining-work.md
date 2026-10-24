@@ -11,6 +11,10 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
 - Left because owned by platform-owner: `HelpWidget`, `HelpAssistantThread` and `portalTheme.ts` (`features/help`, `components/`), and `AdminShell`'s unread badge, which still calls the `limit: 200` wrapper `fetchAdminSupportConversations` (kept in `lib/adminMessagesApi.ts` for it; delete both together). The admin Compose-tab badge in `AdminMessagesPageContent` now counts the first page of threads only.
 - **Follow-ups closed (PR "Comms: design-system follow-ups").** `VendorMessagesEzView` left `ALLOW_LISTED_FILES`: its "Assistant" badge wrote `ez-badge--gold` by hand, so `Badge` gained a `gold` tone (the canvas accent; same pixels; `.ez-badge--gold` is defined at `eventtz.css:307`). The other comms-owned files had no `neutral-*`, inline `style` or raw colours left.
 
+**Components follow-up (platform-owner, web only).** Every `neutral-*` class in `web/components/**` (ChangePasswordModal, RequireAuth, RequireVendorApproved, TermsUpdateBanner, LandingNav and the `ui` blocks) snapped to the nearest token (900/800 to `ink`, 700/600 `ink-2`, 500/400 `ink-3`, 300 `line-strong`, 200 and 100 borders `line`, 100/50 fills `surface-3`; tints shift slightly, `border-neutral-200/80` lost its alpha, design-diff unchanged); the static inline styles in `AdminShell`, `PortalShell`, `EzDonutChart` and `OptionCard` are utilities (the four left are dynamic: progress width, animation delay, toolbar max width, the fixed suggestions menu position). `designTokenGuard.test.ts` now fails on a `neutral-*` class under `components/`. `neutral-*` remains in platform-owned `features/{dashboard,contact,help,...}` (not in this scope). The seven `ALLOW_LISTED_FILES` entries are in `features/` files other owners hold and stay.
+
+**Platform features follow-up (platform-owner, web only).** Every `neutral-*` class in the platform-owned `web/features/{landing,help,dashboard,contact,internal}` (AttentionFeedCard, BookingsCalendarCard, ContactFormView, HelpWidget, help articles and `helpContent.ts` HTML, landing inspiration tiles, UiKitView) snapped to tokens with the same mapping as the components PR (950/900/800 `ink`, 700/600 `ink-2`, 500/400 `ink-3`, 300 ring `line-strong`, borders `line`, fills `surface-3`; `neutral-400` greys get darker as `ink-3`). No static inline `style` remained (the three left are dynamic). `designTokenGuard.test.ts` now fails on `neutral-*` under `components/` and all of `features/`. design-diff vendor screens, main vs branch: V14-Dashboard 1.79% vs 2.05%, V30-Help 0.43% vs 0.43%, V16-Bookings 0.45% vs 0.50% (all PASS, 2.5% budget). `lib/domain-types.ts` and `lib/emptyStateVariants.ts` still hold `neutral-*` (left to the lib typed-schemas work).
+
 **Admin console screens, platform-owned part** (PR "Rebuild audit: admin screens on the design system and server lists").
 - `OWNERS.md` gives platform-owner only admin blog, dashboard, report-bug, settings, layout and components. Blog list is now on `useServerList`; `fetchAdminBlogPosts` (the `limit: 200` wrapper, no callers) is deleted. Cards, buttons, badges and the success banner in those folders use `Card`, `Button`/`ButtonLink`, `Badge`, `Banner`; the last inline `style` and `neutral-*` classes are gone.
 - Two-server comparison (seeded 40 posts, pages 1 and 2, desktop and 390px) and dashboard, report-bug, settings and editor screenshots against main: at most 0.012% mismatching pixels.
@@ -89,12 +93,12 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   Phase 3.6b: every other `lib/*Api.ts` now aliases the generated schema (`lib/apiTypeHelpers.ts` `WithFields`
   narrows a field); `lib/noHandWrittenApiShapes.test.ts` fails on a hand-written type named like a schema.
   Still hand-narrowed because the API types them as free-form dicts (candidates for pydantic models):
-  vendor analytics (`overview`, `funnel`, `*_by_month`), ~~admin marketplace analytics~~ (typed), chat `metadata`,
-  ~~admin booking `booking` and `support.open_dispute`~~ (typed), admin vendor insights `bookings_by_month`, copilot
-  `package_feedback`, `profile_form_data`. Drift found: ~~the planner vendor card is read by screens but not sent by the API~~ (it is sent and typed; the stale web intersection is gone), the admin marketplace screen read `overview.revenue_gbp` / `completed_revenue_gbp`, which the API never sends (the screen now sums the categories directly) (~~`chat_included_for_review`~~
+  ~~vendor analytics (`overview`, `funnel`, `*_by_month`)~~ (typed), ~~admin marketplace analytics~~ (typed), chat `metadata` (kept a dict on purpose: three writers with disjoint key sets, quote card `kind/booking_request_id/event_name/total_label`, booking notes `source/booking_id`, staff `kind/format/edited_at`, plus legacy rows; an optional-fields model would emit nulls for absent keys and drop unknown ones, so the JSON would change),
+  ~~admin booking `booking` and `support.open_dispute`~~ (typed), ~~admin vendor insights `bookings_by_month`~~ (typed as `AdminVendorMonthBookings`; unused by screens), ~~copilot
+  `package_feedback`~~ (typed); `profile_form_data` stays a free-form dict on purpose (it is the vendor's open `vendors.payload` JSON). Drift found: ~~the planner vendor card is read by screens but not sent by the API~~ (it is sent and typed; the stale web intersection is gone), the admin marketplace screen read `overview.revenue_gbp` / `completed_revenue_gbp`, which the API never sends (the screen now sums the categories directly) (~~`chat_included_for_review`~~
   was already sent; the hand-narrowing is gone; `support.open_dispute` was always null and is now filled; the admin booking
-  screen read `pricing`, `review_vendor` and `client_total_label`, which the API never sends: those reads are removed); `message_role` on help/copilot history is sent
-  while the schema shows its `role` alias; `addressApi.ts` is only partly aliased (module disabled).
+  screen read `pricing`, `review_vendor` and `client_total_label`, which the API never sends: those reads are removed); ~~`message_role` on help/copilot history is sent
+  while the schema shows its `role` alias~~ (the schema now lists `message_role`); ~~`addressApi.ts` is only partly aliased~~ (module disabled and unimported; what the schema offers is aliased, the rest are camelCase UI shapes).
 
 **Phase 4: dead code and docs** (PR "Rebuild audit Phase 4", except `test_list_pagination.py`, which Phase 3 owns).
 - **Deleted web files with no importers (grep of every import form, then `npm run build`):**
@@ -301,8 +305,12 @@ For local testing without Docker:
   screenshot comparison (no marketplace screen in `screens.json`): dashboard, browse, favourites, vendor profile, planner
   and analytics identical bar lottie frames; the booking modal keeps main's uppercase labels, venue box and note sizes
   (plain inputs on tokens, `DateInput`), 0.05% apart at 1280 and 390 bar the dev badge. eslint 121 errors, same as main.
-  Follow-ups from review: move the booking and onboarding overlays onto `Modal`; extract one ranked-list card for admin
-  "Top locations" and "Top vendors"; vendor onboarding (`WizardAside`, `StepPortfolio`) still hand-roll `ez-progress`.
+  Follow-ups from review: vendor onboarding (`WizardAside`, `StepPortfolio`) still hand-roll `ez-progress` (vendors-owner).
+  Closed since: `BudgetBreakdown` is off raw `ez-btn--block` (allow-list entry deleted); the booking and client
+  onboarding overlays now render through `Modal`, which gained optional `header`, `panelClassName`,
+  `bodyPaddingClassName`, `footerClassName`, `scrimClassName` and `positionClassName` (defaults unchanged, tested in
+  `Modal.test.tsx`); admin "Top locations" and "Top vendors" share `RankedListCard`. Neither overlay had a focus trap
+  before and `Modal` has none, so none was lost; adding one to `Modal` would help every dialog.
 - **Done (PR "Rebuild audit: vendors screens on the design system and server lists").** Vendor onboarding, profile,
   dashboard, analytics, co-pilot, vendor directory and admin vendor screens use the ui blocks and tokens (no
   `style={{}}`, `neutral-*` or raw palette classes left, except dynamic widths and the status dot colour). `Card` now

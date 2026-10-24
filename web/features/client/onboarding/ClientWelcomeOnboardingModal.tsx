@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { LottieIllustration } from "@/components/ui/LottieIllustration";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { TextField } from "@/components/ui/TextField";
@@ -124,17 +125,6 @@ export function ClientWelcomeOnboardingModal() {
     dismiss();
   }, [dismiss, step]);
 
-  useEffect(() => {
-    if (!shouldShow) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [shouldShow, close]);
-
-  if (!shouldShow) return null;
-
   const handleNameContinue = async () => {
     const parsed = parseForm(preferredNameFormSchema, { preferredName: name });
     if (!parsed.ok) {
@@ -155,20 +145,20 @@ export function ClientWelcomeOnboardingModal() {
   const showBack = currentIdx > 0 && step !== "finish";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
-      <button
-        type="button"
-        aria-label="Close onboarding"
-        className="absolute inset-0 bg-black/55 backdrop-blur-[2px]"
-        onClick={close}
-      />
-
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="client-onboarding-title"
-        className="relative flex max-h-[min(92dvh,820px)] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-surface shadow-2xl sm:rounded-3xl"
-      >
+    <Modal
+      isOpen={shouldShow}
+      onClose={close}
+      title="Welcome to Eventtz"
+      maxWidthClassName="max-w-2xl"
+      scrimClassName="bg-black/55 backdrop-blur-[2px]"
+      positionClassName="items-end justify-center sm:items-center sm:p-6"
+      panelClassName="max-h-[min(92dvh,820px)] rounded-t-3xl bg-surface shadow-2xl sm:rounded-3xl"
+      bodyMaxHeightClassName="max-h-none"
+      bodyClassName="scroll-pane min-h-[min(52dvh,28rem)] sm:min-h-[26rem]"
+      bodyPaddingClassName="px-5 py-2 sm:px-8 sm:py-4"
+      footerClassName="border-t border-line px-5 py-4 sm:px-6"
+      header={
+        <>
         <div className="shrink-0">
           <ProgressBar percent={progressPct} />
         </div>
@@ -185,11 +175,49 @@ export function ClientWelcomeOnboardingModal() {
             <X className="h-5 w-5" />
           </button>
         </div>
-
-        <div
-          key={step}
-          className="animate-onboarding-panel scroll-pane min-h-[min(52dvh,28rem)] flex-1 overflow-y-auto px-5 py-2 sm:min-h-[26rem] sm:px-8 sm:py-4"
-        >
+        </>
+      }
+      footer={
+        step === "finish" ? (
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <Button variant="secondary" className="w-full sm:w-auto" onClick={() => finish()}>
+              {copy.finish.secondaryCta}
+            </Button>
+            <Button className="w-full sm:w-auto" onClick={() => finish("/client/browse")}>
+              {copy.finish.primaryCta}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              {showBack ? (
+                <Button variant="ghost" className="shrink-0" onClick={goBack}>
+                  {copy.back}
+                </Button>
+              ) : canSkip ? (
+                <Button variant="ghost" className="shrink-0" onClick={close}>
+                  {copy.skip}
+                </Button>
+              ) : (
+                <span className="w-16" aria-hidden />
+              )}
+            </div>
+            <Button
+              className="min-w-[7.5rem] shrink-0"
+              loading={step === "name" && saving}
+              onClick={() => {
+                if (step === "welcome") goNext();
+                else if (step === "name") void handleNameContinue();
+                else goNext();
+              }}
+            >
+              {step === "welcome" ? copy.welcome.cta : step === "name" ? copy.name.cta : copy.continue}
+            </Button>
+          </div>
+        )
+      }
+    >
+      <div key={step} className="animate-onboarding-panel">
           {step === "welcome" ? (
             <div className="rounded-2xl bg-primary-soft px-6 py-10 text-center ring-1 ring-primary-border/50 sm:px-10 sm:py-12">
               <AnimatedStepItem index={0}>
@@ -308,48 +336,7 @@ export function ClientWelcomeOnboardingModal() {
               </AnimatedStepItem>
             </div>
           ) : null}
-        </div>
-
-        <div className="shrink-0 border-t border-line px-5 py-4 sm:px-6">
-          {step === "finish" ? (
-            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <Button variant="secondary" className="w-full sm:w-auto" onClick={() => finish()}>
-                {copy.finish.secondaryCta}
-              </Button>
-              <Button className="w-full sm:w-auto" onClick={() => finish("/client/browse")}>
-                {copy.finish.primaryCta}
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-2">
-                {showBack ? (
-                  <Button variant="ghost" className="shrink-0" onClick={goBack}>
-                    {copy.back}
-                  </Button>
-                ) : canSkip ? (
-                  <Button variant="ghost" className="shrink-0" onClick={close}>
-                    {copy.skip}
-                  </Button>
-                ) : (
-                  <span className="w-16" aria-hidden />
-                )}
-              </div>
-              <Button
-                className="min-w-[7.5rem] shrink-0"
-                loading={step === "name" && saving}
-                onClick={() => {
-                  if (step === "welcome") goNext();
-                  else if (step === "name") void handleNameContinue();
-                  else goNext();
-                }}
-              >
-                {step === "welcome" ? copy.welcome.cta : step === "name" ? copy.name.cta : copy.continue}
-              </Button>
-            </div>
-          )}
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

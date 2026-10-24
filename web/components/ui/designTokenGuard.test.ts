@@ -14,6 +14,9 @@ const HEX_COLOUR = /(?<![\w&/])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|
 /** Tailwind violet/purple palette utilities: brand purple is `primary`, `primary-soft`, ... */
 const OFF_BRAND_PURPLE = /(?<![\w-])(?:[a-z-]+:)*[a-z]+-(?:violet|purple)-\d{2,3}\b/;
 
+/** Tailwind neutral palette utilities (`text-neutral-500`, `hover:bg-neutral-100`...). */
+const NEUTRAL_CLASS = /(?<![\w-])(?:[a-z-]+:)*[a-z]+-neutral-\d{2,3}\b/;
+
 /** Lines of `source` that break a rule, as `{ line, rule }`. */
 function findTokenViolations(source: string): { line: number; rule: "hex" | "purple" }[] {
   const violations: { line: number; rule: "hex" | "purple" }[] = [];
@@ -40,6 +43,20 @@ describe("design token guard", () => {
       ),
     );
     expect(offenders).toEqual([]);
+  });
+
+  it("keeps Tailwind neutral-* classes out of components/ and features/ (use ink, line, surface tokens)", () => {
+    const offenders = ["components", "features"].flatMap((folder) =>
+      featureSourceFiles(path.join(webRoot, folder)).filter((file) => NEUTRAL_CLASS.test(readFileSync(file, "utf8"))),
+    );
+    expect(offenders.map((file) => path.relative(webRoot, file))).toEqual([]);
+  });
+
+  it("recognises neutral palette classes (meta-test)", () => {
+    expect(NEUTRAL_CLASS.test('className="text-neutral-500 hover:bg-neutral-100"')).toBe(true);
+    expect(NEUTRAL_CLASS.test('className="border-neutral-200/80"')).toBe(true);
+    expect(NEUTRAL_CLASS.test('className="disabled:bg-neutral-50"')).toBe(true);
+    expect(NEUTRAL_CLASS.test('className="text-ink-3 hover:bg-surface-3"')).toBe(false);
   });
 
   it("catches each pattern (meta-test)", () => {

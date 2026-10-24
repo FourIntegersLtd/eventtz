@@ -125,14 +125,14 @@ export function Drawer({
                   {headerAction ? <div className="shrink-0">{headerAction}</div> : null}
                 </div>
                 {subtitle ? (
-                  <p className="mt-0.5 truncate text-sm text-neutral-500">{subtitle}</p>
+                  <p className="mt-0.5 truncate text-sm text-ink-3">{subtitle}</p>
                 ) : null}
               </div>
               <button
                 type="button"
                 onClick={onClose}
                 aria-label="Close panel"
-                className={`inline-flex shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 ${TOUCH_TARGET} ${FOCUS_RING}`}
+                className={`inline-flex shrink-0 items-center justify-center rounded-lg text-ink-3 hover:bg-surface-3 hover:text-ink-2 ${TOUCH_TARGET} ${FOCUS_RING}`}
               >
                 <X className="h-5 w-5" />
               </button>

@@ -125,7 +125,7 @@ export function ChangePasswordModal({
         </div>
       }
     >
-      <p className="text-sm text-neutral-600">
+      <p className="text-sm text-ink-2">
         Enter your current password, then choose a new one.
         {passwordSchema === "admin"
           ? " Admin passwords must be at least 6 characters with an uppercase letter, a number, and a symbol."

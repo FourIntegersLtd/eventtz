@@ -22,7 +22,7 @@ import {
 
 /** Wrapper for landing product screenshots and mocks. */
 export const LANDING_SCREENSHOT_FRAME_CLASS =
-  "overflow-hidden rounded-lg border border-neutral-200 bg-white";
+  "overflow-hidden rounded-lg border border-line bg-white";
 
 /** Screenshots that already include their own chrome (e.g. full-page capture). */
 export const LANDING_SCREENSHOT_FRAMELESS_CLASS = "overflow-hidden rounded-lg";

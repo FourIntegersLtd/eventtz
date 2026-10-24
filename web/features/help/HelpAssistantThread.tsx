@@ -124,10 +124,10 @@ function HelpAssistantThreadInner({
 
       {!embedded ? (
         <div>
-          <h1 className="font-heading text-2xl font-semibold text-neutral-900">
+          <h1 className="font-heading text-2xl font-semibold text-ink">
             Ask our assistant
           </h1>
-          <p className="mt-1 text-sm text-neutral-500">
+          <p className="mt-1 text-sm text-ink-3">
             Answers from Eventtz help articles. For refunds and disputes, we may send you to Contact.
           </p>
         </div>
@@ -142,7 +142,7 @@ function HelpAssistantThreadInner({
       >
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-0.5 py-1">
           {thread.length === 0 && !busy ? (
-            <p className="text-[14px] text-neutral-500">
+            <p className="text-[14px] text-ink-3">
               Ask how booking, payments, or your portal works.
             </p>
           ) : null}
@@ -167,7 +167,7 @@ function HelpAssistantThreadInner({
                           <button
                             type="button"
                             onClick={() => onOpenArticle(slug)}
-                            className="font-medium text-neutral-900 underline-offset-2 hover:underline"
+                            className="font-medium text-ink underline-offset-2 hover:underline"
                           >
                             {slug.replace(/^(client|vendor)-/, "").replace(/-/g, " ")}
                           </button>
@@ -185,11 +185,11 @@ function HelpAssistantThreadInner({
                   </ul>
                 ) : null}
                 {item.escalate ? (
-                  <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-2 text-[13px] text-neutral-800">
+                  <div className="rounded-xl border border-line bg-surface-3 px-3 py-2 text-[13px] text-ink">
                     <p className="font-medium">
                       {audience === "admin" ? "Ask a super admin" : "Talk to a human"}
                     </p>
-                    <p className="mt-1 text-neutral-600">
+                    <p className="mt-1 text-ink-2">
                       This looks like something our team should handle
                       {item.escalateReason ? ` (${item.escalateReason})` : ""}.
                     </p>
@@ -197,7 +197,7 @@ function HelpAssistantThreadInner({
                       <Link
                         href={contactHref}
                         onClick={onClose}
-                        className="mt-2 inline-block font-semibold text-neutral-900 underline-offset-2 hover:underline"
+                        className="mt-2 inline-block font-semibold text-ink underline-offset-2 hover:underline"
                       >
                         Open Contact
                       </Link>
@@ -205,7 +205,7 @@ function HelpAssistantThreadInner({
                       <Link
                         href="/admin/team"
                         onClick={onClose}
-                        className="mt-2 inline-block font-semibold text-neutral-900 underline-offset-2 hover:underline"
+                        className="mt-2 inline-block font-semibold text-ink underline-offset-2 hover:underline"
                       >
                         Open Admin team
                       </Link>
@@ -215,7 +215,7 @@ function HelpAssistantThreadInner({
               </div>
             ),
           )}
-          {busy ? <p className="text-[14px] text-neutral-500">Thinking...</p> : null}
+          {busy ? <p className="text-[14px] text-ink-3">Thinking...</p> : null}
           {error ? <p className="text-[14px] text-red-700">{error}</p> : null}
         </div>
 
@@ -223,8 +223,8 @@ function HelpAssistantThreadInner({
           onSubmit={onSubmit}
           className={
             embedded
-              ? "mt-2 flex gap-2 border-t border-neutral-100 pt-3"
-              : "mt-3 flex gap-2 border-t border-neutral-100 pt-3"
+              ? "mt-2 flex gap-2 border-t border-line pt-3"
+              : "mt-3 flex gap-2 border-t border-line pt-3"
           }
         >
           <input
@@ -234,8 +234,8 @@ function HelpAssistantThreadInner({
             disabled={busy}
             className={
               embedded
-                ? "min-w-0 flex-1 rounded-xl bg-neutral-100 px-4 py-3 text-base outline-none placeholder:text-neutral-500 focus:ring-1 focus:ring-neutral-300 md:text-sm"
-                : "min-w-0 flex-1 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary md:text-sm"
+                ? "min-w-0 flex-1 rounded-xl bg-surface-3 px-4 py-3 text-base outline-none placeholder:text-ink-3 focus:ring-1 focus:ring-line-strong md:text-sm"
+                : "min-w-0 flex-1 rounded-xl border border-line bg-white px-3 py-2.5 text-base outline-none focus:border-primary focus:ring-1 focus:ring-primary md:text-sm"
             }
           />
           <Button type="submit" loading={busy} disabled={!input.trim()}>

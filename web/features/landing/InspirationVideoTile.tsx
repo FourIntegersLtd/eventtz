@@ -110,7 +110,7 @@ export function InspirationVideoTile({
     </>
   );
 
-  const sharedClass = `group relative block w-full overflow-hidden bg-neutral-950 text-left ${className}`.trim();
+  const sharedClass = `group relative block w-full overflow-hidden bg-ink text-left ${className}`.trim();
 
   if (isActive && !onClick) {
     return (

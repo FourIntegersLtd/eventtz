@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.pagination import DEFAULT_LIST_LIMIT
 
@@ -191,6 +191,18 @@ class AdminDirectorySearchResponse(BaseModel):
     users: list[AdminDirectoryUserRow]
 
 
+class AdminVendorMonthBookings(BaseModel):
+    """One month of a vendor's bookings: the `month` (YYYY-MM) plus a count per booking status.
+
+    The status keys are open-ended (every status the vendor has ever had appears in every row),
+    so they ride as extra integer fields after `month`.
+    """
+
+    model_config = ConfigDict(extra="allow", json_schema_extra={"additionalProperties": {"type": "integer"}})
+
+    month: str
+
+
 class AdminVendorInsightsResponse(BaseModel):
     """One vendor's booking history and review standing, for the admin console's vendor page."""
 
@@ -200,6 +212,6 @@ class AdminVendorInsightsResponse(BaseModel):
     review_count: int = 0
     bookings_total: int = 0
     bookings_by_status: dict[str, int] = Field(default_factory=dict)
-    bookings_by_month: list[dict[str, Any]] = Field(default_factory=list)
+    bookings_by_month: list[AdminVendorMonthBookings] = Field(default_factory=list)
     open_disputes_on_bookings: int = 0
     explore_path: str = ""

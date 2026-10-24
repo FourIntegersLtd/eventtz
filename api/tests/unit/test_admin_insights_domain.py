@@ -6,7 +6,7 @@ import json
 
 from app.core.time import uk_today
 from app.features.admin_insights import domain
-from app.features.admin_insights.schemas import AdminMarketplaceAnalyticsResponse
+from app.features.admin_insights.schemas import AdminMarketplaceAnalyticsResponse, AdminVendorInsightsResponse
 
 
 def test_resolve_metrics_days_falls_back_to_30_outside_the_allowed_set() -> None:
@@ -175,6 +175,24 @@ def test_build_vendor_insights_buckets_bookings_by_status_and_month() -> None:
     ]
     assert built["review_average"] == 4.5
     assert built["open_disputes_on_bookings"] == 1
+
+
+def test_vendor_insights_response_serialises_month_rows_exactly_as_built() -> None:
+    """The response schema must emit each month row as `month` plus one integer per status, nothing else."""
+    built = domain.build_vendor_insights(
+        user_id="vendor-1",
+        review_average=4.5,
+        review_count=2,
+        booking_rows=[
+            {"created_at": "2025-01-05T00:00:00+00:00", "status": "completed"},
+            {"created_at": "2025-02-01T00:00:00+00:00", "status": "cancelled"},
+        ],
+        open_disputes=1,
+    )
+    dumped = AdminVendorInsightsResponse.model_validate(built).model_dump(mode="json")
+    assert dumped == built
+    first_month = list(dumped["bookings_by_month"][0].items())
+    assert first_month == [("month", "2025-01"), ("cancelled", 0), ("completed", 1)]
 
 
 def test_build_marketplace_analytics_computes_the_funnel_for_one_vendor() -> None:
