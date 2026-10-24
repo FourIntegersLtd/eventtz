@@ -89,7 +89,7 @@ This is the to-do list after Phases 0 and 1. The full audit, with evidence and r
   Phase 3.6b: every other `lib/*Api.ts` now aliases the generated schema (`lib/apiTypeHelpers.ts` `WithFields`
   narrows a field); `lib/noHandWrittenApiShapes.test.ts` fails on a hand-written type named like a schema.
   Still hand-narrowed because the API types them as free-form dicts (candidates for pydantic models):
-  ~~vendor analytics (`overview`, `funnel`, `*_by_month`)~~ (typed), admin marketplace analytics, chat `metadata`,
+  ~~vendor analytics (`overview`, `funnel`, `*_by_month`)~~ (typed), admin marketplace analytics, chat `metadata` (kept a dict on purpose: three writers with disjoint key sets, quote card `kind/booking_request_id/event_name/total_label`, booking notes `source/booking_id`, staff `kind/format/edited_at`, plus legacy rows; an optional-fields model would emit nulls for absent keys and drop unknown ones, so the JSON would change),
   ~~admin booking `booking` and `support.open_dispute`~~ (typed), admin vendor insights `bookings_by_month`, ~~copilot
   `package_feedback`~~ (typed); `profile_form_data` stays a free-form dict on purpose (it is the vendor's open `vendors.payload` JSON). Drift found: the planner vendor card is read by screens but not sent by the API (~~`chat_included_for_review`~~
   was already sent; the hand-narrowing is gone; `support.open_dispute` was always null and is now filled; the admin booking
