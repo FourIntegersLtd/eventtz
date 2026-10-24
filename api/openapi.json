@@ -1211,6 +1211,42 @@
         "title": "AdminBookingNeedsAttentionFlag",
         "type": "object"
       },
+      "AdminBookingOpenDispute": {
+        "description": "The dispute blocking a booking's payout, enough for the admin banner to link to it.",
+        "properties": {
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "status",
+          "summary"
+        ],
+        "title": "AdminBookingOpenDispute",
+        "type": "object"
+      },
       "AdminBookingSupportMeta": {
         "description": "The admin detail screen's diagnostics block for one booking.",
         "properties": {
@@ -1235,14 +1271,12 @@
           "open_dispute": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "$ref": "#/components/schemas/AdminBookingOpenDispute"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Open Dispute"
+            ]
           },
           "support_hold": {
             "default": false,

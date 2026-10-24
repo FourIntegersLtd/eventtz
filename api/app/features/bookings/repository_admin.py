@@ -9,15 +9,15 @@ set of filters (date range, free-text search) and their own writes.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
-from sqlalchemy import Boolean, DateTime, Text, Uuid, column, exists, func, or_, select, table, update
+from sqlalchemy import Boolean, DateTime, Text, Uuid, column, func, or_, select, table, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
 from app.core.pagination import LIKE_ESCAPE, contains_pattern, paged
-from app.core.time import HOME_TIMEZONE
+from app.core.time import london_midnight_utc
 from app.features.bookings.domain_financials import PAID_PAYMENT_STATUSES
 from app.features.bookings.models import BookingRequest
 from app.features.bookings.rows import BookingRow
@@ -89,7 +89,14 @@ _BOOKING_COLUMNS = (
 
 # Disputes are their own slice; this handle reads its table inside the admin booking query (same
 # handle `bookings/repository.py` keeps privately, for the same active-dispute check).
-_dispute_cases = table("dispute_cases", column("booking_request_id", Uuid), column("status", Text))
+_dispute_cases = table(
+    "dispute_cases",
+    column("id", Uuid),
+    column("booking_request_id", Uuid),
+    column("status", Text),
+    column("summary", Text),
+    column("created_at", DateTime(timezone=True)),
+)
 _ACTIVE_DISPUTE_STATUSES = ("open", "under_review")
 
 # Vendors' Stripe payout wiring, read in one batch for a whole page of bookings.
@@ -228,17 +235,28 @@ async def booking_ids_with_active_disputes(session: AsyncSession, booking_ids: l
     return {str(booking_id) for booking_id in result.scalars()}
 
 
-async def has_active_dispute(session: AsyncSession, booking_id: str) -> bool:
-    """True when this one booking has a dispute that is open or under review."""
+async def active_dispute(session: AsyncSession, booking_id: str) -> dict[str, Any] | None:
+    """The booking's open or under-review dispute (id, status, summary, created_at), or `None`."""
     result = await session.execute(
         select(
-            exists().where(
-                _dispute_cases.c.booking_request_id == as_uuid(booking_id),
-                _dispute_cases.c.status.in_(_ACTIVE_DISPUTE_STATUSES),
-            )
+            _dispute_cases.c.id,
+            _dispute_cases.c.status,
+            _dispute_cases.c.summary,
+            _dispute_cases.c.created_at,
         )
+        .where(
+            _dispute_cases.c.booking_request_id == as_uuid(booking_id),
+            _dispute_cases.c.status.in_(_ACTIVE_DISPUTE_STATUSES),
+        )
+        .limit(1)
     )
-    return bool(result.scalar())
+    found = result.first()
+    return plain_row(found) if found is not None else None
+
+
+async def has_active_dispute(session: AsyncSession, booking_id: str) -> bool:
+    """True when this one booking has a dispute that is open or under review."""
+    return await active_dispute(session, booking_id) is not None
 
 
 async def paid_bookings_for_financials(
@@ -261,14 +279,9 @@ async def paid_bookings_for_financials(
     if date_to:
         conditions.append(BookingRequest.paid_at <= _as_datetime_bound(date_to))
     if paid_on_or_after:
-        conditions.append(
-            BookingRequest.paid_at >= datetime.combine(paid_on_or_after, time.min, tzinfo=HOME_TIMEZONE)
-        )
+        conditions.append(BookingRequest.paid_at >= london_midnight_utc(paid_on_or_after))
     if paid_on_or_before:
-        conditions.append(
-            BookingRequest.paid_at
-            < datetime.combine(paid_on_or_before + timedelta(days=1), time.min, tzinfo=HOME_TIMEZONE)
-        )
+        conditions.append(BookingRequest.paid_at < london_midnight_utc(paid_on_or_before + timedelta(days=1)))
     result = await session.execute(
         select(*_BOOKING_COLUMNS).where(*conditions).order_by(BookingRequest.paid_at.asc()).limit(5000)
     )

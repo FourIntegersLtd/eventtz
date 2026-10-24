@@ -124,7 +124,7 @@ export function BookingDateChangeCard({
           {byMe ? (
             <Button
               type="button"
-              variant="secondary" className="ez-btn--block"
+              variant="secondary" block
               disabled={busy !== null}
               onClick={() =>
                 void run("withdraw", () => withdrawDateChange(role, bookingId), "Request withdrawn")
@@ -136,7 +136,7 @@ export function BookingDateChangeCard({
             <>
               <Button
                 type="button"
-                className="ez-btn--block"
+                block
                 disabled={busy !== null}
                 onClick={() =>
                   void run("accept", () => respondToDateChange(role, bookingId, true), "New date agreed")
@@ -146,7 +146,7 @@ export function BookingDateChangeCard({
               </Button>
               <Button
                 type="button"
-                variant="secondary" className="ez-btn--block"
+                variant="secondary" block
                 disabled={busy !== null}
                 onClick={() =>
                   void run("decline", () => respondToDateChange(role, bookingId, false), "Date change declined")
@@ -161,7 +161,7 @@ export function BookingDateChangeCard({
     }
 
     return (
-      <div className="rounded-2xl border border-amber-200/80 bg-amber-50/40 px-5 py-4">
+      <div className="rounded-2xl border border-warning-line bg-warning-soft px-5 py-4">
         <p className="text-[15px] font-semibold tracking-tight text-ink">{headline}</p>
         <p className="mt-1 text-[13px] text-ink-2">{detail}</p>
         {note ? <div className="mt-2">{note}</div> : null}
@@ -255,7 +255,7 @@ export function BookingDateChangeCard({
   if (requestPresentation === "modal") {
     return (
       <>
-        <Button type="button" variant="secondary" className="ez-btn--block" onClick={() => setFormOpen(true)}>
+        <Button type="button" variant="secondary" block onClick={() => setFormOpen(true)}>
           Request a date change
         </Button>
         <Modal

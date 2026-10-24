@@ -1,10 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { fetchAdminBookingDetail } from "@/lib/adminPlatformApi";
+import { fetchAdminBookingDetail, type AdminBookingDetail } from "@/lib/adminPlatformApi";
 
 export function useAdminBookingDetail(bookingId: string) {
-  const [booking, setBooking] = useState<Record<string, unknown> | null>(null);
+  const [booking, setBooking] = useState<AdminBookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

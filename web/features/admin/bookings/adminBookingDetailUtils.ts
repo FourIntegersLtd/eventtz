@@ -1,6 +1,4 @@
-import type { BookingLineItemRow, BookingPricing } from "@/features/bookings/BookingPricingBreakdown";
-import type { BookingReviewDisplay } from "@/lib/reviewTypes";
-import type { AdminBookingSupportMeta } from "@/lib/adminPlatformApi";
+import type { BookingLineItemRow } from "@/features/bookings/BookingPricingBreakdown";
 
 export function shortId(raw: unknown, head = 10, tail = 6): string | null {
   const s = raw != null ? String(raw).trim() : "";
@@ -15,18 +13,6 @@ export function asRecord(v: unknown): Record<string, unknown> | null {
 
 export function asArray(v: unknown): unknown[] {
   return Array.isArray(v) ? v : [];
-}
-
-export function asPricing(v: unknown): BookingPricing | null {
-  const p = asRecord(v);
-  if (!p || typeof p.client_total_label !== "string") return null;
-  return p as unknown as BookingPricing;
-}
-
-export function asSupport(v: unknown): AdminBookingSupportMeta | null {
-  const s = asRecord(v);
-  if (!s || !Array.isArray(s.needs_attention)) return null;
-  return s as unknown as AdminBookingSupportMeta;
 }
 
 export function mapAdminLineItems(items: unknown[]): BookingLineItemRow[] {
@@ -48,17 +34,3 @@ export function mapAdminLineItems(items: unknown[]): BookingLineItemRow[] {
   });
 }
 
-export function asClientReview(v: unknown): BookingReviewDisplay | null {
-  const r = asRecord(v);
-  if (!r || typeof r.rating !== "number") return null;
-  const imageUrls = Array.isArray(r.image_urls)
-    ? r.image_urls.map((u) => String(u ?? "").trim()).filter(Boolean)
-    : [];
-  return {
-    id: String(r.id ?? ""),
-    rating: r.rating,
-    body: String(r.body ?? ""),
-    created_at: typeof r.created_at === "string" ? r.created_at : null,
-    image_urls: imageUrls,
-  };
-}

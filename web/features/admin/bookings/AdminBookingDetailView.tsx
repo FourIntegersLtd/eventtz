@@ -12,9 +12,6 @@ import { AdminBookingDetailMainContent } from "./AdminBookingDetailMainContent";
 import type { SupportAction } from "./AdminBookingDetailShared";
 import {
   asArray,
-  asClientReview,
-  asPricing,
-  asSupport,
   mapAdminLineItems,
 } from "./adminBookingDetailUtils";
 import { buildSupportActions } from "./adminBookingSupportActions";
@@ -84,11 +81,9 @@ export function AdminBookingDetailView({ bookingId }: Props) {
   }
 
   const lineItems = mapAdminLineItems(asArray(booking.line_items));
-  const reviewVendor = asClientReview(booking.review_vendor);
-  const pricing = asPricing(booking.pricing);
-  const support = asSupport(booking.support);
+  const support = booking.support;
   const eventName = String(booking.event_name ?? "Booking");
-  const quoteTotalLabel = String(booking.total_label ?? booking.client_total_label ?? "-");
+  const quoteTotalLabel = booking.total_label;
   const openDispute = support?.open_dispute;
   const holdActive = Boolean(support?.support_hold);
 
@@ -125,9 +120,7 @@ export function AdminBookingDetailView({ bookingId }: Props) {
         <AdminBookingDetailMainContent
           booking={booking}
           lineItems={lineItems}
-          pricing={pricing}
           quoteTotalLabel={quoteTotalLabel}
-          reviewVendor={reviewVendor}
         />
         </div>
 
