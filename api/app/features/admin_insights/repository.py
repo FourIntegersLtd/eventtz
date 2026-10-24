@@ -32,7 +32,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import as_uuid, plain_row
 from app.core.pagination import LIKE_ESCAPE, contains_pattern
-from app.core.time import HOME_TIMEZONE
+from app.core.time import london_midnight_utc
 
 #: `users.user_type` is a real Postgres enum, not text; a bound Text parameter
 #: cannot compare against it without an explicit cast (`operator does not exist:
@@ -115,8 +115,8 @@ def _day_bounds(day: str) -> tuple[datetime, datetime]:
     """The `[start, end)` instant range of one London `YYYY-MM-DD` day (23 to 25 hours long)."""
     first = date.fromisoformat(day)
     return (
-        datetime.combine(first, datetime.min.time(), tzinfo=HOME_TIMEZONE),
-        datetime.combine(first + timedelta(days=1), datetime.min.time(), tzinfo=HOME_TIMEZONE),
+        london_midnight_utc(first),
+        london_midnight_utc(first + timedelta(days=1)),
     )
 
 

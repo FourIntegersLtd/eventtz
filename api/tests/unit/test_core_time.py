@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 
-from app.core.time import uk_date
+from app.core.time import london_midnight_utc, uk_date
 from app.features.bookings import domain_portal_dashboard as dashboard
 
 
@@ -49,3 +49,15 @@ def test_a_multi_day_event_still_running_today_stays_upcoming() -> None:
     running = Booking(event_date="2026-06-29T10:00:00", event_end_date="2026-07-01T10:00:00")
     assert dashboard.accepted_upcoming([running], today=date(2026, 7, 1)) == [running]
     assert dashboard.accepted_upcoming([running], today=date(2026, 7, 2)) == []
+
+
+def test_london_midnight_utc_summer_winter_and_clock_changes() -> None:
+    """London midnight as UTC: BST is an hour before, GMT is the same; the change days are 23 and 25 hours."""
+    assert london_midnight_utc(date(2030, 6, 2)) == datetime(2030, 6, 1, 23, 0, tzinfo=UTC)
+    assert london_midnight_utc(date(2030, 1, 16)) == datetime(2030, 1, 16, 0, 0, tzinfo=UTC)
+    # Clocks go back 27 Oct 2030 at 02:00: midnight that day is still BST, the next is GMT.
+    assert london_midnight_utc(date(2030, 10, 27)) == datetime(2030, 10, 26, 23, 0, tzinfo=UTC)
+    assert london_midnight_utc(date(2030, 10, 28)) == datetime(2030, 10, 28, 0, 0, tzinfo=UTC)
+    # Clocks go forward 30 Mar 2031 at 01:00: midnight that day is GMT, the next is BST.
+    assert london_midnight_utc(date(2031, 3, 30)) == datetime(2031, 3, 30, 0, 0, tzinfo=UTC)
+    assert london_midnight_utc(date(2031, 3, 31)) == datetime(2031, 3, 30, 23, 0, tzinfo=UTC)

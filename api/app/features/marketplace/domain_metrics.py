@@ -157,7 +157,7 @@ def vendor_analytics(
     ratings: list[AnalyticsRatingRow],
     profile_views: int,
 ) -> dict[str, Any]:
-    """The vendor's analytics screen: headline numbers, the funnel and month-by-month series."""
+    """The vendor analytics screen as a dict; keys must match `VendorAnalyticsResponse` (pinned by a test)."""
     accepted = [
         enquiry for enquiry in enquiries if enquiry.accepted_at or enquiry.status in ("accepted", "completed")
     ]

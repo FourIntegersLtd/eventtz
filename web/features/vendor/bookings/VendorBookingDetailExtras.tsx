@@ -151,7 +151,7 @@ function CancellationOutcome({ detail }: { detail: VendorBookingDetail }) {
         <Card>
           <Card.Header>
             <span className="ez-h3">Your cancellation policy</span>
-            <Badge className="ez-badge--plain">{cancellationPolicyLabel(policy)}</Badge>
+            <Badge plain>{cancellationPolicyLabel(policy)}</Badge>
           </Card.Header>
           <Card.Body>
             <div className="ez-lines">

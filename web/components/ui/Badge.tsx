@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
 import type { Tone } from "@/lib/tone";
 
+/** Badge tones: the semantic `Tone`s plus the canvas `gold` accent (Badge only; Banner and status metas stay on `Tone`). */
+export type BadgeTone = Tone | "gold";
+
 export type BadgeProps = {
-  /** Semantic colour; defaults to neutral. */
-  tone?: Tone;
+  /** Semantic colour, or the canvas `gold` accent; defaults to neutral. */
+  tone?: BadgeTone;
   /** Drops the leading status dot (`ez-badge--plain`), for labels that are not a status. */
   plain?: boolean;
   className?: string;

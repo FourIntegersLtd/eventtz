@@ -14,15 +14,7 @@ const webRoot = path.resolve(__dirname, "../..");
 const RAW_EZ_CLASS = /(?<![\w-])ez-(?:btn|card|badge|banner|pagehead|kpi)(?![A-Za-z0-9])/;
 
 /** Files under `features/` and `app/` that still use a raw class, to be moved onto the blocks (plan: Phase 2.7 follow-ups). */
-const ALLOW_LISTED_FILES: string[] = [
-  "features/bookings/BookingDateChangeCard.tsx",
-  "features/bookings/VendorBookingDetailEzPanel.tsx",
-  "features/chat/VendorMessagesEzView.tsx",
-  "features/client/planner/BudgetBreakdown.tsx",
-  "features/disputes/VendorDisputesEzView.tsx",
-  "features/vendor/bookings/VendorBookingDetailExtras.tsx",
-  "features/vendor/bookings/VendorBookingResponseFlow.tsx",
-];
+const ALLOW_LISTED_FILES: string[] = [];
 
 /** Lines of `source` that write a raw class, as 1-based line numbers. */
 function findRawEzClassLines(source: string): number[] {

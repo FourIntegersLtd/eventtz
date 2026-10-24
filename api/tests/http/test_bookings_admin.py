@@ -28,6 +28,66 @@ SUPER_ADMIN_ONLY = "Only super admins can perform this action."
 
 
 _next_event_date = date(2099, 6, 1)
+EXPECTED_DETAIL_KEYS: list[str] = [
+    "cancellation_payout_at",
+    "cancellation_policy",
+    "cancellation_refund_gbp",
+    "cancellation_refund_percent",
+    "cancellation_vendor_share_gbp",
+    "client_completion_confirmed_at",
+    "client_email",
+    "client_user_id",
+    "created_at",
+    "damage_deposit_gbp",
+    "date_change_note",
+    "date_change_requested_at",
+    "date_change_requested_by",
+    "delivery_confirmed_at",
+    "delivery_deadline_days",
+    "delivery_due_at",
+    "deposit_claim_awarded_gbp",
+    "deposit_claim_gbp",
+    "deposit_claim_note",
+    "deposit_claim_resolved_at",
+    "deposit_claimed_at",
+    "deposit_refund_due_at",
+    "deposit_refunded_at",
+    "event_address",
+    "event_date",
+    "event_end_date",
+    "event_name",
+    "event_postcode",
+    "id",
+    "line_items",
+    "notes",
+    "paid_at",
+    "payment_amount_gbp",
+    "payment_due_at",
+    "payment_status",
+    "payout_released_at",
+    "payout_stage",
+    "payout_upfront_percent",
+    "platform_fee_gbp",
+    "proposed_event_date",
+    "proposed_event_end_date",
+    "report_window_hours",
+    "selected_option_ids",
+    "status",
+    "stripe_charge_id",
+    "stripe_checkout_session_id",
+    "stripe_payment_intent_id",
+    "stripe_transfer_id",
+    "support",
+    "total_label",
+    "upfront_amount_gbp",
+    "upfront_payout_at",
+    "vendor_adjustments",
+    "vendor_amount_gbp",
+    "vendor_completion_confirmed_at",
+    "vendor_display_name",
+    "vendor_email",
+    "vendor_user_id",
+]
 
 
 async def _booking(
@@ -159,6 +219,63 @@ async def test_get_booking_detail_writes_a_view_audit_log_row(
         {"booking_id": booking_id},
     )
     assert audit.first() is not None
+
+
+async def test_get_booking_detail_returns_exactly_these_keys(
+    client: AsyncClient, db_session: AsyncSession, make_actor: Any, parties: tuple[str, str]
+) -> None:
+    """Freeze the detail JSON: key set, nulls and the support block, so typing it cannot change it."""
+    staff_token = await make_actor("admin-freeze-staff@example.com", user_type="admin", admin_role="admin")
+    client_token, vendor_token = parties
+    client_id, vendor_id = await _ids_from_tokens(client_token, vendor_token, client)
+    booking_id = await _booking(
+        db_session, client_user_id=client_id, vendor_user_id=vendor_id, status="pending"
+    )
+    response = await client.get(f"/api/v1/admin/bookings/{booking_id}", headers=_auth(staff_token))
+    body = response.json()["booking"]
+    assert response.json()["success"] is True
+    assert sorted(body) == EXPECTED_DETAIL_KEYS
+    assert body["support"] == {
+        "needs_attention": [],
+        "open_dispute": None,
+        "support_hold": False,
+        "vendor_stripe_payouts_enabled": False,
+        "next_action": None,
+    }
+    assert (body["total_label"], body["payment_status"], body["vendor_display_name"]) == (
+        "GBP 150",
+        "unpaid",
+        "Vendor",
+    )
+    assert body["line_items"] == [{"id": "pkg-1", "heading": "Classic Package", "unit_price_gbp": 150.0}]
+    assert body["payment_amount_gbp"] is None
+
+
+async def test_get_booking_detail_names_the_open_dispute(
+    client: AsyncClient, db_session: AsyncSession, make_actor: Any, parties: tuple[str, str]
+) -> None:
+    """The support block carries the active dispute so the banner can link to it."""
+    from app.features.disputes import repository as disputes_repository  # noqa: PLC0415 - this test only
+
+    staff_token = await make_actor("admin-dispute-staff@example.com", user_type="admin", admin_role="admin")
+    client_token, vendor_token = parties
+    client_id, vendor_id = await _ids_from_tokens(client_token, vendor_token, client)
+    booking_id = await _booking(db_session, client_user_id=client_id, vendor_user_id=vendor_id)
+    dispute = await disputes_repository.insert_dispute(
+        db_session,
+        booking_request_id=booking_id,
+        opened_by_user_id=client_id,
+        summary="The cake never arrived",
+        conversation_id=None,
+    )
+    response = await client.get(f"/api/v1/admin/bookings/{booking_id}", headers=_auth(staff_token))
+    open_dispute = response.json()["booking"]["support"]["open_dispute"]
+    assert open_dispute == {
+        "id": dispute.id,
+        "status": "open",
+        "summary": "The cake never arrived",
+        "created_at": dispute.created_at,
+    }
 
 
 # --- payment-fields patch ----------------------------------------------------------------

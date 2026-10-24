@@ -9,10 +9,10 @@ Pure values and small rules only: no database, no network.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any, Literal
 
-from app.core.time import HOME_TIMEZONE
+from app.core.time import london_midnight_utc
 from app.features.bookings.rows import BookingRow
 
 # Where a split-payout booking is in its payout: `full` (no split), `upfront` (nothing paid yet),
@@ -86,8 +86,8 @@ def payment_due_at(
     if accepted_at is None or event_date is None:
         return None
     accepted_utc = accepted_at.astimezone(UTC)
-    # Converted to UTC before subtracting: arithmetic on a London-aware value counts wall-clock hours.
-    event_start = datetime.combine(event_date, time.min, tzinfo=HOME_TIMEZONE).astimezone(UTC)
+    # Subtract on the UTC value (see london_midnight_utc).
+    event_start = london_midnight_utc(event_date)
     latest_due = event_start - timedelta(hours=PAYMENT_DEADLINE_HOURS_BEFORE_EVENT)
     if latest_due <= accepted_utc:
         latest_due = event_start
@@ -199,7 +199,7 @@ def event_over_at(booking: BookingRow, *, plus_days: int = 0) -> datetime | None
     except ValueError:
         return None
     clock_day = event_day + timedelta(days=1 + plus_days)
-    return datetime.combine(clock_day, time.min, tzinfo=HOME_TIMEZONE).astimezone(UTC)
+    return london_midnight_utc(clock_day)
 
 
 def delivery_due_at(booking: BookingRow) -> datetime | None:
@@ -271,7 +271,7 @@ def deposit_claim_open(booking: BookingRow, now: datetime) -> bool:
     due_at = deposit_refund_due_at(booking)
     first_day = (booking.event_date or "")[:10]
     try:
-        event_start = datetime.combine(date.fromisoformat(first_day), time.min, tzinfo=HOME_TIMEZONE)
+        event_start = london_midnight_utc(date.fromisoformat(first_day))
     except ValueError:
         return False
     return (

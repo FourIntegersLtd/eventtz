@@ -187,7 +187,7 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
                   ) : null}
                 </div>
               </Card.Body>
-              <div className="ez-card__foot">
+              <Card.Footer>
                 {active.conversation_id ? (
                   <ButtonLink href={`/vendor/messages/${active.conversation_id}`}>
                     <SendIcon />
@@ -198,7 +198,7 @@ export function VendorDisputesEzView({ selectedDisputeId = null }: VendorDispute
                     Open booking
                   </ButtonLink>
                 )}
-              </div>
+              </Card.Footer>
             </Card>
           </div>
           <div className="ez-split__aside">

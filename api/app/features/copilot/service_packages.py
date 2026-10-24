@@ -21,5 +21,5 @@ async def review_listing_packages(
     return CopilotReviewPackagesResponse(
         overall_ok=result.overall_ok,
         summary=summary,
-        package_feedback=[feedback.model_dump() for feedback in result.package_feedback],
+        package_feedback=result.package_feedback,
     )

@@ -1,5 +1,4 @@
 import type { components } from "@/lib/api-schema";
-import type { WithFields } from "@/lib/apiTypeHelpers";
 import api from "@/lib/axios";
 
 export type AdminBookingListSupportSummary = components["schemas"]["AdminBookingListSupportSummary"];
@@ -27,8 +26,8 @@ export async function fetchAdminBookings(
   return data;
 }
 
-export async function fetchAdminBookingDetail(bookingId: string): Promise<Record<string, unknown>> {
-  const { data } = await api.get<{ success: boolean; booking: Record<string, unknown> }>(
+export async function fetchAdminBookingDetail(bookingId: string): Promise<AdminBookingDetail> {
+  const { data } = await api.get<components["schemas"]["AdminBookingDetailResponse"]>(
     `/api/v1/admin/bookings/${bookingId}`,
   );
   return data.booking;
@@ -43,30 +42,16 @@ export async function patchBookingPaymentFields(
 
 export type AdminBookingAttentionFlag = components["schemas"]["AdminBookingNeedsAttentionFlag"];
 
-/** `open_dispute` is a free-form dict in the API schema; narrowed by hand (candidate for pydantic). */
-export type AdminBookingSupportMeta = WithFields<
-  components["schemas"]["AdminBookingSupportMeta"],
-  {
-    open_dispute: {
-      id: string;
-      status: string;
-      summary: string;
-      created_at?: string | null;
-    } | null;
-  }
->;
+export type AdminBookingSupportMeta = components["schemas"]["AdminBookingSupportMeta"];
 
-/** `booking` is a free-form dict in the API schema, so the detail stays a record plus `support`. */
-export type AdminBookingDetail = Record<string, unknown> & {
-  support?: AdminBookingSupportMeta;
-};
+export type AdminBookingDetail = components["schemas"]["AdminBookingDetail"];
 
 async function postAdminBookingAction(
   bookingId: string,
   action: string,
   body?: Record<string, unknown>,
 ): Promise<AdminBookingDetail> {
-  const { data } = await api.post<{ success: boolean; booking: AdminBookingDetail }>(
+  const { data } = await api.post<components["schemas"]["AdminBookingDetailResponse"]>(
     `/api/v1/admin/bookings/${bookingId}/${action}`,
     body ?? {},
   );
@@ -118,7 +103,7 @@ export async function adminSetBookingSupportHold(
   bookingId: string,
   hold: boolean,
 ): Promise<AdminBookingDetail> {
-  const { data } = await api.patch<{ success: boolean; booking: AdminBookingDetail }>(
+  const { data } = await api.patch<components["schemas"]["AdminBookingDetailResponse"]>(
     `/api/v1/admin/bookings/${bookingId}/support-hold`,
     { hold } satisfies components["schemas"]["AdminSupportHoldBody"],
   );
