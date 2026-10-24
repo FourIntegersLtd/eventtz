@@ -21,7 +21,7 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 }
 
 const DEFAULT_INPUT_CLASS =
-  "w-full rounded-lg border border-neutral-200 py-2 pl-9 pr-10 text-base text-neutral-900 placeholder:text-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-neutral-50 disabled:text-neutral-500 md:text-sm";
+  "w-full rounded-lg border border-line py-2 pl-9 pr-10 text-base text-ink placeholder:text-ink-3 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:bg-surface-3 disabled:text-ink-3 md:text-sm";
 
 export type LocationAutocompleteInputProps = {
   /** Visible label above the field. Omit for compact/inline usage (e.g. a search bar) and pass `ariaLabel` instead. */
@@ -73,7 +73,7 @@ export function LocationAutocompleteInput({
   disabled,
   ariaLabel,
   icon: Icon = Building2,
-  iconClassName = "text-neutral-400",
+  iconClassName = "text-ink-3",
   inputClassName,
   className,
   showClear = true,
@@ -190,7 +190,7 @@ export function LocationAutocompleteInput({
       ? createPortal(
           <div
             ref={listRef}
-            className="overflow-hidden rounded-xl border border-neutral-200 bg-white text-left shadow-2xl ring-1 ring-black/10"
+            className="overflow-hidden rounded-xl border border-line bg-white text-left shadow-2xl ring-1 ring-black/10"
             style={{
               position: "fixed",
               top: menuRect.top,
@@ -209,7 +209,7 @@ export function LocationAutocompleteInput({
                   <button
                     type="button"
                     role="option"
-                    className="flex w-full items-center justify-between gap-3 bg-white px-3 py-2.5 text-left text-sm text-neutral-900 hover:bg-neutral-50"
+                    className="flex w-full items-center justify-between gap-3 bg-white px-3 py-2.5 text-left text-sm text-ink hover:bg-surface-3"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => {
                       setOpen(false);
@@ -217,7 +217,7 @@ export function LocationAutocompleteInput({
                     }}
                   >
                     <span className="min-w-0 truncate">{s.label}</span>
-                    <span className="shrink-0 text-xs text-neutral-400">Select</span>
+                    <span className="shrink-0 text-xs text-ink-3">Select</span>
                   </button>
                 </li>
               ))}
@@ -232,7 +232,7 @@ export function LocationAutocompleteInput({
       {label ? (
         <label
           htmlFor={id}
-          className={isEz ? "ez-label" : "block text-xs font-semibold uppercase tracking-wide text-neutral-500"}
+          className={isEz ? "ez-label" : "block text-xs font-semibold uppercase tracking-wide text-ink-3"}
         >
           {label}
         </label>
@@ -266,7 +266,7 @@ export function LocationAutocompleteInput({
         {suggestionsAllowed && busy ? (
           <LoadingSpinner
             size="sm"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3"
           />
         ) : showClearButton ? (
           <button
@@ -276,14 +276,14 @@ export function LocationAutocompleteInput({
               setFetchedSuggestions([]);
               setOpen(false);
             }}
-            className="absolute right-2 top-1/2 inline-flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-md text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+            className="absolute right-2 top-1/2 inline-flex min-h-11 min-w-11 -translate-y-1/2 items-center justify-center rounded-md text-ink-3 hover:bg-surface-3 hover:text-ink-2"
             aria-label="Clear"
           >
             <X className="h-4 w-4" />
           </button>
         ) : null}
       </div>
-      {helpText ? <p className="mt-1 text-xs text-neutral-500">{helpText}</p> : null}
+      {helpText ? <p className="mt-1 text-xs text-ink-3">{helpText}</p> : null}
       {suggestionsMenu}
     </div>
   );

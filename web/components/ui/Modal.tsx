@@ -55,7 +55,7 @@ function DefaultModalHeader({ title, onClose }: { title: string; onClose: () => 
       <button
         type="button"
         onClick={onClose}
-        className={`inline-flex shrink-0 items-center justify-center rounded-lg text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 ${TOUCH_TARGET} ${FOCUS_RING}`}
+        className={`inline-flex shrink-0 items-center justify-center rounded-lg text-ink-3 hover:bg-surface-3 hover:text-ink-2 ${TOUCH_TARGET} ${FOCUS_RING}`}
       >
         <X className="h-5 w-5" />
       </button>

@@ -24,7 +24,7 @@ export function EzFilterDateField({
     >
       <span className="text-ink-2">
         {label}
-        {optional ? <span className="text-neutral-400"> · optional</span> : null}
+        {optional ? <span className="text-ink-3"> · optional</span> : null}
       </span>
       <DateInput
         allowEmpty
