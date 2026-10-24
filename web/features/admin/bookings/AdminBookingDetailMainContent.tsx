@@ -12,9 +12,10 @@ import {
 } from "./adminBookingLifecycle";
 import { DetailSection, ExpandableId, formatTs } from "./AdminBookingDetailShared";
 import { formatGbp } from "@/lib/money";
+import type { AdminBookingDetail } from "@/lib/adminBookingsApi";
 
 type Props = {
-  booking: Record<string, unknown>;
+  booking: AdminBookingDetail;
   lineItems: BookingLineItemRow[];
   quoteTotalLabel: string;
 };
@@ -26,8 +27,7 @@ export function AdminBookingDetailMainContent({
 }: Props) {
   const requestTimeline = buildRequestLifecycleTimeline(booking);
   const paymentTimeline = buildPaymentLifecycleTimeline(booking);
-  const status = String(booking.status ?? "");
-  const paymentStatus = String(booking.payment_status ?? "unpaid");
+  const { status, payment_status: paymentStatus } = booking;
 
   return (
     <div className="ez-stack ez-stack--lg min-w-0">
@@ -76,13 +76,13 @@ export function AdminBookingDetailMainContent({
       <DetailSection title="Parties">
         <DescriptionList
           items={[
-            { label: "Client", value: String(booking.client_email ?? "-") },
-            { label: "Vendor", value: String(booking.vendor_display_name ?? "-") },
-            { label: "Vendor email", value: String(booking.vendor_email ?? "-") },
-            { label: "Event date", value: String(booking.event_date ?? "-") },
+            { label: "Client", value: booking.client_email ?? "-" },
+            { label: "Vendor", value: booking.vendor_display_name },
+            { label: "Vendor email", value: booking.vendor_email ?? "-" },
+            { label: "Event date", value: booking.event_date },
             {
               label: "Postcode",
-              value: booking.event_postcode != null ? String(booking.event_postcode) : "-",
+              value: booking.event_postcode ?? "-",
             },
             { label: "Paid", value: formatTs(booking.paid_at) },
             { label: "Payout sent", value: formatTs(booking.payout_released_at) },
@@ -107,10 +107,6 @@ export function AdminBookingDetailMainContent({
           <dt>Transfer</dt>
           <dd>
             <ExpandableId value={booking.stripe_transfer_id} label="transfer" />
-          </dd>
-          <dt>Vendor Connect account</dt>
-          <dd>
-            <ExpandableId value={booking.vendor_stripe_account_id} label="vendor account" />
           </dd>
         </dl>
         <p className="ez-caption mt-3">
