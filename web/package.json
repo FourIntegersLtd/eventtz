@@ -19,7 +19,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@lottiefiles/dotlottie-react": "^0.20.0",
-    "@sentry/nextjs": "^10.70.0",
+    "@sentry/nextjs": "^11.8.0",
     "@tiptap/extension-blockquote": "^3.32.0",
     "@tiptap/extension-image": "^3.32.0",
     "@tiptap/extension-link": "^3.32.0",
@@ -37,12 +37,12 @@
     "react-dom": "19.3.1",
     "react-icons": "^5.7.0",
     "recharts": "^3.10.1",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/mixpanel-browser": "^2.66.0",
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^6.1.2",
